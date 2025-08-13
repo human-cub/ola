@@ -1,5 +1,6 @@
 import { MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import olaWaveLogo from "@/assets/ola-wave-logo.png";
 
 interface HeaderProps {
   isVisible: boolean;
@@ -19,8 +20,8 @@ export const Header = ({ isVisible }: HeaderProps) => {
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo and Brand */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-soft">
-            <img src="/lovable-uploads/b99517da-1b60-4cc9-ab51-1d60dd3d658a.png" alt="Ola Wave Logo" className="w-8 h-8" />
+          <div className="w-10 h-10 flex items-center justify-center">
+            <img src={olaWaveLogo} alt="Ola Wave Logo" className="w-10 h-10 object-contain" />
           </div>
           <span className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
             Ola!
