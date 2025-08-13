@@ -38,9 +38,9 @@ export const PriceSlider = () => {
           {/* Price Scale */}
           <div className="relative mb-8">
             {/* People numbers (top) */}
-            <div className="flex justify-between mb-2">
+            <div className="flex justify-between mb-2 px-2">
               {priceData.map((item, index) => (
-                <div key={index} className="text-center">
+                <div key={index} className="text-center flex-1">
                   <span className={`text-sm font-medium ${
                     index === selectedIndex ? 'text-primary' : 'text-muted-foreground'
                   }`}>
@@ -63,9 +63,9 @@ export const PriceSlider = () => {
             </div>
             
             {/* Price numbers (bottom) */}
-            <div className="flex justify-between">
+            <div className="flex justify-between px-2">
               {priceData.map((item, index) => (
-                <div key={index} className="text-center">
+                <div key={index} className="text-center flex-1">
                   <span className={`text-xs ${
                     index === selectedIndex ? 'text-primary font-medium' : 'text-muted-foreground'
                   }`}>
