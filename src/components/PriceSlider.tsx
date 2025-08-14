@@ -38,20 +38,33 @@ export const PriceSlider = () => {
           {/* Price Scale */}
           <div className="relative mb-8">
             {/* People numbers (top) */}
-            <div className="flex justify-between mb-2 px-2">
-              {priceData.map((item, index) => (
-                <div key={index} className="text-center flex-1">
-                  <span className={`text-sm font-medium ${
-                    index === selectedIndex ? 'text-primary' : 'text-muted-foreground'
-                  }`}>
-                    {item.people}
-                  </span>
-                </div>
-              ))}
+            <div className="relative mb-2">
+              <div className="absolute inset-0 flex">
+                {priceData.map((item, index) => {
+                  const position = index === 0 ? '0%' : 
+                                  index === 1 ? '25%' :
+                                  index === 2 ? '50%' :
+                                  index === 3 ? '75%' : '100%';
+                  return (
+                    <div 
+                      key={index} 
+                      className="absolute transform -translate-x-1/2"
+                      style={{ left: position }}
+                    >
+                      <span className={`text-sm font-medium ${
+                        index === selectedIndex ? 'text-primary' : 'text-muted-foreground'
+                      }`}>
+                        {item.people}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="h-6"></div>
             </div>
             
             {/* Slider */}
-            <div className="px-2 mb-2">
+            <div className="mb-2">
               <Slider
                 value={[selectedIndex]}
                 onValueChange={handleSliderChange}
@@ -63,16 +76,29 @@ export const PriceSlider = () => {
             </div>
             
             {/* Price numbers (bottom) */}
-            <div className="flex justify-between px-2">
-              {priceData.map((item, index) => (
-                <div key={index} className="text-center flex-1">
-                  <span className={`text-xs ${
-                    index === selectedIndex ? 'text-primary font-medium' : 'text-muted-foreground'
-                  }`}>
-                    ${(item.price / 1000).toFixed(0)}k
-                  </span>
-                </div>
-              ))}
+            <div className="relative">
+              <div className="absolute inset-0 flex">
+                {priceData.map((item, index) => {
+                  const position = index === 0 ? '0%' : 
+                                  index === 1 ? '25%' :
+                                  index === 2 ? '50%' :
+                                  index === 3 ? '75%' : '100%';
+                  return (
+                    <div 
+                      key={index} 
+                      className="absolute transform -translate-x-1/2"
+                      style={{ left: position }}
+                    >
+                      <span className={`text-xs ${
+                        index === selectedIndex ? 'text-primary font-medium' : 'text-muted-foreground'
+                      }`}>
+                        ${(item.price / 1000).toFixed(0)}k
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="h-4"></div>
             </div>
           </div>
 
