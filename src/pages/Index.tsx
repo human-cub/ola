@@ -6,6 +6,7 @@ import { ProductInfo } from "@/components/ProductInfo";
 import { PriceSlider } from "@/components/PriceSlider";
 import { ProductDescription } from "@/components/ProductDescription";
 import { Benefits } from "@/components/Benefits";
+import { ServiceDescription } from "@/components/ServiceDescription";
 import { FloatingButton } from "@/components/FloatingButton";
 
 const Index = () => {
@@ -40,6 +41,7 @@ const Index = () => {
         <PriceSlider />
         <ProductDescription />
         <Benefits />
+        <ServiceDescription />
       </main>
 
       <FloatingButton />
