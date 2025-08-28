@@ -54,10 +54,7 @@ export const ServiceDescription = () => {
               
               <div className="mt-4 text-center">
                 <p className="text-sm font-medium text-foreground mb-2">
-                  Escribinos — estamos abiertes a colaborar y escuchar sugerencias.
-                </p>
-                <p className="text-sm text-primary font-semibold">
-                  Nuestro objetivo es hacer las compras más fáciles y convenientes. ¡Hagámoslo juntes!
+                  Escribinos — estamos abiertos a colaborar y escuchar sugerencias. Nuestra meta es que las compras sean más baratas y más transparentes, sin las mañas de los vendedores. ¡Hagámoslo juntos!
                 </p>
               </div>
             </div>
