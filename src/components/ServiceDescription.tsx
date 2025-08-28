@@ -57,7 +57,7 @@ export const ServiceDescription = () => {
                   Escribinos — estamos abiertes a colaborar y escuchar sugerencias.
                 </p>
                 <p className="text-sm text-primary font-semibold">
-                  Nuestro objetivo es hacer las compras más fáciles y convenientes. ¡Hagámoslo juntes!
+                  Nuestra meta es que las compras sean más baratas y más transparentes, sin las mañas de los vendedores. ¡Hagámoslo juntes!
                 </p>
               </div>
             </div>
