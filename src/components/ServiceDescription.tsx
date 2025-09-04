@@ -1,6 +1,6 @@
 export const ServiceDescription = () => {
   return (
-    <section className="px-4 py-8">
+    <section id="service-description" className="px-4 py-8">
       <div className="container mx-auto max-w-md">
         <div className="bg-gradient-card rounded-xl p-6 shadow-soft">
           <div className="text-center mb-6">
