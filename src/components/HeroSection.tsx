@@ -17,10 +17,9 @@ export const HeroSection = () => {
         <div className="w-20 h-1 bg-gradient-primary mx-auto rounded-full mb-6"></div>
         <Button 
           onClick={scrollToServiceDescription}
-          variant="outline"
-          className="animate-fade-in"
+          className="bg-gradient-primary hover:opacity-90 text-white font-semibold px-8 py-3 rounded-full shadow-elegant transition-all duration-300 hover:shadow-glow animate-fade-in"
         >
-          узнать больше
+          Más info
         </Button>
       </div>
     </section>
