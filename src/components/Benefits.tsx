@@ -1,4 +1,4 @@
-import { Percent, CreditCard, Truck } from "lucide-react";
+import { Percent, CreditCard, Shield } from "lucide-react";
 
 const benefits = [
   {
@@ -7,14 +7,14 @@ const benefits = [
     description: "Obtén mejores precios comprando en grupo"
   },
   {
+    icon: Shield,
+    title: "100% original",
+    description: "Trabajamos solo con proveedores oficiales"
+  },
+  {
     icon: CreditCard,
     title: "Paga al recibir",
     description: "Sin riesgos, pagas cuando tienes tu producto"
-  },
-  {
-    icon: Truck,
-    title: "Retiro gratuito",
-    description: "Retira tu pedido sin costo adicional"
   }
 ];
 
