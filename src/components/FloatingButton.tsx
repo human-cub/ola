@@ -33,7 +33,7 @@ export const FloatingButton = () => {
   }, []);
 
   const handleWhatsAppClick = () => {
-    window.open("https://wa.me/message/GROUP_LINK", "_blank");
+    window.open("https://chat.whatsapp.com/IHMiBbdeOqO68WSbiPKNwA?mode=ems_share_c", "_blank");
   };
 
   return (
@@ -65,7 +65,7 @@ export const FloatingButton = () => {
             className="bg-white/20 hover:bg-white/30 text-white border-0 gap-2"
           >
             <MessageCircle className="w-4 h-4" />
-            <span>Unirse</span>
+            <span>Unite al grupo de WhatsApp</span>
           </Button>
         </div>
       </div>
