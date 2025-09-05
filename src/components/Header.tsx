@@ -33,11 +33,10 @@ export const Header = ({ isVisible }: HeaderProps) => {
           variant="outline" 
           size="sm" 
           onClick={handleWhatsAppClick}
-          className="border-primary/20 hover:border-primary hover:bg-primary/5 gap-2"
+          className="border-primary/20 hover:border-primary hover:bg-primary/5 gap-2 px-3 min-w-fit whitespace-nowrap"
         >
           <MessageCircle className="w-4 h-4" />
-          <span className="hidden sm:inline">Canal WhatsApp</span>
-          <span className="sm:hidden">Canal</span>
+          <span>Canal WhatsApp</span>
         </Button>
       </div>
     </header>
