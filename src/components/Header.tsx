@@ -36,8 +36,8 @@ export const Header = ({ isVisible }: HeaderProps) => {
           className="border-primary/20 hover:border-primary hover:bg-primary/5 gap-2"
         >
           <MessageCircle className="w-4 h-4" />
-          <span className="hidden sm:inline">Grupo Principal</span>
-          <span className="sm:hidden">Grupo</span>
+          <span className="hidden sm:inline">Canal WhatsApp</span>
+          <span className="sm:hidden">Canal</span>
         </Button>
       </div>
     </header>
