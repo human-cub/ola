@@ -12,7 +12,7 @@ export const HeroSection = () => {
     <section className="pt-24 pb-8 px-4">
       <div className="container mx-auto text-center">
         <h1 className="text-4xl md:text-5xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-4 animate-fade-in">
-          Súmate al grupo, comprá al precio mayorista. Descuentos de hasta 60%
+          Sumate al grupo, comprá al precio mayorista. Descuentos de hasta 60%
         </h1>
         <div className="w-20 h-1 bg-gradient-primary mx-auto rounded-full mb-6"></div>
         <Button 
