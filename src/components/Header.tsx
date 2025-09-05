@@ -8,7 +8,7 @@ interface HeaderProps {
 
 export const Header = ({ isVisible }: HeaderProps) => {
   const handleWhatsAppClick = () => {
-    window.open("https://wa.me/message/COMMUNITY_LINK", "_blank");
+    window.open("https://whatsapp.com/channel/0029VbApwH83LdQPnkFyGo2p", "_blank");
   };
 
   return (
