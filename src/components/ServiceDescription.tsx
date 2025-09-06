@@ -1,6 +1,5 @@
 export const ServiceDescription = () => {
-  return (
-    <section id="service-description" className="px-4 py-8">
+  return <section id="service-description" className="px-4 py-8">
       <div className="container mx-auto max-w-md">
         <div className="bg-gradient-card rounded-xl p-6 shadow-soft">
           <div className="text-center mb-6">
@@ -32,9 +31,7 @@ export const ServiceDescription = () => {
               </p>
             </div>
 
-            <p className="text-sm leading-relaxed">
-              El lunes pedimos al proveedor y empezamos con las entregas. El pago es en efectivo al recibir y revisar el producto.
-            </p>
+            <p className="text-sm leading-relaxed">En cuanto cierra el pedido grupal, hacemos la compra al mayorista y arrancamos con las entregas. El pago es en efectivo al recibir y revisar el producto.</p>
 
             <div className="bg-gradient-primary/10 rounded-lg p-4 border border-primary/20">
               <p className="text-sm font-semibold text-primary text-center mb-2">
@@ -64,6 +61,5 @@ export const ServiceDescription = () => {
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
