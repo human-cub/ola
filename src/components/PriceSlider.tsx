@@ -30,8 +30,12 @@ export const PriceSlider = () => {
   return (
     <section className="px-4 py-8">
       <div className="container mx-auto max-w-md">
-        <div className="bg-gradient-card rounded-2xl p-6 shadow-floating">
-          <h3 className="text-lg font-semibold text-center mb-6 text-foreground">
+        <div className="relative bg-gradient-card rounded-2xl p-6 shadow-floating animate-glow-pulse animate-float hover:scale-105 transition-all duration-500 border border-primary/10 backdrop-blur-sm">
+          {/* Decorative elements */}
+          <div className="absolute -top-2 -right-2 w-6 h-6 bg-primary/20 rounded-full animate-pulse"></div>
+          <div className="absolute -bottom-2 -left-2 w-4 h-4 bg-primary/30 rounded-full animate-pulse delay-1000"></div>
+          
+          <h3 className="text-lg font-bold text-center mb-6 text-foreground bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent animate-scale-in">
             El precio baja a medida que se suman más participantes
           </h3>
           
@@ -103,15 +107,16 @@ export const PriceSlider = () => {
           </div>
 
           {/* Current Price Display */}
-          <div className="text-center">
-            <p className="text-sm text-muted-foreground mb-1">
+          <div className="text-center relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 rounded-xl -z-10 animate-shimmer"></div>
+            <p className="text-sm text-muted-foreground mb-1 font-medium">
               Precio con {currentPrice.people} {currentPrice.people === 1 ? 'participante' : 'participantes'}
             </p>
-            <p className="text-3xl font-bold text-primary">
+            <p className="text-4xl font-black text-primary animate-bounce-subtle bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent drop-shadow-sm">
               {formatPrice(currentPrice.price)}
             </p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Precio por persona
+            <p className="text-sm text-muted-foreground mt-2 font-medium border-t border-primary/20 pt-2">
+              💰 Precio por persona
             </p>
           </div>
         </div>
