@@ -92,7 +92,7 @@ export const ServiceDescription = () => {
                     />
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="bg-white rounded-full p-0.5">
-                        <img src="/src/assets/ola-logo.png" alt="OLA Logo" className="w-8 h-8 object-contain" />
+                        <img src="/lovable-uploads/f61342f0-4c86-4d5f-8e4a-6f6380460a50.png" alt="OLA Logo" className="w-8 h-8 object-contain" />
                       </div>
                     </div>
                   </a>
