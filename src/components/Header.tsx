@@ -21,7 +21,7 @@ export const Header = ({ isVisible }: HeaderProps) => {
         {/* Logo and Brand */}
         <div className="flex items-center gap-1">
           <div className="w-12 h-12 flex items-center justify-center">
-            <img src="/lovable-uploads/f61342f0-4c86-4d5f-8e4a-6f6380460a50.png" alt="Ola Wave Logo" className="w-12 h-12 object-contain" />
+            <img src="/lovable-uploads/f61342f0-4c86-4d5f-8e4a-6f6380460a50.png" alt="Ola Wave Logo" className="w-8 h-8 object-contain" />
           </div>
           <span className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
             Ola!
