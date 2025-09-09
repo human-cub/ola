@@ -32,7 +32,7 @@ export const PriceSlider = () => {
       <div className="container mx-auto max-w-md">
         <div className="bg-gradient-card rounded-2xl p-6 shadow-floating">
           <h3 className="text-lg font-semibold text-center mb-6 text-foreground">
-            Precio por cantidad de personas
+            El precio baja a medida que se suman más participantes
           </h3>
           
           {/* Price Scale */}
@@ -92,7 +92,7 @@ export const PriceSlider = () => {
                       <span className={`text-xs ${
                         index === selectedIndex ? 'text-primary font-medium' : 'text-muted-foreground'
                       }`}>
-                        ${(item.price / 1000).toFixed(0)}k
+                        {formatPrice(item.price)}
                       </span>
                     </div>
                   );
@@ -105,10 +105,13 @@ export const PriceSlider = () => {
           {/* Current Price Display */}
           <div className="text-center">
             <p className="text-sm text-muted-foreground mb-1">
-              Para {currentPrice.people} {currentPrice.people === 1 ? 'persona' : 'personas'}
+              Precio con {currentPrice.people} {currentPrice.people === 1 ? 'participante' : 'participantes'}
             </p>
             <p className="text-3xl font-bold text-primary">
               {formatPrice(currentPrice.price)}
+            </p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Precio por persona
             </p>
           </div>
         </div>
