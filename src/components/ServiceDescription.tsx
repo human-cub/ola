@@ -86,17 +86,17 @@ export const ServiceDescription = () => {
                     className="relative"
                   >
                     <img 
-                      src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=https://ola-wave-buddy.lovable.app/" 
+                      src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=https://ola-wave-buddy.lovable.app/" 
                       alt="QR Code"
-                      className="w-20 h-20 rounded-lg border-2 border-primary/30"
+                      className="w-30 h-30 rounded-lg border-2 border-primary/30"
                     />
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="bg-white rounded-full p-1">
-                        <img src="/src/assets/ola-logo.png" alt="OLA Logo" className="w-6 h-6" />
+                      <div className="bg-white rounded-full p-0.5">
+                        <img src="/src/assets/ola-logo.png" alt="OLA Logo" className="w-8 h-8 object-contain" />
                       </div>
                     </div>
                   </a>
-                  <p className="text-xs text-muted-foreground mt-1">Escanea para visitar</p>
+                  <p className="text-xs text-muted-foreground mt-1">Compartí este sitio</p>
                 </div>
               </div>
             </div>
