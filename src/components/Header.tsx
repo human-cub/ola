@@ -8,7 +8,7 @@ interface HeaderProps {
 
 export const Header = ({ isVisible }: HeaderProps) => {
   const handleWhatsAppClick = () => {
-    window.open("https://whatsapp.com/channel/0029VbApwH83LdQPnkFyGo2p", "_blank");
+    window.open("http://wa.me/5491166650878", "_blank");
   };
 
   return (
@@ -36,7 +36,7 @@ export const Header = ({ isVisible }: HeaderProps) => {
           className="border-primary/20 hover:border-primary hover:bg-primary/5 gap-2 px-3 min-w-fit whitespace-nowrap"
         >
           <MessageCircle className="w-4 h-4" />
-          <span>Canal WhatsApp</span>
+          <span>Chateá por WhatsApp</span>
         </Button>
       </div>
     </header>
