@@ -65,7 +65,7 @@ export const PriceSlider = () => {
             </div>
             
             {/* Slider */}
-            <div className="mb-2 px-2">
+            <div className="mb-2 -mx-4">
               <Slider
                 value={[selectedIndex]}
                 onValueChange={handleSliderChange}
