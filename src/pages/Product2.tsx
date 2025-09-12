@@ -7,6 +7,7 @@ import { PriceSlider } from "@/components/PriceSlider";
 import { ProductDescription2 } from "@/components/ProductDescription2";
 import { Benefits } from "@/components/Benefits";
 import { ServiceDescription } from "@/components/ServiceDescription";
+import { RelatedProducts } from "@/components/RelatedProducts";
 import { FloatingButton } from "@/components/FloatingButton";
 
 const Product2 = () => {
@@ -42,6 +43,7 @@ const Product2 = () => {
         <ProductDescription2 />
         <Benefits />
         <ServiceDescription />
+        <RelatedProducts currentProduct="creatine" />
       </main>
 
       <FloatingButton />
