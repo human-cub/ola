@@ -28,7 +28,7 @@ export const PriceSlider = () => {
   };
 
   return (
-    <section className="px-4 pt-3 pb-4">
+    <section className="px-4 pt-1 pb-4">
       <div className="container mx-auto max-w-md">
         <div className="relative bg-gradient-card rounded-2xl p-6 shadow-floating animate-glow-pulse animate-float hover:scale-105 transition-all duration-500 border-2 animate-border-pulse backdrop-blur-sm">
           
