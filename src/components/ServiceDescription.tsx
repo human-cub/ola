@@ -85,12 +85,13 @@ export const ServiceDescription = () => {
                     href="https://ola-wave-buddy.lovable.app/" 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="block"
+                    className="block w-28 h-28 sm:w-32 sm:h-32"
+                    style={{ maxWidth: '120px', maxHeight: '120px' }}
                   >
                     <InlineSVG 
                       src="/qr_ola_logo_pulse_fix_1-2.svg"
                       alt="QR Code для сайта"
-                      className="w-24 h-24 sm:w-30 sm:h-30 max-w-full max-h-full hover:opacity-90 transition-opacity"
+                      className="w-full h-full object-contain hover:opacity-90 transition-opacity"
                     />
                   </a>
                   <p className="text-xs text-muted-foreground mt-1">Compartí este sitio</p>

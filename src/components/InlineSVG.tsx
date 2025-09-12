@@ -32,8 +32,8 @@ export const InlineSVG = ({ src, className = "", alt = "" }: InlineSVGProps) => 
                 element.style.transformOrigin = 'center center';
                 element.style.webkitTransformOrigin = 'center center';
                 // Убираем transform-box для лучшей совместимости с мобильными
-                element.style.transform = 'scale(0.9)';
-                element.style.webkitTransform = 'scale(0.9)';
+                element.style.transform = 'scale(0.8)';
+                element.style.webkitTransform = 'scale(0.8)';
               });
               
               // Пробуем также найти image элементы
@@ -44,8 +44,8 @@ export const InlineSVG = ({ src, className = "", alt = "" }: InlineSVGProps) => 
                 element.style.webkitAnimation = 'qr-logo-pulse 2s ease-in-out infinite';
                 element.style.transformOrigin = 'center center';
                 element.style.webkitTransformOrigin = 'center center';
-                element.style.transform = 'scale(0.9)';
-                element.style.webkitTransform = 'scale(0.9)';
+                element.style.transform = 'scale(0.8)';
+                element.style.webkitTransform = 'scale(0.8)';
               });
             }
             setIsLoaded(true);
