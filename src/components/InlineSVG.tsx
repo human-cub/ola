@@ -26,17 +26,26 @@ export const InlineSVG = ({ src, className = "", alt = "" }: InlineSVGProps) => 
               // Ищем элементы логотипа (цветные пути в центре)
               const logoElements = svg.querySelectorAll('path[fill*="#"], circle[fill*="#"], g[transform*="150"]');
               logoElements.forEach(el => {
-                (el as SVGElement).style.animation = 'qr-logo-pulse 2s ease-in-out infinite';
-                (el as SVGElement).style.transformOrigin = 'center';
-                (el as SVGElement).style.transformBox = 'fill-box';
+                const element = el as SVGElement;
+                element.style.animation = 'qr-logo-pulse 2s ease-in-out infinite';
+                element.style.webkitAnimation = 'qr-logo-pulse 2s ease-in-out infinite';
+                element.style.transformOrigin = 'center center';
+                element.style.webkitTransformOrigin = 'center center';
+                // Убираем transform-box для лучшей совместимости с мобильными
+                element.style.transform = 'scale(0.9)';
+                element.style.webkitTransform = 'scale(0.9)';
               });
               
               // Пробуем также найти image элементы
               const imageElements = svg.querySelectorAll('image');
               imageElements.forEach(el => {
-                (el as SVGElement).style.animation = 'qr-logo-pulse 2s ease-in-out infinite';
-                (el as SVGElement).style.transformOrigin = 'center';
-                (el as SVGElement).style.transformBox = 'fill-box';
+                const element = el as SVGElement;
+                element.style.animation = 'qr-logo-pulse 2s ease-in-out infinite';
+                element.style.webkitAnimation = 'qr-logo-pulse 2s ease-in-out infinite';
+                element.style.transformOrigin = 'center center';
+                element.style.webkitTransformOrigin = 'center center';
+                element.style.transform = 'scale(0.9)';
+                element.style.webkitTransform = 'scale(0.9)';
               });
             }
             setIsLoaded(true);
