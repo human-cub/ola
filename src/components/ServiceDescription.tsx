@@ -83,7 +83,7 @@ export const ServiceDescription = () => {
                     href="https://ola-wave-buddy.lovable.app/" 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="block"
+                    className="block qr-with-pulse"
                   >
                     <img 
                       src="/qr_ola_logo_pulse_fix_1.svg"
