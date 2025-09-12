@@ -209,14 +209,28 @@ All colors MUST be HSL.
     }
   }
   
-  /* QR Logo Pulse Animation */
-  .qr-with-pulse svg > *[transform*="150"],
-  .qr-with-pulse svg *[x*="130"][y*="130"],
-  .qr-with-pulse svg *[cx="150"][cy="150"],
-  .qr-with-pulse svg g:has(*[cx="150"][cy="150"]),
-  .qr-with-pulse svg image {
+  /* QR Logo Pulse Animation - более агрессивные селекторы */
+  .qr-with-pulse svg * {
+    animation-fill-mode: both;
+  }
+  
+  .qr-with-pulse svg *[x="130"],
+  .qr-with-pulse svg *[y="130"],
+  .qr-with-pulse svg *[cx="150"],
+  .qr-with-pulse svg *[cy="150"],
+  .qr-with-pulse svg image,
+  .qr-with-pulse svg circle[r="20"],
+  .qr-with-pulse svg g:last-child > *,
+  .qr-with-pulse svg > g:last-child,
+  .qr-with-pulse svg defs + * image,
+  .qr-with-pulse svg defs + * circle {
     animation: qr-logo-pulse 2s ease-in-out infinite !important;
-    transform-origin: center !important;
-    transform-box: fill-box !important;
+    transform-origin: 150px 150px !important;
+  }
+  
+  /* Резервный вариант - анимация всего SVG центра */
+  .qr-with-pulse:hover svg {
+    animation: qr-logo-pulse 2s ease-in-out infinite;
+    transform-origin: center;
   }
 }
