@@ -1,3 +1,5 @@
+import { InlineSVG } from './InlineSVG';
+
 export const ServiceDescription = () => {
   return <section id="service-description" className="px-4 py-4">
       <div className="container mx-auto max-w-md">
@@ -83,9 +85,9 @@ export const ServiceDescription = () => {
                     href="https://ola-wave-buddy.lovable.app/" 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="block qr-with-pulse"
+                    className="block"
                   >
-                    <img 
+                    <InlineSVG 
                       src="/qr_ola_logo_pulse_fix_1-2.svg"
                       alt="QR Code для сайта"
                       className="w-30 h-30 hover:opacity-90 transition-opacity"
