@@ -210,13 +210,13 @@ All colors MUST be HSL.
   }
   
   /* QR Logo Pulse Animation */
-  .qr-with-pulse g[id*="logo"],
-  .qr-with-pulse g[transform*="translate(150,150)"],
-  .qr-with-pulse circle[cx="150"][cy="150"] + image,
-  .qr-with-pulse image[x*="130"],
-  .qr-with-pulse image[y*="130"] {
-    animation: qr-logo-pulse 2s ease-in-out infinite;
-    transform-origin: center;
-    transform-box: fill-box;
+  .qr-with-pulse svg > *[transform*="150"],
+  .qr-with-pulse svg *[x*="130"][y*="130"],
+  .qr-with-pulse svg *[cx="150"][cy="150"],
+  .qr-with-pulse svg g:has(*[cx="150"][cy="150"]),
+  .qr-with-pulse svg image {
+    animation: qr-logo-pulse 2s ease-in-out infinite !important;
+    transform-origin: center !important;
+    transform-box: fill-box !important;
   }
 }
