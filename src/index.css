@@ -202,40 +202,10 @@ All colors MUST be HSL.
   
   @keyframes qr-logo-pulse {
     0%, 100% { 
-      transform: scale(0.8); 
+      transform: scale(1); 
     }
     50% { 
-      transform: scale(0.65); 
+      transform: scale(1.12); 
     }
-  }
-  
-  @-webkit-keyframes qr-logo-pulse {
-    0%, 100% { 
-      -webkit-transform: scale(0.8); 
-      transform: scale(0.8); 
-    }
-    50% { 
-      -webkit-transform: scale(0.65); 
-      transform: scale(0.65); 
-    }
-  }
-  
-  /* QR Logo Pulse Animation - для логотипа внутри нового SVG */
-  .qr-with-pulse svg *[fill*="#"] {
-    animation: qr-logo-pulse 2s ease-in-out infinite;
-    transform-origin: center;
-    transform-box: fill-box;
-  }
-  
-  .qr-with-pulse svg image {
-    animation: qr-logo-pulse 2s ease-in-out infinite;
-    transform-origin: center;
-    transform-box: fill-box;
-  }
-  
-  /* Анимация для всех цветных элементов в центре SVG */
-  .qr-with-pulse svg *[x*="1"][y*="1"] {
-    animation: qr-logo-pulse 2s ease-in-out infinite;
-    transform-origin: center;
   }
 }
