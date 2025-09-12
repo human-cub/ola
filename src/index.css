@@ -209,8 +209,21 @@ All colors MUST be HSL.
     }
   }
   
-  /* QR Logo Pulse Animation - только для логотипа */
-  .qr-logo-pulse {
+  /* QR Logo Pulse Animation - для логотипа внутри нового SVG */
+  .qr-with-pulse svg *[fill*="#"] {
+    animation: qr-logo-pulse 2s ease-in-out infinite;
+    transform-origin: center;
+    transform-box: fill-box;
+  }
+  
+  .qr-with-pulse svg image {
+    animation: qr-logo-pulse 2s ease-in-out infinite;
+    transform-origin: center;
+    transform-box: fill-box;
+  }
+  
+  /* Анимация для всех цветных элементов в центре SVG */
+  .qr-with-pulse svg *[x*="1"][y*="1"] {
     animation: qr-logo-pulse 2s ease-in-out infinite;
     transform-origin: center;
   }
