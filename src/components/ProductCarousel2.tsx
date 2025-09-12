@@ -1,0 +1,79 @@
+import { useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+export const ProductCarousel2 = () => {
+  const images = [
+    {
+      src: "/lovable-uploads/6c488915-6a0d-4b2b-95ed-83fb84f400db.png",
+      alt: "FitMax Protein - Vista principal"
+    },
+    {
+      src: "/lovable-uploads/b99517da-1b60-4cc9-ab51-1d60dd3d658a.png", 
+      alt: "FitMax Protein - Vista lateral"
+    },
+    {
+      src: "/lovable-uploads/f61342f0-4c86-4d5f-8e4a-6f6380460a50.png",
+      alt: "FitMax Protein - Vista posterior"
+    }
+  ];
+
+  const [currentImage, setCurrentImage] = useState(0);
+
+  const nextImage = () => {
+    setCurrentImage((prev) => (prev + 1) % images.length);
+  };
+
+  const prevImage = () => {
+    setCurrentImage((prev) => (prev - 1 + images.length) % images.length);
+  };
+
+  return (
+    <section className="px-4 py-6">
+      <div className="container mx-auto max-w-md">
+        <div className="relative bg-gradient-card rounded-2xl p-6 shadow-soft">
+          {/* Main Image */}
+          <div className="relative mb-6 group">
+            <img
+              src={images[currentImage].src}
+              alt={images[currentImage].alt}
+              className="w-full h-80 object-cover rounded-xl shadow-soft transition-transform duration-300 group-hover:scale-105"
+            />
+            
+            {/* Navigation Buttons */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={prevImage}
+              className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm hover:bg-background/90 shadow-soft"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={nextImage}
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm hover:bg-background/90 shadow-soft"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {/* Thumbnail Indicators */}
+          <div className="flex justify-center gap-2">
+            {images.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentImage(index)}
+                className={`w-3 h-3 rounded-full transition-colors duration-200 ${
+                  index === currentImage ? 'bg-primary' : 'bg-muted-foreground/30'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
