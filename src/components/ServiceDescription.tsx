@@ -88,7 +88,7 @@ export const ServiceDescription = () => {
                     <img 
                       src="/qr_ola_logo_pulse_fix_1.svg"
                       alt="QR Code для сайта"
-                      className="w-30 h-30 hover:opacity-90 transition-opacity"
+                      className="w-20 h-20 max-w-full max-h-full object-contain hover:opacity-90 transition-opacity"
                     />
                   </a>
                   <p className="text-xs text-muted-foreground mt-1">Compartí este sitio</p>
