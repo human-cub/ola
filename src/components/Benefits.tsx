@@ -20,7 +20,7 @@ const benefits = [
 
 export const Benefits = () => {
   return (
-    <section className="px-4 py-8">
+    <section className="px-4 py-4">
       <div className="container mx-auto max-w-md">
         <h3 className="text-xl font-semibold text-center mb-6 text-foreground">
           Nuestras Ventajas

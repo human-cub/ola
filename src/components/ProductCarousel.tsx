@@ -27,7 +27,7 @@ export const ProductCarousel = () => {
   };
 
   return (
-    <section className="px-4 py-8">
+    <section className="px-4 py-4">
       <div className="container mx-auto max-w-md">
         <div className="relative bg-gradient-card rounded-2xl p-6 shadow-floating">
           {/* Main Image */}

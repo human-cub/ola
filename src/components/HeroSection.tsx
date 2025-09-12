@@ -9,7 +9,7 @@ export const HeroSection = () => {
   };
 
   return (
-    <section className="pt-24 pb-8 px-4">
+    <section className="pt-24 pb-4 px-4">
       <div className="container mx-auto text-center">
         <h1 className="text-4xl md:text-5xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-4 animate-fade-in">
           Sumate al grupo, comprá al precio mayorista. Descuentos de hasta 60%
