@@ -86,15 +86,10 @@ export const ServiceDescription = () => {
                     className="relative"
                   >
                     <img 
-                      src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=https://ola-wave-buddy.lovable.app/" 
+                      src="/src/assets/qr_pulsing_logo.svg" 
                       alt="QR Code"
-                      className="w-30 h-30 rounded-lg border-2 border-primary/30"
+                      className="w-30 h-30 rounded-lg"
                     />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="bg-white rounded-full p-0.5">
-                        <img src="/lovable-uploads/f61342f0-4c86-4d5f-8e4a-6f6380460a50.png" alt="OLA Logo" className="w-8 h-8 object-contain animate-pulse" />
-                      </div>
-                    </div>
                   </a>
                   <p className="text-xs text-muted-foreground mt-1">Compartí este sitio</p>
                 </div>
