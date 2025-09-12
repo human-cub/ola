@@ -86,7 +86,7 @@ export const ServiceDescription = () => {
                     className="relative"
                   >
                     <img 
-                      src="/src/assets/qr_pulsing_logo.svg" 
+                      src="/qr_pulsing_logo.svg" 
                       alt="QR Code"
                       className="w-30 h-30 rounded-lg"
                     />
