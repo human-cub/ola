@@ -1,3 +1,5 @@
+import { QRWithPulsingLogo } from './QRWithPulsingLogo';
+
 export const ServiceDescription = () => {
   return <section id="service-description" className="px-4 py-4">
       <div className="container mx-auto max-w-md">
@@ -83,22 +85,13 @@ export const ServiceDescription = () => {
                     href="https://ola-wave-buddy.lovable.app/" 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="relative block"
+                    className="block"
                   >
-                    <img 
-                      src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=https://ola-wave-buddy.lovable.app/"
-                      alt="QR Code для сайта"
-                      className="w-30 h-30 rounded-lg border-2 border-primary/30 hover:border-primary/50 transition-colors"
+                    <QRWithPulsingLogo 
+                      url="https://ola-wave-buddy.lovable.app/"
+                      size={120}
+                      className="w-30 h-30 hover:opacity-90 transition-opacity"
                     />
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="bg-white rounded-full p-1 shadow-sm">
-                        <img 
-                          src="/qr_pulsing_logo.svg" 
-                          alt="OLA Logo" 
-                          className="w-6 h-6 object-contain animate-pulse" 
-                        />
-                      </div>
-                    </div>
                   </a>
                   <p className="text-xs text-muted-foreground mt-1">Compartí este sitio</p>
                 </div>
