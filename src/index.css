@@ -209,8 +209,8 @@ All colors MUST be HSL.
     }
   }
   
-  /* QR Logo Pulse Animation - применяем ко всему QR */
-  .qr-with-pulse img {
+  /* QR Logo Pulse Animation - только для логотипа */
+  .qr-logo-pulse {
     animation: qr-logo-pulse 2s ease-in-out infinite;
     transform-origin: center;
   }
