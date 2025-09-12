@@ -19,9 +19,17 @@ export const InlineSVG = ({ src, className = "", alt = "" }: InlineSVGProps) => 
         if (containerRef.current) {
           containerRef.current.innerHTML = svgText;
           
+          // Устанавливаем правильные размеры для SVG
+          const svg = containerRef.current.querySelector('svg');
+          if (svg) {
+            svg.setAttribute('width', '120');
+            svg.setAttribute('height', '120');
+            svg.style.width = '120px';
+            svg.style.height = '120px';
+          }
+          
           // Применяем анимацию к логотипу после загрузки
           setTimeout(() => {
-            const svg = containerRef.current?.querySelector('svg');
             if (svg) {
               // Ищем элементы логотипа (цветные пути в центре)
               const logoElements = svg.querySelectorAll('path[fill*="#"], circle[fill*="#"], g[transform*="150"]');
