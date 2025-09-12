@@ -1,5 +1,3 @@
-import { QRWithPulsingLogo } from './QRWithPulsingLogo';
-
 export const ServiceDescription = () => {
   return <section id="service-description" className="px-4 py-4">
       <div className="container mx-auto max-w-md">
@@ -87,9 +85,9 @@ export const ServiceDescription = () => {
                     rel="noopener noreferrer"
                     className="block"
                   >
-                    <QRWithPulsingLogo 
-                      url="https://ola-wave-buddy.lovable.app/"
-                      size={120}
+                    <img 
+                      src="/qr_ola_logo_pulse_fix_1.svg"
+                      alt="QR Code для сайта"
                       className="w-30 h-30 hover:opacity-90 transition-opacity"
                     />
                   </a>
