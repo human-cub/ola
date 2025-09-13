@@ -14,7 +14,7 @@ const benefits = [
   {
     icon: CreditCard,
     title: "Paga al recibir",
-    description: "Sin riesgos, pagas cuando tienes tu producto"
+    description: "Sin riesgos, pagás cuando tenés tu producto"
   }
 ];
 
