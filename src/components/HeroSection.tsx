@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/button";
 
 export const HeroSection = () => {
-  const scrollToServiceDescription = () => {
-    const element = document.getElementById('service-description');
+  const scrollToBenefits = () => {
+    const element = document.getElementById('benefits');
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
     }
@@ -16,7 +16,7 @@ export const HeroSection = () => {
         </h1>
         <div className="w-20 h-1 bg-gradient-primary mx-auto rounded-full mb-6"></div>
         <Button 
-          onClick={scrollToServiceDescription}
+          onClick={scrollToBenefits}
           className="bg-gradient-primary hover:opacity-90 text-white font-semibold px-8 py-3 rounded-full shadow-elegant transition-all duration-300 hover:shadow-glow animate-fade-in"
         >
           Más info
