@@ -28,15 +28,24 @@ export const Benefits = () => {
         
         <div className="space-y-4">
           {benefits.map((benefit, index) => (
-            <div key={index} className="bg-gradient-card rounded-xl p-4 shadow-soft flex items-center gap-4">
-              <div className="w-12 h-12 bg-gradient-primary rounded-full flex items-center justify-center shadow-soft">
-                <benefit.icon className="w-6 h-6 text-white" />
+            <div 
+              key={index} 
+              className={`${index === 2 
+                ? "bg-gradient-primary shadow-elegant border border-primary/20 animate-glow-pulse" 
+                : "bg-gradient-card shadow-soft hover:shadow-elegant transition-all duration-300"
+              } rounded-xl p-4 flex items-center gap-4`}
+            >
+              <div className={`w-12 h-12 ${index === 2 
+                ? "bg-white shadow-glow" 
+                : "bg-gradient-primary shadow-soft"
+              } rounded-full flex items-center justify-center`}>
+                <benefit.icon className={`w-6 h-6 ${index === 2 ? "text-primary" : "text-white"}`} />
               </div>
               <div className="flex-1">
-                <h4 className="font-semibold text-foreground mb-1">
+                <h4 className={`font-semibold mb-1 ${index === 2 ? "text-white" : "text-foreground"}`}>
                   {benefit.title}
                 </h4>
-                <p className="text-sm text-muted-foreground">
+                <p className={`text-sm ${index === 2 ? "text-white/90" : "text-muted-foreground"}`}>
                   {benefit.description}
                 </p>
               </div>
