@@ -1,4 +1,5 @@
 import { Percent, CreditCard, Shield } from "lucide-react";
+import { useEffect, useState } from "react";
 
 const benefits = [
   {
@@ -19,6 +20,27 @@ const benefits = [
 ];
 
 export const Benefits = () => {
+  const [isScrollPulsing, setIsScrollPulsing] = useState(false);
+
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    
+    const handleScroll = () => {
+      setIsScrollPulsing(true);
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        setIsScrollPulsing(false);
+      }, 500);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      clearTimeout(timeoutId);
+    };
+  }, []);
+
   return (
     <section id="benefits" className="px-4 py-4">
       <div className="container mx-auto max-w-md">
@@ -39,7 +61,7 @@ export const Benefits = () => {
                 ? "bg-white shadow-glow" 
                 : "bg-gradient-primary shadow-soft"
               } rounded-full flex items-center justify-center`}>
-                <benefit.icon className={`w-6 h-6 ${index === 2 ? "text-primary" : "text-white"}`} />
+                <benefit.icon className={`w-6 h-6 ${index === 2 ? "text-primary" : "text-white"} ${index === 2 && isScrollPulsing ? "animate-pulse" : ""}`} />
               </div>
               <div className="flex-1">
                 <h4 className={`font-semibold mb-1 ${index === 2 ? "text-white" : "text-foreground"}`}>
