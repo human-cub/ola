@@ -57,11 +57,8 @@ export const Benefits = () => {
                 : "bg-gradient-card shadow-soft hover:shadow-elegant transition-all duration-300"
               } rounded-xl p-4 flex items-center gap-4`}
             >
-              <div className={`w-12 h-12 ${index === 2 
-                ? "bg-white shadow-glow" 
-                : "bg-gradient-primary shadow-soft"
-              } rounded-full flex items-center justify-center`}>
-                <benefit.icon className={`w-6 h-6 ${index === 2 ? "text-primary" : "text-white"} ${index === 2 && isScrollPulsing ? "animate-pulse" : ""}`} />
+              <div className="w-12 h-12 bg-gradient-primary shadow-soft rounded-full flex items-center justify-center">
+                <benefit.icon className={`w-6 h-6 text-white ${index === 2 && isScrollPulsing ? "animate-pulse" : ""}`} />
               </div>
               <div className="flex-1">
                 <h4 className={`font-semibold mb-1 ${index === 2 ? "text-foreground" : "text-foreground"}`}>
