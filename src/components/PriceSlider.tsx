@@ -113,19 +113,19 @@ export const PriceSlider = () => {
           </div>
 
           {/* Current Price Display */}
-          <div className="text-center relative pt-8">
+          <div className="text-center relative pt-12">
             <div className={`absolute inset-0 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 rounded-xl -z-10 animate-shimmer ${showMaxGlow ? 'shadow-glow animate-pulse' : ''}`}></div>
             
             {/* Maximum discount badge */}
             {selectedIndex === 4 && (
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10 animate-scale-in">
+              <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 z-10 animate-scale-in">
                 <span className="bg-primary text-white px-4 py-2 rounded-full text-sm font-bold shadow-glow animate-bounce-subtle">
                   🎉 Máximo descuento
                 </span>
               </div>
             )}
             
-            <p className="text-sm text-muted-foreground mb-1 font-medium mt-2">
+            <p className="text-sm text-muted-foreground mb-1 font-medium">
               Precio con {currentPrice.people} {currentPrice.people === 1 ? 'participante' : 'participantes'}
             </p>
             
