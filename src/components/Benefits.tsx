@@ -53,7 +53,7 @@ export const Benefits = () => {
             <div 
               key={index} 
               className={`${index === 2 
-                ? "bg-gradient-primary shadow-elegant border border-primary/20 animate-glow-pulse" 
+                ? "shadow-elegant border border-primary/20 animate-glow-pulse" 
                 : "bg-gradient-card shadow-soft hover:shadow-elegant transition-all duration-300"
               } rounded-xl p-4 flex items-center gap-4`}
             >
@@ -64,10 +64,10 @@ export const Benefits = () => {
                 <benefit.icon className={`w-6 h-6 ${index === 2 ? "text-primary" : "text-white"} ${index === 2 && isScrollPulsing ? "animate-pulse" : ""}`} />
               </div>
               <div className="flex-1">
-                <h4 className={`font-semibold mb-1 ${index === 2 ? "text-white" : "text-foreground"}`}>
+                <h4 className={`font-semibold mb-1 ${index === 2 ? "text-foreground" : "text-foreground"}`}>
                   {benefit.title}
                 </h4>
-                <p className={`text-sm ${index === 2 ? "text-white/90" : "text-muted-foreground"}`}>
+                <p className={`text-sm ${index === 2 ? "text-muted-foreground" : "text-muted-foreground"}`}>
                   {benefit.description}
                 </p>
               </div>
