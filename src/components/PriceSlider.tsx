@@ -25,7 +25,7 @@ export const PriceSlider = () => {
   };
 
   const currentPrice = priceData[selectedIndex];
-  const retailPrice = Math.round(currentPrice.price * 1.25); // 25% higher retail price
+  const retailPrice = priceData[0].price; // Use price for 1 person as retail price
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('es-AR', {
