@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Slider } from "@/components/ui/slider";
 
 const priceData = [
@@ -11,12 +11,21 @@ const priceData = [
 
 export const PriceSlider = () => {
   const [selectedIndex, setSelectedIndex] = useState(4); // Default to 100 people
+  const [showMaxGlow, setShowMaxGlow] = useState(false);
 
   const handleSliderChange = (value: number[]) => {
-    setSelectedIndex(value[0]);
+    const newIndex = value[0];
+    setSelectedIndex(newIndex);
+    
+    // Trigger glow animation when reaching maximum
+    if (newIndex === 4) {
+      setShowMaxGlow(true);
+      setTimeout(() => setShowMaxGlow(false), 1000);
+    }
   };
 
   const currentPrice = priceData[selectedIndex];
+  const retailPrice = Math.round(currentPrice.price * 1.25); // 25% higher retail price
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('es-AR', {
@@ -105,14 +114,39 @@ export const PriceSlider = () => {
 
           {/* Current Price Display */}
           <div className="text-center relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 rounded-xl -z-10 animate-shimmer"></div>
+            <div className={`absolute inset-0 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 rounded-xl -z-10 animate-shimmer ${showMaxGlow ? 'shadow-glow animate-pulse' : ''}`}></div>
+            
+            {/* Maximum discount badge */}
+            {selectedIndex === 4 && (
+              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
+                <span className="bg-primary text-white px-3 py-1 rounded-full text-xs font-bold animate-bounce-subtle shadow-glow">
+                  Máximo descuento
+                </span>
+              </div>
+            )}
+            
             <p className="text-sm text-muted-foreground mb-1 font-medium">
               Precio con {currentPrice.people} {currentPrice.people === 1 ? 'participante' : 'participantes'}
             </p>
-            <p className="text-4xl font-black text-primary animate-bounce-subtle bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent drop-shadow-sm">
-              {formatPrice(currentPrice.price)}
-            </p>
-            <p className="text-sm text-muted-foreground mt-2 font-medium border-t border-primary/20 pt-2">
+            
+            <div className="flex items-center justify-center gap-3 mb-2">
+              {/* Crossed out retail price */}
+              <span className="text-lg text-gray-400 line-through font-medium">
+                {formatPrice(retailPrice)}
+              </span>
+              
+              {/* Main price with glow animation */}
+              <div className={`relative ${showMaxGlow ? 'animate-pulse' : ''}`}>
+                {showMaxGlow && (
+                  <div className="absolute inset-0 bg-primary/20 rounded-lg blur-md animate-ping"></div>
+                )}
+                <p className="text-4xl font-black text-primary animate-bounce-subtle bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent drop-shadow-sm relative z-10">
+                  {formatPrice(currentPrice.price)}
+                </p>
+              </div>
+            </div>
+            
+            <p className="text-sm text-muted-foreground font-medium border-t border-primary/20 pt-2">
               💰 Precio por persona
             </p>
           </div>
