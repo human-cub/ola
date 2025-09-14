@@ -118,9 +118,9 @@ export const PriceSlider = () => {
             
             {/* Maximum discount badge */}
             {selectedIndex === 4 && (
-              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
-                <span className="bg-primary text-white px-3 py-1 rounded-full text-xs font-bold animate-bounce-subtle shadow-glow">
-                  Máximo descuento
+              <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 z-10 animate-scale-in">
+                <span className="bg-primary text-white px-4 py-2 rounded-full text-sm font-bold shadow-glow animate-bounce-subtle">
+                  🎉 Máximo descuento
                 </span>
               </div>
             )}
