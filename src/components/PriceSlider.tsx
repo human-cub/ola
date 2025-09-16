@@ -2,11 +2,11 @@ import { useState, useEffect } from "react";
 import { Slider } from "@/components/ui/slider";
 
 const priceData = [
-  { people: 1, price: 55000 },
-  { people: 10, price: 46000 },
-  { people: 30, price: 40000 },
-  { people: 50, price: 37000 },
-  { people: 100, price: 31500 },
+  { people: 1, price: 64000 },
+  { people: 10, price: 52500 },
+  { people: 30, price: 46000 },
+  { people: 50, price: 40000 },
+  { people: 100, price: 36200 },
 ];
 
 export const PriceSlider = () => {
