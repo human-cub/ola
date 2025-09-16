@@ -19,9 +19,9 @@ export const ProductCarousel = () => {
   };
 
   return (
-    <section className="px-4 py-4">
-      <div className="container mx-auto max-w-lg">
-        <div className="relative bg-gradient-card rounded-2xl p-6 shadow-floating">
+    <section className="px-2 py-4 sm:px-4">
+      <div className="container mx-auto max-w-xs sm:max-w-lg">
+        <div className="relative bg-gradient-card rounded-2xl p-4 sm:p-6 shadow-floating">
           {/* Main Image */}
           <div className="relative aspect-square overflow-hidden rounded-xl mb-4">
             <img
@@ -35,17 +35,17 @@ export const ProductCarousel = () => {
               variant="ghost"
               size="icon"
               onClick={prevImage}
-              className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white/90 shadow-soft"
+              className="absolute -left-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white shadow-soft w-8 h-8 sm:w-10 sm:h-10"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
               onClick={nextImage}
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white/90 shadow-soft"
+              className="absolute -right-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white shadow-soft w-8 h-8 sm:w-10 sm:h-10"
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
             </Button>
           </div>
 
