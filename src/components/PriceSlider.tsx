@@ -39,15 +39,6 @@ export const PriceSlider = () => {
   return (
     <section className="px-4 pt-1 pb-4">
       <div className="container mx-auto max-w-md">
-        {/* Maximum discount badge - positioned outside the card */}
-        {selectedIndex === 4 && (
-          <div className="text-center mb-2 animate-scale-in">
-            <span className="bg-primary text-white px-4 py-2 rounded-full text-sm font-bold shadow-glow animate-bounce-subtle">
-              🎉 Máximo descuento
-            </span>
-          </div>
-        )}
-        
         <div className="relative bg-gradient-card rounded-2xl p-6 shadow-floating animate-glow-pulse animate-float hover:scale-105 transition-all duration-500 border-2 animate-border-pulse backdrop-blur-sm">
           
           <h3 className="text-lg font-bold text-center mb-6 text-foreground bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent animate-scale-in">
