@@ -11,7 +11,7 @@ export const FloatingButton = () => {
 
   useEffect(() => {
     const calculateTimeLeft = () => {
-      const targetDate = new Date('2024-09-28T23:59:59');
+      const targetDate = new Date('2025-09-28T23:59:59');
       const now = new Date();
       const difference = targetDate.getTime() - now.getTime();
 
