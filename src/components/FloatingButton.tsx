@@ -4,30 +4,33 @@ import { Button } from "@/components/ui/button";
 
 export const FloatingButton = () => {
   const [timeLeft, setTimeLeft] = useState({
-    days: 2,
-    hours: 14,
-    minutes: 35
+    days: 0,
+    hours: 0,
+    minutes: 0
   });
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        let { days, hours, minutes } = prev;
+    const calculateTimeLeft = () => {
+      const targetDate = new Date('2024-09-28T23:59:59');
+      const now = new Date();
+      const difference = targetDate.getTime() - now.getTime();
+
+      if (difference > 0) {
+        const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
         
-        if (minutes > 0) {
-          minutes--;
-        } else if (hours > 0) {
-          hours--;
-          minutes = 59;
-        } else if (days > 0) {
-          days--;
-          hours = 23;
-          minutes = 59;
-        }
-        
-        return { days, hours, minutes };
-      });
-    }, 60000); // Update every minute
+        setTimeLeft({ days, hours, minutes });
+      } else {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0 });
+      }
+    };
+
+    // Calculate immediately
+    calculateTimeLeft();
+    
+    // Update every minute
+    const timer = setInterval(calculateTimeLeft, 60000);
 
     return () => clearInterval(timer);
   }, []);
