@@ -55,22 +55,22 @@ export const ProductCarousel = () => {
               </DialogContent>
             </Dialog>
             
-            {/* Navigation Buttons - Blue Circular Style */}
+            {/* Navigation Buttons - No Background, Blue Arrows Only */}
             <Button
               variant="ghost"
               size="icon"
               onClick={prevImage}
-              className="absolute left-4 top-1/2 -translate-y-1/2 bg-primary hover:bg-primary/90 text-white border-0 w-12 h-12 rounded-full shadow-lg"
+              className="absolute left-4 top-1/2 -translate-y-1/2 bg-transparent hover:bg-transparent text-primary hover:text-primary/80 border-0 w-12 h-12"
             >
-              <ChevronLeft className="w-5 h-5" />
+              <ChevronLeft className="w-6 h-6" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
               onClick={nextImage}
-              className="absolute right-4 top-1/2 -translate-y-1/2 bg-primary hover:bg-primary/90 text-white border-0 w-12 h-12 rounded-full shadow-lg"
+              className="absolute right-4 top-1/2 -translate-y-1/2 bg-transparent hover:bg-transparent text-primary hover:text-primary/80 border-0 w-12 h-12"
             >
-              <ChevronRight className="w-5 h-5" />
+              <ChevronRight className="w-6 h-6" />
             </Button>
 
             {/* Image Counter */}
