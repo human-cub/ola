@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
 const images = [
   { src: "/truemade-protein-main.webp", alt: "TrueMade Whey Protein - Producto principal" },
@@ -9,6 +10,7 @@ const images = [
 
 export const ProductCarousel = () => {
   const [currentImage, setCurrentImage] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const nextImage = () => {
     setCurrentImage((prev) => (prev + 1) % images.length);
@@ -19,46 +21,74 @@ export const ProductCarousel = () => {
   };
 
   return (
-    <section className="px-2 py-4 sm:px-4">
-      <div className="container mx-auto max-w-xs sm:max-w-lg">
-        <div className="relative bg-gradient-card rounded-2xl p-4 sm:p-6 shadow-floating">
-          {/* Main Image */}
-          <div className="relative aspect-square overflow-hidden rounded-xl mb-4">
-            <img
-              src={images[currentImage].src}
-              alt={images[currentImage].alt}
-              className="w-full h-full object-cover transition-all duration-300"
-            />
+    <section className="py-6">
+      <div className="w-full">
+        <div className="relative">
+          {/* Main Image - Full Width */}
+          <div className="relative h-[50vh] sm:h-[60vh] overflow-hidden">
+            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+              <DialogTrigger asChild>
+                <button className="w-full h-full block cursor-zoom-in">
+                  <img
+                    src={images[currentImage].src}
+                    alt={images[currentImage].alt}
+                    className="w-full h-full object-cover transition-all duration-300 hover:scale-105"
+                  />
+                </button>
+              </DialogTrigger>
+              <DialogContent className="max-w-7xl w-full h-full max-h-[90vh] p-0 bg-black/95 border-0">
+                <div className="relative w-full h-full flex items-center justify-center">
+                  <img
+                    src={images[currentImage].src}
+                    alt={images[currentImage].alt}
+                    className="max-w-full max-h-full object-contain"
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setIsModalOpen(false)}
+                    className="absolute top-4 right-4 bg-white/20 hover:bg-white/30 text-white"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
             
             {/* Navigation Buttons */}
             <Button
               variant="ghost"
               size="icon"
               onClick={prevImage}
-              className="absolute -left-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white shadow-soft w-8 h-8 sm:w-10 sm:h-10"
+              className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white border-0 w-12 h-12"
             >
-              <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4" />
+              <ChevronLeft className="w-5 h-5" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
               onClick={nextImage}
-              className="absolute -right-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white shadow-soft w-8 h-8 sm:w-10 sm:h-10"
+              className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white border-0 w-12 h-12"
             >
-              <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
+              <ChevronRight className="w-5 h-5" />
             </Button>
+
+            {/* Image Counter */}
+            <div className="absolute bottom-4 right-4 bg-black/60 text-white px-3 py-1 rounded-full text-sm">
+              {currentImage + 1} / {images.length}
+            </div>
           </div>
 
           {/* Thumbnail Dots */}
-          <div className="flex justify-center gap-2">
+          <div className="flex justify-center gap-3 mt-4 px-4">
             {images.map((_, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentImage(index)}
-                className={`w-3 h-3 rounded-full transition-all duration-200 ${
+                className={`w-4 h-4 rounded-full transition-all duration-200 ${
                   index === currentImage
-                    ? "bg-primary scale-110"
-                    : "bg-muted hover:bg-muted-foreground/30"
+                    ? "bg-primary scale-110 shadow-lg"
+                    : "bg-muted hover:bg-muted-foreground/50 hover:scale-105"
                 }`}
               />
             ))}
