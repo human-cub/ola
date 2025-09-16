@@ -24,15 +24,15 @@ export const ProductCarousel = () => {
     <section className="py-6">
       <div className="w-full">
         <div className="relative">
-          {/* Main Image - Full Width */}
-          <div className="relative h-[50vh] sm:h-[60vh] overflow-hidden">
+          {/* Main Image - Responsive Height */}
+          <div className="relative h-[50vh] md:h-[70vh] lg:h-[80vh] max-h-[600px] overflow-hidden">
             <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
               <DialogTrigger asChild>
                 <button className="w-full h-full block cursor-zoom-in">
                   <img
                     src={images[currentImage].src}
                     alt={images[currentImage].alt}
-                    className="w-full h-full object-cover transition-all duration-300 hover:scale-105"
+                    className="w-full h-full object-contain md:object-cover transition-all duration-300 hover:scale-105"
                   />
                 </button>
               </DialogTrigger>
@@ -55,12 +55,12 @@ export const ProductCarousel = () => {
               </DialogContent>
             </Dialog>
             
-            {/* Navigation Buttons */}
+            {/* Navigation Buttons - Blue Circular Style */}
             <Button
               variant="ghost"
               size="icon"
               onClick={prevImage}
-              className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white border-0 w-12 h-12"
+              className="absolute left-4 top-1/2 -translate-y-1/2 bg-primary hover:bg-primary/90 text-white border-0 w-12 h-12 rounded-full shadow-lg"
             >
               <ChevronLeft className="w-5 h-5" />
             </Button>
@@ -68,7 +68,7 @@ export const ProductCarousel = () => {
               variant="ghost"
               size="icon"
               onClick={nextImage}
-              className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white border-0 w-12 h-12"
+              className="absolute right-4 top-1/2 -translate-y-1/2 bg-primary hover:bg-primary/90 text-white border-0 w-12 h-12 rounded-full shadow-lg"
             >
               <ChevronRight className="w-5 h-5" />
             </Button>
