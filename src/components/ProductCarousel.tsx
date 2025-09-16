@@ -1,18 +1,10 @@
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import proteinMain from "@/assets/protein-main.jpg";
-import proteinSide from "@/assets/protein-side.jpg";
-import proteinBack from "@/assets/protein-back.jpg";
-import proteinOpen from "@/assets/protein-open.jpg";
-import proteinShake from "@/assets/protein-shake.jpg";
 
 const images = [
-  { src: proteinMain, alt: "TrueMade Whey Protein - Vista principal" },
-  { src: proteinSide, alt: "TrueMade Whey Protein - Vista lateral" },
-  { src: proteinBack, alt: "TrueMade Whey Protein - Vista posterior" },
-  { src: proteinOpen, alt: "TrueMade Whey Protein - Vista abierta" },
-  { src: proteinShake, alt: "TrueMade Whey Protein - Con batido" },
+  { src: "/truemade-protein-main.webp", alt: "TrueMade Whey Protein - Producto principal" },
+  { src: "/truemade-protein-nutrition.webp", alt: "TrueMade Whey Protein - Información nutricional" },
 ];
 
 export const ProductCarousel = () => {
@@ -28,7 +20,7 @@ export const ProductCarousel = () => {
 
   return (
     <section className="px-4 py-4">
-      <div className="container mx-auto max-w-md">
+      <div className="container mx-auto max-w-lg">
         <div className="relative bg-gradient-card rounded-2xl p-6 shadow-floating">
           {/* Main Image */}
           <div className="relative aspect-square overflow-hidden rounded-xl mb-4">
