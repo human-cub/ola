@@ -25,14 +25,14 @@ export const ProductCarousel = () => {
       <div className="w-full">
         <div className="relative">
           {/* Main Image - Responsive Height */}
-          <div className="relative h-[50vh] md:h-[70vh] lg:h-[80vh] max-h-[600px] overflow-hidden">
+          <div className="relative h-[50vh] md:h-[75vh] lg:h-[80vh] max-h-[700px] overflow-hidden bg-gradient-to-br from-muted/20 to-muted/5">
             <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
               <DialogTrigger asChild>
                 <button className="w-full h-full block cursor-zoom-in">
                   <img
                     src={images[currentImage].src}
                     alt={images[currentImage].alt}
-                    className="w-full h-full object-contain md:object-cover transition-all duration-300 hover:scale-105"
+                    className="w-full h-full object-contain transition-all duration-300 hover:scale-105"
                   />
                 </button>
               </DialogTrigger>
