@@ -78,7 +78,7 @@ export const ProcessSteps = () => {
                   <p className="text-muted-foreground text-center text-sm leading-relaxed">
                     {step.description}
                     {index === 2 && (
-                      <span className="block mt-2 text-primary/80 font-medium">
+                      <span className="block mt-2">
                         Si el grupo llega al máximo antes, hacemos el pedido más rápido
                       </span>
                     )}
