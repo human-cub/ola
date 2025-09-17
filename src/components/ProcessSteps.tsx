@@ -66,11 +66,51 @@ export const ProcessSteps = () => {
                       </div>
                     </div>
                     
-                    {/* Mobile/Tablet Vertical Line */}
-                    <div className="lg:hidden absolute bottom-0 left-1/2 w-0.5 h-4 bg-gradient-to-b from-primary/60 to-primary/20 transform -translate-x-1/2 translate-y-4">
-                      <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1">
-                        <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
-                      </div>
+                    {/* Mobile Curved Connections */}
+                    <div className="lg:hidden absolute bottom-0 w-full h-16 pointer-events-none">
+                      <svg 
+                        className="absolute bottom-0 w-full h-16" 
+                        viewBox="0 0 300 64" 
+                        fill="none"
+                      >
+                        <defs>
+                          <linearGradient id={`curveGradient${index}`} x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.6"/>
+                            <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.2"/>
+                          </linearGradient>
+                        </defs>
+                        {/* Alternating curved paths */}
+                        {index % 2 === 0 ? (
+                          // Left curve (steps 1-2, 3-4, 5-6)
+                          <path
+                            d="M150 0 Q75 32 150 64"
+                            stroke={`url(#curveGradient${index})`}
+                            strokeWidth="2"
+                            fill="none"
+                            strokeDasharray="5,5"
+                            className="animate-pulse"
+                          />
+                        ) : (
+                          // Right curve (steps 2-3, 4-5)
+                          <path
+                            d="M150 0 Q225 32 150 64"
+                            stroke={`url(#curveGradient${index})`}
+                            strokeWidth="2"
+                            fill="none"
+                            strokeDasharray="5,5"
+                            className="animate-pulse"
+                          />
+                        )}
+                        {/* Connection dot */}
+                        <circle
+                          cx="150"
+                          cy="64"
+                          r="3"
+                          fill="hsl(var(--primary))"
+                          className="animate-pulse"
+                          style={{ animationDelay: `${index * 0.3}s` }}
+                        />
+                      </svg>
                     </div>
                   </>
                 )}
