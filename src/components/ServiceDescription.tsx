@@ -7,7 +7,7 @@ export const ServiceDescription = () => {
               ¿Buscás precios más bajos?
             </h3>
             <p className="text-lg font-semibold text-primary mb-4">
-              ¡Basta de pagar de más! Comprando en grupo podemos cambiar las reglas del juego.
+              ¡Basta de pagar de más! Comprando en grupo ya no tenés que buscar descuentos, los creamos nosotros mismos
             </p>
           </div>
 
