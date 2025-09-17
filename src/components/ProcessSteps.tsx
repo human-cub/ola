@@ -47,100 +47,87 @@ export const ProcessSteps = () => {
           </p>
         </div>
         
-        <div className="relative grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="relative max-w-sm mx-auto space-y-12">
           {steps.map((step, index) => {
             const IconComponent = step.icon;
+            const isLastStep = index === steps.length - 1;
+            
             return (
-              <div
-                key={index}
-                className="relative bg-background rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300 border border-border/50 animate-fade-in group"
-                style={{ animationDelay: `${index * 0.2}s`, animationFillMode: 'both' }}
-              >
-                {/* Connection Lines to Next Step */}
-                {index < steps.length - 1 && (
-                  <>
-                    {/* Desktop Horizontal Line */}
-                    <div className="hidden lg:block absolute top-1/2 -right-4 w-8 h-0.5 bg-gradient-to-r from-primary/60 to-primary/20 transform -translate-y-1/2">
-                      <div className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-1">
-                        <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
-                      </div>
-                    </div>
-                    
-                    {/* Mobile Side Curved Connections */}
-                    <div className="lg:hidden absolute bottom-0 w-full h-16 pointer-events-none">
-                      <svg 
-                        className="absolute bottom-0 w-full h-16" 
-                        viewBox="0 0 100 64" 
-                        fill="none"
-                        preserveAspectRatio="none"
-                      >
-                        <defs>
-                          <linearGradient id={`mobileCurve${index}`} x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.7"/>
-                            <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.3"/>
-                          </linearGradient>
-                        </defs>
-                        
-                        {/* Alternating side curves */}
-                        {index % 2 === 0 ? (
-                          // Right side curve (blocks 1-2, 3-4, 5-6)
-                          <>
-                            <path
-                              d="M85 0 Q100 20 85 40 Q70 60 85 64"
-                              stroke={`url(#mobileCurve${index})`}
-                              strokeWidth="2"
-                              fill="none"
-                              strokeDasharray="4,4"
-                            />
-                            <circle cx="85" cy="64" r="2" fill="hsl(var(--primary))" opacity="0.8"/>
-                          </>
-                        ) : (
-                          // Left side curve (blocks 2-3, 4-5)  
-                          <>
-                            <path
-                              d="M15 0 Q0 20 15 40 Q30 60 15 64"
-                              stroke={`url(#mobileCurve${index})`}
-                              strokeWidth="2"
-                              fill="none"
-                              strokeDasharray="4,4"
-                            />
-                            <circle cx="15" cy="64" r="2" fill="hsl(var(--primary))" opacity="0.8"/>
-                          </>
-                        )}
-                      </svg>
-                    </div>
-                  </>
-                )}
-                
-                {/* Flow Arrow for Better Connection */}
-                {index < steps.length - 1 && index % 3 === 2 && (
-                  <div className="hidden lg:block absolute -bottom-8 left-1/2 transform -translate-x-1/2">
-                    <div className="flex items-center space-x-2 text-primary/60">
-                      <div className="w-8 h-0.5 bg-gradient-to-r from-transparent to-primary/40"></div>
-                      <div className="w-3 h-3 border-r-2 border-b-2 border-primary/60 transform rotate-45"></div>
-                      <div className="w-8 h-0.5 bg-gradient-to-r from-primary/40 to-transparent"></div>
+              <div key={index} className="relative">
+                {/* Step Block */}
+                <div
+                  className="relative bg-background rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300 border border-border/50 animate-fade-in mx-6"
+                  style={{ animationDelay: `${index * 0.2}s`, animationFillMode: 'both' }}
+                >
+                  {/* Step Number */}
+                  <div className="absolute -top-4 -left-4 w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center text-white font-bold text-sm z-10">
+                    {index + 1}
+                  </div>
+                  
+                  {/* Icon */}
+                  <div className="mb-4 flex justify-center">
+                    <div className="w-16 h-16 bg-gradient-primary/10 rounded-full flex items-center justify-center">
+                      <IconComponent className="w-8 h-8 text-primary" />
                     </div>
                   </div>
-                )}
-                {/* Step Number */}
-                <div className="absolute -top-4 -left-4 w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center text-white font-bold text-sm">
-                  {index + 1}
+                  
+                  {/* Content */}
+                  <h3 className="text-lg font-semibold text-foreground mb-3 text-center">
+                    {step.title}
+                  </h3>
+                  <p className="text-muted-foreground text-center text-sm leading-relaxed">
+                    {step.description}
+                  </p>
                 </div>
-                
-                {/* Icon */}
-                <div className="mb-4 flex justify-center">
-                  <div className="w-16 h-16 bg-gradient-primary/10 rounded-full flex items-center justify-center">
-                    <IconComponent className="w-8 h-8 text-primary" />
+
+                {/* External Curved Connections */}
+                {!isLastStep && (
+                  <div className="absolute top-full left-0 right-0 h-12 pointer-events-none">
+                    <svg 
+                      className="absolute inset-0 w-full h-full" 
+                      viewBox="0 0 400 48"
+                      fill="none"
+                      preserveAspectRatio="xMidYMid meet"
+                    >
+                      <defs>
+                        <linearGradient id={`connectionGrad${index}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                          <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.8"/>
+                          <stop offset="50%" stopColor="hsl(var(--primary))" stopOpacity="0.6"/>
+                          <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.4"/>
+                        </linearGradient>
+                      </defs>
+                      
+                      {/* Alternating curved paths */}
+                      {index % 2 === 0 ? (
+                        // Right side curve (steps 1-2, 3-4, 5-6)
+                        <>
+                          <path
+                            d="M320 0 Q380 12 350 24 Q320 36 360 48"
+                            stroke={`url(#connectionGrad${index})`}
+                            strokeWidth="2.5"
+                            fill="none"
+                            strokeDasharray="6,4"
+                            className="opacity-80"
+                          />
+                          <circle cx="360" cy="48" r="3" fill="hsl(var(--primary))" opacity="0.8"/>
+                        </>
+                      ) : (
+                        // Left side curve (steps 2-3, 4-5)  
+                        <>
+                          <path
+                            d="M80 0 Q20 12 50 24 Q80 36 40 48"
+                            stroke={`url(#connectionGrad${index})`}
+                            strokeWidth="2.5"
+                            fill="none"
+                            strokeDasharray="6,4"
+                            className="opacity-80"
+                          />
+                          <circle cx="40" cy="48" r="3" fill="hsl(var(--primary))" opacity="0.8"/>
+                        </>
+                      )}
+                    </svg>
                   </div>
-                </div>
-                
-                {/* Content */}
-                <h3 className="text-lg font-semibold text-foreground mb-3 text-center min-h-[3rem] flex items-center justify-center">
-                  {step.title}
-                </h3>
-                <p className="text-muted-foreground text-center text-sm leading-relaxed">
-                  {step.description}
-                </p>
+                )}
               </div>
             );
           })}
