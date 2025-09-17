@@ -6,6 +6,7 @@ import { ProductInfo } from "@/components/ProductInfo";
 import { PriceSlider } from "@/components/PriceSlider";
 import { ProductDescription } from "@/components/ProductDescription";
 import { Benefits } from "@/components/Benefits";
+import { ProcessSteps } from "@/components/ProcessSteps";
 import { ServiceDescription } from "@/components/ServiceDescription";
 import { RelatedProducts } from "@/components/RelatedProducts";
 import { FloatingButton } from "@/components/FloatingButton";
@@ -42,6 +43,7 @@ const Index = () => {
         <PriceSlider />
         <ProductDescription />
         <Benefits />
+        <ProcessSteps />
         <ServiceDescription />
         <RelatedProducts currentProduct="protein" />
       </main>
