@@ -84,21 +84,6 @@ export const ProcessSteps = () => {
             );
           })}
         </div>
-        
-        {/* Process Flow Indicator */}
-        <div className="text-center mt-12">
-          <div className="flex items-center justify-center space-x-4 text-primary/60">
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-primary rounded-full animate-pulse"></div>
-              <div className="hidden sm:block text-sm font-medium">Proceso continuo</div>
-            </div>
-            <div className="w-16 h-0.5 bg-gradient-to-r from-primary/40 via-primary/60 to-primary/40"></div>
-            <div className="flex items-center space-x-2">
-              <div className="hidden sm:block text-sm font-medium">Sin interrupciones</div>
-              <div className="w-3 h-3 bg-primary rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
-            </div>
-          </div>
-        </div>
       </div>
     </section>
   );
