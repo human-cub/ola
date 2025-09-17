@@ -80,51 +80,52 @@ export const ProcessSteps = () => {
                   </p>
                 </div>
 
-                {/* External Curved Connections between blocks */}
+                {/* Curved Connection Lines between block edges */}
                 {!isLastStep && (
-                  <div className="absolute top-full left-0 right-0 h-12 w-full pointer-events-none z-0">
+                  <div className="absolute top-1/2 left-0 w-full h-24 pointer-events-none z-0" style={{ transform: 'translateY(50%)' }}>
                     <svg 
                       className="absolute inset-0 w-full h-full" 
-                      viewBox="0 0 100 48"
+                      viewBox="0 0 100 100"
                       fill="none"
                       preserveAspectRatio="none"
                     >
                       <defs>
-                        <linearGradient id={`connectionGrad${index}`} x1="0%" y1="0%" x2="100%" y2="0%">
-                          <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.7"/>
-                          <stop offset="50%" stopColor="hsl(var(--primary))" stopOpacity="0.9"/>
-                          <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.7"/>
+                        <linearGradient id={`edgeConnection${index}`} x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.8"/>
+                          <stop offset="50%" stopColor="hsl(var(--primary))" stopOpacity="0.6"/>
+                          <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.8"/>
                         </linearGradient>
                       </defs>
                       
-                      {/* Alternating curved paths connecting block sides */}
+                      {/* Alternating curved paths from edge center to edge center */}
                       {index % 2 === 0 ? (
-                        // Right side curve: from right side of current block to left side of next block
+                        // Right to left: from right edge center of current block to left edge center of next block
                         <path
-                          d="M75 0 Q95 12 95 24 Q95 36 25 48"
-                          stroke={`url(#connectionGrad${index})`}
+                          d="M85 10 Q95 25 95 50 Q95 75 15 90"
+                          stroke={`url(#edgeConnection${index})`}
                           strokeWidth="2"
                           fill="none"
-                          strokeDasharray="5,3"
+                          strokeDasharray="4,3"
                           className="opacity-80"
                         />
                       ) : (
-                        // Left side curve: from left side of current block to right side of next block  
+                        // Left to right: from left edge center of current block to right edge center of next block  
                         <path
-                          d="M25 0 Q5 12 5 24 Q5 36 75 48"
-                          stroke={`url(#connectionGrad${index})`}
+                          d="M15 10 Q5 25 5 50 Q5 75 85 90"
+                          stroke={`url(#edgeConnection${index})`}
                           strokeWidth="2"
                           fill="none"
-                          strokeDasharray="5,3"
+                          strokeDasharray="4,3"
                           className="opacity-80"
                         />
                       )}
                       
-                      {/* Connection dot at the end */}
+                      {/* Small dots at connection points */}
+                      <circle cx="85" cy="10" r="1.5" fill="hsl(var(--primary))" opacity="0.6"/>
                       <circle 
-                        cx={index % 2 === 0 ? "25" : "75"} 
-                        cy="48" 
-                        r="2" 
+                        cx={index % 2 === 0 ? "15" : "85"} 
+                        cy="90" 
+                        r="1.5" 
                         fill="hsl(var(--primary))" 
                         opacity="0.8"
                       />
