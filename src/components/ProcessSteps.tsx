@@ -80,51 +80,54 @@ export const ProcessSteps = () => {
                   </p>
                 </div>
 
-                {/* External Curved Connections */}
+                {/* External Curved Connections between blocks */}
                 {!isLastStep && (
-                  <div className="absolute top-full left-0 right-0 h-12 pointer-events-none">
+                  <div className="absolute top-full left-0 right-0 h-12 w-full pointer-events-none z-0">
                     <svg 
                       className="absolute inset-0 w-full h-full" 
-                      viewBox="0 0 400 48"
+                      viewBox="0 0 100 48"
                       fill="none"
-                      preserveAspectRatio="xMidYMid meet"
+                      preserveAspectRatio="none"
                     >
                       <defs>
-                        <linearGradient id={`connectionGrad${index}`} x1="0%" y1="0%" x2="0%" y2="100%">
-                          <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.8"/>
-                          <stop offset="50%" stopColor="hsl(var(--primary))" stopOpacity="0.6"/>
-                          <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.4"/>
+                        <linearGradient id={`connectionGrad${index}`} x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.7"/>
+                          <stop offset="50%" stopColor="hsl(var(--primary))" stopOpacity="0.9"/>
+                          <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.7"/>
                         </linearGradient>
                       </defs>
                       
-                      {/* Alternating curved paths */}
+                      {/* Alternating curved paths connecting block sides */}
                       {index % 2 === 0 ? (
-                        // Right side curve (steps 1-2, 3-4, 5-6)
-                        <>
-                          <path
-                            d="M320 0 Q380 12 350 24 Q320 36 360 48"
-                            stroke={`url(#connectionGrad${index})`}
-                            strokeWidth="2.5"
-                            fill="none"
-                            strokeDasharray="6,4"
-                            className="opacity-80"
-                          />
-                          <circle cx="360" cy="48" r="3" fill="hsl(var(--primary))" opacity="0.8"/>
-                        </>
+                        // Right side curve: from right side of current block to left side of next block
+                        <path
+                          d="M75 0 Q95 12 95 24 Q95 36 25 48"
+                          stroke={`url(#connectionGrad${index})`}
+                          strokeWidth="2"
+                          fill="none"
+                          strokeDasharray="5,3"
+                          className="opacity-80"
+                        />
                       ) : (
-                        // Left side curve (steps 2-3, 4-5)  
-                        <>
-                          <path
-                            d="M80 0 Q20 12 50 24 Q80 36 40 48"
-                            stroke={`url(#connectionGrad${index})`}
-                            strokeWidth="2.5"
-                            fill="none"
-                            strokeDasharray="6,4"
-                            className="opacity-80"
-                          />
-                          <circle cx="40" cy="48" r="3" fill="hsl(var(--primary))" opacity="0.8"/>
-                        </>
+                        // Left side curve: from left side of current block to right side of next block  
+                        <path
+                          d="M25 0 Q5 12 5 24 Q5 36 75 48"
+                          stroke={`url(#connectionGrad${index})`}
+                          strokeWidth="2"
+                          fill="none"
+                          strokeDasharray="5,3"
+                          className="opacity-80"
+                        />
                       )}
+                      
+                      {/* Connection dot at the end */}
+                      <circle 
+                        cx={index % 2 === 0 ? "25" : "75"} 
+                        cy="48" 
+                        r="2" 
+                        fill="hsl(var(--primary))" 
+                        opacity="0.8"
+                      />
                     </svg>
                   </div>
                 )}
