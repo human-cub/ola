@@ -4,7 +4,7 @@ const steps = [
   {
     icon: Users,
     title: "Te sumás al grupo del producto",
-    description: "Unite a otros compradores interesados en el mismo producto"
+    description: "Unite a otros compradores interesados en el mismo producto durante de la semana"
   },
   {
     icon: UserPlus,
