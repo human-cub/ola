@@ -121,10 +121,12 @@ export const PriceSlider = () => {
             </p>
             
             <div className="flex items-center justify-center gap-3 mb-2">
-              {/* Crossed out retail price */}
-              <span className="text-lg text-gray-400 line-through font-medium">
-                {formatPrice(retailPrice)}
-              </span>
+              {/* Crossed out retail price - only show when not at leftmost position */}
+              {selectedIndex > 0 && (
+                <span className="text-lg text-gray-400 line-through font-medium">
+                  {formatPrice(retailPrice)}
+                </span>
+              )}
               
               {/* Main price with glow animation */}
               <div className={`relative ${showMaxGlow ? 'animate-pulse' : ''}`}>
