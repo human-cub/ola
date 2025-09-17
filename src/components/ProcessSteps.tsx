@@ -56,7 +56,7 @@ export const ProcessSteps = () => {
                 className="relative bg-background rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300 border border-border/50 animate-fade-in group"
                 style={{ animationDelay: `${index * 0.2}s`, animationFillMode: 'both' }}
               >
-                {/* Connection Line to Next Step */}
+                {/* Connection Lines to Next Step */}
                 {index < steps.length - 1 && (
                   <>
                     {/* Desktop Horizontal Line */}
@@ -66,50 +66,47 @@ export const ProcessSteps = () => {
                       </div>
                     </div>
                     
-                    {/* Mobile Curved Connections */}
+                    {/* Mobile Side Curved Connections */}
                     <div className="lg:hidden absolute bottom-0 w-full h-16 pointer-events-none">
                       <svg 
                         className="absolute bottom-0 w-full h-16" 
-                        viewBox="0 0 300 64" 
+                        viewBox="0 0 100 64" 
                         fill="none"
+                        preserveAspectRatio="none"
                       >
                         <defs>
-                          <linearGradient id={`curveGradient${index}`} x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.6"/>
-                            <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.2"/>
+                          <linearGradient id={`mobileCurve${index}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.7"/>
+                            <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.3"/>
                           </linearGradient>
                         </defs>
-                        {/* Alternating curved paths */}
+                        
+                        {/* Alternating side curves */}
                         {index % 2 === 0 ? (
-                          // Left curve (steps 1-2, 3-4, 5-6)
-                          <path
-                            d="M150 0 Q75 32 150 64"
-                            stroke={`url(#curveGradient${index})`}
-                            strokeWidth="2"
-                            fill="none"
-                            strokeDasharray="5,5"
-                            className="animate-pulse"
-                          />
+                          // Right side curve (blocks 1-2, 3-4, 5-6)
+                          <>
+                            <path
+                              d="M85 0 Q100 20 85 40 Q70 60 85 64"
+                              stroke={`url(#mobileCurve${index})`}
+                              strokeWidth="2"
+                              fill="none"
+                              strokeDasharray="4,4"
+                            />
+                            <circle cx="85" cy="64" r="2" fill="hsl(var(--primary))" opacity="0.8"/>
+                          </>
                         ) : (
-                          // Right curve (steps 2-3, 4-5)
-                          <path
-                            d="M150 0 Q225 32 150 64"
-                            stroke={`url(#curveGradient${index})`}
-                            strokeWidth="2"
-                            fill="none"
-                            strokeDasharray="5,5"
-                            className="animate-pulse"
-                          />
+                          // Left side curve (blocks 2-3, 4-5)  
+                          <>
+                            <path
+                              d="M15 0 Q0 20 15 40 Q30 60 15 64"
+                              stroke={`url(#mobileCurve${index})`}
+                              strokeWidth="2"
+                              fill="none"
+                              strokeDasharray="4,4"
+                            />
+                            <circle cx="15" cy="64" r="2" fill="hsl(var(--primary))" opacity="0.8"/>
+                          </>
                         )}
-                        {/* Connection dot */}
-                        <circle
-                          cx="150"
-                          cy="64"
-                          r="3"
-                          fill="hsl(var(--primary))"
-                          className="animate-pulse"
-                          style={{ animationDelay: `${index * 0.3}s` }}
-                        />
                       </svg>
                     </div>
                   </>
