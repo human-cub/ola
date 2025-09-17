@@ -47,14 +47,44 @@ export const ProcessSteps = () => {
           </p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="relative grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {steps.map((step, index) => {
             const IconComponent = step.icon;
             return (
               <div
                 key={index}
-                className="relative bg-background rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300 border border-border/50"
+                className="relative bg-background rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300 border border-border/50 animate-fade-in group"
+                style={{ animationDelay: `${index * 0.2}s`, animationFillMode: 'both' }}
               >
+                {/* Connection Line to Next Step */}
+                {index < steps.length - 1 && (
+                  <>
+                    {/* Desktop Horizontal Line */}
+                    <div className="hidden lg:block absolute top-1/2 -right-4 w-8 h-0.5 bg-gradient-to-r from-primary/60 to-primary/20 transform -translate-y-1/2">
+                      <div className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-1">
+                        <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
+                      </div>
+                    </div>
+                    
+                    {/* Mobile/Tablet Vertical Line */}
+                    <div className="lg:hidden absolute bottom-0 left-1/2 w-0.5 h-4 bg-gradient-to-b from-primary/60 to-primary/20 transform -translate-x-1/2 translate-y-4">
+                      <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1">
+                        <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
+                      </div>
+                    </div>
+                  </>
+                )}
+                
+                {/* Flow Arrow for Better Connection */}
+                {index < steps.length - 1 && index % 3 === 2 && (
+                  <div className="hidden lg:block absolute -bottom-8 left-1/2 transform -translate-x-1/2">
+                    <div className="flex items-center space-x-2 text-primary/60">
+                      <div className="w-8 h-0.5 bg-gradient-to-r from-transparent to-primary/40"></div>
+                      <div className="w-3 h-3 border-r-2 border-b-2 border-primary/60 transform rotate-45"></div>
+                      <div className="w-8 h-0.5 bg-gradient-to-r from-primary/40 to-transparent"></div>
+                    </div>
+                  </div>
+                )}
                 {/* Step Number */}
                 <div className="absolute -top-4 -left-4 w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center text-white font-bold text-sm">
                   {index + 1}
@@ -79,18 +109,19 @@ export const ProcessSteps = () => {
           })}
         </div>
         
-        {/* Connecting Line - Hidden on mobile */}
-        <div className="hidden lg:block relative -mt-32 mb-16">
-          <svg className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl" height="2">
-            <defs>
-              <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.3"/>
-                <stop offset="50%" stopColor="hsl(var(--primary))" stopOpacity="0.8"/>
-                <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.3"/>
-              </linearGradient>
-            </defs>
-            <line x1="0" y1="1" x2="100%" y2="1" stroke="url(#lineGradient)" strokeWidth="2" strokeDasharray="5,5"/>
-          </svg>
+        {/* Process Flow Indicator */}
+        <div className="text-center mt-12">
+          <div className="flex items-center justify-center space-x-4 text-primary/60">
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 bg-primary rounded-full animate-pulse"></div>
+              <div className="hidden sm:block text-sm font-medium">Proceso continuo</div>
+            </div>
+            <div className="w-16 h-0.5 bg-gradient-to-r from-primary/40 via-primary/60 to-primary/40"></div>
+            <div className="flex items-center space-x-2">
+              <div className="hidden sm:block text-sm font-medium">Sin interrupciones</div>
+              <div className="w-3 h-3 bg-primary rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
