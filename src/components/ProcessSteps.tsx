@@ -80,7 +80,7 @@ export const ProcessSteps = () => {
                   </p>
                 </div>
 
-                {/* Curved Connection Lines between block edges */}
+                {/* Curved Connection Lines - same side to same side */}
                 {!isLastStep && (
                   <div className="absolute top-1/2 left-0 w-full h-24 pointer-events-none z-0" style={{ transform: 'translateY(50%)' }}>
                     <svg 
@@ -90,29 +90,29 @@ export const ProcessSteps = () => {
                       preserveAspectRatio="none"
                     >
                       <defs>
-                        <linearGradient id={`edgeConnection${index}`} x1="0%" y1="0%" x2="100%" y2="0%">
+                        <linearGradient id={`sideConnection${index}`} x1="0%" y1="0%" x2="100%" y2="0%">
                           <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.8"/>
                           <stop offset="50%" stopColor="hsl(var(--primary))" stopOpacity="0.6"/>
                           <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.8"/>
                         </linearGradient>
                       </defs>
                       
-                      {/* Alternating curved paths from edge center to edge center */}
+                      {/* Alternating same-side connections */}
                       {index % 2 === 0 ? (
-                        // Right to left: from right edge center of current block to left edge center of next block
+                        // Right to right: from right edge center of current block to right edge center of next block
                         <path
-                          d="M85 10 Q95 25 95 50 Q95 75 15 90"
-                          stroke={`url(#edgeConnection${index})`}
+                          d="M85 10 Q105 35 105 65 Q95 85 85 90"
+                          stroke={`url(#sideConnection${index})`}
                           strokeWidth="2"
                           fill="none"
                           strokeDasharray="4,3"
                           className="opacity-80"
                         />
                       ) : (
-                        // Left to right: from left edge center of current block to right edge center of next block  
+                        // Left to left: from left edge center of current block to left edge center of next block  
                         <path
-                          d="M15 10 Q5 25 5 50 Q5 75 85 90"
-                          stroke={`url(#edgeConnection${index})`}
+                          d="M15 10 Q-5 35 -5 65 Q5 85 15 90"
+                          stroke={`url(#sideConnection${index})`}
                           strokeWidth="2"
                           fill="none"
                           strokeDasharray="4,3"
@@ -120,10 +120,16 @@ export const ProcessSteps = () => {
                         />
                       )}
                       
-                      {/* Small dots at connection points */}
-                      <circle cx="85" cy="10" r="1.5" fill="hsl(var(--primary))" opacity="0.6"/>
+                      {/* Connection dots */}
                       <circle 
-                        cx={index % 2 === 0 ? "15" : "85"} 
+                        cx={index % 2 === 0 ? "85" : "15"} 
+                        cy="10" 
+                        r="1.5" 
+                        fill="hsl(var(--primary))" 
+                        opacity="0.6"
+                      />
+                      <circle 
+                        cx={index % 2 === 0 ? "85" : "15"} 
                         cy="90" 
                         r="1.5" 
                         fill="hsl(var(--primary))" 
