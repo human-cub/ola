@@ -41,11 +41,11 @@ const Index = () => {
         <ProductCarousel />
         <ProductInfo />
         <PriceSlider priceData={[
-          { people: 1, price: 47900 },
-          { people: 10, price: 43200 },
-          { people: 30, price: 38000 },
-          { people: 50, price: 35000 },
-          { people: 100, price: 29000 },
+          { people: 1, price: 64000 },
+          { people: 10, price: 52500 },
+          { people: 30, price: 46000 },
+          { people: 50, price: 40000 },
+          { people: 100, price: 36200 },
         ]} />
         <ProductDescription />
         <Benefits />
