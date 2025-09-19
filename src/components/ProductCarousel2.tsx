@@ -5,16 +5,12 @@ import { Button } from "@/components/ui/button";
 export const ProductCarousel2 = () => {
   const images = [
     {
-      src: "/lovable-uploads/6c488915-6a0d-4b2b-95ed-83fb84f400db.png",
-      alt: "FitMax Protein - Vista principal"
+      src: "/src/assets/creatine-main.png",
+      alt: "Creatina Monohidrato Star Nutrition - Vista principal"
     },
     {
-      src: "/lovable-uploads/b99517da-1b60-4cc9-ab51-1d60dd3d658a.png", 
-      alt: "FitMax Protein - Vista lateral"
-    },
-    {
-      src: "/lovable-uploads/f61342f0-4c86-4d5f-8e4a-6f6380460a50.png",
-      alt: "FitMax Protein - Vista posterior"
+      src: "/src/assets/creatine-info.png", 
+      alt: "Creatina Monohidrato Star Nutrition - Información nutricional"
     }
   ];
 

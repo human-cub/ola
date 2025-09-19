@@ -1,10 +1,10 @@
 export const ProductDescription2 = () => {
   const variants = [
-    "Polvo sin sabor",
-    "Sabor Frutas Tropicales", 
-    "Sabor Limón",
-    "Sabor Sandía",
-    "Cápsulas (90 unidades)"
+    "Polvo sin sabor 500g",
+    "100% Pura - Creatina Micronizada",
+    "Ultra Micronizada para mejor absorción",
+    "5 gramos por porción",
+    "Máxima pureza"
   ];
 
   return (
@@ -33,15 +33,15 @@ export const ProductDescription2 = () => {
           {/* Product Details */}
           <div className="space-y-4">
             <p className="text-muted-foreground leading-relaxed">
-              <strong className="text-foreground">FitMax Creatine Monohydrate</strong> es un suplemento de creatina monohidrato de máxima pureza, diseñado para mejorar la fuerza, potencia y resistencia muscular durante entrenamientos de alta intensidad.
+              <strong className="text-foreground">Creatina Monohidrato Star Nutrition</strong> es la unión de tres aminoácidos que ofrece mayores ventajas que la creatina normal, mejorando su asimilación.
             </p>
             
             <p className="text-muted-foreground leading-relaxed">
-              Cada porción contiene <strong className="text-primary">5 gramos de creatina monohidrato pura</strong>, la forma más estudiada y efectiva de creatina para el rendimiento deportivo.
+              La creatina monohidrato es recomendada durante un plan de entrenamiento para <strong className="text-primary">aumentar la fuerza, resistencia y recuperación</strong>.
             </p>
             
             <p className="text-muted-foreground leading-relaxed">
-              Producto micronizado para una mejor disolución y absorción. Sin aditivos innecesarios, ideal para atletas que buscan maximizar su rendimiento y acelerar la recuperación.
+              <strong className="text-foreground">Creatina monohidrato micronizada de máxima pureza - 100% Pura.</strong> Producto ultra micronizado para una mejor disolución y absorción óptima.
             </p>
           </div>
         </div>
