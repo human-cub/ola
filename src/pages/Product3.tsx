@@ -40,7 +40,13 @@ const Product3 = () => {
         <HeroSection />
         <ProductCarousel3 />
         <ProductInfo3 />
-        <PriceSlider />
+        <PriceSlider priceData={[
+          { people: 1, price: 41900 },
+          { people: 10, price: 37200 },
+          { people: 30, price: 32000 },
+          { people: 50, price: 29000 },
+          { people: 100, price: 23000 },
+        ]} />
         <ProductDescription3 />
         <Benefits />
         <ProcessSteps />
