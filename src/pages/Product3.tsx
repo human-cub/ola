@@ -6,6 +6,7 @@ import { ProductInfo3 } from "@/components/ProductInfo3";
 import { PriceSlider } from "@/components/PriceSlider";
 import { ProductDescription3 } from "@/components/ProductDescription3";
 import { Benefits } from "@/components/Benefits";
+import { ProcessSteps } from "@/components/ProcessSteps";
 import { ServiceDescription } from "@/components/ServiceDescription";
 import { RelatedProducts } from "@/components/RelatedProducts";
 import { FloatingButton } from "@/components/FloatingButton";
@@ -42,6 +43,7 @@ const Product3 = () => {
         <PriceSlider />
         <ProductDescription3 />
         <Benefits />
+        <ProcessSteps />
         <ServiceDescription />
         <RelatedProducts currentProduct="whey-protein" />
       </main>
