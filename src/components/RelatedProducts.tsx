@@ -2,26 +2,34 @@ import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 
 interface RelatedProductsProps {
-  currentProduct?: "protein" | "creatine";
+  currentProduct?: "protein" | "creatine" | "whey-protein";
 }
 
 export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsProps) => {
   const products = [
     {
       id: "creatine",
-      name: "FitMax Creatine Monohydrate",
+      name: "Creatina Monohidrato Star Nutrition",
       description: "Creatina monohidrato micronizada",
       weight: "500g",
       link: "/product2",
-      image: "/lovable-uploads/6c488915-6a0d-4b2b-95ed-83fb84f400db.png"
+      image: "/src/assets/creatine-main.png"
     },
     {
       id: "protein",
-      name: "FitMax Whey Protein Premium",
+      name: "TrueMade Whey Protein",
       description: "Proteína de suero premium",
-      weight: "2.27kg",
+      weight: "930g",
       link: "/",
       image: "/src/assets/protein-main.jpg"
+    },
+    {
+      id: "whey-protein",
+      name: "Whey Protein Doypack 2 Lb",
+      description: "Proteína en práctico doypack",
+      weight: "900g",
+      link: "/product3",
+      image: "/src/assets/whey-protein-main.png"
     }
   ];
 
