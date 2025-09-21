@@ -35,7 +35,7 @@ export const ProductCarousel5 = () => {
   };
 
   return (
-    <section className="py-6">
+    <section id="product-photos" className="py-6">
       <div className="w-full">
         <div className="relative">
           {/* Main Image - Responsive Height */}

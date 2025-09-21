@@ -12,7 +12,7 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
       name: "Creatina Monohidrato Star Nutrition",
       description: "Creatina monohidrato micronizada",
       weight: "500g",
-      link: "/product2",
+      link: "/product2#product-photos",
       image: "/src/assets/creatine-main.png"
     },
     {
@@ -20,7 +20,7 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
       name: "TrueMade Whey Protein",
       description: "Proteína de suero premium",
       weight: "930g",
-      link: "/",
+      link: "/#product-photos",
       image: "/src/assets/protein-main.jpg"
     },
     {
@@ -28,7 +28,7 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
       name: "Whey Protein Doypack 2 Lb",
       description: "Proteína en práctico doypack",
       weight: "900g",
-      link: "/product3",
+      link: "/product3#product-photos",
       image: "/src/assets/whey-protein-main.png"
     },
     {
@@ -36,7 +36,7 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
       name: "Star Nutrition Pump V8",
       description: "Pre-entreno de máximo rendimiento",
       weight: "285g",
-      link: "/product4",
+      link: "/product4#product-photos",
       image: "/src/assets/pump-v8-main.png"
     },
     {
@@ -44,7 +44,7 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
       name: "Gold Nutrition Gainer Gold",
       description: "Ganador de masa muscular premium",
       weight: "5 lbs",
-      link: "/product5",
+      link: "/product5#product-photos",
       image: "https://acdn-us.mitiendanube.com/stores/583/512/products/gainer-cbc507a865b208583517254733035648-1024-1024.png"
     }
   ];
