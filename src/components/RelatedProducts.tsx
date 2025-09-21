@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 
 interface RelatedProductsProps {
-  currentProduct?: "protein" | "creatine" | "whey-protein";
+  currentProduct?: "protein" | "creatine" | "whey-protein" | "pump-v8" | "gainer";
 }
 
 export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsProps) => {
@@ -30,6 +30,22 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
       weight: "900g",
       link: "/product3",
       image: "/src/assets/whey-protein-main.png"
+    },
+    {
+      id: "pump-v8",
+      name: "Star Nutrition Pump V8",
+      description: "Pre-entreno de máximo rendimiento",
+      weight: "285g",
+      link: "/product4",
+      image: "/src/assets/pump-v8-main.png"
+    },
+    {
+      id: "gainer",
+      name: "Gold Nutrition Gainer Gold",
+      description: "Ganador de masa muscular premium",
+      weight: "5 lbs",
+      link: "/product5",
+      image: "https://acdn-us.mitiendanube.com/stores/583/512/products/gainer-cbc507a865b208583517254733035648-1024-1024.png"
     }
   ];
 
