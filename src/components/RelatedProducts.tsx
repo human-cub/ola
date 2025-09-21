@@ -5,6 +5,11 @@ interface RelatedProductsProps {
   currentProduct?: "protein" | "creatine" | "whey-protein" | "pump-v8" | "gainer";
 }
 
+import creatineMain from "/src/assets/creatine-main.png";
+import proteinMain from "/src/assets/protein-main.jpg";
+import wheyProteinMain from "/src/assets/whey-protein-main.png";
+import pumpV8Main from "/src/assets/pump-v8-main.png";
+
 export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsProps) => {
   const products = [
     {
@@ -13,7 +18,7 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
       description: "Creatina monohidrato micronizada",
       weight: "500g",
       link: "/product2#product-photos",
-      image: "/src/assets/creatine-main.png"
+      image: creatineMain
     },
     {
       id: "protein",
@@ -21,7 +26,7 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
       description: "Proteína de suero premium",
       weight: "930g",
       link: "/#product-photos",
-      image: "/src/assets/protein-main.jpg"
+      image: proteinMain
     },
     {
       id: "whey-protein",
@@ -29,7 +34,7 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
       description: "Proteína en práctico doypack",
       weight: "900g",
       link: "/product3#product-photos",
-      image: "/src/assets/whey-protein-main.png"
+      image: wheyProteinMain
     },
     {
       id: "pump-v8",
@@ -37,7 +42,7 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
       description: "Pre-entreno de máximo rendimiento",
       weight: "285g",
       link: "/product4#product-photos",
-      image: "/src/assets/pump-v8-main.png"
+      image: pumpV8Main
     },
     {
       id: "gainer",

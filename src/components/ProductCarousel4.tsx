@@ -3,11 +3,16 @@ import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
+import pumpV8Main from "/src/assets/pump-v8-main.png";
+import pumpV8Acai from "/src/assets/pump-v8-acai.png";
+import pumpV8Grape from "/src/assets/pump-v8-grape.png";
+import pumpV8Info from "/src/assets/pump-v8-info.jpg";
+
 const images = [
-  { src: "/src/assets/pump-v8-main.png", alt: "Pump V8 Gold Nutrition - Producto principal" },
-  { src: "/src/assets/pump-v8-acai.png", alt: "Pump V8 Gold Nutrition - Sabor Açaí" },
-  { src: "/src/assets/pump-v8-grape.png", alt: "Pump V8 Gold Nutrition - Sabor Uva" },
-  { src: "/src/assets/pump-v8-info.jpg", alt: "Pump V8 Gold Nutrition - Información nutricional" },
+  { src: pumpV8Main, alt: "Pump V8 Gold Nutrition - Producto principal" },
+  { src: pumpV8Acai, alt: "Pump V8 Gold Nutrition - Sabor Açaí" },
+  { src: pumpV8Grape, alt: "Pump V8 Gold Nutrition - Sabor Uva" },
+  { src: pumpV8Info, alt: "Pump V8 Gold Nutrition - Información nutricional" },
 ];
 
 export const ProductCarousel4 = () => {

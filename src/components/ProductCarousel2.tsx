@@ -3,9 +3,12 @@ import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
+import creatineMain from "/src/assets/creatine-main.png";
+import creatineInfo from "/src/assets/creatine-info.png";
+
 const images = [
-  { src: "/src/assets/creatine-main.png", alt: "Creatina Gold Nutrition - Producto principal" },
-  { src: "/src/assets/creatine-info.png", alt: "Creatina Gold Nutrition - Información nutricional" },
+  { src: creatineMain, alt: "Creatina Gold Nutrition - Producto principal" },
+  { src: creatineInfo, alt: "Creatina Gold Nutrition - Información nutricional" },
 ];
 
 export const ProductCarousel2 = () => {

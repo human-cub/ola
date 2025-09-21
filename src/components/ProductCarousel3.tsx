@@ -3,9 +3,12 @@ import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
+import wheyProteinMain from "/src/assets/whey-protein-main.png";
+import wheyProteinInfo from "/src/assets/whey-protein-info.png";
+
 const images = [
-  { src: "/src/assets/whey-protein-main.png", alt: "Whey Protein Gold Nutrition - Producto principal" },
-  { src: "/src/assets/whey-protein-info.png", alt: "Whey Protein Gold Nutrition - Información nutricional" },
+  { src: wheyProteinMain, alt: "Whey Protein Gold Nutrition - Producto principal" },
+  { src: wheyProteinInfo, alt: "Whey Protein Gold Nutrition - Información nutricional" },
 ];
 
 export const ProductCarousel3 = () => {
