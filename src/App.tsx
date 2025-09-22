@@ -20,10 +20,11 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/product2" element={<Product2 />} />
-          <Route path="/product3" element={<Product3 />} />
-          <Route path="/product4" element={<Product4 />} />
-          <Route path="/product5" element={<Product5 />} />
+          <Route path="/ena-whey-930" element={<Index />} />
+          <Route path="/sn-creatina-500" element={<Product2 />} />
+          <Route path="/sn-whey-908" element={<Product3 />} />
+          <Route path="/sn-pumpv8-285" element={<Product4 />} />
+          <Route path="/gn-gainer-2267" element={<Product5 />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

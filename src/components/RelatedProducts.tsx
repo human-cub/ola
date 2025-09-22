@@ -35,7 +35,7 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
       name: "Creatina Monohidrato Star Nutrition",
       description: "Creatina monohidrato micronizada",
       weight: "500g",
-      link: "/product2",
+      link: "/sn-creatina-500",
       image: "https://www.demusculos.com/web/wp-content/uploads/2024/11/creatina-500-grs-star-1.jpg",
       originalPrice: "$52.900",
       discountPrice: "$34.000"
@@ -45,7 +45,7 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
       name: "TrueMade Whey Protein",
       description: "Proteína de suero premium",
       weight: "930g",
-      link: "/",
+      link: "/ena-whey-930",
       image: "/truemade-protein-main.webp",
       originalPrice: "$64.000",
       discountPrice: "$36.200"
@@ -55,7 +55,7 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
       name: "Whey Protein Doypack 2 Lb",
       description: "Proteína en práctico doypack",
       weight: "900g",
-      link: "/product3",
+      link: "/sn-whey-908",
       image: wheyProteinMain,
       originalPrice: "$41.900",
       discountPrice: "$23.000"
@@ -65,7 +65,7 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
       name: "Star Nutrition Pump V8",
       description: "Pre-entreno de máximo rendimiento",
       weight: "285g",
-      link: "/product4",
+      link: "/sn-pumpv8-285",
       image: pumpV8Main,
       originalPrice: "$36.500",
       discountPrice: "$20.500"
@@ -75,7 +75,7 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
       name: "Gold Nutrition Gainer Gold",
       description: "Ganador de masa muscular premium",
       weight: "5 lbs",
-      link: "/product5",
+      link: "/gn-gainer-2267",
       image: "https://acdn-us.mitiendanube.com/stores/583/512/products/gainer-cbc507a865b208583517254733035648-1024-1024.png",
       originalPrice: "$66.400",
       discountPrice: "$35.100"
