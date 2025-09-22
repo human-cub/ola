@@ -1,24 +1,42 @@
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 
 interface RelatedProductsProps {
   currentProduct?: "protein" | "creatine" | "whey-protein" | "pump-v8" | "gainer";
 }
 
-import creatineMain from "/src/assets/creatine-main.png";
-import proteinMain from "/src/assets/protein-main.jpg";
-import wheyProteinMain from "/src/assets/whey-protein-main.png";
-import pumpV8Main from "/src/assets/pump-v8-main.png";
+import wheyProteinMain from "@/assets/whey-protein-main.png";
+import pumpV8Main from "@/assets/pump-v8-main.png";
 
 export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsProps) => {
+  // Handle scroll to photos section on page load if coming from product click
+  useEffect(() => {
+    const scrollTarget = sessionStorage.getItem('scrollTarget');
+    if (scrollTarget === 'product-photos') {
+      sessionStorage.removeItem('scrollTarget'); // Clear after use
+      
+      // Delay to ensure DOM is fully rendered
+      const timer = setTimeout(() => {
+        const element = document.getElementById('product-photos');
+        if (element) {
+          element.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+          });
+        }
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, []);
   const products = [
     {
       id: "creatine",
       name: "Creatina Monohidrato Star Nutrition",
       description: "Creatina monohidrato micronizada",
       weight: "500g",
-      link: "/product2#product-photos",
-      image: creatineMain,
+      link: "/product2",
+      image: "https://www.demusculos.com/web/wp-content/uploads/2024/11/creatina-500-grs-star-1.jpg",
       originalPrice: "$45.990",
       discountPrice: "$32.193"
     },
@@ -27,8 +45,8 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
       name: "TrueMade Whey Protein",
       description: "Proteína de suero premium",
       weight: "930g",
-      link: "/#product-photos",
-      image: proteinMain,
+      link: "/",
+      image: "/truemade-protein-main.webp",
       originalPrice: "$89.990",
       discountPrice: "$62.993"
     },
@@ -37,7 +55,7 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
       name: "Whey Protein Doypack 2 Lb",
       description: "Proteína en práctico doypack",
       weight: "900g",
-      link: "/product3#product-photos",
+      link: "/product3",
       image: wheyProteinMain,
       originalPrice: "$79.990",
       discountPrice: "$55.993"
@@ -47,7 +65,7 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
       name: "Star Nutrition Pump V8",
       description: "Pre-entreno de máximo rendimiento",
       weight: "285g",
-      link: "/product4#product-photos",
+      link: "/product4",
       image: pumpV8Main,
       originalPrice: "$65.990",
       discountPrice: "$46.193"
@@ -57,7 +75,7 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
       name: "Gold Nutrition Gainer Gold",
       description: "Ganador de masa muscular premium",
       weight: "5 lbs",
-      link: "/product5#product-photos",
+      link: "/product5",
       image: "https://acdn-us.mitiendanube.com/stores/583/512/products/gainer-cbc507a865b208583517254733035648-1024-1024.png",
       originalPrice: "$149.990",
       discountPrice: "$104.993"
@@ -66,6 +84,14 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
 
   // Filter out current product
   const otherProducts = products.filter(product => product.id !== currentProduct);
+
+  const handleProductClick = (productLink: string) => {
+    // Store scroll target in sessionStorage for cross-page navigation
+    sessionStorage.setItem('scrollTarget', 'product-photos');
+    
+    // Navigate to the product page
+    window.location.href = productLink;
+  };
 
   return (
     <section className="px-4 py-4">
@@ -82,10 +108,10 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
 
           <div className="space-y-4">
             {otherProducts.map((product) => (
-              <Link 
+              <button 
                 key={product.id}
-                to={product.link}
-                className="block group"
+                onClick={() => handleProductClick(product.link)}
+                className="block group w-full text-left"
               >
                 <Card className="p-4 border border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-soft group-hover:scale-[1.02]">
                   <div className="flex items-center gap-4">
@@ -136,7 +162,7 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
                     </div>
                   </div>
                 </Card>
-              </Link>
+              </button>
             ))}
             
             {/* Placeholder for future products */}
