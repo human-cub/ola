@@ -18,7 +18,9 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
       description: "Creatina monohidrato micronizada",
       weight: "500g",
       link: "/product2#product-photos",
-      image: creatineMain
+      image: creatineMain,
+      originalPrice: "$45.990",
+      discountPrice: "$32.193"
     },
     {
       id: "protein",
@@ -26,7 +28,9 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
       description: "Proteína de suero premium",
       weight: "930g",
       link: "/#product-photos",
-      image: proteinMain
+      image: proteinMain,
+      originalPrice: "$89.990",
+      discountPrice: "$62.993"
     },
     {
       id: "whey-protein",
@@ -34,7 +38,9 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
       description: "Proteína en práctico doypack",
       weight: "900g",
       link: "/product3#product-photos",
-      image: wheyProteinMain
+      image: wheyProteinMain,
+      originalPrice: "$79.990",
+      discountPrice: "$55.993"
     },
     {
       id: "pump-v8",
@@ -42,7 +48,9 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
       description: "Pre-entreno de máximo rendimiento",
       weight: "285g",
       link: "/product4#product-photos",
-      image: pumpV8Main
+      image: pumpV8Main,
+      originalPrice: "$65.990",
+      discountPrice: "$46.193"
     },
     {
       id: "gainer",
@@ -50,7 +58,9 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
       description: "Ganador de masa muscular premium",
       weight: "5 lbs",
       link: "/product5#product-photos",
-      image: "https://acdn-us.mitiendanube.com/stores/583/512/products/gainer-cbc507a865b208583517254733035648-1024-1024.png"
+      image: "https://acdn-us.mitiendanube.com/stores/583/512/products/gainer-cbc507a865b208583517254733035648-1024-1024.png",
+      originalPrice: "$149.990",
+      discountPrice: "$104.993"
     }
   ];
 
@@ -99,9 +109,24 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
                       <p className="text-xs text-muted-foreground mb-1">
                         {product.description}
                       </p>
-                      <p className="text-xs font-medium text-primary">
+                      <p className="text-xs font-medium text-primary mb-2">
                         Masa neto: {product.weight}
                       </p>
+                      
+                      {/* Pricing Information */}
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground line-through">
+                            {product.originalPrice}
+                          </span>
+                          <span className="text-sm font-bold text-primary">
+                            {product.discountPrice}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground italic">
+                          Precio por 100 pedidos
+                        </p>
+                      </div>
                     </div>
                     
                     <div className="text-primary group-hover:translate-x-1 transition-transform">
