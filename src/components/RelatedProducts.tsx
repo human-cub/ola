@@ -37,8 +37,8 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
       weight: "500g",
       link: "/product2",
       image: "https://www.demusculos.com/web/wp-content/uploads/2024/11/creatina-500-grs-star-1.jpg",
-      originalPrice: "$45.990",
-      discountPrice: "$32.193"
+      originalPrice: "$69.268",
+      discountPrice: "$59.225"
     },
     {
       id: "protein",
@@ -47,8 +47,8 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
       weight: "930g",
       link: "/",
       image: "/truemade-protein-main.webp",
-      originalPrice: "$89.990",
-      discountPrice: "$62.993"
+      originalPrice: "$64.990",
+      discountPrice: "$52.990"
     },
     {
       id: "whey-protein",
@@ -57,8 +57,8 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
       weight: "900g",
       link: "/product3",
       image: wheyProteinMain,
-      originalPrice: "$79.990",
-      discountPrice: "$55.993"
+      originalPrice: "$42.990",
+      discountPrice: "$34.990"
     },
     {
       id: "pump-v8",
@@ -67,8 +67,8 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
       weight: "285g",
       link: "/product4",
       image: pumpV8Main,
-      originalPrice: "$65.990",
-      discountPrice: "$46.193"
+      originalPrice: "$39.990",
+      discountPrice: "$32.990"
     },
     {
       id: "gainer",
@@ -77,8 +77,8 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
       weight: "5 lbs",
       link: "/product5",
       image: "https://acdn-us.mitiendanube.com/stores/583/512/products/gainer-cbc507a865b208583517254733035648-1024-1024.png",
-      originalPrice: "$149.990",
-      discountPrice: "$104.993"
+      originalPrice: "$79.990",
+      discountPrice: "$64.990"
     }
   ];
 
