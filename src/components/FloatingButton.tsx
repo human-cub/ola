@@ -2,7 +2,11 @@ import { useState, useEffect } from "react";
 import { MessageCircle, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export const FloatingButton = () => {
+interface FloatingButtonProps {
+  whatsappUrl?: string;
+}
+
+export const FloatingButton = ({ whatsappUrl = "https://chat.whatsapp.com/IHMiBbdeOqO68WSbiPKNwA?mode=ems_share_c" }: FloatingButtonProps) => {
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
@@ -36,7 +40,7 @@ export const FloatingButton = () => {
   }, []);
 
   const handleWhatsAppClick = () => {
-    window.open("https://chat.whatsapp.com/IHMiBbdeOqO68WSbiPKNwA?mode=ems_share_c", "_blank");
+    window.open(whatsappUrl, "_blank");
   };
 
   return (

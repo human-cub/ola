@@ -48,7 +48,7 @@ const Product4 = () => {
         <RelatedProducts currentProduct="pump-v8" />
       </main>
 
-      <FloatingButton />
+      <FloatingButton whatsappUrl="https://chat.whatsapp.com/LwCt9mb1TlD87eYaMSOp8Y?mode=ems_copy_c" />
     </div>
   );
 };

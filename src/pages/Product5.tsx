@@ -48,7 +48,7 @@ const Product5 = () => {
         <RelatedProducts currentProduct="gainer" />
       </main>
 
-      <FloatingButton />
+      <FloatingButton whatsappUrl="https://chat.whatsapp.com/CTvImulInPj12UcC08k5FB?mode=ems_copy_c" />
     </div>
   );
 };

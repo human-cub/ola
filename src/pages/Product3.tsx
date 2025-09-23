@@ -54,7 +54,7 @@ const Product3 = () => {
         <RelatedProducts currentProduct="whey-protein" />
       </main>
 
-      <FloatingButton />
+      <FloatingButton whatsappUrl="https://chat.whatsapp.com/BYSF3mQxkxS9CdHtoXGD6m?mode=ems_copy_c" />
     </div>
   );
 };
