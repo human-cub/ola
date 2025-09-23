@@ -114,7 +114,7 @@ export const ServiceDescription = () => {
                 </p>
                 <div className="flex justify-center">
                   <button 
-                    onClick={() => window.open("https://chat.whatsapp.com/FxpV8T80s4DC13No0d6UVK?mode=ems_copy_c", "_blank")}
+                    onClick={() => window.open("https://chat.whatsapp.com/Fbx2bOICgdsF6o7GGeYETg", "_blank")}
                     className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium transition-colors"
                   >
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
