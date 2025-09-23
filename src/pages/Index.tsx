@@ -1,15 +1,10 @@
 import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { HeroSection } from "@/components/HeroSection";
-import { ProductCarousel } from "@/components/ProductCarousel";
-import { ProductInfo } from "@/components/ProductInfo";
-import { PriceSlider } from "@/components/PriceSlider";
-import { ProductDescription } from "@/components/ProductDescription";
+import { MainProductCarousel } from "@/components/MainProductCarousel";
 import { Benefits } from "@/components/Benefits";
 import { ProcessSteps } from "@/components/ProcessSteps";
 import { ServiceDescription } from "@/components/ServiceDescription";
-import { RelatedProducts } from "@/components/RelatedProducts";
-import { FloatingButton } from "@/components/FloatingButton";
 
 const Index = () => {
   const [headerVisible, setHeaderVisible] = useState(true);
@@ -36,25 +31,13 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Header isVisible={headerVisible} />
       
-      <main className="pb-24">
+      <main>
         <HeroSection />
-        <ProductCarousel />
-        <ProductInfo />
-        <PriceSlider priceData={[
-          { people: 1, price: 64000 },
-          { people: 10, price: 52500 },
-          { people: 30, price: 46000 },
-          { people: 50, price: 40000 },
-          { people: 100, price: 36200 },
-        ]} />
-        <ProductDescription />
+        <MainProductCarousel />
         <Benefits />
         <ProcessSteps />
         <ServiceDescription />
-        <RelatedProducts currentProduct="protein" />
       </main>
-
-      <FloatingButton />
     </div>
   );
 };
