@@ -105,7 +105,10 @@ export const ServiceDescription = () => {
                 </p>
                 <div className="flex justify-center">
                   <button 
-                    onClick={() => window.open("http://wa.me/5491166650878", "_blank")}
+                    onClick={() => {
+                      console.log("Bottom WhatsApp button clicked");
+                      window.open("http://wa.me/5491166650878", "_blank");
+                    }}
                     className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium transition-colors"
                   >
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
