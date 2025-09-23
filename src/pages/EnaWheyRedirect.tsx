@@ -2,8 +2,8 @@ import { useEffect } from 'react';
 
 const EnaWheyRedirect = () => {
   useEffect(() => {
-    // Немедленная переадресация на основной сайт
-    window.location.replace('https://ola.lovable.app/');
+    // Немедленная переадресация на основной сайт с заменой истории
+    window.location.href = 'https://ola.lovable.app/';
   }, []);
 
   // Резервное сообщение на случай, если JS отключен или редирект не сработал
