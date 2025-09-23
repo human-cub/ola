@@ -8,6 +8,7 @@ import Product2 from "./pages/Product2";
 import Product3 from "./pages/Product3";
 import Product4 from "./pages/Product4";
 import Product5 from "./pages/Product5";
+import EnaWheyRedirect from "./pages/EnaWheyRedirect";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -21,6 +22,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/ena-whey-930" element={<Index />} />
+          <Route path="/ena-whey" element={<EnaWheyRedirect />} />
           <Route path="/sn-creatina-500" element={<Product2 />} />
           <Route path="/sn-whey-908" element={<Product3 />} />
           <Route path="/sn-pumpv8-285" element={<Product4 />} />
