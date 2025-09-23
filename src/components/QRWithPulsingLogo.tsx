@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import QRCodeStyling from 'qr-code-styling';
-import olaLogo from '@/assets/ola-logo.png';
+import olaWaveLogo from '@/assets/ola-wave-logo.png';
 
 interface QRWithPulsingLogoProps {
   url: string;
@@ -19,32 +19,33 @@ export const QRWithPulsingLogo = ({ url, size = 120, className = "" }: QRWithPul
         height: size,
         type: "svg",
         data: url,
-        image: olaLogo,
+        image: olaWaveLogo,
         dotsOptions: {
-          color: "#2563eb",
-          type: "rounded"
+          color: "#000000",
+          type: "square"
         },
         cornersSquareOptions: {
-          color: "#1e40af",
-          type: "extra-rounded"
+          color: "#000000",
+          type: "square"
         },
         cornersDotOptions: {
-          color: "#1e40af",
-          type: "dot"
+          color: "#000000",
+          type: "square"
         },
         backgroundOptions: {
           color: "#ffffff",
         },
         imageOptions: {
           crossOrigin: "anonymous",
-          margin: 8,
-          imageSize: 0.4,
+          margin: 10,
+          imageSize: 0.3,
+          hideBackgroundDots: true,
           saveAsBlob: true
         },
         qrOptions: {
           typeNumber: 0,
           mode: "Byte",
-          errorCorrectionLevel: "M"
+          errorCorrectionLevel: "H"
         }
       });
     }
