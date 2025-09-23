@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import QRCodeStyling from 'qr-code-styling';
+import olaLogo from '@/assets/ola-logo.png';
 
 interface QRWithPulsingLogoProps {
   url: string;
@@ -12,16 +13,13 @@ export const QRWithPulsingLogo = ({ url, size = 120, className = "" }: QRWithPul
   const qrCode = useRef<QRCodeStyling | null>(null);
 
   useEffect(() => {
-    // Base64 encoded logo from the HTML file
-    const logo = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAhsAAAIcCAYAAABfImwFAAEAAElEQVR4nOz9d7Rl13Xeif7m2ufcUBlVAApAIWcSBDMJUowSKVKiZFmmJKt2K7nbfmN4OHT7uVt+o93ey";
-
     if (!qrCode.current) {
       qrCode.current = new QRCodeStyling({
         width: size,
         height: size,
         type: "svg",
         data: url,
-        image: logo,
+        image: olaLogo,
         dotsOptions: {
           color: "#2563eb",
           type: "rounded"
