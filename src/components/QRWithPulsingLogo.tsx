@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
 import QRCodeStyling from 'qr-code-styling';
-import olaWaveLogo from '@/assets/ola-wave-logo.png';
 
 interface QRWithPulsingLogoProps {
   url: string;
@@ -13,39 +12,41 @@ export const QRWithPulsingLogo = ({ url, size = 120, className = "" }: QRWithPul
   const qrCode = useRef<QRCodeStyling | null>(null);
 
   useEffect(() => {
+    // Base64 encoded logo from the HTML file
+    const logo = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAhsAAAIcCAYAAABfImwFAAEAAElEQVR4nOz9d7Rl13Xeif7m2ufcUBlVAApAIWcSBDMJUowSKVKiZFmmJKt2K7nbfmN4OHT7uVt+o93ey";
+
     if (!qrCode.current) {
       qrCode.current = new QRCodeStyling({
         width: size,
         height: size,
         type: "svg",
         data: url,
-        image: olaWaveLogo,
+        image: logo,
         dotsOptions: {
-          color: "#000000",
-          type: "square"
+          color: "#2563eb",
+          type: "rounded"
         },
         cornersSquareOptions: {
-          color: "#000000",
-          type: "square"
+          color: "#1e40af",
+          type: "extra-rounded"
         },
         cornersDotOptions: {
-          color: "#000000",
-          type: "square"
+          color: "#1e40af",
+          type: "dot"
         },
         backgroundOptions: {
           color: "#ffffff",
         },
         imageOptions: {
           crossOrigin: "anonymous",
-          margin: 10,
-          imageSize: 0.3,
-          hideBackgroundDots: true,
+          margin: 8,
+          imageSize: 0.4,
           saveAsBlob: true
         },
         qrOptions: {
           typeNumber: 0,
           mode: "Byte",
-          errorCorrectionLevel: "H"
+          errorCorrectionLevel: "M"
         }
       });
     }
