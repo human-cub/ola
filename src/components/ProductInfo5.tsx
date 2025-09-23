@@ -7,7 +7,7 @@ export const ProductInfo5 = () => {
             Gold Nutrition Gainer Gold
           </h2>
           <p className="text-muted-foreground font-medium">
-            Masa neto: <span className="text-primary font-semibold">5 libras</span>
+            Masa neto: <span className="text-primary font-semibold">2267g</span>
           </p>
         </div>
       </div>

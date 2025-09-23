@@ -63,7 +63,7 @@ export const MainProductCarousel = () => {
       id: "gainer",
       name: "Gold Nutrition Gainer Gold",
       description: "Ganador de masa muscular premium",
-      weight: "5 lbs",
+      weight: "2267g",
       link: "/gn-gainer-2267",
       image: "https://acdn-us.mitiendanube.com/stores/583/512/products/gainer-cbc507a865b208583517254733035648-1024-1024.png",
       originalPrice: "$66.400",
