@@ -5,6 +5,7 @@ import { MainProductCarousel } from "@/components/MainProductCarousel";
 import { Benefits } from "@/components/Benefits";
 import { ProcessSteps } from "@/components/ProcessSteps";
 import { ServiceDescription } from "@/components/ServiceDescription";
+import { FloatingButton } from "@/components/FloatingButton";
 
 const Index = () => {
   const [headerVisible, setHeaderVisible] = useState(true);
@@ -38,6 +39,8 @@ const Index = () => {
         <ProcessSteps />
         <ServiceDescription />
       </main>
+      
+      <FloatingButton whatsappUrl="https://chat.whatsapp.com/Fbx2bOICgdsF6o7GGeYETg" />
     </div>
   );
 };
