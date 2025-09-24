@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Header } from "@/components/Header";
 import { HeroSection } from "@/components/HeroSection";
 import { ProductCarousel5 } from "@/components/ProductCarousel5";
@@ -14,11 +14,22 @@ import { FloatingButton } from "@/components/FloatingButton";
 const Product5 = () => {
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const [isButtonFixed, setIsButtonFixed] = useState(false);
+  const priceSliderRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
+      
+      // Header visibility logic
       setIsHeaderVisible(currentScrollY <= lastScrollY || currentScrollY < 100);
+      
+      // Button position logic
+      if (priceSliderRef.current) {
+        const priceSliderBottom = priceSliderRef.current.offsetTop + priceSliderRef.current.offsetHeight;
+        setIsButtonFixed(currentScrollY > priceSliderBottom + 100);
+      }
+      
       setLastScrollY(currentScrollY);
     };
 
@@ -34,13 +45,21 @@ const Product5 = () => {
         <HeroSection />
         <ProductCarousel5 />
         <ProductInfo5 />
-        <PriceSlider priceData={[
-          { people: 1, price: 66400 },
-          { people: 10, price: 49700 },
-          { people: 30, price: 45200 },
-          { people: 50, price: 40300 },
-          { people: 100, price: 35100 },
-        ]} />
+        <div ref={priceSliderRef}>
+          <PriceSlider priceData={[
+            { people: 1, price: 66400 },
+            { people: 10, price: 49700 },
+            { people: 30, price: 45200 },
+            { people: 50, price: 40300 },
+            { people: 100, price: 35100 },
+          ]} />
+        </div>
+        {!isButtonFixed && (
+          <FloatingButton 
+            whatsappUrl="https://chat.whatsapp.com/CTvImulInPj12UcC08k5FB?mode=ems_copy_c" 
+            isFixed={false} 
+          />
+        )}
         <ProductDescription5 />
         <Benefits />
         <ProcessSteps />
@@ -48,7 +67,12 @@ const Product5 = () => {
         <RelatedProducts currentProduct="gainer" />
       </main>
 
-      <FloatingButton whatsappUrl="https://chat.whatsapp.com/CTvImulInPj12UcC08k5FB?mode=ems_copy_c" />
+      {isButtonFixed && (
+        <FloatingButton 
+          whatsappUrl="https://chat.whatsapp.com/CTvImulInPj12UcC08k5FB?mode=ems_copy_c" 
+          isFixed={true} 
+        />
+      )}
     </div>
   );
 };

@@ -1,12 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { MessageCircle, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface FloatingButtonProps {
   whatsappUrl?: string;
+  isFixed?: boolean;
 }
 
-export const FloatingButton = ({ whatsappUrl = "https://chat.whatsapp.com/IHMiBbdeOqO68WSbiPKNwA?mode=ems_share_c" }: FloatingButtonProps) => {
+export const FloatingButton = ({ whatsappUrl = "https://chat.whatsapp.com/IHMiBbdeOqO68WSbiPKNwA?mode=ems_share_c", isFixed = true }: FloatingButtonProps) => {
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
@@ -44,7 +45,7 @@ export const FloatingButton = ({ whatsappUrl = "https://chat.whatsapp.com/IHMiBb
   };
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-50">
+    <div className={isFixed ? "fixed bottom-4 left-4 right-4 z-50" : "relative left-4 right-4 z-50 mt-6"}>
       <div className="container mx-auto max-w-md">
         <div className="bg-gradient-primary rounded-2xl p-4 shadow-floating flex flex-col gap-3 text-white">
           {/* Timer */}
