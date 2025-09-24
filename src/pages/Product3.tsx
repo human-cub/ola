@@ -31,7 +31,7 @@ const Product3 = () => {
       // Button position logic
       if (priceSliderRef.current) {
         const priceSliderBottom = priceSliderRef.current.offsetTop + priceSliderRef.current.offsetHeight;
-        setIsButtonFixed(currentScrollY > priceSliderBottom + 100);
+        setIsButtonFixed(currentScrollY > priceSliderBottom);
       }
       
       setLastScrollY(currentScrollY);

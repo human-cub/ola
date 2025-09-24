@@ -45,8 +45,8 @@ export const FloatingButton = ({ whatsappUrl = "https://chat.whatsapp.com/IHMiBb
   };
 
   return (
-    <div className={isFixed ? "fixed bottom-4 left-4 right-4 z-50" : "flex justify-center mt-4 px-4 z-50"}>
-      <div className="container mx-auto max-w-md">
+    <div className={isFixed ? "fixed bottom-4 left-4 right-4 z-50" : "container mx-auto px-4 z-50 -mt-6"}>
+      <div className={isFixed ? "container mx-auto max-w-md" : "max-w-4xl mx-auto"}>
         <div className="bg-gradient-primary rounded-2xl p-4 shadow-floating flex flex-col gap-3 text-white">
           {/* Timer */}
           <div className="flex items-center gap-2 justify-center">
