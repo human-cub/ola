@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { HeroSection } from "@/components/HeroSection";
 import { ProductCarousel4 } from "@/components/ProductCarousel4";
@@ -14,22 +14,11 @@ import { FloatingButton } from "@/components/FloatingButton";
 const Product4 = () => {
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
-  const [isButtonFixed, setIsButtonFixed] = useState(false);
-  const priceSliderRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      
-      // Header visibility logic
       setIsHeaderVisible(currentScrollY <= lastScrollY || currentScrollY < 100);
-      
-      // Button position logic
-      if (priceSliderRef.current) {
-        const priceSliderBottom = priceSliderRef.current.offsetTop + priceSliderRef.current.offsetHeight;
-        setIsButtonFixed(currentScrollY > priceSliderBottom + 50);
-      }
-      
       setLastScrollY(currentScrollY);
     };
 
@@ -45,21 +34,13 @@ const Product4 = () => {
         <HeroSection />
         <ProductCarousel4 />
         <ProductInfo4 />
-        <div ref={priceSliderRef}>
-          <PriceSlider priceData={[
-            { people: 1, price: 36500 },
-            { people: 10, price: 33250 },
-            { people: 30, price: 30000 },
-            { people: 50, price: 26000 },
-            { people: 100, price: 20500 },
-          ]} />
-        </div>
-        {!isButtonFixed && (
-          <FloatingButton 
-            whatsappUrl="https://chat.whatsapp.com/LwCt9mb1TlD87eYaMSOp8Y?mode=ems_copy_c" 
-            isFixed={false} 
-          />
-        )}
+        <PriceSlider priceData={[
+          { people: 1, price: 36500 },
+          { people: 10, price: 33250 },
+          { people: 30, price: 30000 },
+          { people: 50, price: 26000 },
+          { people: 100, price: 20500 },
+        ]} />
         <ProductDescription4 />
         <Benefits />
         <ProcessSteps />
@@ -67,12 +48,7 @@ const Product4 = () => {
         <RelatedProducts currentProduct="pump-v8" />
       </main>
 
-      {isButtonFixed && (
-        <FloatingButton 
-          whatsappUrl="https://chat.whatsapp.com/LwCt9mb1TlD87eYaMSOp8Y?mode=ems_copy_c" 
-          isFixed={true} 
-        />
-      )}
+      <FloatingButton whatsappUrl="https://chat.whatsapp.com/LwCt9mb1TlD87eYaMSOp8Y?mode=ems_copy_c" />
     </div>
   );
 };
