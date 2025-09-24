@@ -1,14 +1,23 @@
 import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
-import { HeroSection } from "@/components/HeroSection";
-import { MainProductCarousel } from "@/components/MainProductCarousel";
-import { Benefits } from "@/components/Benefits";
-import { ProcessSteps } from "@/components/ProcessSteps";
-import { ServiceDescription } from "@/components/ServiceDescription";
+import { ProductCarousel } from "@/components/ProductCarousel";
+import { ProductInfo } from "@/components/ProductInfo";
+import { ProductDescription } from "@/components/ProductDescription";
+import { PriceSlider } from "@/components/PriceSlider";
+import { FloatingButton } from "@/components/FloatingButton";
 
-const Index = () => {
+const EnaWhey930 = () => {
   const [headerVisible, setHeaderVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+
+  // Price data for the protein product
+  const priceData = [
+    { people: 1, price: 85000 },
+    { people: 25, price: 68000 },
+    { people: 50, price: 55000 },
+    { people: 75, price: 48000 },
+    { people: 100, price: 42000 }
+  ];
 
   useEffect(() => {
     const handleScroll = () => {
@@ -32,14 +41,15 @@ const Index = () => {
       <Header isVisible={headerVisible} />
       
       <main>
-        <HeroSection />
-        <MainProductCarousel />
-        <Benefits />
-        <ProcessSteps />
-        <ServiceDescription />
+        <ProductInfo />
+        <ProductCarousel />
+        <PriceSlider priceData={priceData} />
+        <ProductDescription />
       </main>
+      
+      <FloatingButton whatsappUrl="https://chat.whatsapp.com/Fbx2bOICgdsF6o7GGeYETg" />
     </div>
   );
 };
 
-export default Index;
+export default EnaWhey930;
