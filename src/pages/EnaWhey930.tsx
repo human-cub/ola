@@ -1,23 +1,19 @@
 import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
+import { HeroSection } from "@/components/HeroSection";
 import { ProductCarousel } from "@/components/ProductCarousel";
 import { ProductInfo } from "@/components/ProductInfo";
-import { ProductDescription } from "@/components/ProductDescription";
 import { PriceSlider } from "@/components/PriceSlider";
+import { ProductDescription } from "@/components/ProductDescription";
+import { Benefits } from "@/components/Benefits";
+import { ProcessSteps } from "@/components/ProcessSteps";
+import { ServiceDescription } from "@/components/ServiceDescription";
+import { RelatedProducts } from "@/components/RelatedProducts";
 import { FloatingButton } from "@/components/FloatingButton";
 
 const EnaWhey930 = () => {
   const [headerVisible, setHeaderVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
-
-  // Price data for the protein product
-  const priceData = [
-    { people: 1, price: 85000 },
-    { people: 25, price: 68000 },
-    { people: 50, price: 55000 },
-    { people: 75, price: 48000 },
-    { people: 100, price: 42000 }
-  ];
 
   useEffect(() => {
     const handleScroll = () => {
@@ -40,13 +36,24 @@ const EnaWhey930 = () => {
     <div className="min-h-screen bg-background">
       <Header isVisible={headerVisible} />
       
-      <main>
-        <ProductInfo />
+      <main className="pb-24">
+        <HeroSection />
         <ProductCarousel />
-        <PriceSlider priceData={priceData} />
+        <ProductInfo />
+        <PriceSlider priceData={[
+          { people: 1, price: 85000 },
+          { people: 10, price: 77000 },
+          { people: 30, price: 68000 },
+          { people: 50, price: 62000 },
+          { people: 100, price: 55000 },
+        ]} />
         <ProductDescription />
+        <Benefits />
+        <ProcessSteps />
+        <ServiceDescription />
+        <RelatedProducts currentProduct="protein" />
       </main>
-      
+
       <FloatingButton whatsappUrl="https://chat.whatsapp.com/Fbx2bOICgdsF6o7GGeYETg" />
     </div>
   );
