@@ -74,7 +74,7 @@ export const ServiceDescription = () => {
                   
                   <div className="flex flex-col items-center gap-1 flex-1">
                     <a 
-                      href="https://chat.whatsapp.com/your-channel-link" 
+                      href="https://chat.whatsapp.com/Fbx2bOICgdsF6o7GGeYETg" 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/20 hover:bg-primary/30 transition-colors"
