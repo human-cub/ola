@@ -88,11 +88,13 @@ export const ServiceDescription = () => {
                 </div>
                 
                 <div className="flex flex-col items-center">
-                  <img 
-                    src="/qr-code.svg"
-                    alt="QR Code"
-                    className="w-[200px] h-[200px] hover:opacity-90 transition-opacity rounded-lg border-2 border-primary/30 hover:border-primary/50"
-                  />
+                  <div className="w-[200px] h-[200px] aspect-square flex items-center justify-center">
+                    <img 
+                      src="/qr-code.svg"
+                      alt="QR Code"
+                      className="w-full h-full object-contain hover:opacity-90 transition-opacity rounded-lg border-2 border-primary/30 hover:border-primary/50"
+                    />
+                  </div>
                   <p className="text-xs text-muted-foreground mt-1">Compartí este sitio</p>
                 </div>
               </div>
