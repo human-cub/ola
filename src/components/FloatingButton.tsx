@@ -6,7 +6,7 @@ interface FloatingButtonProps {
   whatsappUrl?: string;
 }
 
-export const FloatingButton = ({ whatsappUrl = "https://chat.whatsapp.com/FxpV8T80s4DC13No0d6UVK?mode=ems_copy_t" }: FloatingButtonProps) => {
+export const FloatingButton = ({ whatsappUrl = "https://chat.whatsapp.com/IHMiBbdeOqO68WSbiPKNwA?mode=ems_share_c" }: FloatingButtonProps) => {
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
