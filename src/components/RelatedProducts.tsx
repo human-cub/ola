@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
+import { productPrices } from "@/data/productPrices";
 
 interface RelatedProductsProps {
   currentProduct?: "protein" | "creatine" | "whey-protein" | "pump-v8" | "gainer";
@@ -37,8 +38,8 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
       weight: "500g",
       link: "/sn-creatina-500",
       image: "https://www.demusculos.com/web/wp-content/uploads/2024/11/creatina-500-grs-star-1.jpg",
-      originalPrice: "$52.900",
-      discountPrice: "$34.000"
+      originalPrice: productPrices.creatine.originalPrice,
+      discountPrice: productPrices.creatine.discountPrice
     },
     {
       id: "protein",
@@ -47,8 +48,8 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
       weight: "930g",
       link: "/ena-whey-930",
       image: "/truemade-protein-main.webp",
-      originalPrice: "$64.000",
-      discountPrice: "$36.200"
+      originalPrice: productPrices.protein.originalPrice,
+      discountPrice: productPrices.protein.discountPrice
     },
     {
       id: "whey-protein",
@@ -57,8 +58,8 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
       weight: "900g",
       link: "/sn-whey-908",
       image: wheyProteinMain,
-      originalPrice: "$41.900",
-      discountPrice: "$23.000"
+      originalPrice: productPrices["whey-protein"].originalPrice,
+      discountPrice: productPrices["whey-protein"].discountPrice
     },
     {
       id: "pump-v8",
@@ -67,8 +68,8 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
       weight: "285g",
       link: "/sn-pumpv8-285",
       image: pumpV8Main,
-      originalPrice: "$36.500",
-      discountPrice: "$20.500"
+      originalPrice: productPrices["pump-v8"].originalPrice,
+      discountPrice: productPrices["pump-v8"].discountPrice
     },
     {
       id: "gainer",
@@ -77,8 +78,8 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
       weight: "2267g",
       link: "/gn-gainer-2267",
       image: "https://acdn-us.mitiendanube.com/stores/583/512/products/gainer-cbc507a865b208583517254733035648-1024-1024.png",
-      originalPrice: "$66.400",
-      discountPrice: "$35.100"
+      originalPrice: productPrices.gainer.originalPrice,
+      discountPrice: productPrices.gainer.discountPrice
     }
   ];
 

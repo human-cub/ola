@@ -4,6 +4,7 @@ import { HeroSection } from "@/components/HeroSection";
 import { ProductCarousel5 } from "@/components/ProductCarousel5";
 import { ProductInfo5 } from "@/components/ProductInfo5";
 import { PriceSlider } from "@/components/PriceSlider";
+import { productPrices } from "@/data/productPrices";
 import { ProductDescription5 } from "@/components/ProductDescription5";
 import { Benefits } from "@/components/Benefits";
 import { ProcessSteps } from "@/components/ProcessSteps";
@@ -34,13 +35,7 @@ const Product5 = () => {
         <HeroSection />
         <ProductCarousel5 />
         <ProductInfo5 />
-        <PriceSlider priceData={[
-          { people: 1, price: 66400 },
-          { people: 10, price: 49700 },
-          { people: 30, price: 45200 },
-          { people: 50, price: 40300 },
-          { people: 100, price: 35100 },
-        ]} />
+        <PriceSlider priceData={productPrices.gainer.priceSlider} />
         <ProductDescription5 />
         <Benefits />
         <ProcessSteps />

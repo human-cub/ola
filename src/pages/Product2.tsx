@@ -4,6 +4,7 @@ import { HeroSection } from "@/components/HeroSection";
 import { ProductCarousel2 } from "@/components/ProductCarousel2";
 import { ProductInfo2 } from "@/components/ProductInfo2";
 import { PriceSlider } from "@/components/PriceSlider";
+import { productPrices } from "@/data/productPrices";
 import { ProductDescription2 } from "@/components/ProductDescription2";
 import { Benefits } from "@/components/Benefits";
 import { ProcessSteps } from "@/components/ProcessSteps";
@@ -40,13 +41,7 @@ const Product2 = () => {
         <HeroSection />
         <ProductCarousel2 />
         <ProductInfo2 />
-        <PriceSlider priceData={[
-          { people: 1, price: 56000 },
-          { people: 10, price: 53400 },
-          { people: 30, price: 49100 },
-          { people: 50, price: 44600 },
-          { people: 100, price: 41900 },
-        ]} />
+        <PriceSlider priceData={productPrices.creatine.priceSlider} />
         <ProductDescription2 />
         <Benefits />
         <ProcessSteps />

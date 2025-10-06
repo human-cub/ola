@@ -4,6 +4,7 @@ import { HeroSection } from "@/components/HeroSection";
 import { ProductCarousel } from "@/components/ProductCarousel";
 import { ProductInfo } from "@/components/ProductInfo";
 import { PriceSlider } from "@/components/PriceSlider";
+import { productPrices } from "@/data/productPrices";
 import { ProductDescription } from "@/components/ProductDescription";
 import { Benefits } from "@/components/Benefits";
 import { ProcessSteps } from "@/components/ProcessSteps";
@@ -40,13 +41,7 @@ const EnaWhey930 = () => {
         <HeroSection />
         <ProductCarousel />
         <ProductInfo />
-        <PriceSlider priceData={[
-          { people: 1, price: 56000 },
-          { people: 10, price: 53400 },
-          { people: 30, price: 49100 },
-          { people: 50, price: 44600 },
-          { people: 100, price: 41900 },
-        ]} />
+        <PriceSlider priceData={productPrices.protein.priceSlider} />
         <ProductDescription />
         <Benefits />
         <ProcessSteps />

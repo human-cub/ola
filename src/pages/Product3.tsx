@@ -4,6 +4,7 @@ import { HeroSection } from "@/components/HeroSection";
 import { ProductCarousel3 } from "@/components/ProductCarousel3";
 import { ProductInfo3 } from "@/components/ProductInfo3";
 import { PriceSlider } from "@/components/PriceSlider";
+import { productPrices } from "@/data/productPrices";
 import { ProductDescription3 } from "@/components/ProductDescription3";
 import { Benefits } from "@/components/Benefits";
 import { ProcessSteps } from "@/components/ProcessSteps";
@@ -40,13 +41,7 @@ const Product3 = () => {
         <HeroSection />
         <ProductCarousel3 />
         <ProductInfo3 />
-        <PriceSlider priceData={[
-          { people: 1, price: 41900 },
-          { people: 10, price: 37200 },
-          { people: 30, price: 32000 },
-          { people: 50, price: 29000 },
-          { people: 100, price: 23000 },
-        ]} />
+        <PriceSlider priceData={productPrices["whey-protein"].priceSlider} />
         <ProductDescription3 />
         <Benefits />
         <ProcessSteps />
