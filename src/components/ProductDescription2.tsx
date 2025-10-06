@@ -1,12 +1,4 @@
 export const ProductDescription2 = () => {
-  const variants = [
-    "Polvo sin sabor 500g",
-    "100% Pura - Creatina Micronizada",
-    "Ultra Micronizada para mejor absorción",
-    "5 gramos por porción",
-    "Máxima pureza"
-  ];
-
   return (
     <section className="px-4 py-4">
       <div className="container mx-auto max-w-md">
@@ -15,21 +7,6 @@ export const ProductDescription2 = () => {
             Descripción del Producto
           </h3>
           
-          {/* Variants */}
-          <div className="mb-6">
-            <h4 className="text-lg font-medium mb-3 text-primary">
-              Presentaciones Disponibles:
-            </h4>
-            <div className="grid grid-cols-1 gap-2">
-              {variants.map((variant, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-primary rounded-full"></div>
-                  <span className="text-foreground">{variant}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
           {/* Product Details */}
           <div className="space-y-4">
             <p className="text-muted-foreground leading-relaxed">

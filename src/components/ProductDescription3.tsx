@@ -1,12 +1,4 @@
 export const ProductDescription3 = () => {
-  const flavors = [
-    "Banana",
-    "Cookies & Cream",
-    "Vainilla",
-    "Fresa",
-    "Chocolate"
-  ];
-
   return (
     <section className="px-4 py-4">
       <div className="container mx-auto max-w-md">
@@ -15,21 +7,6 @@ export const ProductDescription3 = () => {
             Descripción del Producto
           </h3>
           
-          {/* Flavors */}
-          <div className="mb-6">
-            <h4 className="text-lg font-medium mb-3 text-primary">
-              Sabores Disponibles:
-            </h4>
-            <div className="grid grid-cols-1 gap-2">
-              {flavors.map((flavor, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-primary rounded-full"></div>
-                  <span className="text-foreground">{flavor}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
           {/* Product Details */}
           <div className="space-y-4">
             <p className="text-muted-foreground leading-relaxed">
