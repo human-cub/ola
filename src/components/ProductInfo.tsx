@@ -1,5 +1,5 @@
 export const ProductInfo = () => {
-  const flavors = ["Chocolate", "Vainilla"];
+  const flavors = ["Double Rich Chocolate", "Vanilla Ice Cream", "Cookies & Cream", "Banana Shake", "Strawberry Milkshake"];
 
   return (
     <section className="px-4 pt-3 pb-0">

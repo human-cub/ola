@@ -1,5 +1,5 @@
 export const ProductInfo3 = () => {
-  const flavors = ["Chocolate", "Cookies & Cream", "Vanilla", "Frutilla", "Banana"];
+  const flavors = ["Chocolate", "Vanilla", "Cookies & Cream", "Frutilla", "Banana"];
 
   return (
     <section className="px-4 pt-3 pb-0">
@@ -9,7 +9,7 @@ export const ProductInfo3 = () => {
             Whey Protein Doypack 2 Lb Star Nutrition
           </h2>
           <p className="text-muted-foreground font-medium mb-4">
-            Masa neto: <span className="text-primary font-semibold">900 gramos</span>
+            Masa neto: <span className="text-primary font-semibold">908 gramos</span>
           </p>
           
           {/* Flavors */}

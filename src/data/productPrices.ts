@@ -16,12 +16,12 @@ export const productPrices: Record<string, ProductPrices> = {
     priceSlider: [
       { people: 1, price: 67200 },
       { people: 10, price: 54900 },
-      { people: 30, price: 49600 },
-      { people: 50, price: 46200 },
-      { people: 100, price: 40500 },
+      { people: 30, price: 48600 },
+      { people: 50, price: 44200 },
+      { people: 100, price: 39800 },
     ],
     originalPrice: "$67.200",
-    discountPrice: "$40.500"
+    discountPrice: "$39.800"
   },
   creatine: {
     id: "creatine",
