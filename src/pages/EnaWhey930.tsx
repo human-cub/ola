@@ -42,7 +42,7 @@ const EnaWhey930 = () => {
         <ProductInfo />
         <PriceSlider priceData={[
           { people: 1, price: 67200 },
-          { people: 10, price: 56300 },
+          { people: 10, price: 54900 },
           { people: 30, price: 48100 },
           { people: 50, price: 41500 },
           { people: 100, price: 34200 },
