@@ -4,7 +4,7 @@ import { HeroSection } from "@/components/HeroSection";
 import { ProductCarousel } from "@/components/ProductCarousel";
 import { ProductInfo } from "@/components/ProductInfo";
 import { PriceSlider } from "@/components/PriceSlider";
-import { productPrices } from "@/data/productPrices";
+import { getProduct } from "@/data/products";
 import { ProductDescription } from "@/components/ProductDescription";
 import { Benefits } from "@/components/Benefits";
 import { ProcessSteps } from "@/components/ProcessSteps";
@@ -15,6 +15,7 @@ import { FloatingButton } from "@/components/FloatingButton";
 const EnaWhey930 = () => {
   const [headerVisible, setHeaderVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const product = getProduct("protein");
 
   useEffect(() => {
     const handleScroll = () => {
@@ -41,7 +42,7 @@ const EnaWhey930 = () => {
         <HeroSection />
         <ProductCarousel />
         <ProductInfo />
-        <PriceSlider priceData={productPrices.protein.priceSlider} />
+        <PriceSlider priceData={product?.priceSlider || []} />
         <ProductDescription />
         <Benefits />
         <ProcessSteps />

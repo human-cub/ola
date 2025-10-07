@@ -4,7 +4,7 @@ import { HeroSection } from "@/components/HeroSection";
 import { ProductCarousel3 } from "@/components/ProductCarousel3";
 import { ProductInfo3 } from "@/components/ProductInfo3";
 import { PriceSlider } from "@/components/PriceSlider";
-import { productPrices } from "@/data/productPrices";
+import { getProduct } from "@/data/products";
 import { ProductDescription3 } from "@/components/ProductDescription3";
 import { Benefits } from "@/components/Benefits";
 import { ProcessSteps } from "@/components/ProcessSteps";
@@ -15,6 +15,7 @@ import { FloatingButton } from "@/components/FloatingButton";
 const Product3 = () => {
   const [headerVisible, setHeaderVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const product = getProduct("whey-protein");
 
   useEffect(() => {
     const handleScroll = () => {
@@ -41,7 +42,7 @@ const Product3 = () => {
         <HeroSection />
         <ProductCarousel3 />
         <ProductInfo3 />
-        <PriceSlider priceData={productPrices["whey-protein"].priceSlider} />
+        <PriceSlider priceData={product?.priceSlider || []} />
         <ProductDescription3 />
         <Benefits />
         <ProcessSteps />

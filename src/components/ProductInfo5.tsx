@@ -1,15 +1,18 @@
+import { getProduct } from "@/data/products";
+
 export const ProductInfo5 = () => {
-  const flavors = ["Chocolate", "Vainilla"];
+  const product = getProduct("gainer");
+  if (!product) return null;
 
   return (
     <section className="px-4 pt-3 pb-0">
       <div className="container mx-auto max-w-md">
         <div className="text-center mb-6">
           <h2 className="text-2xl font-bold text-foreground mb-2">
-            Gold Nutrition Gainer Gold
+            {product.name}
           </h2>
           <p className="text-muted-foreground font-medium mb-4">
-            Masa neto: <span className="text-primary font-semibold">2267g</span>
+            Masa neto: <span className="text-primary font-semibold">{product.weight}</span>
           </p>
           
           {/* Flavors */}
@@ -18,7 +21,7 @@ export const ProductInfo5 = () => {
               Sabores Disponibles:
             </h4>
             <div className="flex flex-wrap justify-center gap-3">
-              {flavors.map((flavor, index) => (
+              {product.flavors?.map((flavor, index) => (
                 <div key={index} className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-primary rounded-full"></div>
                   <span className="text-foreground">{flavor}</span>

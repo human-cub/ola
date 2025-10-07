@@ -4,7 +4,7 @@ import { HeroSection } from "@/components/HeroSection";
 import { ProductCarousel2 } from "@/components/ProductCarousel2";
 import { ProductInfo2 } from "@/components/ProductInfo2";
 import { PriceSlider } from "@/components/PriceSlider";
-import { productPrices } from "@/data/productPrices";
+import { getProduct } from "@/data/products";
 import { ProductDescription2 } from "@/components/ProductDescription2";
 import { Benefits } from "@/components/Benefits";
 import { ProcessSteps } from "@/components/ProcessSteps";
@@ -15,6 +15,7 @@ import { FloatingButton } from "@/components/FloatingButton";
 const Product2 = () => {
   const [headerVisible, setHeaderVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const product = getProduct("creatine");
 
   useEffect(() => {
     const handleScroll = () => {
@@ -41,7 +42,7 @@ const Product2 = () => {
         <HeroSection />
         <ProductCarousel2 />
         <ProductInfo2 />
-        <PriceSlider priceData={productPrices.creatine.priceSlider} />
+        <PriceSlider priceData={product?.priceSlider || []} />
         <ProductDescription2 />
         <Benefits />
         <ProcessSteps />
