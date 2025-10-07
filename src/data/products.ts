@@ -66,7 +66,7 @@ export const products: Record<string, ProductData> = {
     description: "Proteína en práctico doypack",
     weight: "908g",
     link: "/sn-whey-908",
-    image: "/lovable-uploads/whey-protein-main.png",
+    image: "/whey-protein-main.png",
     priceSlider: [
       { people: 1, price: 47900 },
       { people: 10, price: 43100 },
@@ -84,7 +84,7 @@ export const products: Record<string, ProductData> = {
     description: "Pre-entreno de máximo rendimiento",
     weight: "285g",
     link: "/sn-pumpv8-285",
-    image: "/lovable-uploads/pump-v8-main.png",
+    image: "/pump-v8-main.png",
     priceSlider: [
       { people: 1, price: 36900 },
       { people: 10, price: 33250 },
