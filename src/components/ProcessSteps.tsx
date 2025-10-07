@@ -8,7 +8,7 @@ const steps = [
   },
   {
     icon: UserPlus,
-    title: "Invitás a tus amigos",
+    title: "Invitás a tus amigues",
     description: "Compartí el grupo con amigues para conseguir mejores precios"
   },
   {
