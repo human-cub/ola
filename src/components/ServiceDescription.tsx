@@ -43,8 +43,8 @@ export const ServiceDescription = () => {
               
               {/* Social Media and QR Section */}
               <div className="flex flex-col items-center gap-4">
-                <div className="flex gap-2 justify-center items-start max-w-sm mx-auto">
-                  <div className="flex flex-col items-center gap-1 flex-1">
+                <div className="flex gap-3 justify-center items-start mx-auto">
+                  <div className="flex flex-col items-center gap-1 min-w-[60px]">
                     <a 
                       href="https://www.instagram.com/ola.unity" 
                       target="_blank" 
@@ -58,7 +58,7 @@ export const ServiceDescription = () => {
                     <span className="text-xs text-muted-foreground text-center">Instagram</span>
                   </div>
                   
-                  <div className="flex flex-col items-center gap-1 flex-1">
+                  <div className="flex flex-col items-center gap-1 min-w-[60px]">
                     <a 
                       href="https://www.facebook.com/share/1ARgJWvubE" 
                       target="_blank" 
@@ -72,7 +72,7 @@ export const ServiceDescription = () => {
                     <span className="text-xs text-muted-foreground text-center">Facebook</span>
                   </div>
                   
-                  <div className="flex flex-col items-center gap-1 flex-1">
+                  <div className="flex flex-col items-center gap-1 min-w-[60px]">
                     <a 
                       href="https://chat.whatsapp.com/Fbx2bOICgdsF6o7GGeYETg" 
                       target="_blank" 
@@ -86,7 +86,7 @@ export const ServiceDescription = () => {
                     <span className="text-xs text-muted-foreground text-center">Grupo</span>
                   </div>
                   
-                  <div className="flex flex-col items-center gap-1 flex-1">
+                  <div className="flex flex-col items-center gap-1 min-w-[60px]">
                     <a 
                       href="https://whatsapp.com/channel/0029VbApwH83LdQPnkFyGo2p" 
                       target="_blank" 
