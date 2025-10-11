@@ -43,7 +43,7 @@ export const ServiceDescription = () => {
               
               {/* Social Media and QR Section */}
               <div className="flex flex-col items-center gap-4">
-                <div className="grid grid-cols-4 gap-4 w-full max-w-[340px] mx-auto">
+                <div className="grid grid-cols-4 gap-6 w-full max-w-[380px] mx-auto">
                   <div className="flex flex-col items-center gap-1">
                     <a 
                       href="https://www.instagram.com/ola.unity" 
