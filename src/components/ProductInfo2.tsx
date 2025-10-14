@@ -12,7 +12,7 @@ export const ProductInfo2 = () => {
             {product.name}
           </h2>
           <p className="text-muted-foreground font-medium mb-4">
-            Masa neto: <span className="text-primary font-semibold">{product.weight}</span>
+            Peso neto: <span className="text-primary font-semibold">{product.weight}</span>
           </p>
           
           {/* Variants */}
