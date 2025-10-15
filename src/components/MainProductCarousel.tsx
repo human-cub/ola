@@ -122,7 +122,7 @@ export const MainProductCarousel = () => {
                         </p>
                         
                         <p className="text-primary font-semibold mb-4">
-                          Masa neto: {product.weight}
+                          Peso neto: {product.weight}
                         </p>
 
                         <div className="mb-6 space-y-2">

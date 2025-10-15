@@ -85,7 +85,7 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
                         {product.description}
                       </p>
                       <p className="text-xs font-medium text-primary mb-2">
-                        Masa neto: {product.weight}
+                        Peso neto: {product.weight}
                       </p>
                       
                       {/* Pricing Information */}
