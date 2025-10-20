@@ -72,7 +72,7 @@ export const FloatingButton = ({ whatsappUrl = "https://chat.whatsapp.com/IHMiBb
             className="bg-white/20 hover:bg-white/30 text-white border-0 gap-2 w-full"
           >
             <MessageCircle className="w-4 h-4" />
-            <span className="text-sm">Grupo</span>
+            <span className="text-sm">Grupo de compra</span>
           </Button>
         </div>
       </div>
