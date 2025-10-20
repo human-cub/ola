@@ -15,7 +15,7 @@ export const FloatingButton = ({ whatsappUrl = "https://chat.whatsapp.com/IHMiBb
 
   useEffect(() => {
     const calculateTimeLeft = () => {
-      const targetDate = new Date('2025-10-19T23:59:59');
+      const targetDate = new Date('2025-10-26T23:59:59');
       const now = new Date();
       const difference = targetDate.getTime() - now.getTime();
 
