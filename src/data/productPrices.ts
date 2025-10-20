@@ -15,13 +15,13 @@ export const productPrices: Record<string, ProductPrices> = {
     id: "protein",
     priceSlider: [
       { people: 1, price: 67200 },
-      { people: 10, price: 54900 },
-      { people: 30, price: 48600 },
-      { people: 50, price: 44200 },
-      { people: 100, price: 39800 },
+      { people: 10, price: 55700 },
+      { people: 30, price: 49600 },
+      { people: 50, price: 45200 },
+      { people: 100, price: 38800 },
     ],
     originalPrice: "$67.200",
-    discountPrice: "$39.800"
+    discountPrice: "$38.800"
   },
   creatine: {
     id: "creatine",
@@ -38,25 +38,25 @@ export const productPrices: Record<string, ProductPrices> = {
   "whey-protein": {
     id: "whey-protein",
     priceSlider: [
-      { people: 1, price: 54200 },
+      { people: 1, price: 53000 },
       { people: 10, price: 51200 },
       { people: 30, price: 46800 },
       { people: 50, price: 39400 },
       { people: 100, price: 34200 },
     ],
-    originalPrice: "$54.200",
+    originalPrice: "$53.000",
     discountPrice: "$34.200"
   },
   "pump-v8": {
     id: "pump-v8",
     priceSlider: [
-      { people: 1, price: 40000 },
-      { people: 10, price: 36000 },
-      { people: 30, price: 30000 },
+      { people: 1, price: 37600 },
+      { people: 10, price: 35000 },
+      { people: 30, price: 31000 },
       { people: 50, price: 27800 },
       { people: 100, price: 25500 },
     ],
-    originalPrice: "$40.000",
+    originalPrice: "$37.600",
     discountPrice: "$25.500"
   },
   gainer: {
