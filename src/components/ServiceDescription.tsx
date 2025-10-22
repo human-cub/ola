@@ -38,7 +38,7 @@ export const ServiceDescription = () => {
                 ¡Vamos a conseguir el mayor descuento!
               </p>
               <p className="text-sm text-center text-muted-foreground mb-4">
-                Compartilo con tus amigues — capaz que a elles también les interesa.
+                Compartilo con tus amigos — capaz que a ellos también les interesa.
               </p>
               
               {/* Social Media and QR Section */}
@@ -123,7 +123,7 @@ export const ServiceDescription = () => {
               
               <div className="mt-4 text-center">
                 <p className="text-sm font-medium text-foreground mb-2">
-                  Escribinos — estamos abiertes a colaborar y escuchar sugerencias.
+                  Escribinos — estamos abiertos a colaborar y escuchar sugerencias.
                 </p>
                 <p className="text-sm text-primary font-semibold mb-4">
                   Nuestra meta es que las compras sean más baratas y transparentes. ¡Hagámoslo en grupo!
