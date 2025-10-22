@@ -90,7 +90,7 @@ const Product2 = () => {
         <RelatedProducts currentProduct="creatine" />
       </main>
 
-      <FloatingButton whatsappUrl="https://chat.whatsapp.com/DuDGRwejfqZGZq1w8UBcnk?mode=ems_copy_c" />
+      <FloatingButton productName="Star Nutrition Creatina" productId="creatine" />
     </div>
   );
 };

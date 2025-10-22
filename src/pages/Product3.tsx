@@ -90,7 +90,7 @@ const Product3 = () => {
         <RelatedProducts currentProduct="whey-protein" />
       </main>
 
-      <FloatingButton whatsappUrl="https://chat.whatsapp.com/BYSF3mQxkxS9CdHtoXGD6m?mode=ems_copy_c" />
+      <FloatingButton productName="Star Nutrition Whey Protein" productId="whey-protein" />
     </div>
   );
 };

@@ -84,7 +84,7 @@ const Product5 = () => {
         <RelatedProducts currentProduct="gainer" />
       </main>
 
-      <FloatingButton whatsappUrl="https://chat.whatsapp.com/CTvImulInPj12UcC08k5FB?mode=ems_copy_c" />
+      <FloatingButton productName="Gold Nutrition Gainer Gold" productId="gainer" />
     </div>
   );
 };

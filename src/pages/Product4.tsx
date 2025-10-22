@@ -84,7 +84,7 @@ const Product4 = () => {
         <RelatedProducts currentProduct="pump-v8" />
       </main>
 
-      <FloatingButton whatsappUrl="https://chat.whatsapp.com/LwCt9mb1TlD87eYaMSOp8Y?mode=ems_copy_c" />
+      <FloatingButton productName="Star Nutrition Pump V8" productId="pump-v8" />
     </div>
   );
 };

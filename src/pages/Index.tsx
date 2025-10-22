@@ -5,7 +5,6 @@ import { MainProductCarousel } from "@/components/MainProductCarousel";
 import { Benefits } from "@/components/Benefits";
 import { ProcessSteps } from "@/components/ProcessSteps";
 import { ServiceDescription } from "@/components/ServiceDescription";
-import OrderForm from "@/components/OrderForm";
 
 const Index = () => {
   const [headerVisible, setHeaderVisible] = useState(true);
@@ -36,14 +35,6 @@ const Index = () => {
         <HeroSection />
         <MainProductCarousel />
         <Benefits />
-        
-        <section className="py-16 px-4 bg-muted/30">
-          <div className="container mx-auto">
-            <h2 className="text-3xl font-bold text-center mb-8">Hacer tu Pedido</h2>
-            <OrderForm />
-          </div>
-        </section>
-        
         <ProcessSteps />
         <ServiceDescription />
       </main>

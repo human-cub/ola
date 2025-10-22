@@ -91,7 +91,7 @@ const EnaWhey930 = () => {
         <RelatedProducts currentProduct="protein" />
       </main>
 
-      <FloatingButton whatsappUrl="https://chat.whatsapp.com/FxpV8T80s4DC13No0d6UVK?mode=ems_copy_t" />
+      <FloatingButton productName="ENA TrueMade Whey Protein" productId="protein" />
     </div>
   );
 };
