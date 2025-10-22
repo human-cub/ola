@@ -9,6 +9,8 @@ import Product2 from "./pages/Product2";
 import Product3 from "./pages/Product3";
 import Product4 from "./pages/Product4";
 import Product5 from "./pages/Product5";
+import Auth from "./pages/Auth";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +28,8 @@ const App = () => (
           <Route path="/sn-whey-908" element={<Product3 />} />
           <Route path="/sn-pumpv8-285" element={<Product4 />} />
           <Route path="/gn-gainer-2267" element={<Product5 />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/admin" element={<Admin />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
