@@ -11,6 +11,7 @@ interface OrderData {
   customer_name: string;
   phone: string;
   comment?: string;
+  waiting_for_discount?: boolean;
   created_at: string;
 }
 
@@ -33,6 +34,10 @@ serve(async (req) => {
 
     const orderData: OrderData = await req.json();
     
+    const waitingStatus = orderData.waiting_for_discount 
+      ? "🕐 <b>SÍ</b> - Espera descuento hasta domingo" 
+      : "❌ No";
+    
     const message = `
 🔔 <b>Nueva Orden Recibida</b>
 
@@ -40,6 +45,7 @@ serve(async (req) => {
 👤 <b>Cliente:</b> ${orderData.customer_name}
 📱 <b>Teléfono:</b> ${orderData.phone}
 💬 <b>Comentario:</b> ${orderData.comment || 'Sin comentarios'}
+⏳ <b>Espera Descuento:</b> ${waitingStatus}
 📅 <b>Fecha:</b> ${new Date(orderData.created_at).toLocaleString('es-AR')}
     `.trim();
 

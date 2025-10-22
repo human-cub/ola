@@ -11,11 +11,51 @@ import { ProcessSteps } from "@/components/ProcessSteps";
 import { ServiceDescription } from "@/components/ServiceDescription";
 import { RelatedProducts } from "@/components/RelatedProducts";
 import { FloatingButton } from "@/components/FloatingButton";
+import { supabase } from "@/integrations/supabase/client";
 
 const Product4 = () => {
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const [waitingCount, setWaitingCount] = useState(0);
   const product = getProduct("pump-v8");
+
+  useEffect(() => {
+    const fetchWaitingCount = async () => {
+      const { data } = await supabase
+        .from("products")
+        .select("waiting_for_discount_count")
+        .eq("name", "Star Nutrition Pump V8")
+        .single();
+      
+      if (data) {
+        setWaitingCount(data.waiting_for_discount_count);
+      }
+    };
+
+    fetchWaitingCount();
+    
+    const channel = supabase
+      .channel("product-pumpv8-waiting")
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "products",
+          filter: `name=eq.Star Nutrition Pump V8`,
+        },
+        (payload) => {
+          if (payload.new.waiting_for_discount_count !== undefined) {
+            setWaitingCount(payload.new.waiting_for_discount_count);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -36,7 +76,7 @@ const Product4 = () => {
         <HeroSection />
         <ProductCarousel4 />
         <ProductInfo4 />
-        <PriceSlider priceData={product?.priceSlider || []} />
+        <PriceSlider priceData={product?.priceSlider || []} waitingCount={waitingCount} />
         <ProductDescription4 />
         <Benefits />
         <ProcessSteps />

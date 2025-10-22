@@ -26,6 +26,7 @@ export type Database = {
           product_name: string
           status: Database["public"]["Enums"]["order_status"]
           updated_at: string | null
+          waiting_for_discount: boolean
         }
         Insert: {
           admin_comment?: string | null
@@ -38,6 +39,7 @@ export type Database = {
           product_name: string
           status?: Database["public"]["Enums"]["order_status"]
           updated_at?: string | null
+          waiting_for_discount?: boolean
         }
         Update: {
           admin_comment?: string | null
@@ -50,6 +52,7 @@ export type Database = {
           product_name?: string
           status?: Database["public"]["Enums"]["order_status"]
           updated_at?: string | null
+          waiting_for_discount?: boolean
         }
         Relationships: [
           {
@@ -71,6 +74,7 @@ export type Database = {
           total_orders_count: number | null
           updated_at: string | null
           virtual_orders_count: number
+          waiting_for_discount_count: number
           weight: string
         }
         Insert: {
@@ -82,6 +86,7 @@ export type Database = {
           total_orders_count?: number | null
           updated_at?: string | null
           virtual_orders_count?: number
+          waiting_for_discount_count?: number
           weight: string
         }
         Update: {
@@ -93,6 +98,7 @@ export type Database = {
           total_orders_count?: number | null
           updated_at?: string | null
           virtual_orders_count?: number
+          waiting_for_discount_count?: number
           weight?: string
         }
         Relationships: []

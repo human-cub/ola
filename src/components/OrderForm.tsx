@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { products } from "@/data/products";
 
@@ -15,6 +16,7 @@ const OrderForm = () => {
   const [customerName, setCustomerName] = useState("");
   const [phone, setPhone] = useState("");
   const [comment, setComment] = useState("");
+  const [waitForDiscount, setWaitForDiscount] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,6 +41,7 @@ const OrderForm = () => {
         customer_name: customerName,
         phone: phone,
         comment: comment || null,
+        waiting_for_discount: waitForDiscount,
       };
 
       const { data, error } = await supabase
@@ -53,7 +56,11 @@ const OrderForm = () => {
       try {
         await supabase.functions.invoke("notify-telegram", {
           body: {
-            ...orderData,
+            product_name: orderData.product_name,
+            customer_name: orderData.customer_name,
+            phone: orderData.phone,
+            comment: orderData.comment,
+            waiting_for_discount: orderData.waiting_for_discount,
             created_at: data.created_at,
           },
         });
@@ -68,6 +75,7 @@ const OrderForm = () => {
       setCustomerName("");
       setPhone("");
       setComment("");
+      setWaitForDiscount(false);
     } catch (error: any) {
       toast.error(error.message || "Error al enviar la orden");
     } finally {
@@ -134,6 +142,20 @@ const OrderForm = () => {
               onChange={(e) => setComment(e.target.value)}
               rows={3}
             />
+          </div>
+
+          <div className="flex items-center space-x-2 p-4 border rounded-lg bg-primary/5">
+            <Checkbox
+              id="waitForDiscount"
+              checked={waitForDiscount}
+              onCheckedChange={(checked) => setWaitForDiscount(checked as boolean)}
+            />
+            <Label
+              htmlFor="waitForDiscount"
+              className="text-sm font-medium leading-none cursor-pointer"
+            >
+              🕐 Хочу подождать до воскресенья и получить максимальную скидку
+            </Label>
           </div>
 
           <Button type="submit" className="w-full" disabled={loading}>

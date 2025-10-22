@@ -13,6 +13,7 @@ interface Product {
   weight: string;
   real_orders_count: number;
   virtual_orders_count: number;
+  waiting_for_discount_count: number;
   total_orders_count: number;
 }
 
@@ -79,6 +80,7 @@ const ProductsTable = () => {
                 <TableHead>Producto</TableHead>
                 <TableHead>Peso</TableHead>
                 <TableHead>Órdenes Reales</TableHead>
+                <TableHead>Esperando Descuento</TableHead>
                 <TableHead>Órdenes Virtuales</TableHead>
                 <TableHead>Total</TableHead>
                 <TableHead>Acciones</TableHead>
@@ -90,6 +92,7 @@ const ProductsTable = () => {
                   <TableCell className="font-medium">{product.name}</TableCell>
                   <TableCell>{product.weight}</TableCell>
                   <TableCell>{product.real_orders_count}</TableCell>
+                  <TableCell className="font-semibold text-primary">{product.waiting_for_discount_count}</TableCell>
                   <TableCell>
                     {editingId === product.id ? (
                       <Input

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Slider } from "@/components/ui/slider";
+import { Progress } from "@/components/ui/progress";
 
 interface PriceData {
   people: number;
@@ -8,11 +9,27 @@ interface PriceData {
 
 interface PriceSliderProps {
   priceData: PriceData[];
+  waitingCount?: number;
 }
 
-export const PriceSlider = ({ priceData }: PriceSliderProps) => {
+export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) => {
   const [selectedIndex, setSelectedIndex] = useState(4); // Default to 100 people
   const [showMaxGlow, setShowMaxGlow] = useState(false);
+  
+  // Вычисляем текущую цену на основе количества ожидающих
+  const getCurrentPriceIndex = () => {
+    for (let i = priceData.length - 1; i >= 0; i--) {
+      if (waitingCount >= priceData[i].people) {
+        return i;
+      }
+    }
+    return 0;
+  };
+  
+  const currentPriceIndex = getCurrentPriceIndex();
+  const currentActualPrice = priceData[currentPriceIndex];
+  const maxPrice = priceData[priceData.length - 1];
+  const progressPercent = (waitingCount / maxPrice.people) * 100;
 
   const handleSliderChange = (value: number[]) => {
     const newIndex = value[0];
@@ -42,9 +59,18 @@ export const PriceSlider = ({ priceData }: PriceSliderProps) => {
       <div className="container mx-auto max-w-md">
         <div className="relative bg-gradient-card rounded-2xl p-6 shadow-floating animate-glow-pulse animate-float hover:scale-105 transition-all duration-500 border-2 animate-border-pulse backdrop-blur-sm">
           
-          <h3 className="text-lg font-bold text-center mb-6 text-foreground bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent animate-scale-in">
+          <h3 className="text-lg font-bold text-center mb-4 text-foreground bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent animate-scale-in">
             El precio baja a medida que se suman más participantes
           </h3>
+          
+          {/* Прогресс-бар */}
+          <div className="mb-6 space-y-2">
+            <div className="flex justify-between text-sm text-muted-foreground">
+              <span>Сейчас ждут: {waitingCount} чел.</span>
+              <span>Цель: {maxPrice.people} чел.</span>
+            </div>
+            <Progress value={progressPercent} className="h-3" />
+          </div>
           
           {/* Price Scale */}
           <div className="relative mb-8">
@@ -114,35 +140,42 @@ export const PriceSlider = ({ priceData }: PriceSliderProps) => {
           </div>
 
           {/* Current Price Display */}
-          <div className="text-center relative">
+          <div className="text-center relative space-y-4">
             <div className={`absolute inset-0 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 rounded-xl -z-10 animate-shimmer ${showMaxGlow ? 'shadow-glow animate-pulse' : ''}`}></div>
             
-            <p className="text-sm text-muted-foreground mb-1 font-medium">
-              Precio con {currentPrice.people} {currentPrice.people === 1 ? 'participante' : 'participantes'}
-            </p>
-            
-            <div className="flex items-center justify-center gap-3 mb-2">
-              {/* Crossed out retail price - only show when not at leftmost position */}
-              {selectedIndex > 0 && (
-                <span className="text-lg text-gray-400 line-through font-medium">
-                  {formatPrice(retailPrice)}
-                </span>
-              )}
+            {/* Текущая цена */}
+            <div>
+              <p className="text-sm text-muted-foreground mb-1 font-medium">
+                Цена сейчас
+              </p>
               
-              {/* Main price with glow animation */}
-              <div className={`relative ${showMaxGlow ? 'animate-pulse' : ''}`}>
-                {showMaxGlow && (
-                  <div className="absolute inset-0 bg-primary/20 rounded-lg blur-md animate-ping"></div>
-                )}
-                <p className="text-4xl font-black text-primary animate-bounce-subtle bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent drop-shadow-sm relative z-10">
-                  {formatPrice(currentPrice.price)}
+              <div className="flex items-center justify-center gap-3 mb-2">
+                {/* Main price */}
+                <p className="text-3xl font-bold text-foreground">
+                  {formatPrice(currentActualPrice.price)}
                 </p>
               </div>
             </div>
             
-            <p className="text-sm text-muted-foreground font-medium border-t border-primary/20 pt-2">
-              💰 Precio por persona
-            </p>
+            {/* Разделитель */}
+            <div className="border-t border-primary/20 pt-3">
+              <p className="text-xs text-muted-foreground mb-2">
+                🎯 Подожди до окончания сбора и получи цену
+              </p>
+              
+              {/* Максимальная цена со скидкой - подсвечена */}
+              <div className="relative inline-block">
+                <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/30 to-primary/20 rounded-lg blur-md animate-pulse"></div>
+                <div className="relative bg-gradient-to-r from-primary to-primary-dark p-4 rounded-lg shadow-glow">
+                  <p className="text-4xl font-black text-white animate-bounce-subtle drop-shadow-lg">
+                    {formatPrice(maxPrice.price)}
+                  </p>
+                  <p className="text-xs text-white/90 mt-1">
+                    💰 При {maxPrice.people} участниках
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

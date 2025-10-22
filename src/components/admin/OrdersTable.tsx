@@ -16,6 +16,7 @@ interface Order {
   comment: string | null;
   status: "new" | "processing" | "completed";
   admin_comment: string | null;
+  waiting_for_discount: boolean;
   created_at: string;
 }
 
@@ -150,6 +151,7 @@ const OrdersTable = () => {
                 <TableHead>Cliente</TableHead>
                 <TableHead>Teléfono</TableHead>
                 <TableHead>Comentario</TableHead>
+                <TableHead>Espera Desc.</TableHead>
                 <TableHead>Estado</TableHead>
                 <TableHead>Nota Admin</TableHead>
               </TableRow>
@@ -164,6 +166,15 @@ const OrdersTable = () => {
                   <TableCell>{order.customer_name}</TableCell>
                   <TableCell>{order.phone}</TableCell>
                   <TableCell className="max-w-xs truncate">{order.comment}</TableCell>
+                  <TableCell>
+                    {order.waiting_for_discount ? (
+                      <span className="inline-flex items-center text-xs font-semibold text-primary">
+                        🕐 Sí
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">No</span>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <Select
                       value={order.status}
