@@ -23,12 +23,12 @@ const EnaWhey930 = () => {
     const fetchWaitingCount = async () => {
       const { data } = await supabase
         .from("products")
-        .select("waiting_for_discount_count")
+        .select("waiting_for_discount_count, virtual_orders_count")
         .eq("name", "ENA TrueMade Whey Protein")
         .single();
       
       if (data) {
-        setWaitingCount(data.waiting_for_discount_count);
+        setWaitingCount(data.waiting_for_discount_count + data.virtual_orders_count);
       }
     };
 
@@ -46,8 +46,9 @@ const EnaWhey930 = () => {
           filter: `name=eq.ENA TrueMade Whey Protein`,
         },
         (payload) => {
-          if (payload.new.waiting_for_discount_count !== undefined) {
-            setWaitingCount(payload.new.waiting_for_discount_count);
+          const newData = payload.new as any;
+          if (newData.waiting_for_discount_count !== undefined && newData.virtual_orders_count !== undefined) {
+            setWaitingCount(newData.waiting_for_discount_count + newData.virtual_orders_count);
           }
         }
       )
