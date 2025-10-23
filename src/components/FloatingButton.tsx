@@ -55,46 +55,46 @@ export const FloatingButton = ({ productName, productId }: FloatingButtonProps) 
 
   return (
     <>
-      <div className="fixed bottom-4 left-4 right-4 z-50">
-        <div className="container mx-auto max-w-md">
-          <div className="bg-gradient-primary rounded-2xl p-4 shadow-floating flex flex-col gap-3 text-white">
+      <div className="fixed bottom-0 left-0 right-0 z-50 p-3 sm:p-4">
+        <div className="container mx-auto max-w-2xl">
+          <div className="bg-gradient-primary rounded-2xl p-3 sm:p-4 shadow-floating text-white">
             {/* Timer */}
-            <div className="flex items-center gap-2 justify-center">
-              <Clock className="w-5 h-5" />
+            <div className="flex items-center gap-2 justify-center mb-3">
+              <Clock className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
               <div className="text-sm">
-                <div className="flex gap-1 items-center">
+                <div className="flex gap-1 items-center justify-center">
                   <span className="font-bold">{timeLeft.days}d</span>
                   <span>:</span>
                   <span className="font-bold">{timeLeft.hours}h</span>
                   <span>:</span>
                   <span className="font-bold">{timeLeft.minutes}m</span>
                 </div>
-                <div className="text-xs opacity-90 text-center">
+                <div className="text-xs opacity-90 text-center whitespace-nowrap">
                   Tiempo de recolección
                 </div>
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Button
                 variant="secondary"
                 size="sm"
                 onClick={handleBuyNow}
-                className="bg-white/20 hover:bg-white/30 text-white border-0 gap-2 flex-1"
+                className="bg-white/20 hover:bg-white/30 text-white border-0 gap-2 flex-1 h-auto py-3 sm:py-2"
               >
-                <ShoppingCart className="w-4 h-4" />
-                <span className="text-sm">Купить сейчас</span>
+                <ShoppingCart className="w-4 h-4 flex-shrink-0" />
+                <span className="text-sm font-medium">Comprar ahora</span>
               </Button>
               
               <Button
                 variant="secondary"
                 size="sm"
                 onClick={handleWaitForDiscount}
-                className="bg-white/20 hover:bg-white/30 text-white border-0 gap-2 flex-1"
+                className="bg-white/20 hover:bg-white/30 text-white border-0 gap-2 flex-1 h-auto py-3 sm:py-2"
               >
-                <Timer className="w-4 h-4" />
-                <span className="text-sm">Подождать скидку</span>
+                <Timer className="w-4 h-4 flex-shrink-0" />
+                <span className="text-sm font-medium">Esperar y pagar menos</span>
               </Button>
             </div>
           </div>
