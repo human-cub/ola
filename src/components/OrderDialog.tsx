@@ -43,13 +43,13 @@ const OrderDialog = ({
   const fetchOrderNumber = async () => {
     const { data: product } = await supabase
       .from("products")
-      .select("waiting_for_discount_count")
+      .select("total_orders_count")
       .eq("name", productName)
       .single();
 
     if (product) {
-      // Номер участника = текущий счетчик + 1
-      setOrderNumber(product.waiting_for_discount_count + 1);
+      // Номер участника = текущий total счетчик + 1
+      setOrderNumber((product.total_orders_count || 0) + 1);
     }
   };
 
