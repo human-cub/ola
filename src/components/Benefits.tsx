@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 const benefits = [
   {
     icon: Percent,
-    title: "Descuentos hasta 60%",
+    title: "Hasta 3 veces más barato",
     description: "Obtén mejores precios comprando colectivamente"
   },
   {
