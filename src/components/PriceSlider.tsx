@@ -115,24 +115,36 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
   return (
     <section className="px-4 pt-1 pb-4">
       <div className="container mx-auto max-w-md">
-        <div className="relative bg-gradient-card rounded-2xl p-6 shadow-floating animate-glow-pulse animate-float hover:scale-105 transition-all duration-500 border-2 animate-border-pulse backdrop-blur-sm">
+        <div className="relative bg-gradient-card rounded-2xl p-4 shadow-floating animate-glow-pulse animate-float hover:scale-105 transition-all duration-500 border-[3px] animate-border-pulse backdrop-blur-sm">
           
-          <h3 className="text-lg font-bold text-center mb-4 text-foreground bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent animate-scale-in">
+          <h3 className="text-lg font-bold text-center mb-3 text-foreground bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent animate-scale-in">
             El precio baja a medida que se suman más participantes
           </h3>
           
           {/* Información de participantes */}
-          <div className="mb-4 text-center">
+          <div className="mb-3 text-center">
             <p className="text-sm text-muted-foreground">
               Ya participan <span className="font-semibold text-primary">{waitingCount}</span>
+              {(() => {
+                const nextThreshold = getNextDiscountThreshold(waitingCount);
+                if (nextThreshold) {
+                  const remaining = nextThreshold.people - waitingCount;
+                  return (
+                    <>
+                      . Faltan <span className="font-bold text-primary">{remaining}</span> participantes para el siguiente descuento
+                    </>
+                  );
+                }
+                return null;
+              })()}
             </p>
           </div>
           
           {/* Price Scale */}
-          <div className="relative mb-8">
+          <div className="relative mb-4">
             {/* People numbers (top) */}
             <div className="relative mb-2">
-              <div className="absolute inset-0 flex">
+              <div className="absolute inset-0 flex items-center">
                 {priceData.map((item, index) => {
                   const position = index === 0 ? '0%' : 
                                   index === 1 ? '25%' :
@@ -143,14 +155,15 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
                   return (
                     <div 
                       key={index} 
-                      className="absolute transform -translate-x-1/2"
+                      className="absolute transform -translate-x-1/2 flex items-center gap-1"
                       style={{ left: position }}
                     >
                       <span className={`text-sm font-medium transition-colors ${
                         isNearSelected ? 'text-primary' : 'text-muted-foreground'
                       }`}>
-                        {item.people}{index === priceData.length - 1 ? ' 🔥' : ''}
+                        {item.people}
                       </span>
+                      {index === priceData.length - 1 && <span className="text-sm">🔥</span>}
                     </div>
                   );
                 })}
@@ -204,14 +217,14 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
           </div>
 
           {/* Current Price Display */}
-          <div className="text-center relative space-y-2">
+          <div className="text-center relative space-y-1">
             <div className={`absolute inset-0 -z-10 ${showMaxGlow ? 'shadow-glow animate-pulse' : ''}`}></div>
             
             {/* Выбранная цена на слайдере */}
             {selectedPeople !== waitingCount && (
-              <div className="mb-2">
+              <div className="mb-1">
                 <p className="text-xs text-muted-foreground mb-1">
-                  Цена при {selectedPeople} участниках
+                  Precio al llegar a {selectedPeople} participantes
                 </p>
                 <p className="text-2xl font-bold text-primary/80">
                   {formatPrice(selectedPrice.price)}
@@ -236,25 +249,6 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
                 </p>
               </div>
             </div>
-            
-            {/* Siguiente descuento */}
-            {(() => {
-              const nextThreshold = getNextDiscountThreshold(waitingCount);
-              if (nextThreshold) {
-                const remaining = nextThreshold.people - waitingCount;
-                return (
-                  <div className="bg-primary/10 rounded-lg px-4 py-2 mt-2">
-                    <p className="text-sm text-muted-foreground mb-1">
-                      Faltan <span className="font-bold text-primary">{remaining}</span> participantes para el siguiente descuento
-                    </p>
-                    <p className="text-2xl font-bold text-primary">
-                      {formatPrice(nextThreshold.price)}
-                    </p>
-                  </div>
-                );
-              }
-              return null;
-            })()}
           </div>
         </div>
       </div>
