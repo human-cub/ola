@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Pencil, Check, X } from "lucide-react";
+import { Pencil, Check, X, Trash2 } from "lucide-react";
 
 interface Order {
   id: string;
@@ -128,6 +128,25 @@ const OrdersTable = ({ waitingForDiscount = null }: OrdersTableProps) => {
     setEditingComment(order.admin_comment || "");
   };
 
+  const handleDeleteOrder = async (id: string) => {
+    if (!confirm("¿Estás seguro de que deseas eliminar este pedido?")) {
+      return;
+    }
+
+    const { error } = await supabase
+      .from("orders")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      toast.error("Error al eliminar pedido");
+      return;
+    }
+
+    toast.success("Pedido eliminado");
+    fetchOrders();
+  };
+
   if (loading) {
     return <p>Cargando órdenes...</p>;
   }
@@ -169,6 +188,7 @@ const OrdersTable = ({ waitingForDiscount = null }: OrdersTableProps) => {
                 <TableHead>Espera Desc.</TableHead>
                 <TableHead>Estado</TableHead>
                 <TableHead>Nota Admin</TableHead>
+                <TableHead>Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -241,6 +261,16 @@ const OrdersTable = ({ waitingForDiscount = null }: OrdersTableProps) => {
                         </Button>
                       </div>
                     )}
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleDeleteOrder(order.id)}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
