@@ -12,41 +12,61 @@ interface PriceSliderProps {
 }
 
 export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) => {
-  // Вычисляем текущую цену на основе количества ожидающих
-  const getCurrentPriceIndex = () => {
-    for (let i = priceData.length - 1; i >= 0; i--) {
-      if (waitingCount >= priceData[i].people) {
-        return i;
-      }
-    }
-    return 0;
-  };
+  const maxPeople = priceData[priceData.length - 1].people;
+  const minPeople = priceData[0].people;
   
-  const currentPriceIndex = getCurrentPriceIndex();
-  const [selectedIndex, setSelectedIndex] = useState(currentPriceIndex);
+  const [selectedPeople, setSelectedPeople] = useState(waitingCount || minPeople);
   const [showMaxGlow, setShowMaxGlow] = useState(false);
   
   // Обновляем позицию слайдера при изменении количества участников
   useEffect(() => {
-    setSelectedIndex(currentPriceIndex);
-  }, [currentPriceIndex]);
+    setSelectedPeople(waitingCount || minPeople);
+  }, [waitingCount, minPeople]);
   
-  const currentActualPrice = priceData[currentPriceIndex];
+  // Функция для получения цены по количеству людей с интерполяцией
+  const getPriceForPeople = (people: number) => {
+    // Находим два соседних ценовых уровня
+    for (let i = 0; i < priceData.length - 1; i++) {
+      const current = priceData[i];
+      const next = priceData[i + 1];
+      
+      if (people <= current.people) {
+        return current.price;
+      }
+      
+      if (people > current.people && people <= next.people) {
+        // Линейная интерполяция между двумя точками
+        const ratio = (people - current.people) / (next.people - current.people);
+        return Math.round(current.price - (current.price - next.price) * ratio);
+      }
+    }
+    return priceData[priceData.length - 1].price;
+  };
+  
+  // Получаем текущую цену для реального количества участников
+  const currentActualPrice = {
+    people: waitingCount,
+    price: getPriceForPeople(waitingCount)
+  };
+  
+  // Получаем цену для выбранной позиции слайдера
+  const selectedPrice = {
+    people: selectedPeople,
+    price: getPriceForPeople(selectedPeople)
+  };
+  
   const maxPrice = priceData[priceData.length - 1];
 
   const handleSliderChange = (value: number[]) => {
-    const newIndex = value[0];
-    setSelectedIndex(newIndex);
+    const newPeople = value[0];
+    setSelectedPeople(newPeople);
     
     // Trigger glow animation when reaching maximum
-    if (newIndex === 4) {
+    if (newPeople >= maxPeople) {
       setShowMaxGlow(true);
       setTimeout(() => setShowMaxGlow(false), 1000);
     }
   };
-
-  const currentPrice = priceData[selectedIndex];
-  const retailPrice = priceData[0].price; // Use price for 1 person as retail price
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('es-AR', {
@@ -79,18 +99,16 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
             <div className="relative mb-2">
               <div className="absolute inset-0 flex">
                 {priceData.map((item, index) => {
-                  const position = index === 0 ? '0%' : 
-                                  index === 1 ? '25%' :
-                                  index === 2 ? '50%' :
-                                  index === 3 ? '75%' : '100%';
+                  const position = ((item.people - minPeople) / (maxPeople - minPeople)) * 100;
+                  const isNearSelected = Math.abs(selectedPeople - item.people) <= 5;
                   return (
                     <div 
                       key={index} 
                       className="absolute transform -translate-x-1/2"
-                      style={{ left: position }}
+                      style={{ left: `${position}%` }}
                     >
-                      <span className={`text-sm font-medium ${
-                        index === selectedIndex ? 'text-primary' : 'text-muted-foreground'
+                      <span className={`text-sm font-medium transition-colors ${
+                        isNearSelected ? 'text-primary' : 'text-muted-foreground'
                       }`}>
                         {item.people}
                       </span>
@@ -104,10 +122,10 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
             {/* Slider */}
             <div className="mb-2 -mx-3">
               <Slider
-                value={[selectedIndex]}
+                value={[selectedPeople]}
                 onValueChange={handleSliderChange}
-                max={4}
-                min={0}
+                max={maxPeople}
+                min={minPeople}
                 step={1}
                 className="w-full"
               />
@@ -117,18 +135,16 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
             <div className="relative">
               <div className="absolute inset-0 flex">
                 {priceData.map((item, index) => {
-                  const position = index === 0 ? '0%' : 
-                                  index === 1 ? '25%' :
-                                  index === 2 ? '50%' :
-                                  index === 3 ? '75%' : '100%';
+                  const position = ((item.people - minPeople) / (maxPeople - minPeople)) * 100;
+                  const isNearSelected = Math.abs(selectedPeople - item.people) <= 5;
                   return (
                     <div 
                       key={index} 
                       className="absolute transform -translate-x-1/2"
-                      style={{ left: position }}
+                      style={{ left: `${position}%` }}
                     >
-                      <span className={`text-xs ${
-                        index === selectedIndex ? 'text-primary font-medium' : 'text-muted-foreground'
+                      <span className={`text-xs transition-colors ${
+                        isNearSelected ? 'text-primary font-medium' : 'text-muted-foreground'
                       }`}>
                         {formatPrice(item.price)}
                       </span>
@@ -144,10 +160,22 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
           <div className="text-center relative space-y-4">
             <div className={`absolute inset-0 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 rounded-xl -z-10 animate-shimmer ${showMaxGlow ? 'shadow-glow animate-pulse' : ''}`}></div>
             
+            {/* Выбранная цена на слайдере */}
+            {selectedPeople !== waitingCount && (
+              <div className="mb-3">
+                <p className="text-xs text-muted-foreground mb-1">
+                  Цена при {selectedPeople} участниках
+                </p>
+                <p className="text-2xl font-bold text-primary/80">
+                  {formatPrice(selectedPrice.price)}
+                </p>
+              </div>
+            )}
+            
             {/* Текущая цена */}
             <div>
               <p className="text-sm text-muted-foreground mb-1 font-medium">
-                Цена сейчас
+                Цена сейчас ({waitingCount} участников)
               </p>
               
               <div className="flex items-center justify-center gap-3 mb-2">
