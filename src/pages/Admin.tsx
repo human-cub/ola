@@ -70,13 +70,17 @@ const Admin = () => {
           </Button>
         </div>
 
-        <Tabs defaultValue="orders" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="orders">Órdenes</TabsTrigger>
+        <Tabs defaultValue="participants" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="participants">Participantes</TabsTrigger>
+            <TabsTrigger value="buynow">Comprar Ahora</TabsTrigger>
             <TabsTrigger value="products">Productos</TabsTrigger>
           </TabsList>
-          <TabsContent value="orders">
-            <OrdersTable />
+          <TabsContent value="participants">
+            <OrdersTable waitingForDiscount={true} />
+          </TabsContent>
+          <TabsContent value="buynow">
+            <OrdersTable waitingForDiscount={false} />
           </TabsContent>
           <TabsContent value="products">
             <ProductsTable />

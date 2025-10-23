@@ -35,24 +35,21 @@ const OrderDialog = ({
   const [orderNumber, setOrderNumber] = useState(0);
 
   useEffect(() => {
-    if (open) {
+    if (open && waitForDiscount) {
       fetchOrderNumber();
     }
-  }, [open, productId]);
+  }, [open, productId, waitForDiscount]);
 
   const fetchOrderNumber = async () => {
     const { data: product } = await supabase
       .from("products")
-      .select("total_orders_count, waiting_for_discount_count")
+      .select("waiting_for_discount_count")
       .eq("name", productName)
       .single();
 
     if (product) {
       // Номер участника = текущий счетчик + 1
-      const count = waitForDiscount 
-        ? product.waiting_for_discount_count 
-        : product.total_orders_count;
-      setOrderNumber(count + 1);
+      setOrderNumber(product.waiting_for_discount_count + 1);
     }
   };
 
@@ -122,13 +119,15 @@ const OrderDialog = ({
           <DialogTitle>
             {waitForDiscount ? "🕐 Подождать скидку" : "🛒 Купить сейчас"}
           </DialogTitle>
-          <DialogDescription>
-            <div className="text-center py-2">
-              <span className="text-2xl font-bold text-primary">
-                Вы участник #{orderNumber}
-              </span>
-            </div>
-          </DialogDescription>
+          {waitForDiscount && (
+            <DialogDescription>
+              <div className="text-center py-2">
+                <span className="text-2xl font-bold text-primary">
+                  Вы участник #{orderNumber}
+                </span>
+              </div>
+            </DialogDescription>
+          )}
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">

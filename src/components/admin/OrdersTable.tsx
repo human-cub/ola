@@ -32,7 +32,11 @@ const statusLabels = {
   completed: "Completado",
 };
 
-const OrdersTable = () => {
+interface OrdersTableProps {
+  waitingForDiscount?: boolean | null;
+}
+
+const OrdersTable = ({ waitingForDiscount = null }: OrdersTableProps) => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<string>("all");
@@ -44,6 +48,11 @@ const OrdersTable = () => {
       .from("orders")
       .select("*")
       .order("created_at", { ascending: false });
+
+    // Фильтр по waiting_for_discount
+    if (waitingForDiscount !== null) {
+      query = query.eq("waiting_for_discount", waitingForDiscount);
+    }
 
     if (filterStatus !== "all" && (filterStatus === "new" || filterStatus === "processing" || filterStatus === "completed")) {
       query = query.eq("status", filterStatus);
@@ -81,7 +90,7 @@ const OrdersTable = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [filterStatus]);
+  }, [filterStatus, waitingForDiscount]);
 
   const handleStatusChange = async (id: string, newStatus: "new" | "processing" | "completed") => {
     const { error } = await supabase
@@ -123,11 +132,17 @@ const OrdersTable = () => {
     return <p>Cargando órdenes...</p>;
   }
 
+  const getTitle = () => {
+    if (waitingForDiscount === true) return "Participantes (Esperan Descuento)";
+    if (waitingForDiscount === false) return "Comprar Ahora";
+    return "Gestión de Órdenes";
+  };
+
   return (
     <Card>
       <CardHeader>
         <div className="flex justify-between items-center">
-          <CardTitle>Gestión de Órdenes</CardTitle>
+          <CardTitle>{getTitle()}</CardTitle>
           <Select value={filterStatus} onValueChange={setFilterStatus}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Filtrar por estado" />
