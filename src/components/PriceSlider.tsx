@@ -12,20 +12,51 @@ interface PriceSliderProps {
 }
 
 export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) => {
-  const maxPeople = priceData[priceData.length - 1].people;
-  const minPeople = priceData[0].people;
+  // Преобразование количества людей в позицию слайдера (0-4)
+  const peopleToSliderPosition = (people: number): number => {
+    for (let i = 0; i < priceData.length - 1; i++) {
+      const current = priceData[i];
+      const next = priceData[i + 1];
+      
+      if (people <= current.people) {
+        return i;
+      }
+      
+      if (people > current.people && people <= next.people) {
+        // Линейная интерполяция между позициями i и i+1
+        const ratio = (people - current.people) / (next.people - current.people);
+        return i + ratio;
+      }
+    }
+    return priceData.length - 1;
+  };
   
-  const [selectedPeople, setSelectedPeople] = useState(waitingCount || minPeople);
+  // Преобразование позиции слайдера (0-4) в количество людей
+  const sliderPositionToPeople = (position: number): number => {
+    const index = Math.floor(position);
+    const fraction = position - index;
+    
+    if (index >= priceData.length - 1) {
+      return priceData[priceData.length - 1].people;
+    }
+    
+    const current = priceData[index];
+    const next = priceData[index + 1];
+    
+    return Math.round(current.people + (next.people - current.people) * fraction);
+  };
+  
+  const initialPosition = peopleToSliderPosition(waitingCount || priceData[0].people);
+  const [sliderPosition, setSliderPosition] = useState(initialPosition);
   const [showMaxGlow, setShowMaxGlow] = useState(false);
   
   // Обновляем позицию слайдера при изменении количества участников
   useEffect(() => {
-    setSelectedPeople(waitingCount || minPeople);
-  }, [waitingCount, minPeople]);
+    setSliderPosition(peopleToSliderPosition(waitingCount || priceData[0].people));
+  }, [waitingCount]);
   
   // Функция для получения цены по количеству людей с интерполяцией
   const getPriceForPeople = (people: number) => {
-    // Находим два соседних ценовых уровня
     for (let i = 0; i < priceData.length - 1; i++) {
       const current = priceData[i];
       const next = priceData[i + 1];
@@ -35,13 +66,14 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
       }
       
       if (people > current.people && people <= next.people) {
-        // Линейная интерполяция между двумя точками
         const ratio = (people - current.people) / (next.people - current.people);
         return Math.round(current.price - (current.price - next.price) * ratio);
       }
     }
     return priceData[priceData.length - 1].price;
   };
+  
+  const selectedPeople = sliderPositionToPeople(sliderPosition);
   
   // Получаем текущую цену для реального количества участников
   const currentActualPrice = {
@@ -58,11 +90,11 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
   const maxPrice = priceData[priceData.length - 1];
 
   const handleSliderChange = (value: number[]) => {
-    const newPeople = value[0];
-    setSelectedPeople(newPeople);
+    const newPosition = value[0];
+    setSliderPosition(newPosition);
     
     // Trigger glow animation when reaching maximum
-    if (newPeople >= maxPeople) {
+    if (newPosition >= priceData.length - 1) {
       setShowMaxGlow(true);
       setTimeout(() => setShowMaxGlow(false), 1000);
     }
@@ -99,13 +131,17 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
             <div className="relative mb-2">
               <div className="absolute inset-0 flex">
                 {priceData.map((item, index) => {
-                  const position = ((item.people - minPeople) / (maxPeople - minPeople)) * 100;
-                  const isNearSelected = Math.abs(selectedPeople - item.people) <= 5;
+                  const position = index === 0 ? '0%' : 
+                                  index === 1 ? '25%' :
+                                  index === 2 ? '50%' :
+                                  index === 3 ? '75%' : '100%';
+                  const isNearSelected = Math.abs(selectedPeople - item.people) <= 
+                    (index < priceData.length - 1 ? (priceData[index + 1].people - item.people) * 0.1 : 5);
                   return (
                     <div 
                       key={index} 
                       className="absolute transform -translate-x-1/2"
-                      style={{ left: `${position}%` }}
+                      style={{ left: position }}
                     >
                       <span className={`text-sm font-medium transition-colors ${
                         isNearSelected ? 'text-primary' : 'text-muted-foreground'
@@ -122,11 +158,11 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
             {/* Slider */}
             <div className="mb-2 -mx-3">
               <Slider
-                value={[selectedPeople]}
+                value={[sliderPosition]}
                 onValueChange={handleSliderChange}
-                max={maxPeople}
-                min={minPeople}
-                step={1}
+                max={priceData.length - 1}
+                min={0}
+                step={0.01}
                 className="w-full"
               />
             </div>
@@ -135,13 +171,17 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
             <div className="relative">
               <div className="absolute inset-0 flex">
                 {priceData.map((item, index) => {
-                  const position = ((item.people - minPeople) / (maxPeople - minPeople)) * 100;
-                  const isNearSelected = Math.abs(selectedPeople - item.people) <= 5;
+                  const position = index === 0 ? '0%' : 
+                                  index === 1 ? '25%' :
+                                  index === 2 ? '50%' :
+                                  index === 3 ? '75%' : '100%';
+                  const isNearSelected = Math.abs(selectedPeople - item.people) <= 
+                    (index < priceData.length - 1 ? (priceData[index + 1].people - item.people) * 0.1 : 5);
                   return (
                     <div 
                       key={index} 
                       className="absolute transform -translate-x-1/2"
-                      style={{ left: `${position}%` }}
+                      style={{ left: position }}
                     >
                       <span className={`text-xs transition-colors ${
                         isNearSelected ? 'text-primary font-medium' : 'text-muted-foreground'
