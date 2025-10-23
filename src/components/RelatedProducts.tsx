@@ -99,7 +99,7 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
                           </span>
                         </div>
                         <p className="text-xs text-muted-foreground italic">
-                          Precio por 100 pedidos
+                          Precio mínimo
                         </p>
                       </div>
                     </div>

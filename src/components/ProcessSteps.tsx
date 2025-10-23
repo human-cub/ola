@@ -3,18 +3,18 @@ import { Users, UserPlus, Calculator, FileCheck, Truck, CreditCard } from "lucid
 const steps = [
   {
     icon: Users,
-    title: "Te sumás al grupo del producto",
+    title: "Te sumás a la colecta del producto",
     description: "Unite a otros compradores interesados en el mismo producto durante de la semana"
   },
   {
     icon: UserPlus,
     title: "Invitás a tus amigos",
-    description: "Compartí el grupo con amigos para conseguir mejores precios"
+    description: "Compartí la colecta con amigos para conseguir mejores precios"
   },
   {
     icon: Calculator,
     title: "Al final de la semana contamos la cantidad de participantes",
-    description: "Calculamos el descuento según la cantidad de personas en el grupo"
+    description: "Calculamos el descuento según la cantidad de personas en la colecta"
   },
   {
     icon: FileCheck,
@@ -79,7 +79,7 @@ export const ProcessSteps = () => {
                     {step.description}
                     {index === 2 && (
                       <span className="block mt-2">
-                        Si el grupo llega al máximo antes, hacemos el pedido más rápido
+                        Si la colecta llega al máximo antes, hacemos el pedido más rápido
                       </span>
                     )}
                   </p>

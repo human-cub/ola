@@ -135,7 +135,7 @@ export const MainProductCarousel = () => {
                             </span>
                           </div>
                           <p className="text-sm text-muted-foreground italic">
-                            Precio por 100 pedidos
+                            Precio mínimo
                           </p>
                         </div>
 
