@@ -55,22 +55,25 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
     setSliderPosition(peopleToSliderPosition(waitingCount || priceData[0].people));
   }, [waitingCount]);
   
-  // Функция для получения цены по количеству людей с интерполяцией
+  // Функция для получения цены по количеству людей (точные значения, без интерполяции)
   const getPriceForPeople = (people: number) => {
-    for (let i = 0; i < priceData.length - 1; i++) {
-      const current = priceData[i];
-      const next = priceData[i + 1];
-      
-      if (people <= current.people) {
-        return current.price;
-      }
-      
-      if (people > current.people && people <= next.people) {
-        const ratio = (people - current.people) / (next.people - current.people);
-        return Math.round(current.price - (current.price - next.price) * ratio);
+    // Находим ближайший порог снизу
+    for (let i = priceData.length - 1; i >= 0; i--) {
+      if (people >= priceData[i].people) {
+        return priceData[i].price;
       }
     }
-    return priceData[priceData.length - 1].price;
+    return priceData[0].price;
+  };
+  
+  // Функция для получения следующего порога скидки
+  const getNextDiscountThreshold = (currentPeople: number) => {
+    for (let i = 0; i < priceData.length; i++) {
+      if (priceData[i].people > currentPeople) {
+        return priceData[i];
+      }
+    }
+    return null;
   };
   
   const selectedPeople = sliderPositionToPeople(sliderPosition);
@@ -118,10 +121,10 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
             El precio baja a medida que se suman más participantes
           </h3>
           
-          {/* Информация об участниках */}
+          {/* Información de participantes */}
           <div className="mb-4 text-center">
             <p className="text-sm text-muted-foreground">
-              <span className="font-semibold text-primary">{waitingCount}</span> из <span className="font-semibold">{maxPrice.people}</span> участников
+              Ya participan <span className="font-semibold text-primary">{waitingCount}</span>
             </p>
           </div>
           
@@ -183,10 +186,14 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
                       className="absolute transform -translate-x-1/2"
                       style={{ left: position }}
                     >
-                      <span className={`text-xs transition-colors ${
-                        isNearSelected ? 'text-primary font-medium' : 'text-muted-foreground'
+                      <span className={`transition-colors ${
+                        index === priceData.length - 1 
+                          ? 'text-lg font-bold text-primary animate-pulse' 
+                          : isNearSelected 
+                            ? 'text-xs text-primary font-medium' 
+                            : 'text-xs text-muted-foreground'
                       }`}>
-                        {formatPrice(item.price)}
+                        {index === priceData.length - 1 ? '🔥 ' : ''}{formatPrice(item.price)}
                       </span>
                     </div>
                   );
@@ -212,39 +219,44 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
               </div>
             )}
             
-            {/* Текущая цена */}
+            {/* Precio actual */}
             <div>
               <p className="text-sm text-muted-foreground mb-1 font-medium">
-                Цена сейчас ({waitingCount} участников)
+                Comprando ahora
               </p>
               
               <div className="flex items-center justify-center gap-3 mb-2">
-                {/* Main price */}
+                {/* Precio tachado */}
+                <p className="text-xl text-muted-foreground line-through opacity-60">
+                  {formatPrice(priceData[0].price)}
+                </p>
+                {/* Precio actual */}
                 <p className="text-3xl font-bold text-foreground">
                   {formatPrice(currentActualPrice.price)}
                 </p>
               </div>
             </div>
             
-            {/* Разделитель */}
-            <div className="border-t border-primary/20 pt-3">
-              <p className="text-xs text-muted-foreground mb-2">
-                🎯 Подожди до окончания сбора и получи цену
-              </p>
-              
-              {/* Максимальная цена со скидкой - подсвечена */}
-              <div className="relative inline-block">
-                <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/30 to-primary/20 rounded-lg blur-md animate-pulse"></div>
-                <div className="relative bg-gradient-to-r from-primary to-primary-dark p-4 rounded-lg shadow-glow">
-                  <p className="text-4xl font-black text-white animate-bounce-subtle drop-shadow-lg">
-                    {formatPrice(maxPrice.price)}
-                  </p>
-                  <p className="text-xs text-white/90 mt-1">
-                    💰 При {maxPrice.people} участниках
-                  </p>
-                </div>
-              </div>
-            </div>
+            {/* Siguiente descuento */}
+            {(() => {
+              const nextThreshold = getNextDiscountThreshold(waitingCount);
+              if (nextThreshold) {
+                const remaining = nextThreshold.people - waitingCount;
+                return (
+                  <div className="border-t border-primary/20 pt-3 mt-3">
+                    <p className="text-sm text-muted-foreground mb-2">
+                      ⭐ Faltan <span className="font-bold text-primary">{remaining}</span> participantes para el siguiente descuento ⭐
+                    </p>
+                    <div className="bg-primary/10 px-4 py-2 rounded-lg inline-block">
+                      <p className="text-2xl font-bold text-primary">
+                        {formatPrice(nextThreshold.price)}
+                      </p>
+                    </div>
+                  </div>
+                );
+              }
+              return null;
+            })()}
           </div>
         </div>
       </div>
