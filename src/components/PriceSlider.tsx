@@ -149,7 +149,7 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
                       <span className={`text-sm font-medium transition-colors ${
                         isNearSelected ? 'text-primary' : 'text-muted-foreground'
                       }`}>
-                        {item.people}
+                        {item.people}{index === priceData.length - 1 ? ' 🔥' : ''}
                       </span>
                     </div>
                   );
@@ -193,13 +193,13 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
                             ? 'text-xs text-primary font-medium' 
                             : 'text-xs text-muted-foreground'
                       }`}>
-                        {index === priceData.length - 1 ? '🔥 ' : ''}{formatPrice(item.price)}
+                        {formatPrice(item.price)}
                       </span>
                     </div>
                   );
                 })}
               </div>
-              <div className="h-4"></div>
+              <div className="h-8"></div>
             </div>
           </div>
 
@@ -247,7 +247,6 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
                     <p className="text-sm text-muted-foreground mb-1">
                       Faltan <span className="font-bold text-primary">{remaining}</span> participantes para el siguiente descuento
                     </p>
-                    <p className="text-lg mb-1">⭐</p>
                     <p className="text-2xl font-bold text-primary">
                       {formatPrice(nextThreshold.price)}
                     </p>
