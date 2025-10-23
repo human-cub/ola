@@ -115,7 +115,7 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
   return (
     <section className="px-4 pt-1 pb-4">
       <div className="container mx-auto max-w-md">
-        <div className="relative bg-gradient-card rounded-2xl p-4 shadow-floating animate-glow-pulse animate-float hover:scale-105 transition-all duration-500 border-[3px] animate-border-pulse backdrop-blur-sm">
+        <div className="relative bg-gradient-card rounded-2xl p-6 shadow-floating animate-glow-pulse animate-float hover:scale-105 transition-all duration-500 border-[3px] animate-border-pulse backdrop-blur-sm">
           
           <h3 className="text-lg font-bold text-center mb-3 text-foreground bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent animate-scale-in">
             El precio baja a medida que se suman más participantes
@@ -222,7 +222,7 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
             
             {/* Выбранная цена на слайдере */}
             {selectedPeople !== waitingCount && (
-              <div className="mb-1">
+              <div className="mb-2">
                 <p className="text-xs text-muted-foreground mb-1">
                   Precio al llegar a {selectedPeople} participantes
                 </p>
@@ -238,9 +238,9 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
                 Comprando ahora
               </p>
               
-              <div className="flex items-baseline justify-center gap-3">
+              <div className="flex items-center justify-center gap-3">
                 {/* Precio tachado */}
-                <p className="text-2xl text-muted-foreground line-through opacity-60">
+                <p className="text-lg text-muted-foreground line-through opacity-60">
                   {formatPrice(priceData[0].price)}
                 </p>
                 {/* Precio actual */}
@@ -248,6 +248,13 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
                   {formatPrice(currentActualPrice.price)}
                 </p>
               </div>
+            </div>
+            
+            {/* Mensaje de precio mayorista */}
+            <div className="mt-3 pt-3 border-t border-border/50">
+              <p className="text-sm text-muted-foreground text-center">
+                Espera y puedes obtener el precio mayorista <span className="font-semibold text-primary">{formatPrice(maxPrice.price)}</span>
+              </p>
             </div>
           </div>
         </div>
