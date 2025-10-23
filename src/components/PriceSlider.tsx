@@ -186,9 +186,9 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
                       className="absolute transform -translate-x-1/2"
                       style={{ left: position }}
                     >
-                      <span className={`transition-colors ${
+                      <span className={`transition-colors whitespace-nowrap ${
                         index === priceData.length - 1 
-                          ? 'text-lg font-bold text-primary animate-pulse' 
+                          ? 'text-base font-bold text-primary animate-pulse' 
                           : isNearSelected 
                             ? 'text-xs text-primary font-medium' 
                             : 'text-xs text-muted-foreground'
@@ -204,12 +204,12 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
           </div>
 
           {/* Current Price Display */}
-          <div className="text-center relative space-y-4">
-            <div className={`absolute inset-0 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 rounded-xl -z-10 animate-shimmer ${showMaxGlow ? 'shadow-glow animate-pulse' : ''}`}></div>
+          <div className="text-center relative space-y-2">
+            <div className={`absolute inset-0 -z-10 ${showMaxGlow ? 'shadow-glow animate-pulse' : ''}`}></div>
             
             {/* Выбранная цена на слайдере */}
             {selectedPeople !== waitingCount && (
-              <div className="mb-3">
+              <div className="mb-2">
                 <p className="text-xs text-muted-foreground mb-1">
                   Цена при {selectedPeople} участниках
                 </p>
@@ -225,13 +225,13 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
                 Comprando ahora
               </p>
               
-              <div className="flex items-center justify-center gap-3 mb-2">
+              <div className="flex items-center justify-center gap-3">
                 {/* Precio tachado */}
-                <p className="text-xl text-muted-foreground line-through opacity-60">
+                <p className="text-lg text-muted-foreground line-through opacity-60">
                   {formatPrice(priceData[0].price)}
                 </p>
                 {/* Precio actual */}
-                <p className="text-3xl font-bold text-foreground">
+                <p className="text-2xl font-bold text-primary">
                   {formatPrice(currentActualPrice.price)}
                 </p>
               </div>
@@ -243,15 +243,13 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
               if (nextThreshold) {
                 const remaining = nextThreshold.people - waitingCount;
                 return (
-                  <div className="border-t border-primary/20 pt-3 mt-3">
-                    <p className="text-sm text-muted-foreground mb-2">
+                  <div className="bg-primary/10 rounded-lg px-4 py-2 mt-2">
+                    <p className="text-sm text-muted-foreground mb-1">
                       ⭐ Faltan <span className="font-bold text-primary">{remaining}</span> participantes para el siguiente descuento ⭐
                     </p>
-                    <div className="bg-primary/10 px-4 py-2 rounded-lg inline-block">
-                      <p className="text-2xl font-bold text-primary">
-                        {formatPrice(nextThreshold.price)}
-                      </p>
-                    </div>
+                    <p className="text-2xl font-bold text-primary">
+                      {formatPrice(nextThreshold.price)}
+                    </p>
                   </div>
                 );
               }
