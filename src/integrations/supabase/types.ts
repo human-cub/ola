@@ -66,6 +66,7 @@ export type Database = {
       }
       products: {
         Row: {
+          buynow_count: number
           created_at: string | null
           id: string
           name: string
@@ -78,6 +79,7 @@ export type Database = {
           weight: string
         }
         Insert: {
+          buynow_count?: number
           created_at?: string | null
           id?: string
           name: string
@@ -90,6 +92,7 @@ export type Database = {
           weight: string
         }
         Update: {
+          buynow_count?: number
           created_at?: string | null
           id?: string
           name?: string

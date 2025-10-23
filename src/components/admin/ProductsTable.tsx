@@ -12,6 +12,7 @@ interface Product {
   name: string;
   weight: string;
   real_orders_count: number;
+  buynow_count: number;
   virtual_orders_count: number;
   waiting_for_discount_count: number;
   total_orders_count: number;
@@ -79,7 +80,7 @@ const ProductsTable = () => {
               <TableRow>
                 <TableHead>Producto</TableHead>
                 <TableHead>Peso</TableHead>
-                <TableHead>Órdenes Reales</TableHead>
+                <TableHead>Comprar Ahora</TableHead>
                 <TableHead>Esperando Descuento</TableHead>
                 <TableHead>Órdenes Virtuales</TableHead>
                 <TableHead>Total</TableHead>
@@ -91,7 +92,7 @@ const ProductsTable = () => {
                 <TableRow key={product.id}>
                   <TableCell className="font-medium">{product.name}</TableCell>
                   <TableCell>{product.weight}</TableCell>
-                  <TableCell>{product.real_orders_count}</TableCell>
+                  <TableCell>{product.buynow_count}</TableCell>
                   <TableCell className="font-semibold text-primary">{product.waiting_for_discount_count}</TableCell>
                   <TableCell>
                     {editingId === product.id ? (
@@ -105,7 +106,9 @@ const ProductsTable = () => {
                       product.virtual_orders_count
                     )}
                   </TableCell>
-                  <TableCell className="font-bold">{product.total_orders_count}</TableCell>
+                  <TableCell className="font-bold">
+                    {product.waiting_for_discount_count + product.virtual_orders_count}
+                  </TableCell>
                   <TableCell>
                     {editingId === product.id ? (
                       <div className="flex gap-2">
