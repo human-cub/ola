@@ -217,13 +217,13 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
           </div>
 
           {/* Current Price Display */}
-          <div className="text-center relative space-y-1">
+          <div className="text-center relative space-y-1 -mt-2">
             <div className={`absolute inset-0 -z-10 ${showMaxGlow ? 'shadow-glow animate-pulse' : ''}`}></div>
             
             {/* Выбранная цена на слайдере */}
             {selectedPeople !== waitingCount && (
-              <div className="mb-2">
-                <p className="text-xs text-muted-foreground mb-1">
+              <div className="mb-1">
+                <p className="text-xs text-muted-foreground mb-0.5">
                   Precio al llegar a {selectedPeople} participantes
                 </p>
                 <p className="text-2xl font-bold text-primary/80">
