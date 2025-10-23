@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Slider } from "@/components/ui/slider";
-import { Progress } from "@/components/ui/progress";
 
 interface PriceData {
   people: number;
@@ -13,9 +12,6 @@ interface PriceSliderProps {
 }
 
 export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) => {
-  const [selectedIndex, setSelectedIndex] = useState(4); // Default to 100 people
-  const [showMaxGlow, setShowMaxGlow] = useState(false);
-  
   // Вычисляем текущую цену на основе количества ожидающих
   const getCurrentPriceIndex = () => {
     for (let i = priceData.length - 1; i >= 0; i--) {
@@ -27,9 +23,16 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
   };
   
   const currentPriceIndex = getCurrentPriceIndex();
+  const [selectedIndex, setSelectedIndex] = useState(currentPriceIndex);
+  const [showMaxGlow, setShowMaxGlow] = useState(false);
+  
+  // Обновляем позицию слайдера при изменении количества участников
+  useEffect(() => {
+    setSelectedIndex(currentPriceIndex);
+  }, [currentPriceIndex]);
+  
   const currentActualPrice = priceData[currentPriceIndex];
   const maxPrice = priceData[priceData.length - 1];
-  const progressPercent = (waitingCount / maxPrice.people) * 100;
 
   const handleSliderChange = (value: number[]) => {
     const newIndex = value[0];
@@ -63,13 +66,11 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
             El precio baja a medida que se suman más participantes
           </h3>
           
-          {/* Прогресс-бар */}
-          <div className="mb-6 space-y-2">
-            <div className="flex justify-between text-sm text-muted-foreground">
-              <span>Сейчас ждут: {waitingCount} чел.</span>
-              <span>Цель: {maxPrice.people} чел.</span>
-            </div>
-            <Progress value={progressPercent} className="h-3" />
+          {/* Информация об участниках */}
+          <div className="mb-4 text-center">
+            <p className="text-sm text-muted-foreground">
+              <span className="font-semibold text-primary">{waitingCount}</span> из <span className="font-semibold">{maxPrice.people}</span> участников
+            </p>
           </div>
           
           {/* Price Scale */}
