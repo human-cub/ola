@@ -104,12 +104,11 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
   };
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: 'ARS',
+    const formatted = new Intl.NumberFormat('es-AR', {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(price);
+    return `$${formatted}`;
   };
 
   return (
@@ -163,7 +162,9 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
                       }`}>
                         {item.people}
                       </span>
-                      {index === priceData.length - 1 && <span className="text-sm">🔥</span>}
+                      {index === priceData.length - 1 && (
+                        <span className="text-sm filter-none" style={{ textShadow: 'none', WebkitTextStroke: '0' }}>🔥</span>
+                      )}
                     </div>
                   );
                 })}
@@ -185,21 +186,23 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
             
             {/* Price numbers (bottom) */}
             <div className="relative">
-              <div className="absolute inset-0 flex">
+              <div className="absolute inset-0 flex justify-between items-start px-1">
                 {priceData.map((item, index) => {
-                  const position = index === 0 ? '0%' : 
-                                  index === 1 ? '25%' :
-                                  index === 2 ? '50%' :
-                                  index === 3 ? '75%' : '100%';
                   const isNearSelected = Math.abs(selectedPeople - item.people) <= 
                     (index < priceData.length - 1 ? (priceData[index + 1].people - item.people) * 0.1 : 5);
                   return (
                     <div 
                       key={index} 
-                      className="absolute transform -translate-x-1/2"
-                      style={{ left: position }}
+                      className={`flex-shrink-0 ${
+                        index === 0 ? 'text-left' : 
+                        index === priceData.length - 1 ? 'text-right' : 
+                        'text-center'
+                      }`}
+                      style={{ 
+                        width: index === 0 || index === priceData.length - 1 ? 'auto' : '20%'
+                      }}
                     >
-                      <span className={`transition-colors whitespace-nowrap ${
+                      <span className={`transition-colors whitespace-nowrap block ${
                         index === priceData.length - 1 
                           ? 'text-sm font-bold text-primary animate-pulse' 
                           : isNearSelected 
@@ -212,7 +215,7 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
                   );
                 })}
               </div>
-              <div className="h-8"></div>
+              <div className="h-10"></div>
             </div>
           </div>
 
