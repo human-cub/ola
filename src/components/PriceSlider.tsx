@@ -182,13 +182,13 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
             </div>
             
             {/* Price numbers (bottom) */}
-            <div className="relative">
+            <div className="relative px-2">
               <div className="absolute inset-0 flex items-center">
                 {priceData.map((item, index) => {
-                  const position = index === 0 ? '0%' : 
-                                  index === 1 ? '25%' :
+                  const position = index === 0 ? '5%' : 
+                                  index === 1 ? '27%' :
                                   index === 2 ? '50%' :
-                                  index === 3 ? '75%' : '100%';
+                                  index === 3 ? '73%' : '95%';
                   const isNearSelected = Math.abs(selectedPeople - item.people) <= 
                     (index < priceData.length - 1 ? (priceData[index + 1].people - item.people) * 0.1 : 5);
                   return (
