@@ -68,12 +68,19 @@ const OrderDialog = ({
     setLoading(true);
 
     try {
+      console.log("=== Starting order submission ===");
+      console.log("Product name:", productName);
+      console.log("Wait for discount:", waitForDiscount);
+      
       // Get product from database to get the ID
-      const { data: dbProduct } = await supabase
+      const { data: dbProduct, error: productError } = await supabase
         .from("products")
         .select("id")
         .eq("name", productName)
         .single();
+
+      console.log("Product from DB:", dbProduct);
+      if (productError) console.error("Product fetch error:", productError);
 
       const orderData = {
         product_id: dbProduct?.id || null,
@@ -84,11 +91,16 @@ const OrderDialog = ({
         waiting_for_discount: waitForDiscount,
       };
 
+      console.log("Order data to insert:", orderData);
+
       const { data, error } = await supabase
         .from("orders")
         .insert([orderData])
         .select()
         .single();
+
+      console.log("Insert result - data:", data);
+      console.log("Insert result - error:", error);
 
       if (error) throw error;
 
