@@ -162,9 +162,6 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
                       }`}>
                         {item.people}
                       </span>
-                      {index === priceData.length - 1 && (
-                        <span className="text-sm filter-none" style={{ textShadow: 'none', WebkitTextStroke: '0' }}>🔥</span>
-                      )}
                     </div>
                   );
                 })}
@@ -185,37 +182,29 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
             </div>
             
             {/* Price numbers (bottom) */}
-            <div className="relative">
-              <div className="absolute inset-0 flex justify-between items-start px-1">
+            <div className="relative mt-2">
+              <div className="flex justify-between items-start">
                 {priceData.map((item, index) => {
                   const isNearSelected = Math.abs(selectedPeople - item.people) <= 
                     (index < priceData.length - 1 ? (priceData[index + 1].people - item.people) * 0.1 : 5);
                   return (
                     <div 
                       key={index} 
-                      className={`flex-shrink-0 ${
-                        index === 0 ? 'text-left' : 
-                        index === priceData.length - 1 ? 'text-right' : 
-                        'text-center'
-                      }`}
-                      style={{ 
-                        width: index === 0 || index === priceData.length - 1 ? 'auto' : '20%'
-                      }}
+                      className="flex-1"
                     >
                       <span className={`transition-colors whitespace-nowrap block ${
                         index === priceData.length - 1 
-                          ? 'text-sm font-bold text-primary animate-pulse' 
+                          ? 'text-sm font-bold text-primary animate-pulse text-right' 
                           : isNearSelected 
                             ? 'text-xs text-primary font-medium' 
                             : 'text-xs text-muted-foreground'
-                      }`}>
+                      } ${index === 0 ? 'text-left' : index === priceData.length - 1 ? 'text-right' : 'text-center'}`}>
                         {formatPrice(item.price)}
                       </span>
                     </div>
                   );
                 })}
               </div>
-              <div className="h-10"></div>
             </div>
           </div>
 
