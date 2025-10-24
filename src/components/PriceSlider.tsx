@@ -237,9 +237,16 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
               <p className="text-sm text-muted-foreground mb-1 font-medium text-center">
                 Espera y puedes obtener el precio mayorista
               </p>
-              <p className="text-2xl font-bold text-primary">
-                {formatPrice(maxPrice.price)}
-              </p>
+              <div className="flex items-center justify-center gap-3">
+                {/* Precio tachado */}
+                <p className="text-lg text-muted-foreground line-through opacity-60">
+                  {formatPrice(priceData[0].price)}
+                </p>
+                {/* Precio mayorista */}
+                <p className="text-2xl font-bold text-primary">
+                  {formatPrice(maxPrice.price)}
+                </p>
+              </div>
             </div>
             
             {/* Precio actual */}
