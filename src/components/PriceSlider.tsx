@@ -115,7 +115,7 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
   return (
     <section className="px-4 pt-1 pb-4">
       <div className="container mx-auto max-w-md">
-        <div className="relative bg-gradient-card rounded-2xl p-8 sm:p-7 shadow-floating animate-glow-pulse animate-float hover:scale-105 transition-all duration-500 border-[3px] animate-border-pulse backdrop-blur-sm">
+        <div className="relative bg-gradient-card rounded-2xl p-9 sm:p-8 shadow-floating animate-glow-pulse animate-float hover:scale-105 transition-all duration-500 border-[3px] animate-border-pulse backdrop-blur-sm">
           
           <h3 className="text-lg font-bold text-center mb-3 text-foreground bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent animate-scale-in">
             El precio baja a medida que se suman más participantes
@@ -235,7 +235,7 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
             {/* Mensaje de precio mayorista */}
             <div>
               <p className="text-sm text-muted-foreground mb-1 font-medium text-center">
-                Espera y puedes obtener el precio mayorista
+                Esperá y podés obtener el precio mayorista
               </p>
               <div className="flex items-center justify-center gap-3">
                 {/* Precio tachado */}

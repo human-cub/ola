@@ -18,8 +18,27 @@ export const FloatingButton = ({ productName, productId }: FloatingButtonProps) 
   const [waitForDiscount, setWaitForDiscount] = useState(false);
 
   useEffect(() => {
+    const getNextSunday = () => {
+      const now = new Date();
+      const nextSunday = new Date(now);
+      
+      // Calculate days until next Sunday (0 = Sunday, 6 = Saturday)
+      const daysUntilSunday = (7 - now.getDay()) % 7;
+      
+      // If today is Sunday and it's before 23:59, target is today
+      // Otherwise target next Sunday
+      if (daysUntilSunday === 0 && now.getHours() < 23) {
+        nextSunday.setHours(23, 59, 59, 999);
+      } else {
+        nextSunday.setDate(now.getDate() + (daysUntilSunday || 7));
+        nextSunday.setHours(23, 59, 59, 999);
+      }
+      
+      return nextSunday;
+    };
+
     const calculateTimeLeft = () => {
-      const targetDate = new Date('2025-10-26T23:59:59');
+      const targetDate = getNextSunday();
       const now = new Date();
       const difference = targetDate.getTime() - now.getTime();
 
