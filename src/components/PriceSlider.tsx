@@ -182,29 +182,35 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
             </div>
             
             {/* Price numbers (bottom) */}
-            <div className="relative mt-2">
-              <div className="flex justify-between items-start">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
                 {priceData.map((item, index) => {
+                  const position = index === 0 ? '0%' : 
+                                  index === 1 ? '25%' :
+                                  index === 2 ? '50%' :
+                                  index === 3 ? '75%' : '100%';
                   const isNearSelected = Math.abs(selectedPeople - item.people) <= 
                     (index < priceData.length - 1 ? (priceData[index + 1].people - item.people) * 0.1 : 5);
                   return (
                     <div 
                       key={index} 
-                      className="flex-1"
+                      className="absolute transform -translate-x-1/2"
+                      style={{ left: position }}
                     >
-                      <span className={`transition-colors whitespace-nowrap block ${
+                      <span className={`transition-colors whitespace-nowrap ${
                         index === priceData.length - 1 
-                          ? 'text-sm font-bold text-primary animate-pulse text-right' 
+                          ? 'text-sm font-bold text-primary animate-pulse' 
                           : isNearSelected 
                             ? 'text-xs text-primary font-medium' 
                             : 'text-xs text-muted-foreground'
-                      } ${index === 0 ? 'text-left' : index === priceData.length - 1 ? 'text-right' : 'text-center'}`}>
+                      }`}>
                         {formatPrice(item.price)}
                       </span>
                     </div>
                   );
                 })}
               </div>
+              <div className="h-8"></div>
             </div>
           </div>
 
