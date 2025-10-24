@@ -118,13 +118,13 @@ const OrderDialog = ({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
-            {waitForDiscount ? "🕐 Подождать скидку" : "🛒 Купить сейчас"}
+            {waitForDiscount ? "🕐 Esperar y pagar menos" : "🛒 Comprar ahora"}
           </DialogTitle>
           {waitForDiscount && (
             <DialogDescription>
               <div className="text-center py-2">
                 <span className="text-2xl font-bold text-primary">
-                  Вы участник #{orderNumber}
+                  Sos participante #{orderNumber}
                 </span>
               </div>
             </DialogDescription>
@@ -133,11 +133,11 @@ const OrderDialog = ({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Имя *</Label>
+            <Label htmlFor="name">Nombre *</Label>
             <Input
               id="name"
               type="text"
-              placeholder="Ваше имя"
+              placeholder="Tu nombre"
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
               required
@@ -145,7 +145,7 @@ const OrderDialog = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="phone">Телефон *</Label>
+            <Label htmlFor="phone">Teléfono *</Label>
             <Input
               id="phone"
               type="tel"
@@ -157,10 +157,10 @@ const OrderDialog = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="comment">Комментарий</Label>
+            <Label htmlFor="comment">Comentario</Label>
             <Textarea
               id="comment"
-              placeholder="Введите количество, вкус и иные пожелания к заказу"
+              placeholder="Cantidad, sabor y otras preferencias"
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               rows={3}
@@ -176,10 +176,10 @@ const OrderDialog = ({
               className="flex-1"
               disabled={loading}
             >
-              Отменить
+              Cancelar
             </Button>
             <Button type="submit" className="flex-1" disabled={loading}>
-              {loading ? "Отправка..." : "Отправить"}
+              {loading ? "Enviando..." : "Enviar"}
             </Button>
           </div>
         </form>
