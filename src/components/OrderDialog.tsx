@@ -11,7 +11,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { Copy, Instagram } from "lucide-react";
 
 interface OrderDialogProps {
   open: boolean;
@@ -33,6 +41,7 @@ const OrderDialog = ({
   const [phone, setPhone] = useState("");
   const [comment, setComment] = useState("");
   const [orderNumber, setOrderNumber] = useState(0);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
     if (open && waitForDiscount) {
@@ -99,23 +108,32 @@ const OrderDialog = ({
         console.error("Error sending notification:", notifyError);
       }
 
-      toast.success("¡Pedido enviado exitosamente!");
-
-      // Reset form and close
+      // Reset form and close order dialog
       setCustomerName("");
       setPhone("");
       setComment("");
       onOpenChange(false);
+      
+      // Show success dialog
+      setShowSuccess(true);
     } catch (error: any) {
+      console.error("Error details:", error);
       toast.error(error.message || "Error al enviar el pedido");
     } finally {
       setLoading(false);
     }
   };
 
+  const copyProductLink = () => {
+    const currentUrl = window.location.href;
+    navigator.clipboard.writeText(currentUrl);
+    toast.success("¡Enlace copiado!");
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-md rounded-2xl">
         <DialogHeader>
           <DialogTitle>
             {waitForDiscount ? "🕐 Esperar y pagar menos" : "🛒 Comprar ahora"}
@@ -141,6 +159,7 @@ const OrderDialog = ({
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
               required
+              className="placeholder:opacity-50"
             />
           </div>
 
@@ -153,6 +172,7 @@ const OrderDialog = ({
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               required
+              className="placeholder:opacity-50"
             />
           </div>
 
@@ -164,7 +184,7 @@ const OrderDialog = ({
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               rows={3}
-              className="resize-none placeholder:text-muted-foreground/50"
+              className="resize-none placeholder:opacity-50"
             />
           </div>
 
@@ -183,8 +203,55 @@ const OrderDialog = ({
             </Button>
           </div>
         </form>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={showSuccess} onOpenChange={setShowSuccess}>
+        <AlertDialogContent className="rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-center text-2xl">
+              ¡Listo! 🎉
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-center text-base pt-2">
+              Tus datos fueron enviados. Te contactaremos pronto.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          
+          <div className="flex flex-col gap-3 pt-4">
+            <Button
+              onClick={copyProductLink}
+              variant="outline"
+              className="w-full gap-2"
+            >
+              <Copy className="h-4 w-4" />
+              Copiar enlace del producto
+            </Button>
+            
+            <Button
+              asChild
+              variant="outline"
+              className="w-full gap-2"
+            >
+              <a 
+                href="https://www.instagram.com/ola.suplementos/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+              >
+                <Instagram className="h-4 w-4" />
+                Seguinos en Instagram
+              </a>
+            </Button>
+            
+            <Button
+              onClick={() => setShowSuccess(false)}
+              className="w-full mt-2"
+            >
+              Cerrar
+            </Button>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
 
