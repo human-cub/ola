@@ -9,7 +9,7 @@ export const ServiceDescription = () => {
             <h3 className="text-2xl font-bold text-foreground mb-3">
               ¡Basta de pagar de más!
             </h3>
-            <p className="text-sm leading-relaxed">
+            <p className="text-lg font-semibold text-primary mb-4">
               Comprando de forma colectiva ya no tenés que salir a buscar descuentos: los creamos entre todos
             </p>
           </div>
