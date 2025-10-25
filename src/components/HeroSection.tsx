@@ -17,13 +17,6 @@ export const HeroSection = () => {
         <p className="text-xl md:text-2xl text-muted-foreground font-medium mb-4 animate-fade-in">
           Hasta 3 veces más barato. Sin riesgos, pagás al recibir
         </p>
-        <div className="w-20 h-1 bg-gradient-primary mx-auto rounded-full mb-6"></div>
-        <Button 
-          onClick={scrollToBenefits}
-          className="bg-gradient-primary hover:opacity-90 text-white font-semibold px-8 py-3 rounded-full shadow-elegant transition-all duration-300 hover:shadow-glow animate-fade-in"
-        >
-          Más info
-        </Button>
       </div>
     </section>
   );
