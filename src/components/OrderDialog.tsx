@@ -66,11 +66,6 @@ const OrderDialog = ({
       console.log("Product name:", productName);
       console.log("Wait for discount:", waitForDiscount);
       
-      // Ensure we're using anonymous session for public form submissions
-      // This prevents issues with expired or invalid stored sessions
-      await supabase.auth.signOut({ scope: 'local' });
-      console.log("Signed out to use anonymous role");
-      
       // Get product from database to get the ID
       const { data: dbProduct, error: productError } = await supabase
         .from("products")
@@ -92,17 +87,14 @@ const OrderDialog = ({
 
       console.log("Order data to insert:", orderData);
 
-      const { data, error } = await supabase
+      // Insert without .select() because anon role doesn't have SELECT permission
+      const { error } = await supabase
         .from("orders")
-        .insert(orderData)
-        .select()
-        .maybeSingle();
+        .insert(orderData);
 
-      console.log("Insert result - data:", data);
       console.log("Insert result - error:", error);
 
       if (error) throw error;
-      if (!data) throw new Error("No data returned from insert");
 
       // Send Telegram notification
       try {
@@ -113,7 +105,7 @@ const OrderDialog = ({
             phone: orderData.phone,
             comment: orderData.comment,
             waiting_for_discount: orderData.waiting_for_discount,
-            created_at: data.created_at,
+            created_at: new Date().toISOString(),
           },
         });
       } catch (notifyError) {
