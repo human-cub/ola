@@ -79,12 +79,9 @@ export const MainProductCarousel = () => {
     <section className="px-4 py-8">
       <div className="container mx-auto max-w-6xl">
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-2">
+          <h2 className="text-2xl md:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-2">
             Nuestros Productos
           </h2>
-          <p className="text-muted-foreground">
-            Suplementos premium al mejor precio
-          </p>
           <div className="w-20 h-1 bg-gradient-primary mx-auto rounded-full mt-4"></div>
         </div>
 
@@ -157,18 +154,18 @@ export const MainProductCarousel = () => {
             variant="outline"
             size="icon"
             onClick={scrollPrev}
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-white/90 hover:bg-white border-border/50 shadow-elegant z-20"
+            className="absolute -left-6 md:-left-12 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white border-border/50 shadow-elegant z-20"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="w-6 h-6 text-blue-500" />
           </Button>
 
           <Button
             variant="outline"
             size="icon"
             onClick={scrollNext}
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-white/90 hover:bg-white border-border/50 shadow-elegant z-20"
+            className="absolute -right-6 md:-right-12 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white border-border/50 shadow-elegant z-20"
           >
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-6 h-6 text-blue-500" />
           </Button>
         </div>
 
@@ -187,15 +184,6 @@ export const MainProductCarousel = () => {
           ))}
         </div>
 
-        {/* Auto-play indicator */}
-        {isAutoPlaying && (
-          <div className="flex justify-center mt-2">
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <div className="w-1 h-1 bg-primary rounded-full animate-pulse"></div>
-              Auto-navegación activa
-            </div>
-          </div>
-        )}
       </div>
     </section>
   );

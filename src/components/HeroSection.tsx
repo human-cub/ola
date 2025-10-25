@@ -11,8 +11,8 @@ export const HeroSection = () => {
   return (
     <section className="pt-24 pb-4 px-4">
       <div className="container mx-auto text-center">
-        <h1 className="text-4xl md:text-5xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-3 animate-fade-in">
-          Comprá minorista al precio mayorista.
+        <h1 className="text-3xl md:text-5xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-3 animate-fade-in">
+          Comprá minorista <br className="md:hidden" />al precio mayorista.
         </h1>
         <p className="text-xl md:text-2xl text-muted-foreground font-medium mb-4 animate-fade-in">
           Hasta 3 veces más barato. Sin riesgos, pagás al recibir

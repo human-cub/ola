@@ -7,38 +7,42 @@ export const ServiceDescription = () => {
               ¿Buscás precios más bajos?
             </h3>
             <p className="text-lg font-semibold text-primary mb-4">
-              ¡Basta de pagar de más! Comprando colectivamente ya no tenés que buscar descuentos, los creamos nosotros mismos
+              ¡Basta de pagar de más! Comprando de forma colectiva ya no tenés que salir a buscar descuentos: los creamos entre todos
             </p>
           </div>
 
           <div className="space-y-4 text-foreground">
             <p className="text-sm leading-relaxed">
-              Negociamos con proveedores para conseguir precios mayoristas y armamos colectas de compra.
+              Negociamos con proveedores para conseguir precios mayoristas y armamos compras colectivas
             </p>
 
             <div className="space-y-2">
               <p className="text-sm flex items-center gap-2">
                 <span className="w-2 h-2 bg-primary rounded-full flex-shrink-0"></span>
-                Sin adelantos.
+                Sin adelantos
               </p>
               <p className="text-sm flex items-center gap-2">
                 <span className="w-2 h-2 bg-primary rounded-full flex-shrink-0"></span>
-                El descuento depende de la cantidad de participantes. Mové el deslizador y mirá cómo baja el precio.
+                El descuento depende de cuántos se sumen. Mové el deslizador y mirá cómo baja el precio
               </p>
               <p className="text-sm flex items-center gap-2">
                 <span className="w-2 h-2 bg-primary rounded-full flex-shrink-0"></span>
-                Cada colecta dura una semana, de lunes a domingo. Si la colecta llega al máximo antes, hacemos el pedido más rápido.
+                Cada colecta dura una semana (de lunes a domingo). Si se llena antes, hacemos el pedido más rápido
               </p>
             </div>
 
-            <p className="text-sm leading-relaxed">En cuanto cierra el pedido grupal, hacemos la compra al mayorista y arrancamos con las entregas. El pago es en efectivo al recibir y revisar el producto.</p>
+            <p className="text-sm leading-relaxed">Cuando se cierra el pedido colectivo, compramos al mayorista y arrancamos con las entregas.
+Pagás en efectivo al recibir y revisar el producto.</p>
 
             <div className="bg-gradient-primary/10 rounded-lg p-4 border border-primary/20">
+              <p className="text-sm font-semibold text-primary text-center mb-1">
+                ¡Seamos más pagamos menos!
+              </p>
               <p className="text-sm font-semibold text-primary text-center mb-2">
-                ¡Vamos a conseguir el mayor descuento!
+                Vamos a conseguir el mejor descuento
               </p>
               <p className="text-sm text-center text-muted-foreground mb-4">
-                Compartilo con tus amigos — capaz que a ellos también les interesa.
+                Compartilo con tus amigos.
               </p>
               
               {/* Social Media and QR Section */}
@@ -95,24 +99,26 @@ export const ServiceDescription = () => {
                       className="w-full h-full object-contain hover:opacity-90 transition-opacity rounded-lg border-2 border-primary/30 hover:border-primary/50"
                     />
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">Compartí este sitio</p>
                 </div>
               </div>
             </div>
 
             <div className="border-t border-border pt-4 mt-6">
               <div className="space-y-2 text-sm text-muted-foreground">
-                <p>¿Querés un producto que todavía no está en las compras colectivas?</p>
-                <p>¿Conocés proveedores confiables?</p>
-                <p>¿Tenés preguntas, propuestas o críticas?</p>
+                <p>¿Querés que agreguemos un producto?</p>
+                <p>¿Querés ser parte, colaborar o proponer algo nuevo?</p>
+                <p>¿Tenés preguntas, ideas o críticas?</p>
               </div>
               
               <div className="mt-4 text-center">
                 <p className="text-sm font-medium text-foreground mb-2">
-                  Escribinos — estamos abiertos a colaborar y escuchar sugerencias.
+                  Escribinos: estamos abiertos a escuchar, sumar ideas y mejorar juntos.
+                </p>
+                <p className="text-sm text-primary font-semibold mb-2">
+                  Nuestra meta es que las compras sean más baratas y transparentes.
                 </p>
                 <p className="text-sm text-primary font-semibold mb-4">
-                  Nuestra meta es que las compras sean más baratas y transparentes. ¡Hagámoslo juntos!
+                  ¡Hagámoslo juntos!
                 </p>
                 <div className="flex justify-center">
                   <button 

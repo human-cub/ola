@@ -3,33 +3,33 @@ import { Users, UserPlus, Calculator, FileCheck, Truck, CreditCard } from "lucid
 const steps = [
   {
     icon: Users,
-    title: "Te sumás a la colecta del producto",
-    description: "Unite a otros compradores interesados en el mismo producto durante de la semana"
+    title: "Te sumás a la compra del producto",
+    description: "Unite a otros que quieren el mismo producto durante la semana"
   },
   {
     icon: UserPlus,
     title: "Invitás a tus amigos",
-    description: "Compartí la colecta con amigos para conseguir mejores precios"
+    description: "Cuantos más se suman, más baja el precio"
   },
   {
     icon: Calculator,
-    title: "Al final de la semana contamos la cantidad de participantes",
-    description: "Calculamos el descuento según la cantidad de personas en la colecta"
+    title: "Al final de la semana vemos cuántos se sumaron",
+    description: "Calculamos el descuento según cuántas personas se sumaron a la compra"
   },
   {
     icon: FileCheck,
-    title: "Confirmás tu participación completando el formulario de entrega",
-    description: "Completás tus datos de entrega una vez confirmado el precio final"
+    title: "Confirmás tus datos de entrega",
+    description: "Completás el formulario cuando ya sabemos el precio final"
   },
   {
     icon: Truck,
-    title: "Te llevamos el producto",
-    description: "Coordinamos la entrega en el lugar que nos indiques"
+    title: "Te llevamos el producto o lo retirás vos",
+    description: "Coordinamos lo que te quede más cómodo: envío o retiro"
   },
   {
     icon: CreditCard,
-    title: "Revisás el pedido y pagás solo al recibirlo",
-    description: "Sin riesgos: verificás la calidad y pagás en el momento de la entrega"
+    title: "Revisás y pagás al recibirlo",
+    description: "Sin riesgos: revisás el producto y pagás en el momento"
   }
 ];
 
@@ -75,14 +75,14 @@ export const ProcessSteps = () => {
                    <h3 className="text-lg font-semibold text-foreground mb-2 text-center">
                      {step.title}
                    </h3>
-                  <p className="text-muted-foreground text-center text-sm leading-relaxed">
-                    {step.description}
-                    {index === 2 && (
-                      <span className="block mt-2">
-                        Si la colecta llega al máximo antes, hacemos el pedido más rápido
-                      </span>
-                    )}
-                  </p>
+                   <p className="text-muted-foreground text-center text-sm leading-relaxed">
+                     {step.description}
+                     {index === 2 && (
+                       <span className="block mt-2">
+                         Si la compra llega al máximo antes, hacemos el pedido antes
+                       </span>
+                     )}
+                   </p>
                 </div>
 
               </div>

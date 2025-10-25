@@ -5,17 +5,17 @@ const benefits = [
   {
     icon: Percent,
     title: "Hasta 3 veces más barato",
-    description: "Obtén mejores precios comprando colectivamente"
+    description: "Conseguí mejores precios con compras colectivas"
   },
   {
     icon: Shield,
     title: "100% original",
-    description: "Trabajamos solo con proveedores oficiales"
+    description: "Garantizado: solo proveedores oficiales"
   },
   {
     icon: CreditCard,
-    title: "Paga al recibir",
-    description: "Sin riesgos, pagás cuando tenés tu producto"
+    title: "Pagá al recibir",
+    description: "Sin riesgos: pagás cuando tenés tu producto"
   }
 ];
 
