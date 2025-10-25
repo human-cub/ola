@@ -245,7 +245,7 @@ const OrderDialog = ({
               className="w-full gap-2"
             >
               <a 
-                href="https://www.instagram.com/ola.suplementos/" 
+                href="https://www.instagram.com/ola.unity/" 
                 target="_blank" 
                 rel="noopener noreferrer"
               >
