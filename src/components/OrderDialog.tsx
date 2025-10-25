@@ -66,12 +66,17 @@ const OrderDialog = ({
       console.log("Product name:", productName);
       console.log("Wait for discount:", waitForDiscount);
       
+      // Ensure we're using anonymous session for public form submissions
+      // This prevents issues with expired or invalid stored sessions
+      await supabase.auth.signOut({ scope: 'local' });
+      console.log("Signed out to use anonymous role");
+      
       // Get product from database to get the ID
       const { data: dbProduct, error: productError } = await supabase
         .from("products")
         .select("id")
         .eq("name", productName)
-        .single();
+        .maybeSingle();
 
       console.log("Product from DB:", dbProduct);
       if (productError) console.error("Product fetch error:", productError);
@@ -89,14 +94,15 @@ const OrderDialog = ({
 
       const { data, error } = await supabase
         .from("orders")
-        .insert([orderData])
+        .insert(orderData)
         .select()
-        .single();
+        .maybeSingle();
 
       console.log("Insert result - data:", data);
       console.log("Insert result - error:", error);
 
       if (error) throw error;
+      if (!data) throw new Error("No data returned from insert");
 
       // Send Telegram notification
       try {
