@@ -20,6 +20,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { Copy, Instagram } from "lucide-react";
+import { z } from "zod";
+
+const orderSchema = z.object({
+  customerName: z.string().trim().min(1, "El nombre es requerido").max(100, "El nombre es demasiado largo"),
+  phone: z.string().trim().regex(/^[\+]?[0-9\s\-()]{7,20}$/, "Formato de teléfono inválido"),
+  comment: z.string().max(500, "El comentario es demasiado largo").optional(),
+});
 
 interface OrderDialogProps {
   open: boolean;
@@ -62,9 +69,12 @@ const OrderDialog = ({
     setLoading(true);
 
     try {
-      console.log("=== Starting order submission ===");
-      console.log("Product name:", productName);
-      console.log("Wait for discount:", waitForDiscount);
+      // Validate input
+      const validated = orderSchema.parse({
+        customerName,
+        phone,
+        comment: comment || undefined,
+      });
       
       // Get product from database to get the ID
       const { data: dbProduct, error: productError } = await supabase
@@ -73,26 +83,21 @@ const OrderDialog = ({
         .eq("name", productName)
         .maybeSingle();
 
-      console.log("Product from DB:", dbProduct);
-      if (productError) console.error("Product fetch error:", productError);
+      if (productError) throw productError;
 
       const orderData = {
         product_id: dbProduct?.id || null,
         product_name: productName,
-        customer_name: customerName,
-        phone: phone,
-        comment: comment || null,
+        customer_name: validated.customerName,
+        phone: validated.phone,
+        comment: validated.comment || null,
         waiting_for_discount: waitForDiscount,
       };
-
-      console.log("Order data to insert:", orderData);
 
       // Insert without .select() because anon role doesn't have SELECT permission
       const { error } = await supabase
         .from("orders")
         .insert(orderData);
-
-      console.log("Insert result - error:", error);
 
       if (error) throw error;
 
@@ -109,7 +114,7 @@ const OrderDialog = ({
           },
         });
       } catch (notifyError) {
-        console.error("Error sending notification:", notifyError);
+        // Notification failed but order was saved
       }
 
       // Reset form and close order dialog
@@ -126,8 +131,11 @@ const OrderDialog = ({
       // Show success dialog
       setShowSuccess(true);
     } catch (error: any) {
-      console.error("Error details:", error);
-      toast.error(error.message || "Error al enviar el pedido");
+      if (error instanceof z.ZodError) {
+        toast.error(error.errors[0].message);
+      } else {
+        toast.error(error.message || "Error al enviar el pedido");
+      }
     } finally {
       setLoading(false);
     }

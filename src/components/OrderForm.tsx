@@ -9,6 +9,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { products } from "@/data/products";
+import { z } from "zod";
+
+const orderSchema = z.object({
+  customerName: z.string().trim().min(1, "El nombre es requerido").max(100, "El nombre es demasiado largo"),
+  phone: z.string().trim().regex(/^[\+]?[0-9\s\-()]{7,20}$/, "Formato de teléfono inválido"),
+  comment: z.string().max(500, "El comentario es demasiado largo").optional(),
+});
 
 const OrderForm = () => {
   const [loading, setLoading] = useState(false);
@@ -23,6 +30,13 @@ const OrderForm = () => {
     setLoading(true);
 
     try {
+      // Validate input
+      const validated = orderSchema.parse({
+        customerName,
+        phone,
+        comment: comment || undefined,
+      });
+
       const productData = products[selectedProduct];
       if (!productData) {
         throw new Error("Producto no encontrado");
@@ -38,17 +52,15 @@ const OrderForm = () => {
       const orderData = {
         product_id: dbProduct?.id || null,
         product_name: productData.name,
-        customer_name: customerName,
-        phone: phone,
-        comment: comment || null,
+        customer_name: validated.customerName,
+        phone: validated.phone,
+        comment: validated.comment || null,
         waiting_for_discount: waitForDiscount,
       };
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("orders")
-        .insert([orderData])
-        .select()
-        .single();
+        .insert(orderData);
 
       if (error) throw error;
 
@@ -61,11 +73,11 @@ const OrderForm = () => {
             phone: orderData.phone,
             comment: orderData.comment,
             waiting_for_discount: orderData.waiting_for_discount,
-            created_at: data.created_at,
+            created_at: new Date().toISOString(),
           },
         });
       } catch (notifyError) {
-        console.error("Error sending notification:", notifyError);
+        // Notification failed but order was saved
       }
 
       toast.success("¡Orden enviada exitosamente!");
@@ -77,7 +89,11 @@ const OrderForm = () => {
       setComment("");
       setWaitForDiscount(false);
     } catch (error: any) {
-      toast.error(error.message || "Error al enviar la orden");
+      if (error instanceof z.ZodError) {
+        toast.error(error.errors[0].message);
+      } else {
+        toast.error(error.message || "Error al enviar la orden");
+      }
     } finally {
       setLoading(false);
     }
