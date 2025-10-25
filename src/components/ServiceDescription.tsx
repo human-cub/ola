@@ -1,5 +1,5 @@
 export const ServiceDescription = () => {
-  return <section id="service-description" className="px-4 py-4">
+  return <section id="service-description" className="px-4 py-2">
       <div className="container mx-auto max-w-md">
         <div className="bg-gradient-card rounded-xl p-6 shadow-soft">
           <div className="text-center mb-6">
@@ -38,11 +38,8 @@ Pagás en efectivo al recibir y revisar el producto.</p>
               <p className="text-sm font-semibold text-primary text-center mb-1">
                 ¡Seamos más pagamos menos!
               </p>
-              <p className="text-sm font-semibold text-primary text-center mb-2">
-                Vamos a conseguir el mejor descuento
-              </p>
               <p className="text-sm text-center text-muted-foreground mb-4">
-                Compartilo con tus amigos.
+                Vamos a conseguir el mejor descuento — compartilo con tus amigos.
               </p>
               
               {/* Social Media and QR Section */}

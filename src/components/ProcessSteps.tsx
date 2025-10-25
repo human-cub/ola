@@ -35,14 +35,14 @@ const steps = [
 
 export const ProcessSteps = () => {
   return (
-    <section className="py-16 px-4 bg-muted/30">
+    <section className="py-8 px-4 bg-muted/30">
       <div className="container mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             ¿Cómo Funciona?
           </h2>
           <div className="w-20 h-1 bg-gradient-primary mx-auto rounded-full mb-4"></div>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
             Seis simples pasos para conseguir productos de calidad al mejor precio
           </p>
         </div>
