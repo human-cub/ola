@@ -43,12 +43,6 @@ const OrderDialog = ({
   const [orderNumber, setOrderNumber] = useState(0);
   const [showSuccess, setShowSuccess] = useState(false);
 
-  useEffect(() => {
-    if (open && waitForDiscount) {
-      fetchOrderNumber();
-    }
-  }, [open, productId, waitForDiscount]);
-
   const fetchOrderNumber = async () => {
     const { data: product } = await supabase
       .from("products")
@@ -57,9 +51,9 @@ const OrderDialog = ({
       .single();
 
     if (product) {
-      // Номер участника = waiting_for_discount_count + virtual_orders_count + 1
+      // Номер участника = waiting_for_discount_count + virtual_orders_count
       const currentTotal = (product.waiting_for_discount_count || 0) + (product.virtual_orders_count || 0);
-      setOrderNumber(currentTotal + 1);
+      setOrderNumber(currentTotal);
     }
   };
 
@@ -126,6 +120,11 @@ const OrderDialog = ({
       setComment("");
       onOpenChange(false);
       
+      // Fetch order number if waiting for discount
+      if (waitForDiscount) {
+        await fetchOrderNumber();
+      }
+      
       // Show success dialog
       setShowSuccess(true);
     } catch (error: any) {
@@ -150,15 +149,6 @@ const OrderDialog = ({
           <DialogTitle>
             {waitForDiscount ? "🕐 Esperar y pagar menos" : "🛒 Comprar ahora"}
           </DialogTitle>
-          {waitForDiscount && (
-            <DialogDescription>
-              <div className="text-center py-2">
-                <span className="text-2xl font-bold text-primary">
-                  Sos participante #{orderNumber}
-                </span>
-              </div>
-            </DialogDescription>
-          )}
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -225,7 +215,18 @@ const OrderDialog = ({
               ¡Listo! 🎉
             </AlertDialogTitle>
             <AlertDialogDescription className="text-center text-base pt-2">
-              Tus datos fueron enviados. Te contactaremos pronto.
+              {waitForDiscount ? (
+                <div className="space-y-2">
+                  <div className="text-2xl font-bold text-primary">
+                    Sos participante #{orderNumber}
+                  </div>
+                  <div>
+                    Tus datos fueron enviados. Te contactaremos pronto.
+                  </div>
+                </div>
+              ) : (
+                "Tus datos fueron enviados. Te contactaremos pronto."
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           
