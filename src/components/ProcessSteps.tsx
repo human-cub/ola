@@ -3,7 +3,8 @@ import { Users, UserPlus, Calculator, FileCheck, Truck, CreditCard } from "lucid
 const steps = [
   {
     icon: Users,
-    title: "Te sumás a la compra del producto (sin prepago)",
+    title: "Te sumás a la compra del producto",
+    subtitle: "(sin prepago)",
     description: "Unite a otros que quieren el mismo producto durante la semana"
   },
   {
@@ -71,10 +72,15 @@ export const ProcessSteps = () => {
                      </div>
                    </div>
                    
-                   {/* Content */}
-                   <h3 className="text-lg font-semibold text-foreground mb-2 text-center">
-                     {step.title}
-                   </h3>
+                    {/* Content */}
+                    <h3 className="text-lg font-semibold text-foreground mb-2 text-center">
+                      {step.title}
+                      {'subtitle' in step && (
+                        <span className="block text-sm font-normal text-muted-foreground mt-1">
+                          {step.subtitle}
+                        </span>
+                      )}
+                    </h3>
                     <p className="text-muted-foreground text-center text-sm leading-relaxed">
                       {step.description}
                       {index === 2 && (

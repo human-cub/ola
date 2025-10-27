@@ -59,62 +59,70 @@ Pagás en efectivo al recibir y revisar el producto.</p>
                       navigator.clipboard.writeText(text);
                     }
                   }}
-                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-md py-2 px-4 flex items-center justify-center gap-2 transition-colors"
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-md py-2.5 px-4 flex items-center justify-center gap-2 transition-colors text-sm"
                 >
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                   </svg>
-                  Compartir con amigos
+                  <span>Compartir con amigos</span>
                 </button>
                 
-                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    onClick={() => {
-                      const text = encodeURIComponent('Che! Mirá esto - descuentos increíbles de suplementos 🎉 Podés comprar al precio actual o esperar y pagar menos 🤑 https://ola.lovable.app/');
-                      window.open(`https://wa.me/?text=${text}`, '_blank');
-                    }}
-                    className="border border-border hover:bg-accent rounded-md py-2 px-2 flex items-center justify-center gap-1 text-[10px] transition-colors"
-                  >
-                    <svg className="h-3 w-3 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.463 3.488"/>
-                    </svg>
-                    <span className="truncate">WhatsApp</span>
-                  </button>
-                  
-                  <button
-                    onClick={() => {
-                      const text = 'Che! Mirá esto - descuentos increíbles de suplementos 🎉 Podés comprar al precio actual o esperar y pagar menos 🤑 https://ola.lovable.app/';
-                      navigator.clipboard.writeText(text);
-                    }}
-                    className="border border-border hover:bg-accent rounded-md py-2 px-2 flex items-center justify-center gap-1 text-[11px] transition-colors"
-                  >
-                    <svg className="h-3 w-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                    </svg>
-                    <span className="truncate">Copiar invitación</span>
-                  </button>
-                  
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText('https://ola.lovable.app/');
-                    }}
-                    className="border border-border hover:bg-accent rounded-md py-2 px-2 flex items-center justify-center gap-1 text-[10px] transition-colors"
-                  >
-                    <svg className="h-3 w-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                    </svg>
-                    <span className="truncate">Copiar enlace</span>
-                  </button>
+                <button
+                  onClick={() => {
+                    const text = encodeURIComponent('Che! Mirá esto - descuentos increíbles de suplementos 🎉 Podés comprar al precio actual o esperar y pagar menos 🤑 https://ola.lovable.app/');
+                    window.open(`https://wa.me/?text=${text}`, '_blank');
+                  }}
+                  className="w-full border border-border hover:bg-accent rounded-md py-2.5 px-4 flex items-center justify-center gap-2 transition-colors text-sm"
+                >
+                  <svg className="h-4 w-4 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.463 3.488"/>
+                  </svg>
+                  <span>Compartir por WhatsApp</span>
+                </button>
+                
+                <button
+                  onClick={() => {
+                    const text = 'Che! Mirá esto - descuentos increíbles de suplementos 🎉 Podés comprar al precio actual o esperar y pagar menos 🤑 https://ola.lovable.app/';
+                    navigator.clipboard.writeText(text);
+                  }}
+                  className="w-full border border-border hover:bg-accent rounded-md py-2.5 px-4 flex items-center justify-center gap-2 transition-colors text-sm"
+                >
+                  <svg className="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  <span>Copiar invitación</span>
+                </button>
+                
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText('https://ola.lovable.app/');
+                  }}
+                  className="w-full border border-border hover:bg-accent rounded-md py-2.5 px-4 flex items-center justify-center gap-2 transition-colors text-sm"
+                >
+                  <svg className="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  <span>Copiar enlace</span>
+                </button>
+                
+                <div className="flex flex-col items-center mt-2 mb-2">
+                  <div className="w-[180px] h-[180px] aspect-square flex items-center justify-center">
+                    <img 
+                      src="/qr-code.svg"
+                      alt="QR Code"
+                      className="w-full h-full object-contain hover:opacity-90 transition-opacity rounded-lg border-2 border-primary/30 hover:border-primary/50"
+                    />
+                  </div>
                 </div>
                 
-                <div className="border-t border-border/50 pt-2 mt-1" />
+                <div className="border-t border-border/50 pt-2" />
                 
                 <div className="relative w-full p-[2px] rounded-md bg-gradient-to-r from-[#f09433] via-[#dc2743] to-[#bc1888]">
                   <a
                     href="https://www.instagram.com/ola.unity/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 w-full bg-background hover:bg-accent rounded-md py-2 px-4 transition-colors"
+                    className="flex items-center justify-center gap-2 w-full bg-background hover:bg-accent rounded-md py-2.5 px-4 transition-colors text-sm"
                   >
                     <svg className="h-4 w-4" style={{ stroke: 'url(#instagram-gradient)', fill: 'none' }} viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 8c0 .53-.21 1.04-.59 1.41-.37.38-.88.59-1.41.59-.53 0-1.04-.21-1.41-.59C12.21 9.04 12 8.53 12 8s.21-1.04.59-1.41C12.96 6.21 13.47 6 14 6c.53 0 1.04.21 1.41.59.38.37.59.88.59 1.41zM12 2c2.76 0 5.07.99 6.95 2.98C20.91 6.95 22 9.26 22 12s-.99 5.05-2.05 6.95C18.07 21.01 14.76 22 12 22s-6.07-.99-7.95-2.05C2.99 18.05 2 15.74 2 12s.99-5.07 2.05-6.95C5.93 3.01 9.24 2 12 2zm0 18c3.86 0 7-3.14 7-7s-3.14-7-7-7-7 3.14-7 7 3.14 7 7 7zm0-13c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
@@ -130,11 +138,11 @@ Pagás en efectivo al recibir y revisar el producto.</p>
                         </linearGradient>
                       </defs>
                     </svg>
-                    Seguinos en Instagram
+                    <span>Seguinos en Instagram</span>
                   </a>
                 </div>
                 
-                <p className="text-xs text-center text-muted-foreground -mt-1">
+                <p className="text-xs text-center text-muted-foreground">
                   para ofertas, descuentos y novedades
                 </p>
               </div>
