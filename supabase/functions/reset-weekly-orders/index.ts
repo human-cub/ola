@@ -16,9 +16,9 @@ Deno.serve(async (req) => {
       throw fetchError;
     }
 
-    // Update each product with random virtual orders between 31 and 42
+    // Update each product with random virtual orders between 48 and 59
     const updates = products?.map(async (product) => {
-      const randomOrders = Math.floor(Math.random() * (42 - 31 + 1)) + 31;
+      const randomOrders = Math.floor(Math.random() * (59 - 48 + 1)) + 48;
       
       return supabase
         .from('products')
