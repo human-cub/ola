@@ -165,7 +165,7 @@ const OrderDialog = ({
 
   const getShareText = () => {
     const currentUrl = window.location.href;
-    return `Che! Mirá esto - compra colectiva de ${productName} 🎉 Seamos más, pagamos menos. Sumate! ${currentUrl}`;
+    return `Che! Mirá esto - compra colectiva de ${productName} 🎉 Seamos más, pagamos menos. Elegí 'Esperar y pagar menos', sumate e invitá amigos!! ${currentUrl}`;
   };
 
   const handleNativeShare = async () => {
@@ -195,7 +195,7 @@ const OrderDialog = ({
 
   const handleTelegramShare = () => {
     const text = encodeURIComponent(getShareText());
-    window.open(`https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(`Che! Mirá esto - compra colectiva de ${productName} 🎉 Seamos más, pagamos menos. Sumate!`)}`, '_blank');
+    window.open(`https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(`Che! Mirá esto - compra colectiva de ${productName} 🎉 Seamos más, pagamos menos. Elegí 'Esperar y pagar menos', sumate e invitá amigos!!`)}`, '_blank');
   };
 
   const copyInvitation = () => {
@@ -305,7 +305,7 @@ const OrderDialog = ({
             {waitForDiscount && (
               <>
                 <div className="text-sm font-semibold text-center">
-                  Invitar amigos
+                  Invitá amigos para conseguir mejor precio
                 </div>
                 
                 <Button
@@ -328,36 +328,18 @@ const OrderDialog = ({
                   </Button>
                   
                   <Button
-                    onClick={handleTelegramShare}
+                    onClick={copyInvitation}
                     variant="outline"
                     className="gap-2"
                   >
-                    <Send className="h-4 w-4" />
-                    Telegram
+                    <Copy className="h-4 w-4" />
+                    Copiar invitación
                   </Button>
                 </div>
                 
-                <Button
-                  onClick={copyInvitation}
-                  variant="outline"
-                  className="w-full gap-2"
-                >
-                  <Copy className="h-4 w-4" />
-                  Copiar invitación
-                </Button>
-                
-                <div className="border-t pt-3 mt-2" />
+                <div className="border-t pt-2 mt-1" />
               </>
             )}
-            
-            <Button
-              onClick={copyProductLink}
-              variant="outline"
-              className="w-full gap-2"
-            >
-              <Copy className="h-4 w-4" />
-              Copiar enlace del producto
-            </Button>
             
             <Button
               asChild
@@ -368,10 +350,25 @@ const OrderDialog = ({
                 href="https://www.instagram.com/ola.unity/" 
                 target="_blank" 
                 rel="noopener noreferrer"
+                className="flex flex-col items-center py-3"
               >
-                <Instagram className="h-4 w-4" />
-                Seguinos en Instagram
+                <div className="flex items-center gap-2">
+                  <Instagram className="h-4 w-4" />
+                  Seguinos en Instagram
+                </div>
+                <span className="text-xs text-muted-foreground mt-0.5">
+                  para ofertas, descuentos y novedades
+                </span>
               </a>
+            </Button>
+            
+            <Button
+              onClick={copyProductLink}
+              variant="outline"
+              className="w-full gap-2"
+            >
+              <Copy className="h-4 w-4" />
+              Copiar enlace del producto
             </Button>
             
             <Button
