@@ -164,8 +164,13 @@ const OrderDialog = ({
   };
 
   const getShareText = () => {
-    const currentUrl = window.location.href;
-    return `Che! Mirá esto - compra colectiva de ${productName} 🎉 Seamos más, pagamos menos. Elegí 'Esperar y pagar menos', sumate e invitá amigos!! ${currentUrl}`;
+    if (waitForDiscount) {
+      const currentUrl = window.location.href;
+      return `Che! Mirá esto - compra colectiva de ${productName} 🎉 Seamos más, pagamos menos. Elegí 'Esperar y pagar menos', sumate e invitá amigos!! ${currentUrl}`;
+    } else {
+      const homeUrl = window.location.origin;
+      return `Che! Mirá esto - descuentos increíbles de suplementos 🎉 Podés comprar al precio actual o esperar y pagar menos 🤑 ${homeUrl}`;
+    }
   };
 
   const handleNativeShare = async () => {
@@ -194,8 +199,11 @@ const OrderDialog = ({
   };
 
   const handleTelegramShare = () => {
-    const text = encodeURIComponent(getShareText());
-    window.open(`https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(`Che! Mirá esto - compra colectiva de ${productName} 🎉 Seamos más, pagamos menos. Elegí 'Esperar y pagar menos', sumate e invitá amigos!!`)}`, '_blank');
+    const url = waitForDiscount ? window.location.href : window.location.origin;
+    const text = waitForDiscount 
+      ? `Che! Mirá esto - compra colectiva de ${productName} 🎉 Seamos más, pagamos menos. Elegí 'Esperar y pagar menos', sumate e invitá amigos!!`
+      : `Che! Mirá esto - descuentos increíbles de suplementos 🎉 Podés comprar al precio actual o esperar y pagar menos 🤑`;
+    window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`, '_blank');
   };
 
   const copyInvitation = () => {
@@ -278,77 +286,73 @@ const OrderDialog = ({
               ¡Listo! 🎉
             </AlertDialogTitle>
             <AlertDialogDescription className="text-center text-base pt-1">
-              {waitForDiscount ? (
-                <div className="space-y-2">
-                  <div>
-                    Tus datos fueron enviados. Te contactaremos pronto.
-                  </div>
-                  <div className="text-2xl font-bold text-primary">
-                    Sos participante #{orderNumber}
-                  </div>
-                  <div className="space-y-1 text-sm">
-                    <div className="font-medium">
-                      👥 Faltan {peopleUntilNextDiscount} personas para siguiente descuento
-                    </div>
-                    <div className="text-muted-foreground">
-                      Descuento máximo: {maxPrice} con 100 participantes
-                    </div>
-                  </div>
+              <div className="space-y-2">
+                <div>
+                  Tus datos fueron enviados. Te contactaremos pronto.
                 </div>
-              ) : (
-                "Tus datos fueron enviados. Te contactaremos pronto."
-              )}
+                {waitForDiscount && (
+                  <>
+                    <div className="text-2xl font-bold text-primary">
+                      Sos participante #{orderNumber}
+                    </div>
+                    <div className="space-y-1 text-sm">
+                      <div className="font-medium">
+                        👥 Faltan {peopleUntilNextDiscount} personas para siguiente descuento
+                      </div>
+                      <div className="text-muted-foreground">
+                        Descuento máximo: {maxPrice} con 100 participantes
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           
           <div className="flex flex-col gap-2 pt-2">
-            {waitForDiscount && (
-              <>
-                <div className="text-sm font-semibold text-center">
-                  Invitá a tus amigos para conseguir mejor precio
-                </div>
-                
-                <Button
-                  onClick={handleNativeShare}
-                  variant="default"
-                  className="w-full gap-2"
-                >
-                  <Share2 className="h-4 w-4" />
-                  Compartir con amigos
-                </Button>
-                
-                <div className="grid grid-cols-[0.8fr_1.4fr_0.8fr] gap-2">
-                  <Button
-                    onClick={handleWhatsAppShare}
-                    variant="outline"
-                    className="gap-1 text-[10px] px-1.5"
-                  >
-                    <MessageCircle className="h-3 w-3 flex-shrink-0" />
-                    <span className="truncate">WhatsApp</span>
-                  </Button>
-                  
-                  <Button
-                    onClick={copyInvitation}
-                    variant="outline"
-                    className="gap-1 text-[11px] px-2"
-                  >
-                    <Copy className="h-3 w-3 flex-shrink-0" />
-                    <span className="truncate">Copiar invitación</span>
-                  </Button>
-                  
-                  <Button
-                    onClick={copyProductLink}
-                    variant="outline"
-                    className="gap-1 text-[10px] px-1.5"
-                  >
-                    <Copy className="h-3 w-3 flex-shrink-0" />
-                    <span className="truncate">Copiar enlace</span>
-                  </Button>
-                </div>
-                
-                <div className="border-t pt-2 mt-1" />
-              </>
-            )}
+            <div className="text-sm font-semibold text-center">
+              Invitá a tus amigos
+            </div>
+            
+            <Button
+              onClick={handleNativeShare}
+              variant="default"
+              className="w-full gap-2"
+            >
+              <Share2 className="h-4 w-4" />
+              Compartir con amigos
+            </Button>
+            
+            <div className="grid grid-cols-[0.8fr_1.4fr_0.8fr] gap-2">
+              <Button
+                onClick={handleWhatsAppShare}
+                variant="outline"
+                className="gap-1 text-[10px] px-1.5"
+              >
+                <MessageCircle className="h-3 w-3 flex-shrink-0" />
+                <span className="truncate">WhatsApp</span>
+              </Button>
+              
+              <Button
+                onClick={copyInvitation}
+                variant="outline"
+                className="gap-1 text-[11px] px-2"
+              >
+                <Copy className="h-3 w-3 flex-shrink-0" />
+                <span className="truncate">Copiar invitación</span>
+              </Button>
+              
+              <Button
+                onClick={copyProductLink}
+                variant="outline"
+                className="gap-1 text-[10px] px-1.5"
+              >
+                <Copy className="h-3 w-3 flex-shrink-0" />
+                <span className="truncate">Copiar enlace</span>
+              </Button>
+            </div>
+            
+            <div className="border-t pt-2 mt-1" />
             
             <div className="relative w-full p-[2px] rounded-md bg-gradient-to-r from-[#f09433] via-[#dc2743] to-[#bc1888]">
               <Button
