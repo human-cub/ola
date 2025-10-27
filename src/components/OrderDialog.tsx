@@ -49,13 +49,13 @@ const OrderDialog = ({
   const [comment, setComment] = useState("");
   const [orderNumber, setOrderNumber] = useState(0);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0 });
-  const [maxDiscount, setMaxDiscount] = useState("0%");
+  const [peopleUntilNextDiscount, setPeopleUntilNextDiscount] = useState(0);
+  const [maxPrice, setMaxPrice] = useState("");
 
   const fetchOrderNumber = async () => {
     const { data: product } = await supabase
       .from("products")
-      .select("waiting_for_discount_count, virtual_orders_count")
+      .select("waiting_for_discount_count, virtual_orders_count, prices")
       .eq("name", productName)
       .single();
 
@@ -63,6 +63,19 @@ const OrderDialog = ({
       // Номер участника = waiting_for_discount_count + virtual_orders_count
       const currentTotal = (product.waiting_for_discount_count || 0) + (product.virtual_orders_count || 0);
       setOrderNumber(currentTotal);
+      
+      // Calculate people until next discount (thresholds: 25, 50, 75, 100)
+      const thresholds = [25, 50, 75, 100];
+      const nextThreshold = thresholds.find(t => t > currentTotal) || 100;
+      setPeopleUntilNextDiscount(nextThreshold - currentTotal);
+      
+      // Get max price at 100 people
+      if (product.prices && Array.isArray(product.prices)) {
+        const priceAt100 = product.prices.find((p: any) => p.people === 100) as { people: number; price: number } | undefined;
+        if (priceAt100) {
+          setMaxPrice(`$${(priceAt100.price / 1000).toFixed(3).replace('.', ',')}`);
+        }
+      }
     }
   };
 
@@ -143,42 +156,6 @@ const OrderDialog = ({
     }
   };
 
-  useEffect(() => {
-    const getNextSunday = () => {
-      const now = new Date();
-      const nextSunday = new Date(now);
-      const daysUntilSunday = (7 - now.getDay()) % 7;
-      
-      if (daysUntilSunday === 0 && now.getHours() < 23) {
-        nextSunday.setHours(23, 59, 59, 999);
-      } else {
-        nextSunday.setDate(now.getDate() + (daysUntilSunday || 7));
-        nextSunday.setHours(23, 59, 59, 999);
-      }
-      
-      return nextSunday;
-    };
-
-    const calculateTimeLeft = () => {
-      const targetDate = getNextSunday();
-      const now = new Date();
-      const difference = targetDate.getTime() - now.getTime();
-
-      if (difference > 0) {
-        const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-        
-        setTimeLeft({ days, hours, minutes });
-      }
-    };
-
-    if (showSuccess && waitForDiscount) {
-      calculateTimeLeft();
-      const timer = setInterval(calculateTimeLeft, 60000);
-      return () => clearInterval(timer);
-    }
-  }, [showSuccess, waitForDiscount]);
 
   const copyProductLink = () => {
     const currentUrl = window.location.href;
@@ -300,25 +277,22 @@ const OrderDialog = ({
             <AlertDialogTitle className="text-center text-2xl">
               ¡Listo! 🎉
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-center text-base pt-2">
+            <AlertDialogDescription className="text-center text-base pt-1">
               {waitForDiscount ? (
-                <div className="space-y-3">
+                <div className="space-y-2">
+                  <div>
+                    Tus datos fueron enviados. Te contactaremos pronto.
+                  </div>
                   <div className="text-2xl font-bold text-primary">
                     Sos participante #{orderNumber}
                   </div>
                   <div className="space-y-1 text-sm">
                     <div className="font-medium">
-                      ⏰ Tiempo hasta siguiente descuento:
-                    </div>
-                    <div className="text-lg font-bold">
-                      {timeLeft.days}d {timeLeft.hours}h {timeLeft.minutes}m
+                      👥 Faltan {peopleUntilNextDiscount} personas para siguiente descuento
                     </div>
                     <div className="text-muted-foreground">
-                      Descuento máximo: hasta 40% con 100 participantes
+                      Descuento máximo: {maxPrice} con 100 participantes
                     </div>
-                  </div>
-                  <div>
-                    Tus datos fueron enviados. Te contactaremos pronto.
                   </div>
                 </div>
               ) : (
@@ -327,10 +301,10 @@ const OrderDialog = ({
             </AlertDialogDescription>
           </AlertDialogHeader>
           
-          <div className="flex flex-col gap-3 pt-4">
+          <div className="flex flex-col gap-2 pt-2">
             {waitForDiscount && (
               <>
-                <div className="text-sm font-semibold text-center pb-1">
+                <div className="text-sm font-semibold text-center">
                   Invitar amigos
                 </div>
                 
