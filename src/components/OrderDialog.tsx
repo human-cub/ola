@@ -168,8 +168,7 @@ const OrderDialog = ({
       const currentUrl = window.location.href;
       return `Che! Mirá esto - compra colectiva de ${productName} 🎉 Seamos más, pagamos menos. Elegí 'Esperar y pagar menos', sumate e invitá amigos!! ${currentUrl}`;
     } else {
-      const homeUrl = window.location.origin;
-      return `Che! Mirá esto - descuentos increíbles de suplementos 🎉 Podés comprar al precio actual o esperar y pagar menos 🤑 ${homeUrl}`;
+      return `Che! Mirá esto - descuentos increíbles de suplementos 🎉 Podés comprar al precio actual o esperar y pagar menos 🤑 https://ola.lovable.app/`;
     }
   };
 
@@ -199,7 +198,7 @@ const OrderDialog = ({
   };
 
   const handleTelegramShare = () => {
-    const url = waitForDiscount ? window.location.href : window.location.origin;
+    const url = waitForDiscount ? window.location.href : 'https://ola.lovable.app/';
     const text = waitForDiscount 
       ? `Che! Mirá esto - compra colectiva de ${productName} 🎉 Seamos más, pagamos menos. Elegí 'Esperar y pagar menos', sumate e invitá amigos!!`
       : `Che! Mirá esto - descuentos increíbles de suplementos 🎉 Podés comprar al precio actual o esperar y pagar menos 🤑`;
