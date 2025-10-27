@@ -198,11 +198,9 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
                       style={{ left: position }}
                     >
                       <span className={`transition-colors whitespace-nowrap ${
-                        index === priceData.length - 1 
-                          ? 'text-sm font-bold text-primary animate-pulse' 
-                          : isNearSelected 
-                            ? 'text-xs text-primary font-medium' 
-                            : 'text-xs text-muted-foreground'
+                        isNearSelected 
+                          ? 'text-xs text-primary font-medium' 
+                          : 'text-xs text-muted-foreground'
                       }`}>
                         {formatPrice(item.price)}
                       </span>
@@ -210,7 +208,7 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
                   );
                 })}
               </div>
-              <div className="h-8"></div>
+              <div className="h-4"></div>
             </div>
           </div>
 
