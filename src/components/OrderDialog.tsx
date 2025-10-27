@@ -321,27 +321,27 @@ const OrderDialog = ({
                   <Button
                     onClick={handleWhatsAppShare}
                     variant="outline"
-                    className="gap-2"
+                    className="gap-1 text-xs px-2"
                   >
-                    <MessageCircle className="h-4 w-4" />
+                    <MessageCircle className="h-3 w-3" />
                     WhatsApp
                   </Button>
                   
                   <Button
                     onClick={copyInvitation}
                     variant="outline"
-                    className="gap-2"
+                    className="gap-1 text-xs px-2"
                   >
-                    <Copy className="h-4 w-4" />
+                    <Copy className="h-3 w-3" />
                     Copiar invitación
                   </Button>
                   
                   <Button
                     onClick={copyProductLink}
                     variant="outline"
-                    className="gap-2"
+                    className="gap-1 text-xs px-2"
                   >
-                    <Copy className="h-4 w-4" />
+                    <Copy className="h-3 w-3" />
                     Copiar enlace
                   </Button>
                 </div>
