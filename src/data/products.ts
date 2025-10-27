@@ -27,8 +27,8 @@ export const products: Record<string, ProductData> = {
     image: "/truemade-protein-main.webp",
     priceSlider: [
       { people: 1, price: 67200 },
-      { people: 10, price: 55700 },
-      { people: 30, price: 49600 },
+      { people: 10, price: 59100 },
+      { people: 30, price: 52600 },
       { people: 50, price: 45200 },
       { people: 100, price: 38800 },
     ],
@@ -68,14 +68,14 @@ export const products: Record<string, ProductData> = {
     link: "/sn-whey-908",
     image: "/whey-protein-main.png",
     priceSlider: [
-      { people: 1, price: 53000 },
-      { people: 10, price: 51200 },
-      { people: 30, price: 46800 },
-      { people: 50, price: 39400 },
-      { people: 100, price: 34200 },
+      { people: 1, price: 56800 },
+      { people: 10, price: 54000 },
+      { people: 30, price: 48800 },
+      { people: 50, price: 41400 },
+      { people: 100, price: 35200 },
     ],
-    originalPrice: "$53.000",
-    discountPrice: "$34.200",
+    originalPrice: "$56.800",
+    discountPrice: "$35.200",
     flavors: ["Chocolate", "Vanilla", "Cookies & Cream", "Frutilla", "Banana"]
   },
   "pump-v8": {
@@ -86,14 +86,14 @@ export const products: Record<string, ProductData> = {
     link: "/sn-pumpv8-285",
     image: "/pump-v8-main.png",
     priceSlider: [
-      { people: 1, price: 37600 },
-      { people: 10, price: 35000 },
-      { people: 30, price: 31000 },
-      { people: 50, price: 27800 },
-      { people: 100, price: 25500 },
+      { people: 1, price: 42000 },
+      { people: 10, price: 40100 },
+      { people: 30, price: 35200 },
+      { people: 50, price: 32800 },
+      { people: 100, price: 27500 },
     ],
-    originalPrice: "$37.600",
-    discountPrice: "$25.500",
+    originalPrice: "$42.000",
+    discountPrice: "$27.500",
     flavors: ["Açaí", "Grape", "Watermelon", "Lima Limón"]
   },
   gainer: {
@@ -105,7 +105,7 @@ export const products: Record<string, ProductData> = {
     image: "https://acdn-us.mitiendanube.com/stores/583/512/products/gainer-cbc507a865b208583517254733035648-1024-1024.png",
     priceSlider: [
       { people: 1, price: 57900 },
-      { people: 10, price: 53200 },
+      { people: 10, price: 54200 },
       { people: 30, price: 49700 },
       { people: 50, price: 44200 },
       { people: 100, price: 38500 },
