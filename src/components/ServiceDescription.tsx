@@ -30,6 +30,10 @@ export const ServiceDescription = () => {
               </p>
               <p className="text-sm flex items-center gap-2">
                 <span className="w-2 h-2 bg-primary rounded-full flex-shrink-0"></span>
+                Solo necesitás unirte e invitar a tus amigos para conseguir un mejor precio. Del resto nos encargamos nosotros
+              </p>
+              <p className="text-sm flex items-center gap-2">
+                <span className="w-2 h-2 bg-primary rounded-full flex-shrink-0"></span>
                 Cada colecta dura una semana (de lunes a domingo). Si se llena antes, hacemos el pedido más rápido
               </p>
             </div>
