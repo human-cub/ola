@@ -165,7 +165,7 @@ const OrderDialog = ({
 
   const getShareText = () => {
     const currentUrl = window.location.href;
-    return `Ey! Mirá esto - compra colectiva de ${productName} 🎉 Cuantos más, mejor precio. Dale, metete! ${currentUrl}`;
+    return `Che! Mirá esto - compra colectiva de ${productName} 🎉 Seamos más, pagamos menos. Sumate! ${currentUrl}`;
   };
 
   const handleNativeShare = async () => {
@@ -195,7 +195,7 @@ const OrderDialog = ({
 
   const handleTelegramShare = () => {
     const text = encodeURIComponent(getShareText());
-    window.open(`https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(`Ey! Mirá esto - compra colectiva de ${productName} 🎉 Cuantos más, mejor precio. Dale, metete!`)}`, '_blank');
+    window.open(`https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(`Che! Mirá esto - compra colectiva de ${productName} 🎉 Seamos más, pagamos menos. Sumate!`)}`, '_blank');
   };
 
   const copyInvitation = () => {
