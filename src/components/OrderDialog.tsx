@@ -305,7 +305,7 @@ const OrderDialog = ({
             {waitForDiscount && (
               <>
                 <div className="text-sm font-semibold text-center">
-                  Invitá amigos para conseguir mejor precio
+                  Invitá a tus amigos para conseguir mejor precio
                 </div>
                 
                 <Button
@@ -317,7 +317,7 @@ const OrderDialog = ({
                   Compartir con amigos
                 </Button>
                 
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-3 gap-2">
                   <Button
                     onClick={handleWhatsAppShare}
                     variant="outline"
@@ -335,6 +335,15 @@ const OrderDialog = ({
                     <Copy className="h-4 w-4" />
                     Copiar invitación
                   </Button>
+                  
+                  <Button
+                    onClick={copyProductLink}
+                    variant="outline"
+                    className="gap-2"
+                  >
+                    <Copy className="h-4 w-4" />
+                    Copiar enlace
+                  </Button>
                 </div>
                 
                 <div className="border-t pt-2 mt-1" />
@@ -350,26 +359,16 @@ const OrderDialog = ({
                 href="https://www.instagram.com/ola.unity/" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="flex flex-col items-center py-3"
+                className="flex items-center gap-2"
               >
-                <div className="flex items-center gap-2">
-                  <Instagram className="h-4 w-4" />
-                  Seguinos en Instagram
-                </div>
-                <span className="text-xs text-muted-foreground mt-0.5">
-                  para ofertas, descuentos y novedades
-                </span>
+                <Instagram className="h-4 w-4" />
+                Seguinos en Instagram
               </a>
             </Button>
             
-            <Button
-              onClick={copyProductLink}
-              variant="outline"
-              className="w-full gap-2"
-            >
-              <Copy className="h-4 w-4" />
-              Copiar enlace del producto
-            </Button>
+            <div className="text-xs text-center text-muted-foreground -mt-1">
+              para ofertas, descuentos y novedades
+            </div>
             
             <Button
               onClick={() => setShowSuccess(false)}
