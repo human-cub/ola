@@ -107,11 +107,11 @@ export const products: Record<string, ProductData> = {
       { people: 1, price: 57900 },
       { people: 25, price: 54200 },
       { people: 50, price: 49700 },
-      { people: 75, price: 44200 },
-      { people: 100, price: 38500 },
+      { people: 75, price: 43200 },
+      { people: 100, price: 35500 },
     ],
     originalPrice: "$57.900",
-    discountPrice: "$38.500",
+    discountPrice: "$35.500",
     flavors: ["Chocolate", "Vainilla"]
   }
 };
