@@ -317,32 +317,32 @@ const OrderDialog = ({
                   Compartir con amigos
                 </Button>
                 
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-[0.8fr_1.4fr_0.8fr] gap-2">
                   <Button
                     onClick={handleWhatsAppShare}
                     variant="outline"
-                    className="gap-1 text-xs px-2"
+                    className="gap-1 text-[10px] px-1.5"
                   >
-                    <MessageCircle className="h-3 w-3" />
-                    WhatsApp
+                    <MessageCircle className="h-3 w-3 flex-shrink-0" />
+                    <span className="truncate">WhatsApp</span>
                   </Button>
                   
                   <Button
                     onClick={copyInvitation}
                     variant="outline"
-                    className="gap-1 text-xs px-2"
+                    className="gap-1 text-[11px] px-2"
                   >
-                    <Copy className="h-3 w-3" />
-                    Copiar invitación
+                    <Copy className="h-3 w-3 flex-shrink-0" />
+                    <span className="truncate">Copiar invitación</span>
                   </Button>
                   
                   <Button
                     onClick={copyProductLink}
                     variant="outline"
-                    className="gap-1 text-xs px-2"
+                    className="gap-1 text-[10px] px-1.5"
                   >
-                    <Copy className="h-3 w-3" />
-                    Copiar enlace
+                    <Copy className="h-3 w-3 flex-shrink-0" />
+                    <span className="truncate">Copiar enlace</span>
                   </Button>
                 </div>
                 
@@ -353,7 +353,10 @@ const OrderDialog = ({
             <Button
               asChild
               variant="outline"
-              className="w-full gap-2"
+              className="w-full gap-2 relative overflow-hidden border-2"
+              style={{
+                borderImage: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%) 1'
+              }}
             >
               <a 
                 href="https://www.instagram.com/ola.unity/" 
@@ -361,7 +364,24 @@ const OrderDialog = ({
                 rel="noopener noreferrer"
                 className="flex items-center gap-2"
               >
-                <Instagram className="h-4 w-4" />
+                <Instagram 
+                  className="h-4 w-4" 
+                  style={{
+                    stroke: 'url(#instagram-gradient)',
+                    fill: 'none'
+                  }}
+                />
+                <svg width="0" height="0">
+                  <defs>
+                    <linearGradient id="instagram-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#f09433" />
+                      <stop offset="25%" stopColor="#e6683c" />
+                      <stop offset="50%" stopColor="#dc2743" />
+                      <stop offset="75%" stopColor="#cc2366" />
+                      <stop offset="100%" stopColor="#bc1888" />
+                    </linearGradient>
+                  </defs>
+                </svg>
                 Seguinos en Instagram
               </a>
             </Button>
