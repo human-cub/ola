@@ -75,14 +75,14 @@ export const ProcessSteps = () => {
                    <h3 className="text-lg font-semibold text-foreground mb-2 text-center">
                      {step.title}
                    </h3>
-                   <p className="text-muted-foreground text-center text-sm leading-relaxed">
-                     {step.description}
-                     {index === 2 && (
-                       <span className="block mt-2">
-                         Si la compra llega al máximo antes, hacemos el pedido antes
-                       </span>
-                     )}
-                   </p>
+                    <p className="text-muted-foreground text-center text-sm leading-relaxed">
+                      {step.description}
+                      {index === 2 && (
+                        <span className="block mt-2">
+                          Si la compra llega al máximo antes, hacemos el pedido más rápido
+                        </span>
+                      )}
+                    </p>
                 </div>
 
               </div>
