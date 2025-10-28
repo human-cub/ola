@@ -1,3 +1,5 @@
+import instagramIcon from '../assets/instagram-icon.png';
+
 export const ServiceDescription = () => {
   return <section id="service-description" className="px-4 py-2">
       <div className="container mx-auto max-w-md">
@@ -105,17 +107,7 @@ Pagás en efectivo al recibir y revisar el producto.</p>
                   <span>Copiar enlace</span>
                 </button>
                 
-                <div className="flex flex-col items-center mt-2 mb-2">
-                  <div className="w-[180px] h-[180px] aspect-square flex items-center justify-center">
-                    <img 
-                      src="/qr-code.svg"
-                      alt="QR Code"
-                      className="w-full h-full object-contain hover:opacity-90 transition-opacity rounded-lg border-2 border-primary/30 hover:border-primary/50"
-                    />
-                  </div>
-                </div>
-                
-                <div className="border-t border-border/50 pt-2" />
+                <div className="border-t border-border/50 pt-2 mt-2" />
                 
                 <div className="relative w-full p-[2px] rounded-md bg-gradient-to-r from-[#f09433] via-[#dc2743] to-[#bc1888]">
                   <a
@@ -124,27 +116,28 @@ Pagás en efectivo al recibir y revisar el producto.</p>
                     rel="noopener noreferrer"
                     className="flex items-center justify-center gap-2 w-full bg-background hover:bg-accent rounded-md py-2.5 px-4 transition-colors text-sm"
                   >
-                    <svg className="h-4 w-4" style={{ stroke: 'url(#instagram-gradient)', fill: 'none' }} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 8c0 .53-.21 1.04-.59 1.41-.37.38-.88.59-1.41.59-.53 0-1.04-.21-1.41-.59C12.21 9.04 12 8.53 12 8s.21-1.04.59-1.41C12.96 6.21 13.47 6 14 6c.53 0 1.04.21 1.41.59.38.37.59.88.59 1.41zM12 2c2.76 0 5.07.99 6.95 2.98C20.91 6.95 22 9.26 22 12s-.99 5.05-2.05 6.95C18.07 21.01 14.76 22 12 22s-6.07-.99-7.95-2.05C2.99 18.05 2 15.74 2 12s.99-5.07 2.05-6.95C5.93 3.01 9.24 2 12 2zm0 18c3.86 0 7-3.14 7-7s-3.14-7-7-7-7 3.14-7 7 3.14 7 7 7zm0-13c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
-                    </svg>
-                    <svg width="0" height="0">
-                      <defs>
-                        <linearGradient id="instagram-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                          <stop offset="0%" stopColor="#f09433" />
-                          <stop offset="25%" stopColor="#e6683c" />
-                          <stop offset="50%" stopColor="#dc2743" />
-                          <stop offset="75%" stopColor="#cc2366" />
-                          <stop offset="100%" stopColor="#bc1888" />
-                        </linearGradient>
-                      </defs>
-                    </svg>
+                    <img 
+                      src={instagramIcon}
+                      alt="Instagram"
+                      className="h-5 w-5"
+                    />
                     <span>Seguinos en Instagram</span>
                   </a>
                 </div>
                 
-                <p className="text-xs text-center text-muted-foreground">
+                <p className="text-xs text-center text-muted-foreground mb-2">
                   para ofertas, descuentos y novedades
                 </p>
+                
+                <div className="flex flex-col items-center">
+                  <div className="w-[180px] h-[180px] aspect-square flex items-center justify-center">
+                    <img 
+                      src="/qr-code.svg"
+                      alt="QR Code"
+                      className="w-full h-full object-contain hover:opacity-90 transition-opacity rounded-lg border-2 border-primary/30 hover:border-primary/50"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
