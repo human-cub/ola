@@ -73,14 +73,14 @@ export const ProcessSteps = () => {
                    </div>
                    
                     {/* Content */}
-                    <h3 className="text-lg font-semibold text-foreground mb-2 text-center">
-                      {step.title}
-                      {'subtitle' in step && (
-                        <span className="block text-sm font-normal text-muted-foreground mt-1">
-                          {step.subtitle}
-                        </span>
-                      )}
-                    </h3>
+                     <h3 className="text-lg font-semibold text-foreground mb-2 text-center">
+                       {step.title}
+                       {'subtitle' in step && (
+                         <span className="block text-lg font-semibold text-foreground mt-1">
+                           {step.subtitle}
+                         </span>
+                       )}
+                     </h3>
                     <p className="text-muted-foreground text-center text-sm leading-relaxed">
                       {step.description}
                       {index === 2 && (
