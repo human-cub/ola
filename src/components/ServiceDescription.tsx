@@ -1,4 +1,4 @@
-import instagramIcon from '../assets/instagram-icon.png';
+import instagramIcon from '../assets/instagram-icon-new.png';
 
 export const ServiceDescription = () => {
   return <section id="service-description" className="px-4 py-2">
@@ -119,9 +119,9 @@ Pagás en efectivo al recibir y revisar el producto.</p>
                     <img 
                       src={instagramIcon}
                       alt="Instagram"
-                      className="h-5 w-5"
+                      className="h-5 w-5 flex-shrink-0"
                     />
-                    <span>Seguinos en Instagram</span>
+                    <span className="whitespace-nowrap">Seguinos en Instagram</span>
                   </a>
                 </div>
                 
