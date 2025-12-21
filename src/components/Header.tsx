@@ -1,10 +1,27 @@
 
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, Menu, Dumbbell, Atom, Pill, TrendingUp, Zap, Sparkles, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 interface HeaderProps {
   isVisible: boolean;
 }
+
+const catalogCategories = [
+  { name: "Proteínas", icon: Dumbbell },
+  { name: "Creatinas", icon: Atom },
+  { name: "Aminoácidos", icon: Pill },
+  { name: "Aumentadores de masa", icon: TrendingUp },
+  { name: "Pre-entrenos", icon: Zap },
+  { name: "Colágeno", icon: Sparkles },
+  { name: "Vitaminas y minerales", icon: Heart },
+];
 
 export const Header = ({ isVisible }: HeaderProps) => {
   const handleWhatsAppClick = () => {
@@ -22,14 +39,35 @@ export const Header = ({ isVisible }: HeaderProps) => {
       }`}
     >
       <div className="container mx-auto px-4 h-16 flex items-center justify-between relative">
-        {/* Clickable area for left third */}
-        <div 
-          className="absolute left-0 top-0 w-1/3 h-full cursor-pointer z-10"
-          onClick={handleHomeClick}
-        />
+        {/* Burger Menu */}
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="icon" className="z-20">
+              <Menu className="w-6 h-6" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-72 bg-background">
+            <SheetHeader>
+              <SheetTitle className="text-left text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                Catálogo
+              </SheetTitle>
+            </SheetHeader>
+            <nav className="mt-6 flex flex-col gap-2">
+              {catalogCategories.map((category) => (
+                <button
+                  key={category.name}
+                  className="flex items-center gap-3 px-4 py-3 rounded-lg text-left text-foreground hover:bg-primary/10 transition-colors"
+                >
+                  <category.icon className="w-5 h-5 text-primary" />
+                  <span className="font-medium">{category.name}</span>
+                </button>
+              ))}
+            </nav>
+          </SheetContent>
+        </Sheet>
         
         {/* Logo and Brand */}
-        <div className="flex items-center gap-1 cursor-pointer z-20" onClick={handleHomeClick}>
+        <div className="flex items-center gap-1 cursor-pointer z-20 absolute left-1/2 -translate-x-1/2" onClick={handleHomeClick}>
           <div className="w-12 h-12 flex items-center justify-center">
             <img src="/lovable-uploads/f61342f0-4c86-4d5f-8e4a-6f6380460a50.png" alt="Ola Wave Logo" className="w-8 h-8 object-contain" />
           </div>
@@ -46,7 +84,8 @@ export const Header = ({ isVisible }: HeaderProps) => {
           className="border-primary/20 hover:border-primary hover:bg-primary/5 gap-2 px-3 min-w-fit whitespace-nowrap z-20"
         >
           <MessageCircle className="w-4 h-4" />
-          <span>Chateá por WhatsApp</span>
+          <span className="hidden sm:inline">Chateá por WhatsApp</span>
+          <span className="sm:hidden">WhatsApp</span>
         </Button>
       </div>
     </header>
