@@ -1,6 +1,6 @@
-
 import { MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { BurgerMenu } from "@/components/BurgerMenu";
 
 interface HeaderProps {
   isVisible: boolean;
@@ -22,14 +22,16 @@ export const Header = ({ isVisible }: HeaderProps) => {
       }`}
     >
       <div className="container mx-auto px-4 h-16 flex items-center justify-between relative">
-        {/* Clickable area for left third */}
-        <div 
-          className="absolute left-0 top-0 w-1/3 h-full cursor-pointer z-10"
-          onClick={handleHomeClick}
-        />
+        {/* Burger Menu */}
+        <div className="z-20">
+          <BurgerMenu />
+        </div>
         
-        {/* Logo and Brand */}
-        <div className="flex items-center gap-1 cursor-pointer z-20" onClick={handleHomeClick}>
+        {/* Logo and Brand - Centered */}
+        <div 
+          className="absolute left-1/2 transform -translate-x-1/2 flex items-center gap-1 cursor-pointer z-20" 
+          onClick={handleHomeClick}
+        >
           <div className="w-12 h-12 flex items-center justify-center">
             <img src="/lovable-uploads/f61342f0-4c86-4d5f-8e4a-6f6380460a50.png" alt="Ola Wave Logo" className="w-8 h-8 object-contain" />
           </div>
@@ -46,7 +48,8 @@ export const Header = ({ isVisible }: HeaderProps) => {
           className="border-primary/20 hover:border-primary hover:bg-primary/5 gap-2 px-3 min-w-fit whitespace-nowrap z-20"
         >
           <MessageCircle className="w-4 h-4" />
-          <span>Chateá por WhatsApp</span>
+          <span className="hidden sm:inline">Chateá por WhatsApp</span>
+          <span className="sm:hidden">WhatsApp</span>
         </Button>
       </div>
     </header>
