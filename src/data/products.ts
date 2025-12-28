@@ -149,6 +149,24 @@ export const products: Record<string, ProductData> = {
     originalPrice: "$36.198",
     discountPrice: "$22.813",
     flavors: ["Chocolate", "Coco y dulce de leche", "Frutilla", "Banana"]
+  },
+  "plant-protein": {
+    id: "plant-protein",
+    name: "Star Nutrition Just Plant Protein",
+    description: "Proteína 100% vegetal sin sabor",
+    weight: "908g",
+    link: "/sn-plant-908",
+    image: "/src/assets/plant-protein-main.png",
+    priceSlider: [
+      { people: 1, price: 59287 },
+      { people: 25, price: 53897 },
+      { people: 50, price: 48507 },
+      { people: 75, price: 43118 },
+      { people: 100, price: 37231 },
+    ],
+    originalPrice: "$59.287",
+    discountPrice: "$37.231",
+    flavors: ["Sin sabor"]
   }
 };
 
