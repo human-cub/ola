@@ -131,6 +131,24 @@ export const products: Record<string, ProductData> = {
     originalPrice: "$68.079",
     discountPrice: "$39.628",
     flavors: ["Chocolate", "Vanilla", "Cookies & Cream", "Frutilla", "Banana"]
+  },
+  "ena-bars": {
+    id: "ena-bars",
+    name: "ENA Protein Bar",
+    description: "Snack rico en proteínas",
+    weight: "16 unidades",
+    link: "/ena-bars-16",
+    image: "/src/assets/ena-bars-main.png",
+    priceSlider: [
+      { people: 1, price: 36198 },
+      { people: 25, price: 32907 },
+      { people: 50, price: 29616 },
+      { people: 75, price: 26326 },
+      { people: 100, price: 22813 },
+    ],
+    originalPrice: "$36.198",
+    discountPrice: "$22.813",
+    flavors: ["Chocolate", "Coco y dulce de leche", "Frutilla", "Banana"]
   }
 };
 
