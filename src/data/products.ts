@@ -113,6 +113,24 @@ export const products: Record<string, ProductData> = {
     originalPrice: "$57.900",
     discountPrice: "$35.500",
     flavors: ["Chocolate", "Vainilla"]
+  },
+  "platinum-protein": {
+    id: "platinum-protein",
+    name: "Star Nutrition Platinum Protein",
+    description: "Proteína premium Grass Fed",
+    weight: "908g",
+    link: "/sn-platinum-908",
+    image: "https://acdn-us.mitiendanube.com/stores/583/512/products/platinum-41-f35de5ebef0ac00e1217340259067655-1024-1024.png",
+    priceSlider: [
+      { people: 1, price: 62500 },
+      { people: 25, price: 58900 },
+      { people: 50, price: 53200 },
+      { people: 75, price: 46800 },
+      { people: 100, price: 39500 },
+    ],
+    originalPrice: "$62.500",
+    discountPrice: "$39.500",
+    flavors: ["Chocolate", "Vanilla", "Cookies & Cream", "Frutilla", "Banana"]
   }
 };
 
