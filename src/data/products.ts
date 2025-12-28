@@ -120,16 +120,16 @@ export const products: Record<string, ProductData> = {
     description: "Proteína premium Grass Fed",
     weight: "908g",
     link: "/sn-platinum-908",
-    image: "https://acdn-us.mitiendanube.com/stores/583/512/products/platinum-41-f35de5ebef0ac00e1217340259067655-1024-1024.png",
+    image: "/src/assets/platinum-protein-main.png",
     priceSlider: [
-      { people: 1, price: 62500 },
-      { people: 25, price: 58900 },
-      { people: 50, price: 53200 },
-      { people: 75, price: 46800 },
-      { people: 100, price: 39500 },
+      { people: 1, price: 68079 },
+      { people: 25, price: 61890 },
+      { people: 50, price: 55701 },
+      { people: 75, price: 49512 },
+      { people: 100, price: 39628 },
     ],
-    originalPrice: "$62.500",
-    discountPrice: "$39.500",
+    originalPrice: "$68.079",
+    discountPrice: "$39.628",
     flavors: ["Chocolate", "Vanilla", "Cookies & Cream", "Frutilla", "Banana"]
   }
 };
