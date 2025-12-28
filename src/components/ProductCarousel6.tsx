@@ -3,10 +3,14 @@ import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
-// Using placeholder images - replace with actual product images when available
+import platinumMain from "@/assets/platinum-protein-main.png";
+import platinumInfo from "@/assets/platinum-protein-info.png";
+import platinumUsage from "@/assets/platinum-protein-usage.png";
+
 const images = [
-  { src: "https://acdn-us.mitiendanube.com/stores/583/512/products/platinum-41-f35de5ebef0ac00e1217340259067655-1024-1024.png", alt: "Star Nutrition Platinum Protein - Producto principal" },
-  { src: "https://acdn-us.mitiendanube.com/stores/583/512/products/platinum-3-b76d0e6fafc95ca4db17340259144563-1024-1024.png", alt: "Star Nutrition Platinum Protein - Información nutricional" },
+  { src: platinumMain, alt: "Star Nutrition Platinum Protein - Producto principal" },
+  { src: platinumInfo, alt: "Star Nutrition Platinum Protein - Información nutricional" },
+  { src: platinumUsage, alt: "Star Nutrition Platinum Protein - Modo de uso" },
 ];
 
 export const ProductCarousel6 = () => {
