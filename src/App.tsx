@@ -11,6 +11,7 @@ import Product4 from "./pages/Product4";
 import Product5 from "./pages/Product5";
 import Product6 from "./pages/Product6";
 import Product7 from "./pages/Product7";
+import Product8 from "./pages/Product8";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
@@ -32,6 +33,7 @@ const App = () => (
           <Route path="/gn-gainer-2267" element={<Product5 />} />
           <Route path="/sn-platinum-908" element={<Product6 />} />
           <Route path="/ena-bars-16" element={<Product7 />} />
+          <Route path="/sn-plant-908" element={<Product8 />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/admin" element={<Admin />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
