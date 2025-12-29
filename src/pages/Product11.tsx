@@ -5,9 +5,6 @@ import { ProductCarousel11 } from "@/components/ProductCarousel11";
 import { ProductInfo11 } from "@/components/ProductInfo11";
 import { PriceSlider } from "@/components/PriceSlider";
 import { ProductDescription11 } from "@/components/ProductDescription11";
-import { Benefits } from "@/components/Benefits";
-import { ProcessSteps } from "@/components/ProcessSteps";
-import { ServiceDescription } from "@/components/ServiceDescription";
 import { RelatedProducts } from "@/components/RelatedProducts";
 import { FloatingButton } from "@/components/FloatingButton";
 import { getProduct } from "@/data/products";
@@ -63,9 +60,6 @@ const Product11 = () => {
       <ProductInfo11 />
       <PriceSlider priceData={product.priceSlider} waitingCount={waitingCount} />
       <ProductDescription11 />
-      <Benefits />
-      <ProcessSteps />
-      <ServiceDescription />
       <RelatedProducts currentProduct="magnesio" />
       <FloatingButton productId="magnesio" productName={product.name} />
     </div>

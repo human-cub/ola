@@ -6,9 +6,6 @@ import { ProductInfo3 } from "@/components/ProductInfo3";
 import { PriceSlider } from "@/components/PriceSlider";
 import { getProduct } from "@/data/products";
 import { ProductDescription3 } from "@/components/ProductDescription3";
-import { Benefits } from "@/components/Benefits";
-import { ProcessSteps } from "@/components/ProcessSteps";
-import { ServiceDescription } from "@/components/ServiceDescription";
 import { RelatedProducts } from "@/components/RelatedProducts";
 import { FloatingButton } from "@/components/FloatingButton";
 import { supabase } from "@/integrations/supabase/client";
@@ -85,9 +82,6 @@ const Product3 = () => {
         <ProductInfo3 />
         <PriceSlider priceData={product?.priceSlider || []} waitingCount={waitingCount} />
         <ProductDescription3 />
-        <Benefits />
-        <ProcessSteps />
-        <ServiceDescription />
         <RelatedProducts currentProduct="whey-protein" />
       </main>
 

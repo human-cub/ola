@@ -3,9 +3,6 @@ import { useParams } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { HeroSection } from "@/components/HeroSection";
 import { PriceSlider } from "@/components/PriceSlider";
-import { Benefits } from "@/components/Benefits";
-import { ProcessSteps } from "@/components/ProcessSteps";
-import { ServiceDescription } from "@/components/ServiceDescription";
 import { RelatedProducts } from "@/components/RelatedProducts";
 import { FloatingButton } from "@/components/FloatingButton";
 import { supabase } from "@/integrations/supabase/client";
@@ -158,9 +155,6 @@ const DynamicProduct = () => {
         />
         <PriceSlider priceData={product.prices} waitingCount={waitingCount} />
         <DynamicProductDescription description={product.description} />
-        <Benefits />
-        <ProcessSteps />
-        <ServiceDescription />
         <RelatedProducts currentProduct={product.id} />
       </main>
 

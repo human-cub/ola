@@ -6,9 +6,6 @@ import { ProductInfo } from "@/components/ProductInfo";
 import { PriceSlider } from "@/components/PriceSlider";
 import { getProduct } from "@/data/products";
 import { ProductDescription } from "@/components/ProductDescription";
-import { Benefits } from "@/components/Benefits";
-import { ProcessSteps } from "@/components/ProcessSteps";
-import { ServiceDescription } from "@/components/ServiceDescription";
 import { RelatedProducts } from "@/components/RelatedProducts";
 import { FloatingButton } from "@/components/FloatingButton";
 import { supabase } from "@/integrations/supabase/client";
@@ -86,9 +83,6 @@ const EnaWhey930 = () => {
         <ProductInfo />
         <PriceSlider priceData={product?.priceSlider || []} waitingCount={waitingCount} />
         <ProductDescription />
-        <Benefits />
-        <ProcessSteps />
-        <ServiceDescription />
         <RelatedProducts currentProduct="protein" />
       </main>
 

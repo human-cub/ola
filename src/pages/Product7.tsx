@@ -5,9 +5,6 @@ import { ProductCarousel7 } from "@/components/ProductCarousel7";
 import { ProductInfo7 } from "@/components/ProductInfo7";
 import { PriceSlider } from "@/components/PriceSlider";
 import { ProductDescription7 } from "@/components/ProductDescription7";
-import { Benefits } from "@/components/Benefits";
-import { ProcessSteps } from "@/components/ProcessSteps";
-import { ServiceDescription } from "@/components/ServiceDescription";
 import { RelatedProducts } from "@/components/RelatedProducts";
 import { FloatingButton } from "@/components/FloatingButton";
 import { getProduct } from "@/data/products";
@@ -88,9 +85,6 @@ const Product7 = () => {
         waitingCount={waitingCount}
       />
       <ProductDescription7 />
-      <Benefits />
-      <ProcessSteps />
-      <ServiceDescription />
       <RelatedProducts currentProduct="ena-bars" />
       <FloatingButton productId="ena-bars" productName={product.name} />
     </div>
