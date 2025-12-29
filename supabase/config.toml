@@ -1,1 +1,10 @@
 project_id = "vczrkqwnokjuxehvbrbx"
+
+[functions.notify-telegram]
+verify_jwt = false
+
+[functions.reset-weekly-orders]
+verify_jwt = false
+
+[functions.sync-products]
+verify_jwt = false
