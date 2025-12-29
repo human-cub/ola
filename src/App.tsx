@@ -45,11 +45,10 @@ const App = () => (
           <Route path="/sn-magnesio-500" element={<Product11 />} />
           <Route path="/sn-creatina-300" element={<Product12 />} />
           <Route path="/categoria/:category" element={<Category />} />
+          <Route path="/producto/:slug" element={<DynamicProduct />} />
           <Route path="/:slug" element={<DynamicProduct />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/admin" element={<Admin />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
