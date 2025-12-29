@@ -133,9 +133,12 @@ const Category = () => {
                       </h3>
                       <p className="text-xs text-muted-foreground">{product.weight}</p>
                       <div className="space-y-1">
-                        <p className="text-lg font-bold text-primary">
-                          {formatPrice(lastPrice)}
-                        </p>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-lg font-bold text-primary">
+                            {formatPrice(lastPrice)}
+                          </p>
+                          <span className="text-xs text-muted-foreground">(Precio mínimo)</span>
+                        </div>
                         {firstPrice !== lastPrice && (
                           <p className="text-xs text-muted-foreground line-through">
                             {formatPrice(firstPrice)}
