@@ -114,7 +114,7 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
   return (
     <section className="px-4 pt-1 pb-4">
       <div className="container mx-auto max-w-md">
-        <div className="relative bg-gradient-card rounded-2xl p-9 sm:p-8 shadow-floating animate-glow-pulse animate-float hover:scale-105 transition-all duration-500 border-[3px] animate-border-pulse backdrop-blur-sm">
+        <div className="relative bg-gradient-card rounded-2xl p-9 sm:p-8 shadow-floating animate-glow-pulse transition-all duration-500 border-[3px] animate-border-pulse backdrop-blur-sm">
           
           <h3 className="text-lg font-bold text-center mb-3 text-foreground bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent animate-scale-in">
             El precio baja a medida que se suman más participantes
@@ -142,24 +142,26 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
           {/* Price Scale */}
           <div className="relative mb-4">
             {/* People numbers (top) */}
-            <div className="relative mb-2 h-6">
+            <div className="grid grid-cols-5 items-center mb-2">
               {priceData.map((item, index) => {
-                if (index !== 0 && index !== priceData.length - 1) return null;
-                const position = index === 0 ? '0%' : '100%';
+                const isNearSelected =
+                  Math.abs(selectedPeople - item.people) <=
+                  (index < priceData.length - 1 ? (priceData[index + 1].people - item.people) * 0.1 : 5);
+
                 return (
-                  <div 
-                    key={index} 
-                    className="absolute transform -translate-x-1/2"
-                    style={{ left: position }}
-                  >
-                    <span className="text-sm font-medium text-muted-foreground">
+                  <div key={index} className="text-center min-w-0">
+                    <span
+                      className={`tabular-nums whitespace-nowrap leading-none text-[11px] sm:text-sm font-medium transition-colors ${
+                        isNearSelected ? "text-primary" : "text-muted-foreground"
+                      }`}
+                    >
                       {item.people}
                     </span>
                   </div>
                 );
               })}
             </div>
-            
+
             {/* Slider */}
             <div className="mb-2 -mx-3">
               <Slider
@@ -171,19 +173,21 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
                 className="w-full"
               />
             </div>
-            
-            {/* Price numbers (bottom) - only first and last */}
-            <div className="relative h-5">
+
+            {/* Price numbers (bottom) */}
+            <div className="grid grid-cols-5 items-center h-5">
               {priceData.map((item, index) => {
-                if (index !== 0 && index !== priceData.length - 1) return null;
-                const position = index === 0 ? '0%' : '100%';
+                const isNearSelected =
+                  Math.abs(selectedPeople - item.people) <=
+                  (index < priceData.length - 1 ? (priceData[index + 1].people - item.people) * 0.1 : 5);
+
                 return (
-                  <div 
-                    key={index} 
-                    className="absolute transform -translate-x-1/2"
-                    style={{ left: position }}
-                  >
-                    <span className="text-xs text-muted-foreground whitespace-nowrap">
+                  <div key={index} className="text-center min-w-0">
+                    <span
+                      className={`tabular-nums whitespace-nowrap leading-none text-[10px] sm:text-xs transition-colors ${
+                        isNearSelected ? "text-primary font-medium" : "text-muted-foreground"
+                      }`}
+                    >
                       {formatPrice(item.price)}
                     </span>
                   </div>
@@ -196,9 +200,12 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
           <div className="text-center relative space-y-1 -mt-2">
             <div className={`absolute inset-0 -z-10 ${showMaxGlow ? 'shadow-glow animate-pulse' : ''}`}></div>
             
-            {/* Выбранная цена на слайдере */}
-            {selectedPeople !== waitingCount && (
-              <div className="mb-1">
+            {/* Выбранная цена на слайдере (резервируем высоту, чтобы блок не “прыгал”) */}
+            <div className="mb-1 min-h-[3.75rem]">
+              <div
+                aria-hidden={selectedPeople === waitingCount}
+                className={`transition-opacity ${selectedPeople !== waitingCount ? "opacity-100" : "opacity-0"}`}
+              >
                 <p className="text-xs text-muted-foreground mb-0.5">
                   Precio al llegar a {selectedPeople} participantes
                 </p>
@@ -206,7 +213,7 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
                   {formatPrice(selectedPrice.price)}
                 </p>
               </div>
-            )}
+            </div>
             
             {/* Mensaje de precio mayorista */}
             <div>
