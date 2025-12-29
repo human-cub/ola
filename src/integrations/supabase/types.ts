@@ -66,9 +66,13 @@ export type Database = {
       }
       products: {
         Row: {
+          base_probability: number | null
           buynow_count: number
+          cooldown_minutes: number | null
           created_at: string | null
           id: string
+          last_increment_at: string | null
+          max_weekly_participants: number | null
           name: string
           prices: Json
           real_orders_count: number
@@ -76,12 +80,17 @@ export type Database = {
           updated_at: string | null
           virtual_orders_count: number
           waiting_for_discount_count: number
+          week_start_date: string | null
           weight: string
         }
         Insert: {
+          base_probability?: number | null
           buynow_count?: number
+          cooldown_minutes?: number | null
           created_at?: string | null
           id?: string
+          last_increment_at?: string | null
+          max_weekly_participants?: number | null
           name: string
           prices?: Json
           real_orders_count?: number
@@ -89,12 +98,17 @@ export type Database = {
           updated_at?: string | null
           virtual_orders_count?: number
           waiting_for_discount_count?: number
+          week_start_date?: string | null
           weight: string
         }
         Update: {
+          base_probability?: number | null
           buynow_count?: number
+          cooldown_minutes?: number | null
           created_at?: string | null
           id?: string
+          last_increment_at?: string | null
+          max_weekly_participants?: number | null
           name?: string
           prices?: Json
           real_orders_count?: number
@@ -102,6 +116,7 @@ export type Database = {
           updated_at?: string | null
           virtual_orders_count?: number
           waiting_for_discount_count?: number
+          week_start_date?: string | null
           weight?: string
         }
         Relationships: []
