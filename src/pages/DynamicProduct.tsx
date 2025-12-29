@@ -44,16 +44,16 @@ const DynamicProduct = () => {
         .from("products")
         .select("*")
         .eq("link", `/${slug}`)
-        .single();
+        .maybeSingle();
 
       // Fallback to old format for backwards compatibility
-      if (error || !data) {
+      if (!data) {
         const fallbackResult = await supabase
           .from("products")
           .select("*")
           .eq("link", `/producto/${slug}`)
-          .single();
-        
+          .maybeSingle();
+
         data = fallbackResult.data;
         error = fallbackResult.error;
       }
