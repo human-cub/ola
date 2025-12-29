@@ -184,6 +184,24 @@ export const products: Record<string, ProductData> = {
     ],
     originalPrice: "$46.079",
     discountPrice: "$26.398"
+  },
+  "collagen": {
+    id: "collagen",
+    name: "Star Nutrition Collagen",
+    description: "Colágeno hidrolizado con vitamina C",
+    weight: "210g",
+    link: "/sn-collagen-210",
+    image: "/src/assets/collagen-main.png",
+    priceSlider: [
+      { people: 1, price: 28342 },
+      { people: 25, price: 25765 },
+      { people: 50, price: 23189 },
+      { people: 75, price: 20612 },
+      { people: 100, price: 16047 },
+    ],
+    originalPrice: "$28.342",
+    discountPrice: "$16.047",
+    flavors: ["Limón", "Frutos Rojos"]
   }
 };
 
