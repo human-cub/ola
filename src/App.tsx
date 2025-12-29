@@ -14,6 +14,7 @@ import Product7 from "./pages/Product7";
 import Product8 from "./pages/Product8";
 import Product9 from "./pages/Product9";
 import Product10 from "./pages/Product10";
+import Product11 from "./pages/Product11";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
@@ -38,6 +39,7 @@ const App = () => (
           <Route path="/sn-plant-908" element={<Product8 />} />
           <Route path="/sn-omega3-60" element={<Product9 />} />
           <Route path="/sn-collagen-210" element={<Product10 />} />
+          <Route path="/sn-magnesio-500" element={<Product11 />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/admin" element={<Admin />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
