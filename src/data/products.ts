@@ -167,6 +167,23 @@ export const products: Record<string, ProductData> = {
     originalPrice: "$59.287",
     discountPrice: "$37.231",
     flavors: ["Sin sabor"]
+  },
+  "omega3": {
+    id: "omega3",
+    name: "Star Nutrition Omega 3",
+    description: "Aceite de pescado ultra concentrado",
+    weight: "60 cápsulas",
+    link: "/sn-omega3-60",
+    image: "/src/assets/omega3-main.png",
+    priceSlider: [
+      { people: 1, price: 46079 },
+      { people: 25, price: 41890 },
+      { people: 50, price: 37701 },
+      { people: 75, price: 33512 },
+      { people: 100, price: 26398 },
+    ],
+    originalPrice: "$46.079",
+    discountPrice: "$26.398"
   }
 };
 
