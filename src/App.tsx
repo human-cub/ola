@@ -16,6 +16,7 @@ import Product9 from "./pages/Product9";
 import Product10 from "./pages/Product10";
 import Product11 from "./pages/Product11";
 import Product12 from "./pages/Product12";
+import DynamicProduct from "./pages/DynamicProduct";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
@@ -42,6 +43,7 @@ const App = () => (
           <Route path="/sn-collagen-210" element={<Product10 />} />
           <Route path="/sn-magnesio-500" element={<Product11 />} />
           <Route path="/sn-creatina-300" element={<Product12 />} />
+          <Route path="/producto/:slug" element={<DynamicProduct />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/admin" element={<Admin />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
