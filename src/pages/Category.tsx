@@ -133,15 +133,15 @@ const Category = () => {
                       </h3>
                       <p className="text-xs text-muted-foreground">{product.weight}</p>
                       <div className="space-y-0.5">
+                        {firstPrice !== lastPrice && (
+                          <p className="text-sm text-muted-foreground/70 line-through">
+                            {formatPrice(firstPrice)}
+                          </p>
+                        )}
                         <p className="text-lg font-bold text-primary">
                           {formatPrice(lastPrice)}
                         </p>
                         <p className="text-xs text-muted-foreground">(Precio mínimo)</p>
-                        {firstPrice !== lastPrice && (
-                          <p className="text-xs text-muted-foreground line-through">
-                            {formatPrice(firstPrice)}
-                          </p>
-                        )}
                       </div>
                     </div>
                   </Link>
