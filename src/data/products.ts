@@ -237,6 +237,23 @@ export const products: Record<string, ProductData> = {
     ],
     originalPrice: "$45.247",
     discountPrice: "$28.306"
+  },
+  "creatine-star": {
+    id: "creatine-star",
+    name: "Star Nutrition Creatina Doypack",
+    description: "Creatina monohidrato ultramicronizada",
+    weight: "300g",
+    link: "/sn-creatina-doypack-300",
+    image: "/src/assets/creatine-star-main.jpg",
+    priceSlider: [
+      { people: 1, price: 41789 },
+      { people: 25, price: 37990 },
+      { people: 50, price: 34191 },
+      { people: 75, price: 30392 },
+      { people: 100, price: 25855 },
+    ],
+    originalPrice: "$41.789",
+    discountPrice: "$25.855"
   }
 };
 
