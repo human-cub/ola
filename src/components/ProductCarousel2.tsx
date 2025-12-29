@@ -3,8 +3,8 @@ import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
-import creatineMain from "@/assets/creatine-main.png";
-import creatineInfo from "@/assets/creatine-info.png";
+import creatineMain from "@/assets/creatine-star-main.jpg";
+import creatineInfo from "@/assets/creatine-star-info.jpg";
 
 const images = [
   { src: creatineMain, alt: "Creatina Star Nutrition - Producto principal" },

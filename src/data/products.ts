@@ -244,7 +244,7 @@ export const products: Record<string, ProductData> = {
     description: "Creatina monohidrato ultramicronizada",
     weight: "300g",
     link: "/sn-creatina-doypack-300",
-    image: "/src/assets/creatine-star-main.png",
+    image: "/src/assets/creatine-star-main.jpg",
     priceSlider: [
       { people: 1, price: 41789 },
       { people: 25, price: 37990 },
@@ -254,23 +254,6 @@ export const products: Record<string, ProductData> = {
     ],
     originalPrice: "$41.789",
     discountPrice: "$25.855"
-  },
-  "creatine-pote-150": {
-    id: "creatine-pote-150",
-    name: "Star Nutrition Creatina Pote 150g",
-    description: "Creatina monohidrato ultramicronizada",
-    weight: "150g",
-    link: "/sn-creatina-150",
-    image: "/src/assets/creatine-pote-150-main.png",
-    priceSlider: [
-      { people: 1, price: 24184 },
-      { people: 25, price: 21985 },
-      { people: 50, price: 19787 },
-      { people: 75, price: 17588 },
-      { people: 100, price: 16291 },
-    ],
-    originalPrice: "$24.184",
-    discountPrice: "$16.291"
   }
 };
 

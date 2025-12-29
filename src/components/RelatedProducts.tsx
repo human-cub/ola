@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { getAllProducts } from "@/data/products";
 
 interface RelatedProductsProps {
-  currentProduct?: "protein" | "creatine" | "whey-protein" | "pump-v8" | "gainer" | "platinum-protein" | "ena-bars" | "plant-protein" | "omega3" | "collagen" | "magnesio" | "creatine-pote" | "creatine-star" | "creatine-pote-150";
+  currentProduct?: "protein" | "creatine" | "whey-protein" | "pump-v8" | "gainer" | "platinum-protein" | "ena-bars" | "plant-protein" | "omega3" | "collagen" | "magnesio" | "creatine-pote" | "creatine-star";
 }
 
 
