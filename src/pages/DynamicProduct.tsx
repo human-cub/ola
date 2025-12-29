@@ -39,11 +39,24 @@ const DynamicProduct = () => {
     const fetchProduct = async () => {
       if (!slug) return;
       
-      const { data, error } = await supabase
+      // Try to find by short link first (e.g., /sn-creatina-300)
+      let { data, error } = await supabase
         .from("products")
         .select("*")
-        .eq("link", `/producto/${slug}`)
+        .eq("link", `/${slug}`)
         .single();
+
+      // Fallback to old format for backwards compatibility
+      if (error || !data) {
+        const fallbackResult = await supabase
+          .from("products")
+          .select("*")
+          .eq("link", `/producto/${slug}`)
+          .single();
+        
+        data = fallbackResult.data;
+        error = fallbackResult.error;
+      }
 
       if (error || !data) {
         console.error("Product not found:", error);

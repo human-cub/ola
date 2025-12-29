@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Menu, X, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,22 +11,23 @@ import {
 } from "@/components/ui/sheet";
 
 const catalogCategories = [
-  { name: "Proteínas", href: "#proteinas" },
-  { name: "Creatinas", href: "#creatinas" },
-  { name: "Aminoácidos", href: "#aminoacidos" },
-  { name: "Aumentadores de masa", href: "#aumentadores" },
-  { name: "Barras y snacks", href: "#barras" },
-  { name: "Pre-entrenos", href: "#pre-entrenos" },
-  { name: "Colágeno", href: "#colageno" },
-  { name: "Vitaminas y minerales", href: "#vitaminas" },
+  { name: "Proteínas", slug: "proteinas" },
+  { name: "Creatinas", slug: "creatinas" },
+  { name: "Aminoácidos", slug: "aminoacidos" },
+  { name: "Aumentadores de masa", slug: "aumentadores" },
+  { name: "Barras y snacks", slug: "barras" },
+  { name: "Pre-entrenos", slug: "pre-entrenos" },
+  { name: "Colágeno", slug: "colageno" },
+  { name: "Vitaminas y minerales", slug: "vitaminas" },
 ];
 
 export const BurgerMenu = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
 
-  const handleCategoryClick = (href: string) => {
+  const handleCategoryClick = (slug: string) => {
     setIsOpen(false);
-    // For now just close the menu, later can navigate to category pages
+    navigate(`/categoria/${slug}`);
   };
 
   return (
@@ -57,9 +59,9 @@ export const BurgerMenu = () => {
         <nav className="p-4">
           <ul className="space-y-1">
             {catalogCategories.map((category) => (
-              <li key={category.name}>
+              <li key={category.slug}>
                 <button
-                  onClick={() => handleCategoryClick(category.href)}
+                  onClick={() => handleCategoryClick(category.slug)}
                   className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-primary/10 transition-colors text-left group"
                 >
                   <span className="font-medium text-foreground group-hover:text-primary transition-colors">

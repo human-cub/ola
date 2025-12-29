@@ -128,13 +128,19 @@ const EditProductDialog = ({ product, open, onOpenChange, onProductUpdated }: Ed
     return tiers.map((people, i) => ({ people, price: priceValues[i] }));
   };
 
-  const generateSlug = (name: string): string => {
-    return name
+  const generateSlug = (name: string, weight: string): string => {
+    const namePart = name
       .toLowerCase()
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
+      .replace(/star nutrition/i, "sn")
+      .replace(/ena sport/i, "ena")
+      .replace(/gentech/i, "gn")
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-|-$/g, "");
+    
+    const weightNum = weight.replace(/\D/g, "");
+    return weightNum ? `${namePart}-${weightNum}` : namePart;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -149,8 +155,8 @@ const EditProductDialog = ({ product, open, onOpenChange, onProductUpdated }: Ed
         ? formData.flavors.split(",").map(f => f.trim()).filter(Boolean)
         : [];
       
-      const slug = generateSlug(formData.name);
-      const link = `/producto/${slug}`;
+      const slug = generateSlug(formData.name, formData.weight);
+      const link = `/${slug}`;
 
       const { error } = await supabase.from("products").update({
         name: formData.name,

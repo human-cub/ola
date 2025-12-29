@@ -109,13 +109,22 @@ const AddProductDialog = ({ onProductAdded }: AddProductDialogProps) => {
     return trimmed;
   };
 
-  const generateSlug = (name: string): string => {
-    return name
+  const generateSlug = (name: string, weight: string): string => {
+    // Create short slug like sn-creatina-300
+    const namePart = name
       .toLowerCase()
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
+      .replace(/star nutrition/i, "sn")
+      .replace(/ena sport/i, "ena")
+      .replace(/gentech/i, "gn")
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-|-$/g, "");
+    
+    // Extract numeric weight value
+    const weightNum = weight.replace(/\D/g, "");
+    
+    return weightNum ? `${namePart}-${weightNum}` : namePart;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -128,13 +137,14 @@ const AddProductDialog = ({ onProductAdded }: AddProductDialogProps) => {
         ? formData.flavors.split(",").map(f => f.trim()).filter(Boolean)
         : [];
       
-      const slug = generateSlug(formData.name);
-      const link = `/producto/${slug}`;
+      const formattedWeight = formatWeight(formData.weight);
+      const slug = generateSlug(formData.name, formattedWeight);
+      const link = `/${slug}`;
 
       const { error } = await supabase.from("products").insert({
         name: formData.name,
         category: formData.category,
-        weight: formatWeight(formData.weight),
+        weight: formattedWeight,
         prices: priceSlider,
         images: imageUrls,
         description: formData.description,
