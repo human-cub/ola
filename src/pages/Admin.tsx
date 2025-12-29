@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -6,11 +6,41 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import ProductsTable from "@/components/admin/ProductsTable";
 import OrdersTable from "@/components/admin/OrdersTable";
+import { getAllProducts } from "@/data/products";
 
 const Admin = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const syncAttempted = useRef(false);
+
+  // Sync products from products.ts to Supabase
+  const syncProducts = async () => {
+    if (syncAttempted.current) return;
+    syncAttempted.current = true;
+
+    try {
+      const allProducts = getAllProducts();
+      const productsData = allProducts.map(p => ({
+        id: p.id,
+        name: p.name,
+        weight: p.weight,
+        priceSlider: p.priceSlider,
+      }));
+
+      const { data, error } = await supabase.functions.invoke('sync-products', {
+        body: { products: productsData }
+      });
+
+      if (error) throw error;
+      
+      if (data?.inserted > 0) {
+        console.log(`Synced ${data.inserted} new products`);
+      }
+    } catch (error) {
+      console.error('Error syncing products:', error);
+    }
+  };
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -38,6 +68,9 @@ const Admin = () => {
 
       setIsAdmin(true);
       setLoading(false);
+      
+      // Sync products after auth check
+      syncProducts();
     };
 
     checkAuth();
