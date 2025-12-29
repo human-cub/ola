@@ -6,9 +6,6 @@ import { ProductInfo4 } from "@/components/ProductInfo4";
 import { PriceSlider } from "@/components/PriceSlider";
 import { getProduct } from "@/data/products";
 import { ProductDescription4 } from "@/components/ProductDescription4";
-import { Benefits } from "@/components/Benefits";
-import { ProcessSteps } from "@/components/ProcessSteps";
-import { ServiceDescription } from "@/components/ServiceDescription";
 import { RelatedProducts } from "@/components/RelatedProducts";
 import { FloatingButton } from "@/components/FloatingButton";
 import { supabase } from "@/integrations/supabase/client";
@@ -79,9 +76,6 @@ const Product4 = () => {
         <ProductInfo4 />
         <PriceSlider priceData={product?.priceSlider || []} waitingCount={waitingCount} />
         <ProductDescription4 />
-        <Benefits />
-        <ProcessSteps />
-        <ServiceDescription />
         <RelatedProducts currentProduct="pump-v8" />
       </main>
 

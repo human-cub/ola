@@ -5,9 +5,6 @@ import { ProductCarousel9 } from "@/components/ProductCarousel9";
 import { ProductInfo9 } from "@/components/ProductInfo9";
 import { PriceSlider } from "@/components/PriceSlider";
 import { ProductDescription9 } from "@/components/ProductDescription9";
-import { Benefits } from "@/components/Benefits";
-import { ProcessSteps } from "@/components/ProcessSteps";
-import { ServiceDescription } from "@/components/ServiceDescription";
 import { RelatedProducts } from "@/components/RelatedProducts";
 import { FloatingButton } from "@/components/FloatingButton";
 import { getProduct } from "@/data/products";
@@ -86,9 +83,6 @@ const Product9 = () => {
         waitingCount={waitingCount}
       />
       <ProductDescription9 />
-      <Benefits />
-      <ProcessSteps />
-      <ServiceDescription />
       <RelatedProducts currentProduct="omega3" />
       <FloatingButton productId="omega3" productName={product.name} />
     </div>
