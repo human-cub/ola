@@ -26,6 +26,11 @@ const Admin = () => {
         name: p.name,
         weight: p.weight,
         priceSlider: p.priceSlider,
+        description: p.description,
+        link: p.link,
+        image: p.image,
+        flavors: p.flavors,
+        variants: p.variants,
       }));
 
       const { data, error } = await supabase.functions.invoke('sync-products', {

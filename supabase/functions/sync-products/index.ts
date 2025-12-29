@@ -9,11 +9,15 @@ interface ProductData {
   id: string;
   name: string;
   weight: string;
+  description?: string;
+  link?: string;
+  image?: string;
   priceSlider: { people: number; price: number }[];
+  flavors?: string[];
+  variants?: string[];
 }
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -65,11 +69,17 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Insert new products
+    // Insert new products with full data
     const productsToInsert = newProducts.map(p => ({
       name: p.name,
       weight: p.weight,
       prices: p.priceSlider,
+      description: p.description || null,
+      link: p.link || null,
+      images: p.image ? [p.image] : [],
+      flavors: p.flavors || p.variants || [],
+      is_manual: false,
+      category: getCategoryFromProduct(p),
     }))
 
     const { error: insertError } = await supabase
@@ -100,3 +110,16 @@ Deno.serve(async (req) => {
     )
   }
 })
+
+function getCategoryFromProduct(p: ProductData): string {
+  const name = p.name.toLowerCase();
+  if (name.includes('protein') || name.includes('whey')) return 'proteinas';
+  if (name.includes('creatina') || name.includes('creatine')) return 'creatinas';
+  if (name.includes('pump') || name.includes('pre-')) return 'pre-entrenos';
+  if (name.includes('gainer')) return 'aumentadores';
+  if (name.includes('bar')) return 'barras';
+  if (name.includes('omega')) return 'vitaminas';
+  if (name.includes('collagen') || name.includes('colágeno')) return 'colageno';
+  if (name.includes('magnesio')) return 'vitaminas';
+  return 'proteinas';
+}
