@@ -142,31 +142,22 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
           {/* Price Scale */}
           <div className="relative mb-4">
             {/* People numbers (top) */}
-            <div className="relative mb-2">
-              <div className="absolute inset-0 flex items-center">
-                {priceData.map((item, index) => {
-                  const position = index === 0 ? '0%' : 
-                                  index === 1 ? '25%' :
-                                  index === 2 ? '50%' :
-                                  index === 3 ? '75%' : '100%';
-                  const isNearSelected = Math.abs(selectedPeople - item.people) <= 
-                    (index < priceData.length - 1 ? (priceData[index + 1].people - item.people) * 0.1 : 5);
-                  return (
-                    <div 
-                      key={index} 
-                      className="absolute transform -translate-x-1/2 flex items-center gap-1"
-                      style={{ left: position }}
-                    >
-                      <span className={`text-sm font-medium transition-colors ${
-                        isNearSelected ? 'text-primary' : 'text-muted-foreground'
-                      }`}>
-                        {item.people}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="h-6"></div>
+            <div className="relative mb-2 h-6">
+              {priceData.map((item, index) => {
+                if (index !== 0 && index !== priceData.length - 1) return null;
+                const position = index === 0 ? '0%' : '100%';
+                return (
+                  <div 
+                    key={index} 
+                    className="absolute transform -translate-x-1/2"
+                    style={{ left: position }}
+                  >
+                    <span className="text-sm font-medium text-muted-foreground">
+                      {item.people}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
             
             {/* Slider */}
@@ -181,34 +172,23 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
               />
             </div>
             
-            {/* Price numbers (bottom) */}
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                {priceData.map((item, index) => {
-                  const position = index === 0 ? '0%' : 
-                                  index === 1 ? '25%' :
-                                  index === 2 ? '50%' :
-                                  index === 3 ? '75%' : '100%';
-                  const isNearSelected = Math.abs(selectedPeople - item.people) <= 
-                    (index < priceData.length - 1 ? (priceData[index + 1].people - item.people) * 0.1 : 5);
-                  return (
-                    <div 
-                      key={index} 
-                      className="absolute transform -translate-x-1/2"
-                      style={{ left: position }}
-                    >
-                      <span className={`transition-colors whitespace-nowrap ${
-                        isNearSelected 
-                          ? 'text-xs text-primary font-medium' 
-                          : 'text-xs text-muted-foreground'
-                      }`}>
-                        {formatPrice(item.price)}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="h-4"></div>
+            {/* Price numbers (bottom) - only first and last */}
+            <div className="relative h-5">
+              {priceData.map((item, index) => {
+                if (index !== 0 && index !== priceData.length - 1) return null;
+                const position = index === 0 ? '0%' : '100%';
+                return (
+                  <div 
+                    key={index} 
+                    className="absolute transform -translate-x-1/2"
+                    style={{ left: position }}
+                  >
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">
+                      {formatPrice(item.price)}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
