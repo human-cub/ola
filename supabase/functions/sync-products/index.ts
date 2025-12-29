@@ -43,28 +43,61 @@ Deno.serve(async (req) => {
     // Get existing products from database
     const { data: existingProducts, error: fetchError } = await supabase
       .from('products')
-      .select('name, weight')
+      .select('name, weight, images, is_manual')
 
     if (fetchError) {
       console.error('Error fetching existing products:', fetchError)
       throw fetchError
     }
 
-    // Create a set of existing product keys for fast lookup
-    const existingProductKeys = new Set(
-      existingProducts?.map(p => `${p.name}-${p.weight}`) || []
+    // Create a map of existing products for fast lookup
+    const existingProductMap = new Map(
+      existingProducts?.map(p => [`${p.name}-${p.weight}`, p]) || []
     )
 
-    // Filter out products that already exist
-    const newProducts = products.filter(
-      p => !existingProductKeys.has(`${p.name}-${p.weight}`)
-    )
+    // Separate new products and products to update
+    const newProducts: ProductData[] = []
+    const productsToUpdate: { name: string; weight: string; images: string[] }[] = []
+
+    for (const p of products) {
+      const key = `${p.name}-${p.weight}`
+      const existing = existingProductMap.get(key)
+      
+      if (!existing) {
+        newProducts.push(p)
+      } else if (!existing.is_manual && (!existing.images || existing.images.length === 0) && p.image) {
+        // Update images for non-manual products that don't have images
+        productsToUpdate.push({
+          name: p.name,
+          weight: p.weight,
+          images: [p.image]
+        })
+      }
+    }
 
     console.log(`Found ${newProducts.length} new products to insert`)
+    console.log(`Found ${productsToUpdate.length} products to update images`)
+
+    // Update images for existing products
+    for (const p of productsToUpdate) {
+      const { error: updateError } = await supabase
+        .from('products')
+        .update({ images: p.images })
+        .eq('name', p.name)
+        .eq('weight', p.weight)
+
+      if (updateError) {
+        console.error('Error updating product images:', updateError)
+      }
+    }
 
     if (newProducts.length === 0) {
       return new Response(
-        JSON.stringify({ message: 'All products already synced', inserted: 0 }),
+        JSON.stringify({ 
+          message: `All products already synced. Updated images for ${productsToUpdate.length} products`, 
+          inserted: 0,
+          updated: productsToUpdate.length 
+        }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -95,8 +128,9 @@ Deno.serve(async (req) => {
 
     return new Response(
       JSON.stringify({ 
-        message: `Successfully synced ${newProducts.length} new products`,
-        inserted: newProducts.length 
+        message: `Successfully synced ${newProducts.length} new products, updated ${productsToUpdate.length} images`,
+        inserted: newProducts.length,
+        updated: productsToUpdate.length
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
