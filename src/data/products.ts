@@ -202,6 +202,24 @@ export const products: Record<string, ProductData> = {
     originalPrice: "$28.342",
     discountPrice: "$16.047",
     flavors: ["Limón", "Frutos Rojos"]
+  },
+  "magnesio": {
+    id: "magnesio",
+    name: "Star Nutrition Magnesio",
+    description: "Citrato de magnesio en polvo",
+    weight: "500g",
+    link: "/sn-magnesio-500",
+    image: "/src/assets/magnesio-main.png",
+    priceSlider: [
+      { people: 1, price: 41191 },
+      { people: 25, price: 37446 },
+      { people: 50, price: 33701 },
+      { people: 75, price: 29957 },
+      { people: 100, price: 24412 },
+    ],
+    originalPrice: "$41.191",
+    discountPrice: "$24.412",
+    flavors: ["Frutos Rojos", "Sin Sabor"]
   }
 };
 
