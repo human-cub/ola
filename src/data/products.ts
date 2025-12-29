@@ -220,6 +220,23 @@ export const products: Record<string, ProductData> = {
     originalPrice: "$41.191",
     discountPrice: "$24.412",
     flavors: ["Frutos Rojos", "Sin Sabor"]
+  },
+  "creatine-pote": {
+    id: "creatine-pote",
+    name: "Star Nutrition Creatina Pote",
+    description: "Creatina monohidrato ultramicronizada",
+    weight: "300g",
+    link: "/sn-creatina-300",
+    image: "/src/assets/creatine-pote-main.png",
+    priceSlider: [
+      { people: 1, price: 45247 },
+      { people: 25, price: 41134 },
+      { people: 50, price: 37021 },
+      { people: 75, price: 32907 },
+      { people: 100, price: 28306 },
+    ],
+    originalPrice: "$45.247",
+    discountPrice: "$28.306"
   }
 };
 
