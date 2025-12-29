@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, X, ImagePlus } from "lucide-react";
+import { Plus, X, Upload, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -27,8 +27,9 @@ interface AddProductDialogProps {
 const AddProductDialog = ({ onProductAdded }: AddProductDialogProps) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [uploadingImages, setUploadingImages] = useState(false);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
-  const [newImageUrl, setNewImageUrl] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     name: "",
     category: "",
@@ -38,10 +39,41 @@ const AddProductDialog = ({ onProductAdded }: AddProductDialogProps) => {
     flavors: "",
   });
 
-  const handleAddImage = () => {
-    if (newImageUrl.trim()) {
-      setImageUrls([...imageUrls, newImageUrl.trim()]);
-      setNewImageUrl("");
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploadingImages(true);
+    const newUrls: string[] = [];
+
+    try {
+      for (const file of Array.from(files)) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const filePath = `products/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('product-images')
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('product-images')
+          .getPublicUrl(filePath);
+
+        newUrls.push(publicUrl);
+      }
+
+      setImageUrls([...imageUrls, ...newUrls]);
+      toast.success(`${newUrls.length} imagen(es) subida(s)`);
+    } catch (error: any) {
+      toast.error("Error al subir imagen: " + error.message);
+    } finally {
+      setUploadingImages(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
   };
 
@@ -60,13 +92,11 @@ const AddProductDialog = ({ onProductAdded }: AddProductDialogProps) => {
 
   const formatWeight = (weight: string): string => {
     const trimmed = weight.trim();
-    // Check if it's already formatted
     if (trimmed.toLowerCase().includes("peso neto") || 
         trimmed.toLowerCase().includes("cápsulas") ||
         trimmed.toLowerCase().includes("unidades")) {
       return trimmed;
     }
-    // Auto-format based on content
     if (/^\d+\s*g$/i.test(trimmed)) {
       return trimmed;
     }
@@ -140,7 +170,6 @@ const AddProductDialog = ({ onProductAdded }: AddProductDialogProps) => {
       flavors: "",
     });
     setImageUrls([]);
-    setNewImageUrl("");
   };
 
   return (
@@ -157,17 +186,36 @@ const AddProductDialog = ({ onProductAdded }: AddProductDialogProps) => {
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Images */}
+          {/* Images Upload */}
           <div className="space-y-3">
             <Label>Fotos del Producto</Label>
             <div className="flex gap-2">
-              <Input
-                placeholder="URL de la imagen"
-                value={newImageUrl}
-                onChange={(e) => setNewImageUrl(e.target.value)}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleFileUpload}
+                className="hidden"
               />
-              <Button type="button" variant="outline" onClick={handleAddImage}>
-                <ImagePlus className="h-4 w-4" />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingImages}
+                className="w-full gap-2"
+              >
+                {uploadingImages ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Subiendo...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-4 w-4" />
+                    Subir Fotos
+                  </>
+                )}
               </Button>
             </div>
             {imageUrls.length > 0 && (
@@ -237,7 +285,20 @@ const AddProductDialog = ({ onProductAdded }: AddProductDialogProps) => {
             </p>
           </div>
 
-          {/* Prices */}
+          {/* Flavors - MOVED UP */}
+          <div className="space-y-2">
+            <Label>Sabores/Variantes (opcional)</Label>
+            <Input
+              placeholder="Chocolate, Vainilla, Frutilla"
+              value={formData.flavors}
+              onChange={(e) => setFormData({ ...formData, flavors: e.target.value })}
+            />
+            <p className="text-xs text-muted-foreground">
+              Separados por coma
+            </p>
+          </div>
+
+          {/* Prices - MOVED DOWN */}
           <div className="space-y-2">
             <Label>Precios (5 valores separados por espacio) *</Label>
             <Input
@@ -248,19 +309,6 @@ const AddProductDialog = ({ onProductAdded }: AddProductDialogProps) => {
             />
             <p className="text-xs text-muted-foreground">
               De mayor a menor: precio 1 persona → 25 → 50 → 75 → 100
-            </p>
-          </div>
-
-          {/* Flavors */}
-          <div className="space-y-2">
-            <Label>Sabores/Variantes (opcional)</Label>
-            <Input
-              placeholder="Chocolate, Vainilla, Frutilla"
-              value={formData.flavors}
-              onChange={(e) => setFormData({ ...formData, flavors: e.target.value })}
-            />
-            <p className="text-xs text-muted-foreground">
-              Separados por coma
             </p>
           </div>
 
@@ -276,7 +324,7 @@ const AddProductDialog = ({ onProductAdded }: AddProductDialogProps) => {
           </div>
 
           <div className="flex gap-3 pt-4">
-            <Button type="submit" className="flex-1" disabled={loading}>
+            <Button type="submit" className="flex-1" disabled={loading || uploadingImages}>
               {loading ? "Guardando..." : "Guardar Producto"}
             </Button>
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
