@@ -31,8 +31,10 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
   
   const products = getAllProducts();
 
-  // Filter out current product
-  const otherProducts = products.filter(product => product.id !== currentProduct);
+  // Filter out current product and get 3 random products
+  const filteredProducts = products.filter(product => product.id !== currentProduct);
+  const shuffled = [...filteredProducts].sort(() => Math.random() - 0.5);
+  const otherProducts = shuffled.slice(0, 3);
 
   const handleProductClick = (productLink: string) => {
     // Store scroll target in sessionStorage for cross-page navigation
@@ -114,13 +116,6 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
               </button>
             ))}
             
-            {/* Placeholder for future products */}
-            <div className="text-center py-4">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm">
-                <span className="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
-                Próximamente más productos
-              </div>
-            </div>
           </div>
         </div>
       </div>
