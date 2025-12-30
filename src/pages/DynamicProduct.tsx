@@ -144,8 +144,7 @@ const DynamicProduct = () => {
     <div className="min-h-screen bg-background">
       <Header isVisible={headerVisible} />
       
-      <main className="pb-24">
-        <HeroSection />
+      <main className="pb-24 pt-20">
         <DynamicProductCarousel images={product.images} productName={product.name} />
         <DynamicProductInfo 
           name={product.name} 

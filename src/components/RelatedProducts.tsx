@@ -49,78 +49,78 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
   };
 
   return (
-    <section className="px-4 py-4">
-      <div className="container mx-auto max-w-md">
-        <div className="bg-gradient-card rounded-xl p-6 shadow-soft">
-          <div className="text-center mb-6">
-            <h3 className="text-2xl font-bold text-foreground mb-2">
-              Otros Productos
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Explorá más opciones de suplementos
-            </p>
-          </div>
+    <section className="px-4 py-6">
+      <div className="container mx-auto max-w-lg">
+        <div className="text-center mb-6">
+          <h3 className="text-2xl font-bold text-foreground mb-2">
+            Otros Productos
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Explorá más opciones de suplementos
+          </p>
+        </div>
 
-          <div className="space-y-4">
-            {otherProducts.map((product) => (
-              <button 
-                key={product.id}
-                onClick={() => handleProductClick(product.link)}
-                className="block group w-full text-left"
-              >
-                <Card className="p-4 border border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-soft group-hover:scale-[1.02]">
-                  <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-lg bg-gradient-primary/10 flex items-center justify-center overflow-hidden flex-shrink-0">
-                      <img 
-                        src={product.image} 
-                        alt={product.name}
-                        className="w-full h-full object-cover rounded-lg"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
-                          target.parentElement!.innerHTML = '<div class="w-8 h-8 bg-primary/20 rounded"></div>';
-                        }}
-                      />
-                    </div>
-                    
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-foreground text-sm mb-1 truncate group-hover:text-primary transition-colors">
+        <div className="space-y-4">
+          {otherProducts.map((product) => (
+            <button 
+              key={product.id}
+              onClick={() => handleProductClick(product.link)}
+              className="block group w-full text-left"
+            >
+              <Card className="p-4 border-0 bg-gradient-card shadow-soft hover:shadow-elegant transition-all duration-300 group-hover:scale-[1.01]">
+                <div className="flex gap-4">
+                  {/* Image - larger and square */}
+                  <div className="w-24 h-24 rounded-xl bg-white flex items-center justify-center overflow-hidden flex-shrink-0 shadow-sm">
+                    <img 
+                      src={product.image} 
+                      alt={product.name}
+                      className="w-full h-full object-contain p-1"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        target.parentElement!.innerHTML = '<div class="w-12 h-12 bg-primary/20 rounded"></div>';
+                      }}
+                    />
+                  </div>
+                  
+                  {/* Content - stacked vertically */}
+                  <div className="flex-1 min-w-0 flex flex-col justify-between py-1">
+                    <div>
+                      <h4 className="font-bold text-foreground text-base leading-tight mb-1 group-hover:text-primary transition-colors">
                         {product.name}
                       </h4>
-                      <p className="text-xs text-muted-foreground mb-1">
+                      <p className="text-xs text-muted-foreground line-clamp-2 mb-1">
                         {product.description}
                       </p>
-                      <p className="text-xs font-medium text-primary mb-2">
-                        Peso neto: {product.weight}
+                      <p className="text-xs font-medium text-primary">
+                        {product.weight}
                       </p>
-                      
-                      {/* Pricing Information */}
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground line-through">
-                            {product.originalPrice}
-                          </span>
-                          <span className="text-sm font-bold text-primary">
-                            {product.discountPrice}
-                          </span>
-                        </div>
-                        <p className="text-xs text-muted-foreground italic">
-                          Precio mínimo
-                        </p>
-                      </div>
                     </div>
                     
-                    <div className="text-primary group-hover:translate-x-1 transition-transform">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
+                    {/* Pricing - horizontal */}
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-xs text-muted-foreground line-through">
+                        {product.originalPrice}
+                      </span>
+                      <span className="text-sm font-bold text-primary">
+                        {product.discountPrice}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        (mín.)
+                      </span>
                     </div>
                   </div>
-                </Card>
-              </button>
-            ))}
-            
-          </div>
+                  
+                  {/* Arrow */}
+                  <div className="text-primary self-center group-hover:translate-x-1 transition-transform">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </div>
+              </Card>
+            </button>
+          ))}
         </div>
       </div>
     </section>
