@@ -1,4 +1,4 @@
-import { Percent, CreditCard, Shield } from "lucide-react";
+import { Percent, CreditCard, Shield, Truck } from "lucide-react";
 import { useEffect, useState } from "react";
 
 const benefits = [
@@ -11,6 +11,11 @@ const benefits = [
     icon: Shield,
     title: "100% original",
     description: "Garantizado: solo proveedores oficiales"
+  },
+  {
+    icon: Truck,
+    title: "Envío gratis",
+    description: "Recibí tu pedido sin costo adicional dentro de CABA"
   },
   {
     icon: CreditCard,
@@ -52,19 +57,19 @@ export const Benefits = () => {
           {benefits.map((benefit, index) => (
             <div 
               key={index} 
-              className={`${index === 2 
+              className={`${index === 3 
                 ? "shadow-elegant border border-primary/20 animate-glow-pulse" 
                 : "bg-gradient-card shadow-soft hover:shadow-elegant transition-all duration-300"
               } rounded-xl p-4 flex items-center gap-4`}
             >
               <div className="w-12 h-12 bg-gradient-primary shadow-soft rounded-full flex items-center justify-center">
-                <benefit.icon className={`w-6 h-6 text-white ${index === 2 && isScrollPulsing ? "animate-pulse" : ""}`} />
+                <benefit.icon className={`w-6 h-6 text-white ${index === 3 && isScrollPulsing ? "animate-pulse" : ""}`} />
               </div>
               <div className="flex-1">
-                <h4 className={`font-semibold mb-1 ${index === 2 ? "text-foreground" : "text-foreground"}`}>
+                <h4 className={`font-semibold mb-1 ${index === 3 ? "text-foreground" : "text-foreground"}`}>
                   {benefit.title}
                 </h4>
-                <p className={`text-sm ${index === 2 ? "text-muted-foreground" : "text-muted-foreground"}`}>
+                <p className={`text-sm ${index === 3 ? "text-muted-foreground" : "text-muted-foreground"}`}>
                   {benefit.description}
                 </p>
               </div>
