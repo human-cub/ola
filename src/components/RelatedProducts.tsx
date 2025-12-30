@@ -1,20 +1,67 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
-import { getAllProducts } from "@/data/products";
+import { supabase } from "@/integrations/supabase/client";
 
 interface RelatedProductsProps {
   currentProduct?: string;
 }
 
+interface ProductItem {
+  id: string;
+  name: string;
+  description: string;
+  weight: string;
+  link: string;
+  image: string;
+  originalPrice: string;
+  discountPrice: string;
+}
 
-export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsProps) => {
+export const RelatedProducts = ({ currentProduct = "" }: RelatedProductsProps) => {
+  const [products, setProducts] = useState<ProductItem[]>([]);
+
+  // Fetch products from Supabase
+  useEffect(() => {
+    const fetchProducts = async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("id, name, description, weight, link, images, prices");
+
+      if (error || !data) {
+        console.error("Error fetching products:", error);
+        return;
+      }
+
+      const formatted = data.map((p) => {
+        const images = (p.images as string[]) || [];
+        const prices = (p.prices as { people: number; price: number }[]) || [];
+        const firstPrice = prices[0]?.price || 0;
+        const lastPrice = prices[prices.length - 1]?.price || 0;
+
+        return {
+          id: p.id,
+          name: p.name,
+          description: p.description || "",
+          weight: p.weight,
+          link: p.link || `/producto/${p.id}`,
+          image: images[0] || "",
+          originalPrice: `$${firstPrice.toLocaleString("es-AR")}`,
+          discountPrice: `$${lastPrice.toLocaleString("es-AR")}`,
+        };
+      });
+
+      setProducts(formatted);
+    };
+
+    fetchProducts();
+  }, []);
+
   // Handle scroll to photos section on page load if coming from product click
   useEffect(() => {
     const scrollTarget = sessionStorage.getItem('scrollTarget');
     if (scrollTarget === 'product-photos') {
-      sessionStorage.removeItem('scrollTarget'); // Clear after use
+      sessionStorage.removeItem('scrollTarget');
       
-      // Delay to ensure DOM is fully rendered
       const timer = setTimeout(() => {
         const element = document.getElementById('product-photos');
         if (element) {
@@ -28,12 +75,8 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
       return () => clearTimeout(timer);
     }
   }, []);
-  
-  // IMPORTANT: getAllProducts() returns a new array each render, so we memoize it to keep
-  // the random selection stable during scroll-triggered re-renders.
-  const products = useMemo(() => getAllProducts(), []);
 
-  // Filter out current product and pick 3 random products (stable until currentProduct changes)
+  // Filter out current product and pick 3 random products
   const otherProducts = useMemo(() => {
     const filteredProducts = products.filter((product) => product.id !== currentProduct);
     const shuffled = [...filteredProducts].sort(() => Math.random() - 0.5);
@@ -41,10 +84,7 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
   }, [currentProduct, products]);
 
   const handleProductClick = (productLink: string) => {
-    // Store scroll target in sessionStorage for cross-page navigation
     sessionStorage.setItem('scrollTarget', 'product-photos');
-    
-    // Navigate to the product page
     window.location.href = productLink;
   };
 
