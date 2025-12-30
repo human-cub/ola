@@ -37,8 +37,8 @@ function isNewWeek(weekStartDate: string): boolean {
 function generateNewWeekParams() {
   return {
     max_weekly_participants: 55 + Math.floor(Math.random() * 26), // 55-80
-    base_probability: 0.002 + Math.random() * 0.006, // 0.002-0.008
-    cooldown_minutes: 30 + Math.floor(Math.random() * 151), // 30-180
+    base_probability: 0.15 + Math.random() * 0.15, // 0.15-0.30 (15-30% chance per run)
+    cooldown_minutes: 15 + Math.floor(Math.random() * 46), // 15-60 minutes (faster cycles)
     virtual_orders_count: Math.floor(Math.random() * 6), // 0-5 start
     week_start_date: new Date().toISOString().split('T')[0],
     last_increment_at: null,
@@ -109,13 +109,14 @@ Deno.serve(async (req) => {
       }
 
       // Calculate probability of adding a participant
-      const baseProbability = product.base_probability || 0.005;
+      // Use higher default probability for meaningful increments
+      const baseProbability = product.base_probability < 0.05 ? 0.20 : product.base_probability;
       const saturationFactor = getSaturationFactor(currentCount, maxCount);
       
-      // Add random "skip day" factor (5-10% chance of no growth at all)
-      const skipDayFactor = Math.random() < 0.08 ? 0 : 1;
+      // Add random "skip" factor (8% chance of no growth at all this run)
+      const skipFactor = Math.random() < 0.08 ? 0 : 1;
       
-      const finalProbability = baseProbability * timeFactor * saturationFactor * skipDayFactor;
+      const finalProbability = baseProbability * timeFactor * saturationFactor * skipFactor;
       
       // Roll the dice
       if (Math.random() < finalProbability) {
