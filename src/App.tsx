@@ -4,18 +4,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
-import EnaWhey930 from "./pages/EnaWhey930";
-import Product2 from "./pages/Product2";
-import Product3 from "./pages/Product3";
-import Product4 from "./pages/Product4";
-import Product5 from "./pages/Product5";
-import Product6 from "./pages/Product6";
-import Product7 from "./pages/Product7";
-import Product8 from "./pages/Product8";
-import Product9 from "./pages/Product9";
-import Product10 from "./pages/Product10";
-import Product11 from "./pages/Product11";
-import Product12 from "./pages/Product12";
 import DynamicProduct from "./pages/DynamicProduct";
 import Category from "./pages/Category";
 import Auth from "./pages/Auth";
@@ -32,23 +20,12 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/ena-whey-930" element={<EnaWhey930 />} />
-          <Route path="/sn-creatina-500" element={<Product2 />} />
-          <Route path="/sn-whey-908" element={<Product3 />} />
-          <Route path="/sn-pumpv8-285" element={<Product4 />} />
-          <Route path="/gn-gainer-2267" element={<Product5 />} />
-          <Route path="/sn-platinum-908" element={<Product6 />} />
-          <Route path="/ena-bars-16" element={<Product7 />} />
-          <Route path="/sn-plant-908" element={<Product8 />} />
-          <Route path="/sn-omega3-60" element={<Product9 />} />
-          <Route path="/sn-collagen-210" element={<Product10 />} />
-          <Route path="/sn-magnesio-500" element={<Product11 />} />
-          <Route path="/sn-creatina-300" element={<Product12 />} />
           <Route path="/categoria/:category" element={<Category />} />
           <Route path="/producto/:slug" element={<DynamicProduct />} />
           <Route path="/:slug" element={<DynamicProduct />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
