@@ -29,11 +29,13 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
     }
   }, []);
   
-  const products = getAllProducts();
+  // IMPORTANT: getAllProducts() returns a new array each render, so we memoize it to keep
+  // the random selection stable during scroll-triggered re-renders.
+  const products = useMemo(() => getAllProducts(), []);
 
-  // Filter out current product and get 3 random products - memoized to prevent re-shuffling on scroll
+  // Filter out current product and pick 3 random products (stable until currentProduct changes)
   const otherProducts = useMemo(() => {
-    const filteredProducts = products.filter(product => product.id !== currentProduct);
+    const filteredProducts = products.filter((product) => product.id !== currentProduct);
     const shuffled = [...filteredProducts].sort(() => Math.random() - 0.5);
     return shuffled.slice(0, 3);
   }, [currentProduct, products]);
