@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { getAllProducts } from "@/data/products";
 
@@ -31,10 +31,12 @@ export const RelatedProducts = ({ currentProduct = "protein" }: RelatedProductsP
   
   const products = getAllProducts();
 
-  // Filter out current product and get 3 random products
-  const filteredProducts = products.filter(product => product.id !== currentProduct);
-  const shuffled = [...filteredProducts].sort(() => Math.random() - 0.5);
-  const otherProducts = shuffled.slice(0, 3);
+  // Filter out current product and get 3 random products - memoized to prevent re-shuffling on scroll
+  const otherProducts = useMemo(() => {
+    const filteredProducts = products.filter(product => product.id !== currentProduct);
+    const shuffled = [...filteredProducts].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, 3);
+  }, [currentProduct, products]);
 
   const handleProductClick = (productLink: string) => {
     // Store scroll target in sessionStorage for cross-page navigation
