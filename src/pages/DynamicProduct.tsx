@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Header } from "@/components/Header";
-import { HeroSection } from "@/components/HeroSection";
+import { Breadcrumb } from "@/components/Breadcrumb";
 import { PriceSlider } from "@/components/PriceSlider";
 import { RelatedProducts } from "@/components/RelatedProducts";
 import { FloatingButton } from "@/components/FloatingButton";
@@ -9,6 +9,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { DynamicProductCarousel } from "@/components/DynamicProductCarousel";
 import { DynamicProductInfo } from "@/components/DynamicProductInfo";
 import { DynamicProductDescription } from "@/components/DynamicProductDescription";
+
+const categoryLabels: Record<string, string> = {
+  proteinas: "Proteínas",
+  creatinas: "Creatinas",
+  aminoacidos: "Aminoácidos",
+  aumentadores: "Aumentadores de masa",
+  barras: "Barras y snacks",
+  "pre-entrenos": "Pre-entrenos",
+  colageno: "Colágeno",
+  vitaminas: "Vitaminas y minerales",
+};
 
 interface ProductData {
   id: string;
@@ -140,11 +151,21 @@ const DynamicProduct = () => {
     );
   }
 
+  const categoryLabel = product.category ? categoryLabels[product.category] || product.category : null;
+  
+  const breadcrumbItems = categoryLabel 
+    ? [
+        { label: categoryLabel, href: `/categoria/${product.category}` },
+        { label: product.name }
+      ]
+    : [{ label: product.name }];
+
   return (
     <div className="min-h-screen bg-background">
       <Header isVisible={headerVisible} />
       
-      <main className="pb-24 pt-20">
+      <main className="pb-24 pt-16">
+        <Breadcrumb items={breadcrumbItems} />
         <DynamicProductCarousel images={product.images} productName={product.name} />
         <DynamicProductInfo 
           name={product.name} 
