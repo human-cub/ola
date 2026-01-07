@@ -209,7 +209,7 @@ export const products: Record<string, ProductData> = {
     description: "Citrato de magnesio en polvo",
     weight: "500g",
     link: "/sn-magnesio-500",
-    image: "https://http2.mlstatic.com/D_NQ_NP_879135-MLA80127605521_102024-O.webp",
+    image: "https://vczrkqwnokjuxehvbrbx.supabase.co/storage/v1/object/public/product-images/products/1767806351692-dyjvc5.webp",
     priceSlider: [
       { people: 1, price: 41191 },
       { people: 25, price: 37446 },
