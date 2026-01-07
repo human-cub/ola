@@ -3,24 +3,13 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import useEmblaCarousel from 'embla-carousel-react';
-import { supabase } from "@/integrations/supabase/client";
-
-interface ProductDisplay {
-  id: string;
-  name: string;
-  description: string;
-  weight: string;
-  link: string;
-  image: string;
-  originalPrice: string;
-  discountPrice: string;
-}
+import { useProducts } from "@/hooks/useProducts";
 
 export const MainProductCarousel = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
-  const [products, setProducts] = useState<ProductDisplay[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: products = [], isLoading } = useProducts();
+  
   const [emblaRef, emblaApi] = useEmblaCarousel({ 
     loop: true,
     align: 'center',
@@ -30,56 +19,16 @@ export const MainProductCarousel = () => {
     duration: 30
   });
 
-  // Fetch products from database
-  useEffect(() => {
-    const fetchProducts = async () => {
-      const { data, error } = await supabase
-        .from('products')
-        .select('id, name, description, weight, link, images, prices')
-        .order('name');
-
-      if (error) {
-        console.error('Error fetching products:', error);
-        setLoading(false);
-        return;
-      }
-
-      const transformed = (data || []).map(product => {
-        const images = product.images as string[] | null;
-        const prices = product.prices as { people: number; price: number }[] | null;
-        
-        const firstPrice = prices?.[0]?.price || 0;
-        const lastPrice = prices?.[prices.length - 1]?.price || 0;
-
-        return {
-          id: product.id,
-          name: product.name,
-          description: product.description || '',
-          weight: product.weight,
-          link: product.link || `/${product.id}`,
-          image: images?.[0] || '',
-          originalPrice: `$${firstPrice.toLocaleString('es-AR')}`,
-          discountPrice: `$${lastPrice.toLocaleString('es-AR')}`
-        };
-      });
-
-      setProducts(transformed);
-      setLoading(false);
-    };
-
-    fetchProducts();
-  }, []);
-
   // Auto-scroll functionality
   useEffect(() => {
-    if (!isAutoPlaying || !emblaApi) return;
+    if (!isAutoPlaying || !emblaApi || products.length === 0) return;
     
     const interval = setInterval(() => {
       emblaApi.scrollNext();
-    }, 6000); // Slower auto-scroll - every 6 seconds
+    }, 6000);
 
     return () => clearInterval(interval);
-  }, [isAutoPlaying, emblaApi]);
+  }, [isAutoPlaying, emblaApi, products.length]);
 
   // Update current index when carousel changes
   const onSelect = useCallback(() => {
@@ -98,7 +47,6 @@ export const MainProductCarousel = () => {
     if (emblaApi) {
       setIsAutoPlaying(false);
       emblaApi.scrollPrev();
-      // Resume auto-play after 15 seconds
       setTimeout(() => setIsAutoPlaying(true), 15000);
     }
   }, [emblaApi]);
@@ -107,7 +55,6 @@ export const MainProductCarousel = () => {
     if (emblaApi) {
       setIsAutoPlaying(false);
       emblaApi.scrollNext();
-      // Resume auto-play after 15 seconds
       setTimeout(() => setIsAutoPlaying(true), 15000);
     }
   }, [emblaApi]);
@@ -116,7 +63,6 @@ export const MainProductCarousel = () => {
     if (emblaApi) {
       setIsAutoPlaying(false);
       emblaApi.scrollTo(index);
-      // Resume auto-play after 15 seconds
       setTimeout(() => setIsAutoPlaying(true), 15000);
     }
   }, [emblaApi]);
@@ -126,7 +72,7 @@ export const MainProductCarousel = () => {
     window.location.href = productLink;
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <section className="px-4 py-8">
         <div className="container mx-auto max-w-6xl">
@@ -137,7 +83,7 @@ export const MainProductCarousel = () => {
             <div className="w-20 h-1 bg-gradient-primary mx-auto rounded-full mt-4"></div>
           </div>
           <div className="flex justify-center">
-            <div className="w-80 h-96 bg-muted/50 rounded-xl animate-pulse"></div>
+            <div className="w-80 h-80 bg-muted/50 rounded-xl animate-pulse"></div>
           </div>
         </div>
       </section>
@@ -159,7 +105,6 @@ export const MainProductCarousel = () => {
         </div>
 
         <div className="relative">
-          {/* Embla Carousel */}
           <div className="overflow-hidden" ref={emblaRef}>
             <div className="flex">
               {products.map((product) => (
@@ -186,10 +131,6 @@ export const MainProductCarousel = () => {
                         <h3 className="text-xl font-bold text-foreground mb-2">
                           {product.name}
                         </h3>
-                        
-                        <p className="text-muted-foreground text-sm mb-2">
-                          {product.description}
-                        </p>
                         
                         <p className="text-primary font-semibold mb-4">
                           Peso neto: {product.weight}
@@ -222,7 +163,6 @@ export const MainProductCarousel = () => {
             </div>
           </div>
 
-          {/* Navigation Buttons - Positioned outside content area */}
           <Button
             variant="outline"
             size="icon"
@@ -242,7 +182,6 @@ export const MainProductCarousel = () => {
           </Button>
         </div>
 
-        {/* Indicators */}
         <div className="flex justify-center gap-2 mt-6">
           {products.map((_, index) => (
             <button
@@ -256,7 +195,6 @@ export const MainProductCarousel = () => {
             />
           ))}
         </div>
-
       </div>
     </section>
   );
