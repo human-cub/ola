@@ -3,21 +3,72 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import useEmblaCarousel from 'embla-carousel-react';
-import { getAllProducts } from "@/data/products";
+import { supabase } from "@/integrations/supabase/client";
+
+interface ProductDisplay {
+  id: string;
+  name: string;
+  description: string;
+  weight: string;
+  link: string;
+  image: string;
+  originalPrice: string;
+  discountPrice: string;
+}
 
 export const MainProductCarousel = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const [products, setProducts] = useState<ProductDisplay[]>([]);
+  const [loading, setLoading] = useState(true);
   const [emblaRef, emblaApi] = useEmblaCarousel({ 
     loop: true,
     align: 'center',
     skipSnaps: false,
     dragFree: false,
     containScroll: 'trimSnaps',
-    duration: 30 // Slower transitions
+    duration: 30
   });
 
-  const products = getAllProducts();
+  // Fetch products from database
+  useEffect(() => {
+    const fetchProducts = async () => {
+      const { data, error } = await supabase
+        .from('products')
+        .select('id, name, description, weight, link, images, prices')
+        .order('name');
+
+      if (error) {
+        console.error('Error fetching products:', error);
+        setLoading(false);
+        return;
+      }
+
+      const transformed = (data || []).map(product => {
+        const images = product.images as string[] | null;
+        const prices = product.prices as { people: number; price: number }[] | null;
+        
+        const firstPrice = prices?.[0]?.price || 0;
+        const lastPrice = prices?.[prices.length - 1]?.price || 0;
+
+        return {
+          id: product.id,
+          name: product.name,
+          description: product.description || '',
+          weight: product.weight,
+          link: product.link || `/${product.id}`,
+          image: images?.[0] || '',
+          originalPrice: `$${firstPrice.toLocaleString('es-AR')}`,
+          discountPrice: `$${lastPrice.toLocaleString('es-AR')}`
+        };
+      });
+
+      setProducts(transformed);
+      setLoading(false);
+    };
+
+    fetchProducts();
+  }, []);
 
   // Auto-scroll functionality
   useEffect(() => {
@@ -75,6 +126,28 @@ export const MainProductCarousel = () => {
     window.location.href = productLink;
   };
 
+  if (loading) {
+    return (
+      <section className="px-4 py-8">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-2">
+              Nuestros Productos
+            </h2>
+            <div className="w-20 h-1 bg-gradient-primary mx-auto rounded-full mt-4"></div>
+          </div>
+          <div className="flex justify-center">
+            <div className="w-80 h-96 bg-muted/50 rounded-xl animate-pulse"></div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (products.length === 0) {
+    return null;
+  }
+
   return (
     <section className="px-4 py-8">
       <div className="container mx-auto max-w-6xl">
@@ -89,7 +162,7 @@ export const MainProductCarousel = () => {
           {/* Embla Carousel */}
           <div className="overflow-hidden" ref={emblaRef}>
             <div className="flex">
-              {products.map((product, index) => (
+              {products.map((product) => (
                 <div key={product.id} className="flex-[0_0_100%] min-w-0 pl-4">
                   <div className="flex justify-center">
                     <Card 
