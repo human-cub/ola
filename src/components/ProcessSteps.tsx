@@ -3,7 +3,7 @@ import { Users, UserPlus, Calculator, FileCheck, Truck, CreditCard } from "lucid
 const steps = [
   {
     icon: Users,
-    title: "Te sumás a la compra del producto",
+    title: "Te sumás a la compra del producto (sin compromiso)",
     subtitle: "(sin prepago)",
     description: "Unite a otros que quieren el mismo producto durante la semana"
   },

@@ -260,6 +260,12 @@ const OrderDialog = ({
             />
           </div>
 
+          {waitForDiscount && (
+            <p className="text-xs text-center text-muted-foreground">
+              Tranqui, agregarte no te obliga a nada
+            </p>
+          )}
+
           <div className="flex gap-2">
             <Button
               type="button"
