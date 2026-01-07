@@ -181,7 +181,8 @@ const DynamicProduct = () => {
       <FloatingButton 
         productName={product.name} 
         productId={product.id} 
-        originalPrice={product.prices[0]?.price} 
+        prices={product.prices}
+        waitingCount={waitingCount}
       />
     </div>
   );

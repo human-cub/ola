@@ -3,13 +3,19 @@ import { Clock, ShoppingCart, Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import OrderDialog from "./OrderDialog";
 
+interface PriceData {
+  people: number;
+  price: number;
+}
+
 interface FloatingButtonProps {
   productName: string;
   productId: string;
-  originalPrice?: number;
+  prices?: PriceData[];
+  waitingCount?: number;
 }
 
-export const FloatingButton = ({ productName, productId, originalPrice }: FloatingButtonProps) => {
+export const FloatingButton = ({ productName, productId, prices = [], waitingCount = 0 }: FloatingButtonProps) => {
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
@@ -63,6 +69,19 @@ export const FloatingButton = ({ productName, productId, originalPrice }: Floati
     return () => clearInterval(timer);
   }, []);
 
+  // Calcular el precio actual basado en waitingCount
+  const getCurrentPrice = () => {
+    if (prices.length === 0) return null;
+    for (let i = prices.length - 1; i >= 0; i--) {
+      if (waitingCount >= prices[i].people) {
+        return prices[i].price;
+      }
+    }
+    return prices[0].price;
+  };
+
+  const currentPrice = getCurrentPrice();
+
   const handleBuyNow = () => {
     setWaitForDiscount(false);
     setDialogOpen(true);
@@ -115,7 +134,7 @@ export const FloatingButton = ({ productName, productId, originalPrice }: Floati
               >
                 <ShoppingCart className="w-4 h-4 flex-shrink-0" />
                 <span className="text-sm font-medium">
-                  Comprar ahora {originalPrice && <span className="font-bold">${originalPrice.toLocaleString()}</span>}
+                  Comprar ahora {currentPrice && <span className="font-bold">${currentPrice.toLocaleString()}</span>}
                 </span>
               </Button>
             </div>
