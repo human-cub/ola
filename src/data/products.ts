@@ -120,7 +120,7 @@ export const products: Record<string, ProductData> = {
     description: "Proteína premium Grass Fed",
     weight: "908g",
     link: "/sn-platinum-908",
-    image: "/src/assets/platinum-protein-main.png",
+    image: "https://http2.mlstatic.com/D_NQ_NP_684556-MLA80127606813_102024-O.webp",
     priceSlider: [
       { people: 1, price: 68079 },
       { people: 25, price: 61890 },
@@ -138,7 +138,7 @@ export const products: Record<string, ProductData> = {
     description: "Snack rico en proteínas",
     weight: "16 unidades",
     link: "/ena-bars-16",
-    image: "/src/assets/ena-bars-main.png",
+    image: "https://d23sdv0psvt1yv.cloudfront.net/Custom/Content/Products/27/64/2764_barra-de-proteina-x16-unidades_l.jpg",
     priceSlider: [
       { people: 1, price: 36198 },
       { people: 25, price: 32907 },
@@ -156,7 +156,7 @@ export const products: Record<string, ProductData> = {
     description: "Proteína 100% vegetal sin sabor",
     weight: "908g",
     link: "/sn-plant-908",
-    image: "/src/assets/plant-protein-main.png",
+    image: "https://http2.mlstatic.com/D_NQ_NP_850413-MLA53295222954_012023-O.webp",
     priceSlider: [
       { people: 1, price: 59287 },
       { people: 25, price: 53897 },
@@ -174,7 +174,7 @@ export const products: Record<string, ProductData> = {
     description: "Aceite de pescado ultra concentrado",
     weight: "60 cápsulas",
     link: "/sn-omega3-60",
-    image: "/src/assets/omega3-main.png",
+    image: "https://http2.mlstatic.com/D_NQ_NP_882376-MLA80127609961_102024-O.webp",
     priceSlider: [
       { people: 1, price: 46079 },
       { people: 25, price: 41890 },
@@ -191,7 +191,7 @@ export const products: Record<string, ProductData> = {
     description: "Colágeno hidrolizado con vitamina C",
     weight: "210g",
     link: "/sn-collagen-210",
-    image: "/src/assets/collagen-main.png",
+    image: "https://http2.mlstatic.com/D_NQ_NP_909651-MLA80127589277_102024-O.webp",
     priceSlider: [
       { people: 1, price: 28342 },
       { people: 25, price: 25765 },
@@ -209,7 +209,7 @@ export const products: Record<string, ProductData> = {
     description: "Citrato de magnesio en polvo",
     weight: "500g",
     link: "/sn-magnesio-500",
-    image: "/src/assets/magnesio-main.png",
+    image: "https://http2.mlstatic.com/D_NQ_NP_879135-MLA80127605521_102024-O.webp",
     priceSlider: [
       { people: 1, price: 41191 },
       { people: 25, price: 37446 },
@@ -227,7 +227,7 @@ export const products: Record<string, ProductData> = {
     description: "Creatina monohidrato ultramicronizada",
     weight: "300g",
     link: "/sn-creatina-300",
-    image: "/src/assets/creatine-pote-main.png",
+    image: "https://http2.mlstatic.com/D_NQ_NP_758206-MLA53295176436_012023-O.webp",
     priceSlider: [
       { people: 1, price: 45247 },
       { people: 25, price: 41134 },
