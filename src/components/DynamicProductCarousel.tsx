@@ -24,8 +24,8 @@ export const DynamicProductCarousel = ({ images, productName }: DynamicProductCa
 
   return (
     <>
-      <section className="px-4 py-6">
-        <div className="container mx-auto max-w-md">
+      <section className="px-0 py-6">
+        <div className="container mx-auto max-w-md px-4">
           <Carousel className="w-full">
             <CarouselContent>
               {displayImages.map((image, index) => (
@@ -43,8 +43,8 @@ export const DynamicProductCarousel = ({ images, productName }: DynamicProductCa
             </CarouselContent>
             {displayImages.length > 1 && (
               <>
-                <CarouselPrevious className="left-2" />
-                <CarouselNext className="right-2" />
+                <CarouselPrevious className="-left-2 sm:-left-4 bg-white/80 hover:bg-white border-0 shadow-md" />
+                <CarouselNext className="-right-2 sm:-right-4 bg-white/80 hover:bg-white border-0 shadow-md" />
               </>
             )}
           </Carousel>
@@ -52,7 +52,7 @@ export const DynamicProductCarousel = ({ images, productName }: DynamicProductCa
       </section>
 
       <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
-        <DialogContent className="max-w-[95vw] max-h-[95vh] p-2 bg-black/95 border-none">
+        <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 bg-transparent border-none shadow-none [&>button]:text-white [&>button]:bg-black/50 [&>button]:rounded-full [&>button]:p-1">
           <img
             src={selectedImage || ""}
             alt={productName}
