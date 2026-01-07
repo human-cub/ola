@@ -6,9 +6,10 @@ import OrderDialog from "./OrderDialog";
 interface FloatingButtonProps {
   productName: string;
   productId: string;
+  originalPrice?: number;
 }
 
-export const FloatingButton = ({ productName, productId }: FloatingButtonProps) => {
+export const FloatingButton = ({ productName, productId, originalPrice }: FloatingButtonProps) => {
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
@@ -113,7 +114,9 @@ export const FloatingButton = ({ productName, productId }: FloatingButtonProps) 
                 className="bg-white/20 hover:bg-white/30 text-white border-0 gap-2 flex-1 h-auto py-3 sm:py-2"
               >
                 <ShoppingCart className="w-4 h-4 flex-shrink-0" />
-                <span className="text-sm font-medium">Comprar ahora</span>
+                <span className="text-sm font-medium">
+                  Comprar ahora {originalPrice && <span className="font-bold">${originalPrice.toLocaleString()}</span>}
+                </span>
               </Button>
             </div>
           </div>

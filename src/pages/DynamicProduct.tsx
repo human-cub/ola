@@ -178,7 +178,11 @@ const DynamicProduct = () => {
         <RelatedProducts currentProduct={product.id} />
       </main>
 
-      <FloatingButton productName={product.name} productId={product.id} />
+      <FloatingButton 
+        productName={product.name} 
+        productId={product.id} 
+        originalPrice={product.prices[0]?.price} 
+      />
     </div>
   );
 };
