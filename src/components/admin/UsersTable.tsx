@@ -50,9 +50,9 @@ interface UserProfile {
   is_blocked: boolean;
   blocked_at: string | null;
   blocked_reason: string | null;
-  registration_method: string | null;
   created_at: string;
   profile_completed: boolean;
+  email?: string;
 }
 
 interface LoginEntry {
@@ -156,7 +156,7 @@ const UsersTable = () => {
   };
 
   const handleExportCSV = () => {
-    const headers = ["ID", "Nombre", "Apellido", "Teléfono", "Dirección", "Estado", "Método registro", "Fecha registro"];
+    const headers = ["ID", "Nombre", "Apellido", "Teléfono", "Dirección", "Estado", "Email", "Fecha registro"];
     const rows = users.map(u => [
       u.id,
       u.first_name || "",
@@ -164,7 +164,7 @@ const UsersTable = () => {
       u.phone || "",
       u.address || "",
       u.is_blocked ? "Bloqueado" : "Activo",
-      u.registration_method || "email",
+      u.email || "",
       format(new Date(u.created_at), "dd/MM/yyyy HH:mm"),
     ]);
 
@@ -237,7 +237,6 @@ const UsersTable = () => {
                     <TableRow>
                       <TableHead>Nombre</TableHead>
                       <TableHead>Teléfono</TableHead>
-                      <TableHead>Método</TableHead>
                       <TableHead>Registro</TableHead>
                       <TableHead>Estado</TableHead>
                       <TableHead className="text-right">Acciones</TableHead>
@@ -253,11 +252,6 @@ const UsersTable = () => {
                           }
                         </TableCell>
                         <TableCell>{user.phone || "-"}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="capitalize">
-                            {user.registration_method || "email"}
-                          </Badge>
-                        </TableCell>
                         <TableCell>
                           {format(new Date(user.created_at), "dd/MM/yyyy", { locale: es })}
                         </TableCell>
@@ -354,8 +348,8 @@ const UsersTable = () => {
                   <p className="font-medium">{selectedUser.address || "-"}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Método de registro</p>
-                  <p className="font-medium capitalize">{selectedUser.registration_method || "email"}</p>
+                  <p className="text-muted-foreground">Email</p>
+                  <p className="font-medium">{selectedUser.email || "-"}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Fecha de registro</p>
