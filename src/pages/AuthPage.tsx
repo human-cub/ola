@@ -20,7 +20,7 @@ const AuthPage = () => {
         .maybeSingle();
 
       if (profile?.profile_completed) {
-        navigate("/mi-cuenta");
+        navigate("/");
       } else {
         navigate("/completar-perfil");
       }

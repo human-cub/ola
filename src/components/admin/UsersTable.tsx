@@ -35,10 +35,21 @@ import {
   Ban,
   CheckCircle,
   Download,
-  Eye
+  Eye,
+  Trash2
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface UserProfile {
   id: string;
@@ -73,6 +84,9 @@ const UsersTable = () => {
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [loginHistory, setLoginHistory] = useState<LoginEntry[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<UserProfile | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -152,6 +166,30 @@ const UsersTable = () => {
       }
     } catch (error: any) {
       toast.error("Error al actualizar usuario");
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+    
+    setDeleting(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .delete()
+        .eq("id", userToDelete.id);
+
+      if (error) throw error;
+
+      toast.success("Perfil eliminado");
+      setDeleteDialogOpen(false);
+      setUserToDelete(null);
+      setSelectedUser(null);
+      fetchUsers();
+    } catch (error: any) {
+      toast.error("Error al eliminar el perfil");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -407,11 +445,55 @@ const UsersTable = () => {
                     </>
                   )}
                 </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setUserToDelete(selectedUser);
+                    setDeleteDialogOpen(true);
+                  }}
+                  className="text-destructive hover:text-destructive"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
               </div>
             </div>
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar este perfil?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Se eliminará permanentemente el perfil de{" "}
+              <span className="font-medium">
+                {userToDelete?.first_name || userToDelete?.last_name
+                  ? `${userToDelete.first_name || ""} ${userToDelete.last_name || ""}`.trim()
+                  : "este usuario"}
+              </span>.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteUser}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Eliminando...
+                </>
+              ) : (
+                "Eliminar"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };
