@@ -6,9 +6,14 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import DynamicProduct from "./pages/DynamicProduct";
 import Category from "./pages/Category";
-import Auth from "./pages/Auth";
+import AuthPage from "./pages/AuthPage";
+import ProfileComplete from "./pages/ProfileComplete";
+import Profile from "./pages/Profile";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
+import { FloatingWhatsApp } from "./components/FloatingWhatsApp";
 
 const queryClient = new QueryClient();
 
@@ -23,10 +28,16 @@ const App = () => (
           <Route path="/categoria/:category" element={<Category />} />
           <Route path="/producto/:slug" element={<DynamicProduct />} />
           <Route path="/:slug" element={<DynamicProduct />} />
-          <Route path="/auth" element={<Auth />} />
+          <Route path="/ingresar" element={<AuthPage />} />
+          <Route path="/completar-perfil" element={<ProfileComplete />} />
+          <Route path="/mi-cuenta" element={<Profile />} />
+          <Route path="/recuperar-clave" element={<ForgotPassword />} />
+          <Route path="/restablecer-clave" element={<ResetPassword />} />
+          <Route path="/auth" element={<AuthPage />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <FloatingWhatsApp />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

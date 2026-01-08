@@ -1,15 +1,30 @@
-import { MessageCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { User, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BurgerMenu } from "@/components/BurgerMenu";
+import { supabase } from "@/integrations/supabase/client";
 
 interface HeaderProps {
   isVisible: boolean;
 }
 
 export const Header = ({ isVisible }: HeaderProps) => {
-  const handleWhatsAppClick = () => {
-    window.open("http://wa.me/5491166650878", "_blank");
-  };
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setUser(session?.user ?? null);
+      }
+    );
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const handleHomeClick = () => {
     window.location.href = "/";
@@ -22,12 +37,10 @@ export const Header = ({ isVisible }: HeaderProps) => {
       }`}
     >
       <div className="container mx-auto px-4 h-16 flex items-center justify-between relative">
-        {/* Burger Menu */}
         <div className="z-20">
           <BurgerMenu />
         </div>
         
-        {/* Logo and Brand - Centered */}
         <div 
           className="absolute left-1/2 transform -translate-x-1/2 flex items-center gap-1 cursor-pointer z-20" 
           onClick={handleHomeClick}
@@ -40,17 +53,25 @@ export const Header = ({ isVisible }: HeaderProps) => {
           </span>
         </div>
 
-        {/* WhatsApp Button */}
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={handleWhatsAppClick}
-          className="border-primary/20 hover:border-primary hover:bg-primary/5 gap-2 px-3 min-w-fit whitespace-nowrap z-20"
-        >
-          <MessageCircle className="w-4 h-4" />
-          <span className="hidden sm:inline">Chateá por WhatsApp</span>
-          <span className="sm:hidden">WhatsApp</span>
-        </Button>
+        <Link to={user ? "/mi-cuenta" : "/ingresar"} className="z-20">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="border-primary/20 hover:border-primary hover:bg-primary/5 gap-2 px-3"
+          >
+            {user ? (
+              <>
+                <User className="w-4 h-4" />
+                <span className="hidden sm:inline">Mi cuenta</span>
+              </>
+            ) : (
+              <>
+                <LogIn className="w-4 h-4" />
+                <span className="hidden sm:inline">Ingresar</span>
+              </>
+            )}
+          </Button>
+        </Link>
       </div>
     </header>
   );

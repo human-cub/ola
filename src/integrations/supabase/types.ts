@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      login_history: {
+        Row: {
+          id: string
+          ip_address: string | null
+          login_at: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          ip_address?: string | null
+          login_at?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          id?: string
+          ip_address?: string | null
+          login_at?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           admin_comment: string | null
@@ -139,6 +163,63 @@ export type Database = {
           waiting_for_discount_count?: number
           week_start_date?: string | null
           weight?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          address: string | null
+          blocked_at: string | null
+          blocked_reason: string | null
+          created_at: string | null
+          first_name: string | null
+          id: string
+          is_blocked: boolean | null
+          last_login_at: string | null
+          last_name: string | null
+          locked_until: string | null
+          login_attempts: number | null
+          phone: string | null
+          profile_completed: boolean | null
+          registration_method: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          blocked_at?: string | null
+          blocked_reason?: string | null
+          created_at?: string | null
+          first_name?: string | null
+          id?: string
+          is_blocked?: boolean | null
+          last_login_at?: string | null
+          last_name?: string | null
+          locked_until?: string | null
+          login_attempts?: number | null
+          phone?: string | null
+          profile_completed?: boolean | null
+          registration_method?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          blocked_at?: string | null
+          blocked_reason?: string | null
+          created_at?: string | null
+          first_name?: string | null
+          id?: string
+          is_blocked?: boolean | null
+          last_login_at?: string | null
+          last_name?: string | null
+          locked_until?: string | null
+          login_attempts?: number | null
+          phone?: string | null
+          profile_completed?: boolean | null
+          registration_method?: string | null
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }

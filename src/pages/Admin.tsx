@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import ProductsTable from "@/components/admin/ProductsTable";
 import OrdersTable from "@/components/admin/OrdersTable";
+import UsersTable from "@/components/admin/UsersTable";
 import { getAllProducts } from "@/data/products";
 
 const Admin = () => {
@@ -109,10 +110,11 @@ const Admin = () => {
         </div>
 
         <Tabs defaultValue="participants" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="participants">Participantes</TabsTrigger>
             <TabsTrigger value="buynow">Comprar Ahora</TabsTrigger>
             <TabsTrigger value="products">Productos</TabsTrigger>
+            <TabsTrigger value="users">Usuarios</TabsTrigger>
           </TabsList>
           <TabsContent value="participants">
             <OrdersTable waitingForDiscount={true} />
@@ -122,6 +124,9 @@ const Admin = () => {
           </TabsContent>
           <TabsContent value="products">
             <ProductsTable />
+          </TabsContent>
+          <TabsContent value="users">
+            <UsersTable />
           </TabsContent>
         </Tabs>
       </div>
