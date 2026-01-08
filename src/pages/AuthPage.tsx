@@ -12,11 +12,26 @@ const AuthPage = () => {
   const [activeTab, setActiveTab] = useState("login");
 
   useEffect(() => {
+    const checkProfileComplete = async (userId: string) => {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("profile_completed")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (profile?.profile_completed) {
+        navigate("/mi-cuenta");
+      } else {
+        navigate("/completar-perfil");
+      }
+    };
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (session) {
-          // Check if profile is complete
-          checkProfileComplete(session.user.id);
+          setTimeout(() => {
+            checkProfileComplete(session.user.id);
+          }, 0);
         }
       }
     );
@@ -31,23 +46,6 @@ const AuthPage = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const checkProfileComplete = async (userId: string) => {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("profile_completed")
-      .eq("user_id", userId)
-      .maybeSingle();
-
-    if (profile?.profile_completed) {
-      navigate("/mi-cuenta");
-    } else {
-      navigate("/completar-perfil");
-    }
-  };
-
-  const handleLoginSuccess = () => {
-    // Will be handled by onAuthStateChange
-  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-accent/20 p-4">
@@ -85,7 +83,7 @@ const AuthPage = () => {
                 <TabsTrigger value="register">Registrarse</TabsTrigger>
               </TabsList>
               <TabsContent value="login">
-                <LoginForm onSuccess={handleLoginSuccess} />
+                <LoginForm onSuccess={() => {}} />
               </TabsContent>
               <TabsContent value="register">
                 <RegisterForm />
