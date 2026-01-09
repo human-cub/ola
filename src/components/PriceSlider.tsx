@@ -84,6 +84,12 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
     price: getPriceForPeople(waitingCount)
   };
   
+  // Получаем цену для выбранной позиции слайдера
+  const selectedPrice = {
+    people: selectedPeople,
+    price: getPriceForPeople(selectedPeople)
+  };
+  
   const maxPrice = priceData[priceData.length - 1];
 
   const handleSliderChange = (value: number[]) => {
@@ -105,52 +111,66 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
     return `$${formatted}`;
   };
 
-  // Calcular cuántas unidades faltan para el próximo descuento
-  const nextThreshold = getNextDiscountThreshold(waitingCount);
-  const remaining = nextThreshold ? nextThreshold.people - waitingCount : 0;
-
   return (
     <section className="px-4 pt-1 pb-4">
       <div className="container mx-auto max-w-md">
-        <div className="relative bg-gradient-card rounded-2xl p-6 sm:p-8 shadow-floating animate-glow-pulse animate-float hover:scale-105 transition-all duration-500 border-[3px] animate-border-pulse backdrop-blur-sm">
+        <div className="relative bg-gradient-card rounded-2xl p-9 sm:p-8 shadow-floating animate-glow-pulse animate-float hover:scale-105 transition-all duration-500 border-[3px] animate-border-pulse backdrop-blur-sm">
           
-          {/* Título */}
-          <h3 className="text-xl font-bold text-center mb-4 text-primary italic">
+          <h3 className="text-lg font-bold text-center mb-3 text-primary animate-scale-in">
             Precio por unidad en compra grupal
           </h3>
           
-          {/* Faltan X para el próximo descuento */}
-          {nextThreshold && (
-            <p className="text-center text-muted-foreground mb-4">
-              Faltan <span className="font-semibold">{remaining}</span> para el próximo descuento
+          {/* Información de participantes */}
+          <div className="mb-3 text-center space-y-1">
+            <p className="text-sm text-muted-foreground">
+              Ya se reservaron <span className="font-semibold text-primary">{waitingCount}</span> unidades entre distintos compradores
             </p>
-          )}
-          
-          {/* Label de unidades actuales arriba del slider */}
-          <div className="text-center mb-2">
-            <span className="text-primary font-semibold text-sm">
-              {waitingCount} unidades
-            </span>
+            {(() => {
+              const nextThreshold = getNextDiscountThreshold(waitingCount);
+              if (nextThreshold) {
+                const remaining = nextThreshold.people - waitingCount;
+                return (
+                  <p className="text-sm text-muted-foreground">
+                    Faltan <span className="font-bold text-primary">{remaining}</span> unidades más para el próximo descuento
+                  </p>
+                );
+              }
+              return null;
+            })()}
           </div>
           
           {/* Price Scale */}
-          <div className="relative mb-2">
-            {/* People numbers (top row) */}
-            <div className="relative mb-1">
-              <div className="flex justify-between px-1">
-                {priceData.map((item, index) => (
-                  <span 
-                    key={index} 
-                    className="text-xs text-muted-foreground"
-                  >
-                    {item.people}
-                  </span>
-                ))}
+          <div className="relative mb-4">
+            {/* People numbers (top) */}
+            <div className="relative mb-2">
+              <div className="absolute inset-0 flex items-center">
+                {priceData.map((item, index) => {
+                  const position = index === 0 ? '0%' : 
+                                  index === 1 ? '25%' :
+                                  index === 2 ? '50%' :
+                                  index === 3 ? '75%' : '100%';
+                  const isNearSelected = Math.abs(selectedPeople - item.people) <= 
+                    (index < priceData.length - 1 ? (priceData[index + 1].people - item.people) * 0.1 : 5);
+                  return (
+                    <div 
+                      key={index} 
+                      className="absolute transform -translate-x-1/2 flex items-center gap-1"
+                      style={{ left: position }}
+                    >
+                      <span className={`text-sm font-medium transition-colors ${
+                        isNearSelected ? 'text-primary' : 'text-muted-foreground'
+                      }`}>
+                        {item.people}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
+              <div className="h-6"></div>
             </div>
             
             {/* Slider */}
-            <div className="mb-1 -mx-2">
+            <div className="mb-2 -mx-3">
               <Slider
                 value={[sliderPosition]}
                 onValueChange={handleSliderChange}
@@ -161,70 +181,76 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
               />
             </div>
             
-            {/* Price numbers (bottom row) */}
-            <div className="flex justify-between px-1">
-              {priceData.map((item, index) => (
-                <span 
-                  key={index} 
-                  className="text-xs text-muted-foreground"
-                >
-                  {formatPrice(item.price)}
-                </span>
-              ))}
+            {/* Price numbers (bottom) */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                {priceData.map((item, index) => {
+                  const position = index === 0 ? '0%' : 
+                                  index === 1 ? '25%' :
+                                  index === 2 ? '50%' :
+                                  index === 3 ? '75%' : '100%';
+                  const isNearSelected = Math.abs(selectedPeople - item.people) <= 
+                    (index < priceData.length - 1 ? (priceData[index + 1].people - item.people) * 0.1 : 5);
+                  return (
+                    <div 
+                      key={index} 
+                      className="absolute transform -translate-x-1/2"
+                      style={{ left: position }}
+                    >
+                      <span className={`transition-colors whitespace-nowrap ${
+                        isNearSelected 
+                          ? 'text-xs text-primary font-medium' 
+                          : 'text-xs text-muted-foreground'
+                      }`}>
+                        {formatPrice(item.price)}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="h-4"></div>
             </div>
           </div>
 
-          {/* Precio actual y precio mayorista final */}
-          <div className="flex justify-between items-end mt-4 mb-4">
-            {/* Precio actual */}
-            <div className="text-center">
-              <p className="text-xl font-bold text-[#c9302c]">
-                {formatPrice(currentActualPrice.price)}
+          {/* Current Price Display */}
+          <div className="text-center relative space-y-1 -mt-2">
+            <div className={`absolute inset-0 -z-10 ${showMaxGlow ? 'shadow-glow animate-pulse' : ''}`}></div>
+            
+            {/* Выбранная цена на слайдере */}
+            {selectedPeople !== waitingCount && (
+              <div className="mb-1">
+                <p className="text-xs text-muted-foreground mb-0.5">
+                  Precio al llegar a {selectedPeople} participantes
+                </p>
+                <p className="text-2xl font-bold text-primary/80">
+                  {formatPrice(selectedPrice.price)}
+                </p>
+              </div>
+            )}
+            
+            {/* Mensaje de precio mayorista */}
+            <div>
+              <p className="text-sm text-muted-foreground mb-1 font-medium text-center">
+                Esperá y podés obtener el precio mayorista
               </p>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
-                Precio actual
-              </p>
+              <div className="flex items-center justify-center gap-3">
+                {/* Precio tachado */}
+                <p className="text-lg text-muted-foreground line-through opacity-60">
+                  {formatPrice(priceData[0].price)}
+                </p>
+                {/* Precio mayorista */}
+                <p className="text-2xl font-bold text-primary">
+                  {formatPrice(maxPrice.price)}
+                </p>
+              </div>
             </div>
             
-            {/* Precio mayorista final */}
-            <div className="text-center">
-              <p className="text-xl font-bold text-[#5cb85c]">
-                {formatPrice(maxPrice.price)}
-              </p>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
-                Precio mayorista final
+            {/* Precio actual */}
+            <div className="mt-3 pt-3 border-t border-border/50">
+              <p className="text-sm text-muted-foreground text-center">
+                Comprando ahora <span className="font-semibold text-primary">{formatPrice(currentActualPrice.price)}</span>
               </p>
             </div>
-          </div>
-          
-          {/* Separador visual */}
-          <div className="border-t border-border/50 my-4"></div>
-
-          {/* Mensaje de precio mayorista */}
-          <div className="text-center">
-            <p className="text-sm text-muted-foreground mb-2">
-              Esperá y podés obtener el precio mayorista
-            </p>
-            <div className="flex items-center justify-center gap-3">
-              {/* Precio tachado */}
-              <span className="text-lg text-gray-400 line-through">
-                {formatPrice(priceData[0].price)}
-              </span>
-              {/* Precio mayorista grande */}
-              <span className="text-3xl font-bold text-[#5cb85c]">
-                {formatPrice(maxPrice.price)}
-              </span>
-            </div>
-          </div>
-          
-          {/* Comprando ahora */}
-          <div className="text-center mt-4">
-            <p className="text-sm text-muted-foreground">
-              Comprando ahora{" "}
-              <span className="font-semibold text-primary">
-                {formatPrice(currentActualPrice.price)}
-              </span>
-            </p>
           </div>
         </div>
       </div>
