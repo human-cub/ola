@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { User, LogIn } from "lucide-react";
+import olaLogo from "@/assets/ola-logo-new.png";
 import { Button } from "@/components/ui/button";
 import { BurgerMenu } from "@/components/BurgerMenu";
 import { supabase } from "@/integrations/supabase/client";
@@ -46,7 +47,7 @@ export const Header = ({ isVisible }: HeaderProps) => {
           onClick={handleHomeClick}
         >
           <div className="w-12 h-12 flex items-center justify-center">
-            <img src="/lovable-uploads/f61342f0-4c86-4d5f-8e4a-6f6380460a50.png" alt="Ola Wave Logo" className="w-8 h-8 object-contain" />
+            <img src={olaLogo} alt="Ola Wave Logo" className="w-8 h-8 object-contain" />
           </div>
           <span className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
             Ola!
