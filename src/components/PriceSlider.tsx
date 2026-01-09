@@ -123,7 +123,7 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
           {/* Información de participantes */}
           <div className="mb-3 text-center space-y-1">
             <p className="text-sm text-muted-foreground">
-              Ya se reservaron <span className="font-semibold text-primary">{waitingCount}</span> packs entre distintos compradores
+              Ya se reservaron <span className="font-semibold text-primary">{waitingCount}</span> unidades entre distintos compradores
             </p>
             {(() => {
               const nextThreshold = getNextDiscountThreshold(waitingCount);
@@ -131,7 +131,7 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
                 const remaining = nextThreshold.people - waitingCount;
                 return (
                   <p className="text-sm text-muted-foreground">
-                    Faltan <span className="font-bold text-primary">{remaining}</span> packs más para el próximo descuento
+                    Faltan <span className="font-bold text-primary">{remaining}</span> unidades más para el próximo descuento
                   </p>
                 );
               }
