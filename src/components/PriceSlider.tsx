@@ -117,7 +117,7 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
         <div className="relative bg-gradient-card rounded-2xl p-9 sm:p-8 shadow-floating animate-glow-pulse animate-float hover:scale-105 transition-all duration-500 border-[3px] animate-border-pulse backdrop-blur-sm">
           
           <h3 className="text-lg font-bold text-center mb-3 text-primary animate-scale-in">
-            Precio por pack en compra grupal
+            Precio por unidad en compra grupal
           </h3>
           
           {/* Información de participantes */}
