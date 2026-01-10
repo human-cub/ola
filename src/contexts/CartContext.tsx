@@ -51,31 +51,25 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [waitingListItems, setWaitingListItems] = useState<WaitingListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [userId, setUserId] = useState<string | null>(null);
-  const [sessionId, setSessionId] = useState<string>('');
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  // Get or create session ID for guest users
-  const getSessionId = useCallback(() => {
-    if (sessionId) return sessionId;
-    
+  // Get or create session ID for guest users - stable function
+  const getSessionId = useCallback((): string => {
     let storedSessionId = localStorage.getItem(SESSION_ID_KEY);
     if (!storedSessionId) {
       storedSessionId = crypto.randomUUID();
       localStorage.setItem(SESSION_ID_KEY, storedSessionId);
     }
-    setSessionId(storedSessionId);
     return storedSessionId;
-  }, [sessionId]);
+  }, []);
 
-  // Fetch cart items
-  const fetchCartItems = useCallback(async () => {
+  // Fetch cart items - uses passed userId or sessionId
+  const fetchCartItemsInternal = async (userId: string | null): Promise<CartItem[]> => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
       let query = supabase.from('cart_items').select('*');
       
-      if (session?.user) {
-        query = query.eq('user_id', session.user.id);
+      if (userId) {
+        query = query.eq('user_id', userId);
       } else {
         const sid = getSessionId();
         query = query.eq('session_id', sid);
@@ -85,7 +79,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (error) throw error;
       
-      setCartItems(data?.map(item => ({
+      return (data || []).map(item => ({
         id: item.id,
         product_id: item.product_id,
         product_name: item.product_name,
@@ -93,21 +87,20 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         quantity: item.quantity,
         price_per_unit: Number(item.price_per_unit),
         product_image: item.product_image,
-      })) || []);
+      }));
     } catch (error) {
       console.error('Error fetching cart:', error);
+      return [];
     }
-  }, [getSessionId]);
+  };
 
-  // Fetch waiting list items
-  const fetchWaitingListItems = useCallback(async () => {
+  // Fetch waiting list items - uses passed userId or sessionId
+  const fetchWaitingListItemsInternal = async (userId: string | null): Promise<WaitingListItem[]> => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
       let query = supabase.from('waiting_list_items').select('*');
       
-      if (session?.user) {
-        query = query.eq('user_id', session.user.id);
+      if (userId) {
+        query = query.eq('user_id', userId);
       } else {
         const sid = getSessionId();
         query = query.eq('session_id', sid);
@@ -117,7 +110,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (error) throw error;
       
-      setWaitingListItems(data?.map(item => ({
+      return (data || []).map(item => ({
         id: item.id,
         product_id: item.product_id,
         product_name: item.product_name,
@@ -125,49 +118,72 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         quantity: item.quantity,
         current_price_per_unit: Number(item.current_price_per_unit),
         product_image: item.product_image,
-      })) || []);
+      }));
     } catch (error) {
       console.error('Error fetching waiting list:', error);
+      return [];
     }
-  }, [getSessionId]);
+  };
 
   // Refresh all data
   const refreshCart = useCallback(async () => {
     setIsLoading(true);
-    await Promise.all([fetchCartItems(), fetchWaitingListItems()]);
+    const [cart, waiting] = await Promise.all([
+      fetchCartItemsInternal(currentUserId),
+      fetchWaitingListItemsInternal(currentUserId)
+    ]);
+    setCartItems(cart);
+    setWaitingListItems(waiting);
     setIsLoading(false);
-  }, [fetchCartItems, fetchWaitingListItems]);
+  }, [currentUserId, getSessionId]);
 
-  // Listen to auth changes and merge guest cart
-  useEffect(() => {
-    let isInitialized = false;
+  // Migrate guest cart to user cart
+  const migrateGuestCart = async (newUserId: string) => {
+    const guestSessionId = localStorage.getItem(SESSION_ID_KEY);
+    if (!guestSessionId) return;
     
-    const migrateGuestCart = async (newUserId: string) => {
-      const guestSessionId = localStorage.getItem(SESSION_ID_KEY);
-      if (!guestSessionId) return;
+    try {
+      console.log('Migrating guest cart for session:', guestSessionId, 'to user:', newUserId);
       
-      try {
-        console.log('Migrating guest cart for session:', guestSessionId);
-        
-        // Migrate cart items
-        const { error: cartError } = await supabase
-          .from('cart_items')
-          .update({ user_id: newUserId, session_id: null })
-          .eq('session_id', guestSessionId);
-        
-        if (cartError) console.error('Cart migration error:', cartError);
-        
-        // Migrate waiting list items  
-        const { error: waitingError } = await supabase
-          .from('waiting_list_items')
-          .update({ user_id: newUserId, session_id: null })
-          .eq('session_id', guestSessionId);
-        
-        if (waitingError) console.error('Waiting list migration error:', waitingError);
-        
-        console.log('Cart migration complete');
-      } catch (error) {
-        console.error('Error migrating guest cart:', error);
+      // Migrate cart items
+      const { error: cartError } = await supabase
+        .from('cart_items')
+        .update({ user_id: newUserId, session_id: null })
+        .eq('session_id', guestSessionId);
+      
+      if (cartError) console.error('Cart migration error:', cartError);
+      
+      // Migrate waiting list items  
+      const { error: waitingError } = await supabase
+        .from('waiting_list_items')
+        .update({ user_id: newUserId, session_id: null })
+        .eq('session_id', guestSessionId);
+      
+      if (waitingError) console.error('Waiting list migration error:', waitingError);
+      
+      console.log('Cart migration complete');
+    } catch (error) {
+      console.error('Error migrating guest cart:', error);
+    }
+  };
+
+  // Listen to auth changes
+  useEffect(() => {
+    let mounted = true;
+    
+    const loadData = async (userId: string | null) => {
+      if (!mounted) return;
+      
+      setIsLoading(true);
+      const [cart, waiting] = await Promise.all([
+        fetchCartItemsInternal(userId),
+        fetchWaitingListItemsInternal(userId)
+      ]);
+      
+      if (mounted) {
+        setCartItems(cart);
+        setWaitingListItems(waiting);
+        setIsLoading(false);
       }
     };
     
@@ -177,25 +193,30 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('Auth state change:', event, 'userId:', newUserId);
       
       if (event === 'SIGNED_IN' && newUserId) {
-        // User just logged in - migrate guest cart to user cart
+        // User just logged in - migrate guest cart first
         await migrateGuestCart(newUserId);
       }
       
-      setUserId(newUserId);
-      await refreshCart();
+      if (mounted) {
+        setCurrentUserId(newUserId);
+        await loadData(newUserId);
+      }
     });
 
     // Initial load
     supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (isInitialized) return;
-      isInitialized = true;
-      
-      setUserId(session?.user?.id || null);
-      await refreshCart();
+      const userId = session?.user?.id || null;
+      if (mounted) {
+        setCurrentUserId(userId);
+        await loadData(userId);
+      }
     });
 
-    return () => subscription.unsubscribe();
-  }, [refreshCart]);
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [getSessionId]);
 
   // Add to cart
   const addToCart = async (item: Omit<CartItem, 'id'>) => {
@@ -248,7 +269,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await supabase.from('cart_items').insert(insertData);
       }
       
-      await fetchCartItems();
+      // Refresh cart data
+      const cart = await fetchCartItemsInternal(session?.user?.id || null);
+      setCartItems(cart);
       toast.success('Producto agregado al carrito');
     } catch (error) {
       console.error('Error adding to cart:', error);
@@ -303,10 +326,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .update({ quantity: newQty, current_price_per_unit: item.current_price_per_unit })
           .eq('id', existing.id);
       } else {
-        await supabase.from('waiting_list_items').insert(insertData);
+      await supabase.from('waiting_list_items').insert(insertData);
       }
       
-      await fetchWaitingListItems();
+      const waiting = await fetchWaitingListItemsInternal(session?.user?.id || null);
+      setWaitingListItems(waiting);
       toast.success('Producto agregado a la lista de espera');
     } catch (error) {
       console.error('Error adding to waiting list:', error);
@@ -324,7 +348,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .update({ quantity })
         .eq('id', id);
       
-      await fetchCartItems();
+      const cart = await fetchCartItemsInternal(currentUserId);
+      setCartItems(cart);
     } catch (error) {
       console.error('Error updating cart item:', error);
       toast.error('Error al actualizar cantidad');
@@ -341,7 +366,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .update({ quantity })
         .eq('id', id);
       
-      await fetchWaitingListItems();
+      const waiting = await fetchWaitingListItemsInternal(currentUserId);
+      setWaitingListItems(waiting);
     } catch (error) {
       console.error('Error updating waiting list item:', error);
       toast.error('Error al actualizar cantidad');
@@ -356,7 +382,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .update({ flavor })
         .eq('id', id);
       
-      await fetchCartItems();
+      const cart = await fetchCartItemsInternal(currentUserId);
+      setCartItems(cart);
     } catch (error) {
       console.error('Error updating cart item flavor:', error);
       toast.error('Error al actualizar sabor');
@@ -371,7 +398,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .update({ flavor })
         .eq('id', id);
       
-      await fetchWaitingListItems();
+      const waiting = await fetchWaitingListItemsInternal(currentUserId);
+      setWaitingListItems(waiting);
     } catch (error) {
       console.error('Error updating waiting list item flavor:', error);
       toast.error('Error al actualizar sabor');
@@ -382,7 +410,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const removeFromCart = async (id: string) => {
     try {
       await supabase.from('cart_items').delete().eq('id', id);
-      await fetchCartItems();
+      const cart = await fetchCartItemsInternal(currentUserId);
+      setCartItems(cart);
       toast.success('Producto eliminado del carrito');
     } catch (error) {
       console.error('Error removing from cart:', error);
@@ -394,7 +423,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const removeFromWaitingList = async (id: string) => {
     try {
       await supabase.from('waiting_list_items').delete().eq('id', id);
-      await fetchWaitingListItems();
+      const waiting = await fetchWaitingListItemsInternal(currentUserId);
+      setWaitingListItems(waiting);
       toast.success('Producto eliminado de la lista de espera');
     } catch (error) {
       console.error('Error removing from waiting list:', error);
