@@ -126,17 +126,10 @@ const UserOrdersTable = () => {
   const fetchOrders = async () => {
     setLoading(true);
     
+    // First fetch orders
     let query = supabase
       .from("user_orders")
-      .select(`
-        *,
-        profiles!user_orders_user_id_fkey (
-          email,
-          phone,
-          first_name,
-          last_name
-        )
-      `)
+      .select("*")
       .order("created_at", { ascending: false });
 
     if (statusFilter !== "all") {
@@ -147,33 +140,52 @@ const UserOrdersTable = () => {
       query = query.eq("order_type", typeFilter as OrderType);
     }
 
-    const { data, error } = await query;
+    const { data: ordersData, error } = await query;
 
     if (error) {
       console.error("Error fetching orders:", error);
       toast.error("Error al cargar los pedidos");
-    } else {
-      // Parse JSON fields properly
-      const parsedOrders = (data || []).map((order: any) => ({
-        ...order,
-        items: Array.isArray(order.items) ? order.items : [],
-        delivery_address: order.delivery_address as DeliveryAddress | null,
-        profiles: order.profiles,
-      })) as UserOrder[];
-      
-      // Apply search filter
-      const filtered = searchQuery
-        ? parsedOrders.filter(
-            (o) =>
-              o.order_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
-              o.profiles?.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-              o.profiles?.phone?.includes(searchQuery)
-          )
-        : parsedOrders;
-      
-      setOrders(filtered);
+      setLoading(false);
+      return;
     }
+
+    // Get unique user IDs
+    const userIds = [...new Set((ordersData || []).map((o: any) => o.user_id))];
     
+    // Fetch profiles for those users
+    let profilesMap: Record<string, any> = {};
+    if (userIds.length > 0) {
+      const { data: profilesData } = await supabase
+        .from("profiles")
+        .select("user_id, email, phone, first_name, last_name")
+        .in("user_id", userIds);
+      
+      if (profilesData) {
+        profilesData.forEach((p: any) => {
+          profilesMap[p.user_id] = p;
+        });
+      }
+    }
+
+    // Merge orders with profiles
+    const parsedOrders = (ordersData || []).map((order: any) => ({
+      ...order,
+      items: Array.isArray(order.items) ? order.items : [],
+      delivery_address: order.delivery_address as DeliveryAddress | null,
+      profiles: profilesMap[order.user_id] || null,
+    })) as UserOrder[];
+    
+    // Apply search filter
+    const filtered = searchQuery
+      ? parsedOrders.filter(
+          (o) =>
+            o.order_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            o.profiles?.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            o.profiles?.phone?.includes(searchQuery)
+        )
+      : parsedOrders;
+    
+    setOrders(filtered);
     setLoading(false);
   };
 
