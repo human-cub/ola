@@ -1,19 +1,44 @@
 import { Button } from "@/components/ui/button";
-import { useLocation } from "react-router-dom";
+import { useLocation, useMatch } from "react-router-dom";
 
 export const FloatingWhatsApp = () => {
   const location = useLocation();
-  
+
   const handleWhatsAppClick = () => {
     window.open("http://wa.me/5491166650878", "_blank");
   };
 
-  // Hide on product pages completely (both /producto/ and /product/)
-  const isProductPage = location.pathname.startsWith("/producto/") || location.pathname.startsWith("/product/");
-  
-  if (isProductPage) {
-    return null;
-  }
+  // Hide on product pages completely (both /producto/:slug and the short /:slug format)
+  const legacyProductoMatch = useMatch({ path: "/producto/:slug", end: true });
+  const legacyProductMatch = useMatch({ path: "/product/:slug", end: true });
+  const legacyMatch = legacyProductoMatch || legacyProductMatch;
+
+  const shortProductMatch = useMatch({ path: "/:slug", end: true });
+
+  const firstSegment = location.pathname.split("/").filter(Boolean)[0] ?? "";
+  const nonProductSingleSegmentRoutes = new Set([
+    "", // home
+    "categoria",
+    "ingresar",
+    "completar-perfil",
+    "mi-cuenta",
+    "recuperar-clave",
+    "restablecer-clave",
+    "auth",
+    "admin",
+    "carrito",
+    "lista-espera",
+    "checkout",
+    "checkout-colectivo",
+    "pedido",
+    "producto",
+    "product",
+  ]);
+
+  const isShortProductPage = Boolean(shortProductMatch) && !nonProductSingleSegmentRoutes.has(firstSegment);
+  const isProductPage = Boolean(legacyMatch) || isShortProductPage;
+
+  if (isProductPage) return null;
 
   return (
     <Button
