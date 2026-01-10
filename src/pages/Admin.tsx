@@ -54,7 +54,7 @@ const Admin = () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        navigate("/auth");
+        navigate("/ingresar");
         return;
       }
 
@@ -67,9 +67,9 @@ const Admin = () => {
         .single();
 
       if (!roles) {
-        toast.error("No tienes permisos de administrador");
-        await supabase.auth.signOut();
-        navigate("/auth");
+        toast.error("No tenés permisos de administrador");
+        // Don't sign out - just redirect to home
+        navigate("/");
         return;
       }
 
@@ -85,7 +85,7 @@ const Admin = () => {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    navigate("/auth");
+    navigate("/ingresar");
   };
 
   if (loading) {
