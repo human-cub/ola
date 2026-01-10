@@ -458,29 +458,40 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (!item) return;
       
-      // Get product prices for tier calculation
+      // Get product prices + current participants for tier calculation
       const { data: product } = await supabase
         .from('products')
-        .select('prices')
+        .select('prices, waiting_for_discount_count, virtual_orders_count')
         .eq('id', item.product_id)
         .single();
       
       let newPrice: number | null = null;
       
+      const baseParticipants =
+        Number(product?.waiting_for_discount_count ?? 0) +
+        Number(product?.virtual_orders_count ?? 0);
+
+      // For waiting list, unit price changes based on (current participants + user's quantity)
+      const totalParticipants = baseParticipants + quantity;
+
       if (product?.prices && Array.isArray(product.prices)) {
-        const prices = product.prices as Array<{ people: number; price: number }>;
-        // Find the appropriate price tier based on quantity
-        const sortedPrices = [...prices].sort((a, b) => b.people - a.people);
-        for (const tier of sortedPrices) {
-          if (quantity >= tier.people) {
-            newPrice = tier.price;
-            break;
+        const normalized = (product.prices as any[])
+          .map((p) => ({
+            people: Number((p as any)?.people),
+            price: Number((p as any)?.price),
+          }))
+          .filter((p) => Number.isFinite(p.people) && Number.isFinite(p.price))
+          .sort((a, b) => a.people - b.people);
+
+        if (normalized.length > 0) {
+          // Find the nearest lower threshold (same logic as PriceSlider/AddToCartDialog)
+          for (let i = normalized.length - 1; i >= 0; i--) {
+            if (totalParticipants >= normalized[i].people) {
+              newPrice = normalized[i].price;
+              break;
+            }
           }
-        }
-        // If no tier matched, use the lowest tier price
-        if (newPrice === null && prices.length > 0) {
-          const lowestTier = prices.reduce((min, tier) => tier.people < min.people ? tier : min, prices[0]);
-          newPrice = lowestTier.price;
+          if (newPrice === null) newPrice = normalized[0].price;
         }
       }
       
