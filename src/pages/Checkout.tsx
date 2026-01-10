@@ -233,11 +233,15 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
         product_image: item.product_image,
       }));
 
+      // Generate order number
+      const generatedOrderNumber = `OLA-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+
       // Create order
       const { data: order, error: orderError } = await supabase
         .from("user_orders")
         .insert([{
           user_id: session.user.id,
+          order_number: generatedOrderNumber,
           order_type: isCollective ? 'collective' as const : 'immediate' as const,
           items: orderItems as any,
           subtotal: originalPrice,
