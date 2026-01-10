@@ -7,7 +7,6 @@ import Index from "./pages/Index";
 import DynamicProduct from "./pages/DynamicProduct";
 import Category from "./pages/Category";
 import AuthPage from "./pages/AuthPage";
-import ProfileComplete from "./pages/ProfileComplete";
 import Profile from "./pages/Profile";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
@@ -34,7 +33,6 @@ const App = () => (
           <Route path="/producto/:slug" element={<DynamicProduct />} />
           <Route path="/:slug" element={<DynamicProduct />} />
           <Route path="/ingresar" element={<AuthPage />} />
-          <Route path="/completar-perfil" element={<ProfileComplete />} />
           <Route path="/mi-cuenta" element={<Profile />} />
           <Route path="/recuperar-clave" element={<ForgotPassword />} />
           <Route path="/restablecer-clave" element={<ResetPassword />} />

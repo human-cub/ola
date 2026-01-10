@@ -361,25 +361,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Helper to update product waiting_for_discount_count based on all waiting_list_items
-  const updateProductWaitingCount = async (productId: string) => {
-    try {
-      // Sum all quantities of this product in waiting_list_items
-      const { data: items } = await supabase
-        .from('waiting_list_items')
-        .select('quantity')
-        .eq('product_id', productId);
-      
-      const totalQuantity = (items || []).reduce((sum, item) => sum + item.quantity, 0);
-      
-      await supabase
-        .from('products')
-        .update({ waiting_for_discount_count: totalQuantity })
-        .eq('id', productId);
-    } catch (error) {
-      console.error('Error updating product waiting count:', error);
-    }
-  };
 
   // Add to waiting list
   const addToWaitingList = async (item: Omit<WaitingListItem, 'id'>) => {
@@ -431,8 +412,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await supabase.from('waiting_list_items').insert(insertData);
       }
       
-      // Update product waiting_for_discount_count
-      await updateProductWaitingCount(item.product_id);
       
       const waiting = await fetchWaitingListItemsInternal(session?.user?.id || null);
       setWaitingListItems(waiting);
@@ -485,12 +464,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await supabase
         .from('waiting_list_items')
         .update({ quantity })
-        .eq('id', id);
-      
-      // Update product waiting_for_discount_count based on all items
-      await updateProductWaitingCount(item.product_id);
-      
-      // Now get updated product counts for price calculation
+
+      // Get product counts for price calculation
       const { data: product } = await supabase
         .from('products')
         .select('prices, waiting_for_discount_count, virtual_orders_count')
@@ -598,19 +573,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Remove from waiting list
   const removeFromWaitingList = async (id: string) => {
     try {
-      // Get product_id before deletion
-      const { data: item } = await supabase
-        .from('waiting_list_items')
-        .select('product_id')
-        .eq('id', id)
-        .single();
-      
       await supabase.from('waiting_list_items').delete().eq('id', id);
-      
-      // Update product waiting_for_discount_count
-      if (item) {
-        await updateProductWaitingCount(item.product_id);
-      }
       
       const waiting = await fetchWaitingListItemsInternal(currentUserId);
       setWaitingListItems(waiting);
