@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -25,12 +24,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, ChevronDown, ChevronUp, Check, MapPin, Loader2, Share2, Copy, MessageCircle, Instagram } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronUp, Check, MapPin, Loader2, Share2, MessageCircle } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { z } from "zod";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
+import { Separator } from "@/components/ui/separator";
 
 const addressSchema = z.object({
   street: z.string().min(1, "La calle es requerida").max(200),
@@ -106,7 +106,6 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
       if (profile) {
         setPhone(profile.phone || "");
         if (profile.address) {
-          // Try to parse stored address
           try {
             const addr = JSON.parse(profile.address);
             setStreet(addr.street || "");
@@ -117,7 +116,6 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
             setProvince(addr.province || "Buenos Aires");
             setReferences(addr.references || "");
           } catch {
-            // If not JSON, use as street
             setStreet(profile.address);
           }
         }
@@ -161,7 +159,7 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
 
   const originalPrice = subtotal * 1.2;
   const discount = originalPrice - subtotal;
-  const deliveryCost = isInCABA ? 0 : null; // null means "to confirm"
+  const deliveryCost = isInCABA ? 0 : null;
   const total = subtotal + (deliveryCost || 0);
 
   const formatPrice = (price: number) => {
@@ -171,7 +169,6 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
   const handleSubmit = async () => {
     setErrors({});
 
-    // Validate address
     const addressValidation = addressSchema.safeParse({
       street,
       number: streetNumber,
@@ -191,7 +188,6 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
       return;
     }
 
-    // Validate contact
     const contactValidation = contactSchema.safeParse({ phone, email });
     if (!contactValidation.success) {
       const fieldErrors: Record<string, string> = {};
@@ -202,7 +198,6 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
       return;
     }
 
-    // Validate payment method
     if (!paymentMethod) {
       setErrors((prev) => ({ ...prev, paymentMethod: "Seleccioná un método de pago" }));
       return;
@@ -233,10 +228,8 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
         product_image: item.product_image,
       }));
 
-      // Generate order number
       const generatedOrderNumber = `OLA-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
 
-      // Create order
       const { data: order, error: orderError } = await supabase
         .from("user_orders")
         .insert([{
@@ -257,7 +250,6 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
 
       if (orderError) throw orderError;
 
-      // Update profile with address
       await supabase
         .from("profiles")
         .update({
@@ -266,7 +258,6 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
         })
         .eq("user_id", session.user.id);
 
-      // Send Telegram notification
       try {
         await supabase.functions.invoke("notify-telegram", {
           body: {
@@ -283,7 +274,6 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
         // Notification failed but order was saved
       }
 
-      // Clear cart/waiting list
       if (isCollective) {
         await clearWaitingList();
       } else {
@@ -359,46 +349,45 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
             {isCollective ? "Confirmar Compra Colectiva" : "Finalizar Compra"}
           </h1>
 
-          {/* Order Summary */}
+          {/* Order Summary - Collapsible */}
           <Collapsible open={orderSummaryOpen} onOpenChange={setOrderSummaryOpen} className="mb-6">
-            <Card>
-              <CollapsibleTrigger className="w-full">
-                <CardHeader className="flex flex-row items-center justify-between py-4">
-                  <CardTitle className="text-lg">Resumen del pedido</CardTitle>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold">{formatPrice(total)}</span>
-                    {orderSummaryOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                  </div>
-                </CardHeader>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <CardContent className="pt-0 space-y-2">
-                  {items.map((item) => {
-                    const price = 'price_per_unit' in item ? item.price_per_unit : item.current_price_per_unit;
-                    return (
-                      <div key={item.id} className="flex justify-between text-sm">
-                        <span>{item.quantity}x {item.product_name} {item.flavor && `(${item.flavor})`}</span>
-                        <span>{formatPrice(price * item.quantity)}</span>
-                      </div>
-                    );
-                  })}
-                </CardContent>
-              </CollapsibleContent>
-            </Card>
+            <CollapsibleTrigger className="w-full">
+              <div className="flex items-center justify-between py-3 px-1">
+                <span className="text-lg font-semibold">Resumen del pedido</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold">{formatPrice(total)}</span>
+                  {orderSummaryOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </div>
+              </div>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="space-y-2 pb-4">
+                {items.map((item) => {
+                  const price = 'price_per_unit' in item ? item.price_per_unit : item.current_price_per_unit;
+                  return (
+                    <div key={item.id} className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">{item.quantity}x {item.product_name} {item.flavor && `(${item.flavor})`}</span>
+                      <span>{formatPrice(price * item.quantity)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </CollapsibleContent>
           </Collapsible>
 
-          {/* Address Form */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <MapPin className="w-5 h-5" />
-                Dirección de entrega
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-3 gap-4">
-                <div className="col-span-2 space-y-2">
-                  <Label htmlFor="street">Calle *</Label>
+          <Separator className="mb-6" />
+
+          {/* Address Section */}
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold flex items-center gap-2 mb-4">
+              <MapPin className="w-5 h-5" />
+              Dirección de entrega
+            </h2>
+            
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-3">
+                <div className="col-span-2 space-y-1">
+                  <Label htmlFor="street" className="text-sm">Calle *</Label>
                   <Input
                     id="street"
                     value={street}
@@ -406,10 +395,10 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
                     placeholder="Av. Corrientes"
                     className={errors.street ? "border-destructive" : ""}
                   />
-                  {errors.street && <p className="text-sm text-destructive">{errors.street}</p>}
+                  {errors.street && <p className="text-xs text-destructive">{errors.street}</p>}
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="number">Número *</Label>
+                <div className="space-y-1">
+                  <Label htmlFor="number" className="text-sm">Número *</Label>
                   <Input
                     id="number"
                     value={streetNumber}
@@ -417,13 +406,13 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
                     placeholder="1234"
                     className={errors.number ? "border-destructive" : ""}
                   />
-                  {errors.number && <p className="text-sm text-destructive">{errors.number}</p>}
+                  {errors.number && <p className="text-xs text-destructive">{errors.number}</p>}
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="floor">Piso, Depto (opcional)</Label>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label htmlFor="floor" className="text-sm">Piso/Depto</Label>
                   <Input
                     id="floor"
                     value={floor}
@@ -431,8 +420,8 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
                     placeholder="3° B"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="postalCode">Código Postal *</Label>
+                <div className="space-y-1">
+                  <Label htmlFor="postalCode" className="text-sm">CP *</Label>
                   <Input
                     id="postalCode"
                     value={postalCode}
@@ -441,13 +430,13 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
                     maxLength={4}
                     className={errors.postalCode ? "border-destructive" : ""}
                   />
-                  {errors.postalCode && <p className="text-sm text-destructive">{errors.postalCode}</p>}
+                  {errors.postalCode && <p className="text-xs text-destructive">{errors.postalCode}</p>}
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="city">Ciudad *</Label>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label htmlFor="city" className="text-sm">Ciudad *</Label>
                   <Select value={city} onValueChange={setCity}>
                     <SelectTrigger id="city">
                       <SelectValue />
@@ -462,8 +451,8 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="province">Provincia *</Label>
+                <div className="space-y-1">
+                  <Label htmlFor="province" className="text-sm">Provincia *</Label>
                   <Select value={province} onValueChange={setProvince}>
                     <SelectTrigger id="province">
                       <SelectValue />
@@ -478,40 +467,40 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="references">Referencias adicionales</Label>
+              <div className="space-y-1">
+                <Label htmlFor="references" className="text-sm">Referencias</Label>
                 <Textarea
                   id="references"
                   value={references}
                   onChange={(e) => setReferences(e.target.value)}
                   placeholder="Timbre, indicaciones, etc."
                   rows={2}
+                  className="resize-none"
                 />
               </div>
 
-              {/* Delivery cost info */}
               {isInCABA ? (
                 <div className="flex items-center gap-2 text-green-600 bg-green-50 p-3 rounded-lg">
-                  <Check className="w-5 h-5" />
-                  <span className="font-medium">¡Envío gratis en CABA!</span>
+                  <Check className="w-5 h-5 flex-shrink-0" />
+                  <span className="font-medium text-sm">¡Envío gratis en CABA!</span>
                 </div>
               ) : (
                 <div className="bg-amber-50 border border-amber-200 p-3 rounded-lg text-sm">
                   <p className="font-medium text-amber-800">Tu dirección está fuera de CABA</p>
-                  <p className="text-amber-700">Nos pondremos en contacto para coordinar la entrega y calcular el costo de envío.</p>
+                  <p className="text-amber-700 text-xs">Nos pondremos en contacto para coordinar la entrega.</p>
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          {/* Contact Info */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="text-lg">Datos de contacto</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="phone">Teléfono *</Label>
+          <Separator className="mb-6" />
+
+          {/* Contact Section */}
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold mb-4">Datos de contacto</h2>
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <Label htmlFor="phone" className="text-sm">Teléfono *</Label>
                 <Input
                   id="phone"
                   type="tel"
@@ -520,10 +509,10 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
                   placeholder="+54 9 11 1234-5678"
                   className={errors.phone ? "border-destructive" : ""}
                 />
-                {errors.phone && <p className="text-sm text-destructive">{errors.phone}</p>}
+                {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+              <div className="space-y-1">
+                <Label htmlFor="email" className="text-sm">Email</Label>
                 <Input
                   id="email"
                   type="email"
@@ -531,52 +520,51 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
                   onChange={(e) => setEmail(e.target.value)}
                   className={errors.email ? "border-destructive" : ""}
                 />
-                {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
+                {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          {/* Payment Method */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="text-lg">Forma de pago</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                <SelectTrigger className={errors.paymentMethod ? "border-destructive" : ""}>
-                  <SelectValue placeholder="Seleccioná forma de pago" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="efectivo">Efectivo</SelectItem>
-                  <SelectItem value="transferencia">Transferencia (Alias: klesh.mp)</SelectItem>
-                  <SelectItem value="tarjeta" disabled>Tarjeta (Próximamente)</SelectItem>
-                </SelectContent>
-              </Select>
-              {errors.paymentMethod && <p className="text-sm text-destructive mt-2">{errors.paymentMethod}</p>}
-            </CardContent>
-          </Card>
+          <Separator className="mb-6" />
+
+          {/* Payment Section */}
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold mb-4">Forma de pago</h2>
+            <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+              <SelectTrigger className={errors.paymentMethod ? "border-destructive" : ""}>
+                <SelectValue placeholder="Seleccioná forma de pago" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="efectivo">Efectivo</SelectItem>
+                <SelectItem value="transferencia">Transferencia (Alias: klesh.mp)</SelectItem>
+                <SelectItem value="tarjeta" disabled>Tarjeta (Próximamente)</SelectItem>
+              </SelectContent>
+            </Select>
+            {errors.paymentMethod && <p className="text-xs text-destructive mt-1">{errors.paymentMethod}</p>}
+          </div>
+
+          <Separator className="mb-6" />
 
           {/* Order Total */}
-          <Card className="mb-6">
-            <CardContent className="p-4 space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Subtotal:</span>
-                <span className="line-through text-muted-foreground">{formatPrice(originalPrice)}</span>
-              </div>
-              <div className="flex justify-between text-sm text-green-600">
-                <span>Descuento:</span>
-                <span>-{formatPrice(discount)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span>Envío:</span>
-                <span>{isInCABA ? "Gratis" : "A confirmar"}</span>
-              </div>
-              <div className="border-t pt-2 flex justify-between text-xl font-bold">
-                <span>TOTAL A PAGAR:</span>
-                <span>{formatPrice(total)}</span>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="mb-6 space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Subtotal:</span>
+              <span className="line-through text-muted-foreground">{formatPrice(originalPrice)}</span>
+            </div>
+            <div className="flex justify-between text-sm text-green-600">
+              <span>Descuento:</span>
+              <span>-{formatPrice(discount)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Envío:</span>
+              <span>{isInCABA ? "Gratis" : "A confirmar"}</span>
+            </div>
+            <Separator />
+            <div className="flex justify-between text-xl font-bold pt-2">
+              <span>TOTAL:</span>
+              <span>{formatPrice(total)}</span>
+            </div>
+          </div>
 
           <Button
             onClick={handleSubmit}
@@ -598,7 +586,7 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
 
       {/* Success Dialog */}
       <AlertDialog open={showSuccess} onOpenChange={setShowSuccess}>
-        <AlertDialogContent className="rounded-2xl">
+        <AlertDialogContent className="rounded-2xl max-w-[90vw] sm:max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-center">
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 flex items-center justify-center">
@@ -624,7 +612,7 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
                 </div>
                 <div className="flex justify-between">
                   <span>Dirección:</span>
-                  <span className="text-right">{street} {streetNumber}, {city}</span>
+                  <span className="text-right text-xs">{street} {streetNumber}, {city}</span>
                 </div>
               </div>
 

@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -24,6 +23,7 @@ import { Plus, Minus, Trash2, ShoppingBag, ArrowLeft, ArrowRight } from "lucide-
 import { useCart } from "@/contexts/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
+import { Separator } from "@/components/ui/separator";
 
 const Cart = () => {
   const navigate = useNavigate();
@@ -55,7 +55,6 @@ const Cart = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
 
-  // Fetch flavors for products
   useEffect(() => {
     const fetchFlavors = async () => {
       const productIds = [...new Set(cartItems.map(item => item.product_id))];
@@ -83,7 +82,6 @@ const Cart = () => {
     0
   );
 
-  // Assuming original price is 20% higher for discount display
   const originalPrice = subtotal * 1.2;
   const discount = originalPrice - subtotal;
 
@@ -141,17 +139,15 @@ const Cart = () => {
             Volver al inicio
           </Link>
 
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-2xl font-bold">Mi Carrito</h1>
-              <p className="text-muted-foreground">
-                {cartCount} {cartCount === 1 ? "producto" : "productos"}
-              </p>
-            </div>
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold">Mi Carrito</h1>
+            <p className="text-muted-foreground">
+              {cartCount} {cartCount === 1 ? "producto" : "productos"}
+            </p>
           </div>
 
           {cartItems.length === 0 ? (
-            <Card className="p-8 text-center">
+            <div className="text-center py-12">
               <ShoppingBag className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
               <h2 className="text-xl font-semibold mb-2">Tu carrito está vacío</h2>
               <p className="text-muted-foreground mb-4">
@@ -160,107 +156,105 @@ const Cart = () => {
               <Button asChild>
                 <Link to="/">Ir a comprar</Link>
               </Button>
-            </Card>
+            </div>
           ) : (
             <>
-              {/* Cart Items */}
+              {/* Cart Items - No Card wrapper */}
               <div className="space-y-4 mb-6">
-                {cartItems.map((item) => (
-                  <Card key={item.id} className="overflow-hidden">
-                    <CardContent className="p-4">
-                      <div className="flex gap-4">
-                        {item.product_image && (
-                          <img
-                            src={item.product_image}
-                            alt={item.product_name}
-                            className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
-                          />
+                {cartItems.map((item, index) => (
+                  <div key={item.id}>
+                    <div className="flex gap-4 py-4">
+                      {item.product_image && (
+                        <img
+                          src={item.product_image}
+                          alt={item.product_name}
+                          className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
+                        />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-start gap-2">
+                          <h3 className="font-semibold text-sm leading-tight">
+                            {item.product_name}
+                          </h3>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0 h-8 w-8"
+                            onClick={() => setDeleteItemId(item.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+
+                        {productFlavors[item.product_id]?.length > 0 && (
+                          <Select
+                            value={item.flavor || ""}
+                            onValueChange={(value) =>
+                              updateCartItemFlavor(item.id, value)
+                            }
+                          >
+                            <SelectTrigger className="w-full mt-2 h-8 text-xs">
+                              <SelectValue placeholder="Seleccionar sabor" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {productFlavors[item.product_id].map((flavor) => (
+                                <SelectItem key={flavor} value={flavor}>
+                                  {flavor}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         )}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex justify-between items-start">
-                            <h3 className="font-semibold truncate pr-2">
-                              {item.product_name}
-                            </h3>
+
+                        <div className="flex items-center justify-between mt-3">
+                          <div className="flex items-center gap-2">
                             <Button
-                              variant="ghost"
+                              variant="outline"
                               size="icon"
-                              className="text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0"
-                              onClick={() => setDeleteItemId(item.id)}
+                              className="h-8 w-8"
+                              onClick={() =>
+                                handleQuantityChange(item.id, -1, item.quantity)
+                              }
+                              disabled={item.quantity <= 1}
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Minus className="w-3 h-3" />
+                            </Button>
+                            <span className="w-8 text-center font-medium text-sm">
+                              {item.quantity}
+                            </span>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() =>
+                                handleQuantityChange(item.id, 1, item.quantity)
+                              }
+                              disabled={item.quantity >= 99}
+                            >
+                              <Plus className="w-3 h-3" />
                             </Button>
                           </div>
 
-                          {/* Flavor selector */}
-                          {productFlavors[item.product_id]?.length > 0 && (
-                            <Select
-                              value={item.flavor || ""}
-                              onValueChange={(value) =>
-                                updateCartItemFlavor(item.id, value)
-                              }
-                            >
-                              <SelectTrigger className="w-full mt-2 h-8 text-sm">
-                                <SelectValue placeholder="Seleccionar sabor" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {productFlavors[item.product_id].map((flavor) => (
-                                  <SelectItem key={flavor} value={flavor}>
-                                    {flavor}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          )}
-
-                          <div className="flex items-center justify-between mt-3">
-                            {/* Quantity */}
-                            <div className="flex items-center gap-2">
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={() =>
-                                  handleQuantityChange(item.id, -1, item.quantity)
-                                }
-                                disabled={item.quantity <= 1}
-                              >
-                                <Minus className="w-3 h-3" />
-                              </Button>
-                              <span className="w-8 text-center font-medium">
-                                {item.quantity}
-                              </span>
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={() =>
-                                  handleQuantityChange(item.id, 1, item.quantity)
-                                }
-                                disabled={item.quantity >= 99}
-                              >
-                                <Plus className="w-3 h-3" />
-                              </Button>
-                            </div>
-
-                            {/* Price */}
-                            <div className="text-right">
-                              <p className="text-sm text-muted-foreground">
-                                {formatPrice(item.price_per_unit)} c/u
-                              </p>
-                              <p className="font-semibold">
-                                {formatPrice(item.price_per_unit * item.quantity)}
-                              </p>
-                            </div>
+                          <div className="text-right">
+                            <p className="text-xs text-muted-foreground">
+                              {formatPrice(item.price_per_unit)} c/u
+                            </p>
+                            <p className="font-semibold">
+                              {formatPrice(item.price_per_unit * item.quantity)}
+                            </p>
                           </div>
                         </div>
                       </div>
-                    </CardContent>
-                  </Card>
+                    </div>
+                    {index < cartItems.length - 1 && <Separator />}
+                  </div>
                 ))}
               </div>
 
-              {/* Summary */}
-              <Card className="p-4 space-y-3">
+              <Separator className="my-6" />
+
+              {/* Summary - No Card wrapper */}
+              <div className="space-y-3 mb-6">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Subtotal:</span>
                   <span className="line-through text-muted-foreground">
@@ -271,29 +265,29 @@ const Cart = () => {
                   <span>Descuento:</span>
                   <span>-{formatPrice(discount)}</span>
                 </div>
-                <div className="border-t pt-3 flex justify-between text-lg font-bold">
+                <Separator />
+                <div className="flex justify-between text-lg font-bold pt-2">
                   <span>Total:</span>
                   <span>{formatPrice(subtotal)}</span>
                 </div>
                 <p className="text-sm text-green-600 text-center font-medium">
                   ¡Ahorraste {formatPrice(discount)} pesos!
                 </p>
+              </div>
 
-                <Button
-                  onClick={handleCheckout}
-                  className="w-full gap-2"
-                  size="lg"
-                >
-                  Continuar con la compra
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
-              </Card>
+              <Button
+                onClick={handleCheckout}
+                className="w-full gap-2"
+                size="lg"
+              >
+                Continuar con la compra
+                <ArrowRight className="w-4 h-4" />
+              </Button>
             </>
           )}
         </div>
       </main>
 
-      {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!deleteItemId} onOpenChange={() => setDeleteItemId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>

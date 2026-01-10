@@ -8,24 +8,17 @@ export const FloatingWhatsApp = () => {
     window.open("http://wa.me/5491166650878", "_blank");
   };
 
-  // Check if we're on a product page (has FloatingButton)
-  const isProductPage = location.pathname.startsWith("/producto/") || 
-    (location.pathname !== "/" && 
-     location.pathname !== "/ingresar" && 
-     location.pathname !== "/mi-cuenta" && 
-     location.pathname !== "/admin" &&
-     location.pathname !== "/recuperar-clave" &&
-     location.pathname !== "/restablecer-clave" &&
-     location.pathname !== "/completar-perfil" &&
-     location.pathname !== "/auth" &&
-     !location.pathname.startsWith("/categoria/"));
+  // Hide on product pages completely
+  const isProductPage = location.pathname.startsWith("/producto/");
+  
+  if (isProductPage) {
+    return null;
+  }
 
   return (
     <Button
       onClick={handleWhatsAppClick}
-      className={`fixed right-6 z-50 w-14 h-14 rounded-full bg-[#25D366] hover:bg-[#20BD5A] shadow-lg hover:shadow-xl transition-all duration-300 p-0 ${
-        isProductPage ? "bottom-40" : "bottom-6"
-      }`}
+      className="fixed right-6 bottom-6 z-50 w-14 h-14 rounded-full bg-[#25D366] hover:bg-[#20BD5A] shadow-lg hover:shadow-xl transition-all duration-300 p-0"
       aria-label="Chatear por WhatsApp"
     >
       <svg viewBox="0 0 24 24" className="w-7 h-7 text-white fill-current">
