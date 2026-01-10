@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import ProductsTable from "@/components/admin/ProductsTable";
 import OrdersTable from "@/components/admin/OrdersTable";
 import UsersTable from "@/components/admin/UsersTable";
+import UserOrdersTable from "@/components/admin/UserOrdersTable";
 import { getAllProducts } from "@/data/products";
 
 const Admin = () => {
@@ -109,13 +110,17 @@ const Admin = () => {
           </Button>
         </div>
 
-        <Tabs defaultValue="participants" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+        <Tabs defaultValue="userorders" className="w-full">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="userorders">Pedidos</TabsTrigger>
             <TabsTrigger value="participants">Participantes</TabsTrigger>
             <TabsTrigger value="buynow">Comprar Ahora</TabsTrigger>
             <TabsTrigger value="products">Productos</TabsTrigger>
             <TabsTrigger value="users">Usuarios</TabsTrigger>
           </TabsList>
+          <TabsContent value="userorders">
+            <UserOrdersTable />
+          </TabsContent>
           <TabsContent value="participants">
             <OrdersTable waitingForDiscount={true} />
           </TabsContent>

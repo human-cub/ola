@@ -180,7 +180,9 @@ const DynamicProduct = () => {
 
       <FloatingButton 
         productName={product.name} 
-        productId={product.id} 
+        productId={product.id}
+        productImage={product.images.length > 0 ? product.images[0] : null}
+        flavors={product.flavors}
         prices={product.prices}
         waitingCount={waitingCount}
       />

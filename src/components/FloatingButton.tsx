@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Clock, ShoppingCart, Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import OrderDialog from "./OrderDialog";
+import { AddToCartDialog } from "./AddToCartDialog";
 
 interface PriceData {
   people: number;
@@ -11,18 +11,27 @@ interface PriceData {
 interface FloatingButtonProps {
   productName: string;
   productId: string;
+  productImage?: string | null;
+  flavors?: string[];
   prices?: PriceData[];
   waitingCount?: number;
 }
 
-export const FloatingButton = ({ productName, productId, prices = [], waitingCount = 0 }: FloatingButtonProps) => {
+export const FloatingButton = ({ 
+  productName, 
+  productId, 
+  productImage = null,
+  flavors = [],
+  prices = [], 
+  waitingCount = 0 
+}: FloatingButtonProps) => {
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
     minutes: 0
   });
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [waitForDiscount, setWaitForDiscount] = useState(false);
+  const [isWaitingList, setIsWaitingList] = useState(false);
 
   useEffect(() => {
     const getNextSunday = () => {
@@ -83,12 +92,12 @@ export const FloatingButton = ({ productName, productId, prices = [], waitingCou
   const currentPrice = getCurrentPrice();
 
   const handleBuyNow = () => {
-    setWaitForDiscount(false);
+    setIsWaitingList(false);
     setDialogOpen(true);
   };
 
   const handleWaitForDiscount = () => {
-    setWaitForDiscount(true);
+    setIsWaitingList(true);
     setDialogOpen(true);
   };
 
@@ -142,12 +151,16 @@ export const FloatingButton = ({ productName, productId, prices = [], waitingCou
         </div>
       </div>
 
-      <OrderDialog
+      <AddToCartDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         productId={productId}
         productName={productName}
-        waitForDiscount={waitForDiscount}
+        productImage={productImage}
+        flavors={flavors}
+        prices={prices}
+        isWaitingList={isWaitingList}
+        currentParticipants={waitingCount}
       />
     </>
   );
