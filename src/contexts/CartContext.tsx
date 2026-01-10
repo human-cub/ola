@@ -288,6 +288,79 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Sync waiting list with pending collective order
+  const syncWaitingListOrder = async (userId: string) => {
+    try {
+      // Fetch current waiting list items
+      const { data: waitingListData } = await supabase
+        .from("waiting_list_items")
+        .select("*")
+        .eq("user_id", userId);
+
+      // Check if pending collective order exists
+      const { data: existingOrder } = await supabase
+        .from("user_orders")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("order_type", "collective")
+        .eq("status", "pending")
+        .maybeSingle();
+
+      if (!existingOrder) {
+        // No order yet - nothing to sync
+        return;
+      }
+
+      if (!waitingListData || waitingListData.length === 0) {
+        // No items left - delete the order
+        await supabase
+          .from("user_orders")
+          .delete()
+          .eq("id", existingOrder.id);
+        return;
+      }
+
+      // Calculate next Sunday 23:59
+      const now = new Date();
+      const nextSunday = new Date(now);
+      const daysUntilSunday = (7 - now.getDay()) % 7;
+      if (daysUntilSunday === 0 && now.getHours() < 23) {
+        nextSunday.setHours(23, 59, 59, 999);
+      } else {
+        nextSunday.setDate(now.getDate() + (daysUntilSunday || 7));
+        nextSunday.setHours(23, 59, 59, 999);
+      }
+
+      // Prepare order items
+      const orderItems = waitingListData.map(item => ({
+        product_id: item.product_id,
+        product_name: item.product_name,
+        flavor: item.flavor,
+        quantity: item.quantity,
+        price_per_unit: item.current_price_per_unit,
+        product_image: item.product_image,
+      }));
+
+      const subtotal = waitingListData.reduce(
+        (sum, item) => sum + Number(item.current_price_per_unit) * item.quantity,
+        0
+      );
+
+      // Update existing order
+      await supabase
+        .from("user_orders")
+        .update({
+          items: orderItems,
+          subtotal,
+          total_amount: subtotal,
+          collective_close_date: nextSunday.toISOString(),
+        })
+        .eq("id", existingOrder.id);
+    } catch (error) {
+      console.error("Error syncing waiting list order:", error);
+    }
+  };
+
   // Add to waiting list
   const addToWaitingList = async (item: Omit<WaitingListItem, 'id'>) => {
     try {
@@ -335,11 +408,17 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .update({ quantity: newQty, current_price_per_unit: item.current_price_per_unit })
           .eq('id', existing.id);
       } else {
-      await supabase.from('waiting_list_items').insert(insertData);
+        await supabase.from('waiting_list_items').insert(insertData);
       }
       
       const waiting = await fetchWaitingListItemsInternal(session?.user?.id || null);
       setWaitingListItems(waiting);
+      
+      // Sync order if user is authenticated
+      if (session?.user) {
+        await syncWaitingListOrder(session.user.id);
+      }
+      
       toast.success('Producto agregado a la lista de espera');
     } catch (error) {
       console.error('Error adding to waiting list:', error);
@@ -377,6 +456,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       const waiting = await fetchWaitingListItemsInternal(currentUserId);
       setWaitingListItems(waiting);
+      
+      // Sync order if user is authenticated
+      if (currentUserId) {
+        await syncWaitingListOrder(currentUserId);
+      }
     } catch (error) {
       console.error('Error updating waiting list item:', error);
       toast.error('Error al actualizar cantidad');
@@ -409,6 +493,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       const waiting = await fetchWaitingListItemsInternal(currentUserId);
       setWaitingListItems(waiting);
+      
+      // Sync order if user is authenticated
+      if (currentUserId) {
+        await syncWaitingListOrder(currentUserId);
+      }
     } catch (error) {
       console.error('Error updating waiting list item flavor:', error);
       toast.error('Error al actualizar sabor');
@@ -434,6 +523,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await supabase.from('waiting_list_items').delete().eq('id', id);
       const waiting = await fetchWaitingListItemsInternal(currentUserId);
       setWaitingListItems(waiting);
+      
+      // Sync order if user is authenticated
+      if (currentUserId) {
+        await syncWaitingListOrder(currentUserId);
+      }
+      
       toast.success('Producto eliminado de la lista de espera');
     } catch (error) {
       console.error('Error removing from waiting list:', error);
