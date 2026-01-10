@@ -8,7 +8,7 @@ import { useProducts } from "@/hooks/useProducts";
 export const MainProductCarousel = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
-  const { data: products = [], isLoading } = useProducts();
+  const { data: products = [], isLoading, isError, refetch } = useProducts();
   
   const [emblaRef, emblaApi] = useEmblaCarousel({ 
     loop: true,
@@ -84,6 +84,24 @@ export const MainProductCarousel = () => {
           </div>
           <div className="flex justify-center">
             <div className="w-80 h-80 bg-muted/50 rounded-xl animate-pulse"></div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (isError) {
+    return (
+      <section className="px-4 py-8">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl md:text-3xl font-bold mb-2">Nuestros Productos</h2>
+            <p className="text-muted-foreground">No pudimos cargar los productos.</p>
+          </div>
+          <div className="flex justify-center">
+            <Button variant="outline" onClick={() => refetch()}>
+              Reintentar
+            </Button>
           </div>
         </div>
       </section>

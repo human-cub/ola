@@ -13,10 +13,25 @@ export interface ProductDisplay {
 }
 
 const fetchProducts = async (): Promise<ProductDisplay[]> => {
-  const { data, error } = await supabase
-    .from('products')
-    .select('id, name, weight, link, images, prices')
-    .order('name');
+  const withTimeout = async <T,>(promise: Promise<T>, ms: number): Promise<T> => {
+    let timeoutId: number | undefined;
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timeoutId = window.setTimeout(() => reject(new Error("timeout")), ms);
+    });
+    try {
+      return await Promise.race([promise, timeoutPromise]);
+    } finally {
+      if (timeoutId) window.clearTimeout(timeoutId);
+    }
+  };
+
+  const { data, error } = await withTimeout(
+    supabase
+      .from('products')
+      .select('id, name, weight, link, images, prices')
+      .order('name'),
+    12_000
+  );
 
   if (error) {
     console.error('Error fetching products:', error);
@@ -26,7 +41,7 @@ const fetchProducts = async (): Promise<ProductDisplay[]> => {
   return (data || []).map(product => {
     const images = product.images as string[] | null;
     const prices = product.prices as { people: number; price: number }[] | null;
-    
+
     const firstPrice = prices?.[0]?.price || 0;
     const lastPrice = prices?.[prices.length - 1]?.price || 0;
 
