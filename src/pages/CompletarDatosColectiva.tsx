@@ -187,6 +187,82 @@ const CompletarDatosColectiva = () => {
         })
         .eq("user_id", session.user.id);
 
+      // Fetch waiting list items
+      const { data: waitingListItems } = await supabase
+        .from("waiting_list_items")
+        .select("*")
+        .eq("user_id", session.user.id);
+
+      if (waitingListItems && waitingListItems.length > 0) {
+        // Calculate next Sunday 23:59
+        const now = new Date();
+        const nextSunday = new Date(now);
+        const daysUntilSunday = (7 - now.getDay()) % 7;
+        if (daysUntilSunday === 0 && now.getHours() < 23) {
+          nextSunday.setHours(23, 59, 59, 999);
+        } else {
+          nextSunday.setDate(now.getDate() + (daysUntilSunday || 7));
+          nextSunday.setHours(23, 59, 59, 999);
+        }
+
+        // Prepare order items
+        const orderItems = waitingListItems.map(item => ({
+          product_id: item.product_id,
+          product_name: item.product_name,
+          flavor: item.flavor,
+          quantity: item.quantity,
+          price_per_unit: item.current_price_per_unit,
+          product_image: item.product_image,
+        }));
+
+        const subtotal = waitingListItems.reduce(
+          (sum, item) => sum + item.current_price_per_unit * item.quantity,
+          0
+        );
+
+        // Check if pending collective order already exists
+        const { data: existingOrder } = await supabase
+          .from("user_orders")
+          .select("id")
+          .eq("user_id", session.user.id)
+          .eq("order_type", "collective")
+          .eq("status", "pending")
+          .maybeSingle();
+
+        if (existingOrder) {
+          // Update existing order
+          await supabase
+            .from("user_orders")
+            .update({
+              items: orderItems,
+              subtotal,
+              total_amount: subtotal,
+              delivery_address: addressData,
+              collective_close_date: nextSunday.toISOString(),
+              notes: phone,
+            })
+            .eq("id", existingOrder.id);
+        } else {
+          // Create new collective order
+          const orderNumber = `OLA-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+          
+          await supabase
+            .from("user_orders")
+            .insert({
+              user_id: session.user.id,
+              order_number: orderNumber,
+              order_type: "collective",
+              items: orderItems,
+              subtotal,
+              total_amount: subtotal,
+              delivery_address: addressData,
+              status: "pending",
+              collective_close_date: nextSunday.toISOString(),
+              notes: phone,
+            });
+        }
+      }
+
       toast.success("¡Datos guardados correctamente!");
       navigate("/lista-espera");
     } catch (error: any) {
