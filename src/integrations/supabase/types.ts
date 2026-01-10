@@ -14,6 +14,56 @@ export type Database = {
   }
   public: {
     Tables: {
+      cart_items: {
+        Row: {
+          created_at: string
+          flavor: string | null
+          id: string
+          price_per_unit: number
+          product_id: string
+          product_image: string | null
+          product_name: string
+          quantity: number
+          session_id: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          flavor?: string | null
+          id?: string
+          price_per_unit: number
+          product_id: string
+          product_image?: string | null
+          product_name: string
+          quantity?: number
+          session_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          flavor?: string | null
+          id?: string
+          price_per_unit?: number
+          product_id?: string
+          product_image?: string | null
+          product_name?: string
+          quantity?: number
+          session_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cart_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       login_history: {
         Row: {
           id: string
@@ -226,6 +276,72 @@ export type Database = {
         }
         Relationships: []
       }
+      user_orders: {
+        Row: {
+          admin_notes: string | null
+          collective_close_date: string | null
+          created_at: string
+          delivery_address: Json | null
+          delivery_cost: number
+          discount_amount: number
+          discount_percentage: number | null
+          id: string
+          items: Json
+          notes: string | null
+          order_number: string
+          order_type: Database["public"]["Enums"]["order_type"]
+          participants_count: number | null
+          payment_method: string | null
+          status: Database["public"]["Enums"]["extended_order_status"]
+          subtotal: number
+          total_amount: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          collective_close_date?: string | null
+          created_at?: string
+          delivery_address?: Json | null
+          delivery_cost?: number
+          discount_amount?: number
+          discount_percentage?: number | null
+          id?: string
+          items?: Json
+          notes?: string | null
+          order_number: string
+          order_type?: Database["public"]["Enums"]["order_type"]
+          participants_count?: number | null
+          payment_method?: string | null
+          status?: Database["public"]["Enums"]["extended_order_status"]
+          subtotal?: number
+          total_amount?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          collective_close_date?: string | null
+          created_at?: string
+          delivery_address?: Json | null
+          delivery_cost?: number
+          discount_amount?: number
+          discount_percentage?: number | null
+          id?: string
+          items?: Json
+          notes?: string | null
+          order_number?: string
+          order_type?: Database["public"]["Enums"]["order_type"]
+          participants_count?: number | null
+          payment_method?: string | null
+          status?: Database["public"]["Enums"]["extended_order_status"]
+          subtotal?: number
+          total_amount?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -247,6 +363,56 @@ export type Database = {
         }
         Relationships: []
       }
+      waiting_list_items: {
+        Row: {
+          created_at: string
+          current_price_per_unit: number
+          flavor: string | null
+          id: string
+          product_id: string
+          product_image: string | null
+          product_name: string
+          quantity: number
+          session_id: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          current_price_per_unit: number
+          flavor?: string | null
+          id?: string
+          product_id: string
+          product_image?: string | null
+          product_name: string
+          quantity?: number
+          session_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          current_price_per_unit?: number
+          flavor?: string | null
+          id?: string
+          product_id?: string
+          product_image?: string | null
+          product_name?: string
+          quantity?: number
+          session_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "waiting_list_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -263,7 +429,15 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      extended_order_status:
+        | "pending"
+        | "confirmed"
+        | "processing"
+        | "shipped"
+        | "delivered"
+        | "cancelled"
       order_status: "new" | "processing" | "completed"
+      order_type: "immediate" | "collective"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -392,7 +566,16 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      extended_order_status: [
+        "pending",
+        "confirmed",
+        "processing",
+        "shipped",
+        "delivered",
+        "cancelled",
+      ],
       order_status: ["new", "processing", "completed"],
+      order_type: ["immediate", "collective"],
     },
   },
 } as const
