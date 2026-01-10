@@ -44,10 +44,25 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const withTimeout = async <T,>(promise: Promise<T>, ms: number): Promise<T> => {
+        let timeoutId: number | undefined;
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          timeoutId = window.setTimeout(() => reject(new Error("timeout")), ms);
+        });
+        try {
+          return await Promise.race([promise, timeoutPromise]);
+        } finally {
+          if (timeoutId) window.clearTimeout(timeoutId);
+        }
+      };
+
+      const { error } = await withTimeout(
+        supabase.auth.signInWithPassword({
+          email,
+          password,
+        }),
+        12_000
+      );
 
       if (error) {
         if (error.message.includes("Invalid login credentials")) {
@@ -63,7 +78,11 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
       toast.success("¡Bienvenido/a!");
       onSuccess();
     } catch (error: any) {
-      toast.error("Error al iniciar sesión");
+      if (error?.message === "timeout") {
+        toast.error("La autenticación tardó demasiado. Reintentá.");
+      } else {
+        toast.error("Error al iniciar sesión");
+      }
     } finally {
       setLoading(false);
     }

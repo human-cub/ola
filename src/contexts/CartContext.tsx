@@ -167,49 +167,58 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Listen to auth changes
+  // Listen to auth changes (IMPORTANT: keep callback synchronous to avoid auth deadlocks)
   useEffect(() => {
     let mounted = true;
-    
+
     const loadData = async (userId: string | null) => {
       if (!mounted) return;
-      
       setIsLoading(true);
-      const [cart, waiting] = await Promise.all([
-        fetchCartItemsInternal(userId),
-        fetchWaitingListItemsInternal(userId)
-      ]);
-      
-      if (mounted) {
+      try {
+        const [cart, waiting] = await Promise.all([
+          fetchCartItemsInternal(userId),
+          fetchWaitingListItemsInternal(userId),
+        ]);
+
+        if (!mounted) return;
         setCartItems(cart);
         setWaitingListItems(waiting);
-        setIsLoading(false);
+      } finally {
+        if (mounted) setIsLoading(false);
       }
     };
-    
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      const newUserId = session?.user?.id || null;
-      
-      console.log('Auth state change:', event, 'userId:', newUserId);
-      
-      if (event === 'SIGNED_IN' && newUserId) {
-        // User just logged in - migrate guest cart first
-        await migrateGuestCart(newUserId);
+
+    const handleAuthChange = async (event: string, userId: string | null) => {
+      if (event === "SIGNED_IN" && userId) {
+        await migrateGuestCart(userId);
       }
-      
-      if (mounted) {
-        setCurrentUserId(newUserId);
-        await loadData(newUserId);
-      }
+      await loadData(userId);
+    };
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      const newUserId = session?.user?.id ?? null;
+      if (mounted) setCurrentUserId(newUserId);
+
+      // Defer any Supabase calls outside the auth callback
+      setTimeout(() => {
+        void handleAuthChange(event, newUserId).catch((err) => {
+          console.error("Auth change handling failed:", err);
+        });
+      }, 0);
     });
 
-    // Initial load
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      const userId = session?.user?.id || null;
-      if (mounted) {
-        setCurrentUserId(userId);
-        await loadData(userId);
-      }
+    // Initial load (after listener is attached)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      const userId = session?.user?.id ?? null;
+      if (mounted) setCurrentUserId(userId);
+
+      setTimeout(() => {
+        void handleAuthChange("INITIAL_SESSION", userId).catch((err) => {
+          console.error("Initial session load failed:", err);
+        });
+      }, 0);
     });
 
     return () => {
