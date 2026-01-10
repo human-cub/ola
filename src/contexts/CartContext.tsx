@@ -140,29 +140,45 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Listen to auth changes and merge guest cart
   useEffect(() => {
+    let isInitialized = false;
+    
+    const migrateGuestCart = async (newUserId: string) => {
+      const guestSessionId = localStorage.getItem(SESSION_ID_KEY);
+      if (!guestSessionId) return;
+      
+      try {
+        console.log('Migrating guest cart for session:', guestSessionId);
+        
+        // Migrate cart items
+        const { error: cartError } = await supabase
+          .from('cart_items')
+          .update({ user_id: newUserId, session_id: null })
+          .eq('session_id', guestSessionId);
+        
+        if (cartError) console.error('Cart migration error:', cartError);
+        
+        // Migrate waiting list items  
+        const { error: waitingError } = await supabase
+          .from('waiting_list_items')
+          .update({ user_id: newUserId, session_id: null })
+          .eq('session_id', guestSessionId);
+        
+        if (waitingError) console.error('Waiting list migration error:', waitingError);
+        
+        console.log('Cart migration complete');
+      } catch (error) {
+        console.error('Error migrating guest cart:', error);
+      }
+    };
+    
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       const newUserId = session?.user?.id || null;
       
-      if (event === 'SIGNED_IN' && newUserId && !userId) {
+      console.log('Auth state change:', event, 'userId:', newUserId);
+      
+      if (event === 'SIGNED_IN' && newUserId) {
         // User just logged in - migrate guest cart to user cart
-        const guestSessionId = localStorage.getItem(SESSION_ID_KEY);
-        if (guestSessionId) {
-          try {
-            // Migrate cart items
-            await supabase
-              .from('cart_items')
-              .update({ user_id: newUserId, session_id: null })
-              .eq('session_id', guestSessionId);
-            
-            // Migrate waiting list items  
-            await supabase
-              .from('waiting_list_items')
-              .update({ user_id: newUserId, session_id: null })
-              .eq('session_id', guestSessionId);
-          } catch (error) {
-            console.error('Error migrating guest cart:', error);
-          }
-        }
+        await migrateGuestCart(newUserId);
       }
       
       setUserId(newUserId);
@@ -170,13 +186,16 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     // Initial load
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (isInitialized) return;
+      isInitialized = true;
+      
       setUserId(session?.user?.id || null);
-      refreshCart();
+      await refreshCart();
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [refreshCart]);
 
   // Add to cart
   const addToCart = async (item: Omit<CartItem, 'id'>) => {

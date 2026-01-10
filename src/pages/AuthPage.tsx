@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,10 +9,13 @@ import { ArrowLeft } from "lucide-react";
 
 const AuthPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState("login");
+  
+  const redirectTo = searchParams.get("redirect") || "/";
 
   useEffect(() => {
-    const checkProfileComplete = async (userId: string) => {
+    const checkProfileAndRedirect = async (userId: string) => {
       const { data: profile } = await supabase
         .from("profiles")
         .select("profile_completed")
@@ -20,18 +23,22 @@ const AuthPage = () => {
         .maybeSingle();
 
       if (profile?.profile_completed) {
-        navigate("/");
+        // Redirect to the original destination or home
+        navigate(redirectTo);
       } else {
+        // Store redirect for after profile completion
+        sessionStorage.setItem("auth_redirect", redirectTo);
         navigate("/completar-perfil");
       }
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        if (session) {
+        if (event === 'SIGNED_IN' && session) {
+          // Give CartContext time to migrate cart items
           setTimeout(() => {
-            checkProfileComplete(session.user.id);
-          }, 0);
+            checkProfileAndRedirect(session.user.id);
+          }, 500);
         }
       }
     );
@@ -39,12 +46,12 @@ const AuthPage = () => {
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        checkProfileComplete(session.user.id);
+        checkProfileAndRedirect(session.user.id);
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, redirectTo]);
 
 
   return (

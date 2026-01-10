@@ -105,7 +105,11 @@ const ProfileComplete = () => {
       if (error) throw error;
 
       toast.success("¡Perfil completado!");
-      navigate("/mi-cuenta");
+      
+      // Redirect to saved destination or account page
+      const savedRedirect = sessionStorage.getItem("auth_redirect");
+      sessionStorage.removeItem("auth_redirect");
+      navigate(savedRedirect || "/mi-cuenta");
     } catch (error: any) {
       toast.error("Error al guardar el perfil");
     } finally {
