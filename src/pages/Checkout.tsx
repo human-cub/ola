@@ -1,0 +1,659 @@
+import { useState, useEffect } from "react";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
+import { Header } from "@/components/Header";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { ArrowLeft, ChevronDown, ChevronUp, Check, MapPin, Loader2, Share2, Copy, MessageCircle, Instagram } from "lucide-react";
+import { useCart } from "@/contexts/CartContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { z } from "zod";
+import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
+
+const addressSchema = z.object({
+  street: z.string().min(1, "La calle es requerida").max(200),
+  number: z.string().min(1, "El número es requerido").max(20),
+  floor: z.string().max(20).optional(),
+  postalCode: z.string().regex(/^\d{4}$/, "Código postal debe tener 4 dígitos"),
+  city: z.string().min(1, "La ciudad es requerida"),
+  province: z.string().min(1, "La provincia es requerida"),
+  references: z.string().max(500).optional(),
+});
+
+const contactSchema = z.object({
+  phone: z.string().regex(/^[\+]?[0-9\s\-()]{7,20}$/, "Formato de teléfono inválido"),
+  email: z.string().email("Email inválido"),
+});
+
+interface CheckoutProps {
+  isCollective?: boolean;
+}
+
+const Checkout = ({ isCollective = false }: CheckoutProps) => {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { cartItems, waitingListItems, clearCart, clearWaitingList } = useCart();
+  
+  const items = isCollective ? waitingListItems : cartItems;
+  
+  const [headerVisible, setHeaderVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [orderSummaryOpen, setOrderSummaryOpen] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [orderNumber, setOrderNumber] = useState("");
+  
+  // Address fields
+  const [street, setStreet] = useState("");
+  const [streetNumber, setStreetNumber] = useState("");
+  const [floor, setFloor] = useState("");
+  const [postalCode, setPostalCode] = useState("");
+  const [city, setCity] = useState("Ciudad Autónoma de Buenos Aires");
+  const [province, setProvince] = useState("Buenos Aires");
+  const [references, setReferences] = useState("");
+  
+  // Contact fields
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  
+  // Payment
+  const [paymentMethod, setPaymentMethod] = useState("");
+  
+  // Delivery
+  const [isInCABA, setIsInCABA] = useState(true);
+  
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Load profile data
+  useEffect(() => {
+    const loadProfile = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate("/ingresar?redirect=" + (isCollective ? "/checkout-colectivo" : "/checkout"));
+        return;
+      }
+
+      setEmail(session.user.email || "");
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
+
+      if (profile) {
+        setPhone(profile.phone || "");
+        if (profile.address) {
+          // Try to parse stored address
+          try {
+            const addr = JSON.parse(profile.address);
+            setStreet(addr.street || "");
+            setStreetNumber(addr.number || "");
+            setFloor(addr.floor || "");
+            setPostalCode(addr.postalCode || "");
+            setCity(addr.city || "Ciudad Autónoma de Buenos Aires");
+            setProvince(addr.province || "Buenos Aires");
+            setReferences(addr.references || "");
+          } catch {
+            // If not JSON, use as street
+            setStreet(profile.address);
+          }
+        }
+      }
+    };
+
+    loadProfile();
+  }, [navigate, isCollective]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        setHeaderVisible(false);
+      } else {
+        setHeaderVisible(true);
+      }
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [lastScrollY]);
+
+  // Check if address is in CABA
+  useEffect(() => {
+    const cabaPostalCodes = ['1000', '1001', '1002', '1003', '1004', '1005'];
+    const isCaba = city.toLowerCase().includes('buenos aires') && 
+                   city.toLowerCase().includes('ciudad') ||
+                   cabaPostalCodes.some(cp => postalCode.startsWith(cp.slice(0, 2)));
+    setIsInCABA(isCaba);
+  }, [city, postalCode]);
+
+  const subtotal = items.reduce(
+    (sum, item) => {
+      const price = 'price_per_unit' in item ? item.price_per_unit : item.current_price_per_unit;
+      return sum + price * item.quantity;
+    },
+    0
+  );
+
+  const originalPrice = subtotal * 1.2;
+  const discount = originalPrice - subtotal;
+  const deliveryCost = isInCABA ? 0 : null; // null means "to confirm"
+  const total = subtotal + (deliveryCost || 0);
+
+  const formatPrice = (price: number) => {
+    return `$${Math.round(price).toLocaleString('es-AR')}`;
+  };
+
+  const handleSubmit = async () => {
+    setErrors({});
+
+    // Validate address
+    const addressValidation = addressSchema.safeParse({
+      street,
+      number: streetNumber,
+      floor: floor || undefined,
+      postalCode,
+      city,
+      province,
+      references: references || undefined,
+    });
+
+    if (!addressValidation.success) {
+      const fieldErrors: Record<string, string> = {};
+      addressValidation.error.errors.forEach((err) => {
+        fieldErrors[err.path[0] as string] = err.message;
+      });
+      setErrors(fieldErrors);
+      return;
+    }
+
+    // Validate contact
+    const contactValidation = contactSchema.safeParse({ phone, email });
+    if (!contactValidation.success) {
+      const fieldErrors: Record<string, string> = {};
+      contactValidation.error.errors.forEach((err) => {
+        fieldErrors[err.path[0] as string] = err.message;
+      });
+      setErrors((prev) => ({ ...prev, ...fieldErrors }));
+      return;
+    }
+
+    // Validate payment method
+    if (!paymentMethod) {
+      setErrors((prev) => ({ ...prev, paymentMethod: "Seleccioná un método de pago" }));
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("No session");
+
+      const addressData = {
+        street,
+        number: streetNumber,
+        floor: floor || null,
+        postalCode,
+        city,
+        province,
+        references: references || null,
+      };
+
+      const orderItems = items.map(item => ({
+        product_id: item.product_id,
+        product_name: item.product_name,
+        flavor: item.flavor,
+        quantity: item.quantity,
+        price_per_unit: 'price_per_unit' in item ? item.price_per_unit : item.current_price_per_unit,
+        product_image: item.product_image,
+      }));
+
+      // Create order
+      const { data: order, error: orderError } = await supabase
+        .from("user_orders")
+        .insert([{
+          user_id: session.user.id,
+          order_type: isCollective ? 'collective' as const : 'immediate' as const,
+          items: orderItems as any,
+          subtotal: originalPrice,
+          discount_amount: discount,
+          total_amount: total,
+          delivery_cost: deliveryCost || 0,
+          delivery_address: addressData as any,
+          payment_method: paymentMethod,
+          status: 'pending' as const,
+        }])
+        .select('order_number')
+        .single();
+
+      if (orderError) throw orderError;
+
+      // Update profile with address
+      await supabase
+        .from("profiles")
+        .update({
+          phone,
+          address: JSON.stringify(addressData),
+        })
+        .eq("user_id", session.user.id);
+
+      // Send Telegram notification
+      try {
+        await supabase.functions.invoke("notify-telegram", {
+          body: {
+            order_number: order.order_number,
+            order_type: isCollective ? 'Compra Colectiva' : 'Compra Inmediata',
+            customer_email: email,
+            phone,
+            total: formatPrice(total),
+            items: orderItems.map(i => `${i.quantity}x ${i.product_name} (${i.flavor || 'Sin sabor'})`).join(', '),
+            address: `${street} ${streetNumber}, ${city}`,
+          },
+        });
+      } catch {
+        // Notification failed but order was saved
+      }
+
+      // Clear cart/waiting list
+      if (isCollective) {
+        await clearWaitingList();
+      } else {
+        await clearCart();
+      }
+
+      setOrderNumber(order.order_number);
+      setShowSuccess(true);
+    } catch (error: any) {
+      toast.error(error.message || "Error al procesar el pedido");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getShareText = () => {
+    return `Che! Mirá esto - descuentos increíbles de suplementos 🎉 Podés comprar al precio actual o esperar y pagar menos 🤑 https://ola.lovable.app/`;
+  };
+
+  const handleNativeShare = async () => {
+    const text = getShareText();
+    if (navigator.share) {
+      try {
+        await navigator.share({ text });
+      } catch (error) {
+        if ((error as Error).name !== 'AbortError') {
+          navigator.clipboard.writeText(text);
+          toast.success("¡Texto copiado!");
+        }
+      }
+    } else {
+      navigator.clipboard.writeText(text);
+      toast.success("¡Texto copiado!");
+    }
+  };
+
+  const handleWhatsAppShare = () => {
+    const text = encodeURIComponent(getShareText());
+    window.open(`https://wa.me/?text=${text}`, '_blank');
+  };
+
+  if (items.length === 0 && !showSuccess) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header isVisible={true} />
+        <main className="pt-20 pb-8 px-4">
+          <div className="container mx-auto max-w-2xl text-center">
+            <p className="text-muted-foreground mb-4">No hay productos para checkout</p>
+            <Button asChild>
+              <Link to="/">Ir a comprar</Link>
+            </Button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Header isVisible={headerVisible} />
+
+      <main className="pt-20 pb-8 px-4">
+        <div className="container mx-auto max-w-2xl">
+          <Link
+            to={isCollective ? "/lista-espera" : "/carrito"}
+            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Volver
+          </Link>
+
+          <h1 className="text-2xl font-bold mb-6">
+            {isCollective ? "Confirmar Compra Colectiva" : "Finalizar Compra"}
+          </h1>
+
+          {/* Order Summary */}
+          <Collapsible open={orderSummaryOpen} onOpenChange={setOrderSummaryOpen} className="mb-6">
+            <Card>
+              <CollapsibleTrigger className="w-full">
+                <CardHeader className="flex flex-row items-center justify-between py-4">
+                  <CardTitle className="text-lg">Resumen del pedido</CardTitle>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold">{formatPrice(total)}</span>
+                    {orderSummaryOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </div>
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent className="pt-0 space-y-2">
+                  {items.map((item) => {
+                    const price = 'price_per_unit' in item ? item.price_per_unit : item.current_price_per_unit;
+                    return (
+                      <div key={item.id} className="flex justify-between text-sm">
+                        <span>{item.quantity}x {item.product_name} {item.flavor && `(${item.flavor})`}</span>
+                        <span>{formatPrice(price * item.quantity)}</span>
+                      </div>
+                    );
+                  })}
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
+
+          {/* Address Form */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <MapPin className="w-5 h-5" />
+                Dirección de entrega
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-3 gap-4">
+                <div className="col-span-2 space-y-2">
+                  <Label htmlFor="street">Calle *</Label>
+                  <Input
+                    id="street"
+                    value={street}
+                    onChange={(e) => setStreet(e.target.value)}
+                    placeholder="Av. Corrientes"
+                    className={errors.street ? "border-destructive" : ""}
+                  />
+                  {errors.street && <p className="text-sm text-destructive">{errors.street}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="number">Número *</Label>
+                  <Input
+                    id="number"
+                    value={streetNumber}
+                    onChange={(e) => setStreetNumber(e.target.value)}
+                    placeholder="1234"
+                    className={errors.number ? "border-destructive" : ""}
+                  />
+                  {errors.number && <p className="text-sm text-destructive">{errors.number}</p>}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="floor">Piso, Depto (opcional)</Label>
+                  <Input
+                    id="floor"
+                    value={floor}
+                    onChange={(e) => setFloor(e.target.value)}
+                    placeholder="3° B"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="postalCode">Código Postal *</Label>
+                  <Input
+                    id="postalCode"
+                    value={postalCode}
+                    onChange={(e) => setPostalCode(e.target.value)}
+                    placeholder="1043"
+                    maxLength={4}
+                    className={errors.postalCode ? "border-destructive" : ""}
+                  />
+                  {errors.postalCode && <p className="text-sm text-destructive">{errors.postalCode}</p>}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="city">Ciudad *</Label>
+                  <Select value={city} onValueChange={setCity}>
+                    <SelectTrigger id="city">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Ciudad Autónoma de Buenos Aires">CABA</SelectItem>
+                      <SelectItem value="La Plata">La Plata</SelectItem>
+                      <SelectItem value="Mar del Plata">Mar del Plata</SelectItem>
+                      <SelectItem value="Córdoba">Córdoba</SelectItem>
+                      <SelectItem value="Rosario">Rosario</SelectItem>
+                      <SelectItem value="Mendoza">Mendoza</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="province">Provincia *</Label>
+                  <Select value={province} onValueChange={setProvince}>
+                    <SelectTrigger id="province">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Buenos Aires">Buenos Aires</SelectItem>
+                      <SelectItem value="Córdoba">Córdoba</SelectItem>
+                      <SelectItem value="Santa Fe">Santa Fe</SelectItem>
+                      <SelectItem value="Mendoza">Mendoza</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="references">Referencias adicionales</Label>
+                <Textarea
+                  id="references"
+                  value={references}
+                  onChange={(e) => setReferences(e.target.value)}
+                  placeholder="Timbre, indicaciones, etc."
+                  rows={2}
+                />
+              </div>
+
+              {/* Delivery cost info */}
+              {isInCABA ? (
+                <div className="flex items-center gap-2 text-green-600 bg-green-50 p-3 rounded-lg">
+                  <Check className="w-5 h-5" />
+                  <span className="font-medium">¡Envío gratis en CABA!</span>
+                </div>
+              ) : (
+                <div className="bg-amber-50 border border-amber-200 p-3 rounded-lg text-sm">
+                  <p className="font-medium text-amber-800">Tu dirección está fuera de CABA</p>
+                  <p className="text-amber-700">Nos pondremos en contacto para coordinar la entrega y calcular el costo de envío.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Contact Info */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="text-lg">Datos de contacto</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="phone">Teléfono *</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+54 9 11 1234-5678"
+                  className={errors.phone ? "border-destructive" : ""}
+                />
+                {errors.phone && <p className="text-sm text-destructive">{errors.phone}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className={errors.email ? "border-destructive" : ""}
+                />
+                {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Payment Method */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="text-lg">Forma de pago</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                <SelectTrigger className={errors.paymentMethod ? "border-destructive" : ""}>
+                  <SelectValue placeholder="Seleccioná forma de pago" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="efectivo">Efectivo</SelectItem>
+                  <SelectItem value="transferencia">Transferencia (Alias: klesh.mp)</SelectItem>
+                  <SelectItem value="tarjeta" disabled>Tarjeta (Próximamente)</SelectItem>
+                </SelectContent>
+              </Select>
+              {errors.paymentMethod && <p className="text-sm text-destructive mt-2">{errors.paymentMethod}</p>}
+            </CardContent>
+          </Card>
+
+          {/* Order Total */}
+          <Card className="mb-6">
+            <CardContent className="p-4 space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Subtotal:</span>
+                <span className="line-through text-muted-foreground">{formatPrice(originalPrice)}</span>
+              </div>
+              <div className="flex justify-between text-sm text-green-600">
+                <span>Descuento:</span>
+                <span>-{formatPrice(discount)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>Envío:</span>
+                <span>{isInCABA ? "Gratis" : "A confirmar"}</span>
+              </div>
+              <div className="border-t pt-2 flex justify-between text-xl font-bold">
+                <span>TOTAL A PAGAR:</span>
+                <span>{formatPrice(total)}</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Button
+            onClick={handleSubmit}
+            disabled={loading}
+            className="w-full"
+            size="lg"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Procesando...
+              </>
+            ) : (
+              "Finalizar pedido"
+            )}
+          </Button>
+        </div>
+      </main>
+
+      {/* Success Dialog */}
+      <AlertDialog open={showSuccess} onOpenChange={setShowSuccess}>
+        <AlertDialogContent className="rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-center">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 flex items-center justify-center">
+                <Check className="w-8 h-8 text-green-600" />
+              </div>
+              ¡Pedido confirmado!
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-center space-y-4">
+              <p>Tu pedido ha sido registrado exitosamente</p>
+              <p className="text-xl font-bold text-foreground">Pedido #{orderNumber}</p>
+              <p className="text-sm">
+                Nos pondremos en contacto en las próximas horas para confirmar los detalles.
+              </p>
+              
+              <div className="bg-muted rounded-lg p-4 text-left text-sm space-y-1">
+                <div className="flex justify-between">
+                  <span>Total:</span>
+                  <span className="font-bold">{formatPrice(total)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Forma de pago:</span>
+                  <span className="capitalize">{paymentMethod}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Dirección:</span>
+                  <span className="text-right">{street} {streetNumber}, {city}</span>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t">
+                <p className="font-semibold mb-3">¡Comparte con tus amigos!</p>
+                <div className="flex gap-2 justify-center">
+                  <Button variant="outline" size="sm" onClick={handleNativeShare}>
+                    <Share2 className="w-4 h-4 mr-1" />
+                    Compartir
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={handleWhatsAppShare}>
+                    <MessageCircle className="w-4 h-4 mr-1" />
+                    WhatsApp
+                  </Button>
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <div className="flex flex-col gap-2 pt-4">
+            <Button onClick={() => navigate("/mi-cuenta/pedidos")} className="w-full">
+              Ver mi pedido
+            </Button>
+            <Button variant="outline" onClick={() => navigate("/")} className="w-full">
+              Seguir comprando
+            </Button>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <FloatingWhatsApp />
+    </div>
+  );
+};
+
+export default Checkout;
