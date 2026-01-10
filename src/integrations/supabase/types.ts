@@ -426,6 +426,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      order_items_product_qty: {
+        Args: { _items: Json }
+        Returns: {
+          product_id: string
+          qty: number
+        }[]
+      }
+      recompute_waiting_for_discount_counts: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "user"
