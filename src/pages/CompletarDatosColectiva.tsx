@@ -229,23 +229,8 @@ const CompletarDatosColectiva = () => {
           .eq("status", "pending")
           .maybeSingle();
 
-        // Calculate quantities per product for updating waiting_for_discount_count
-        const quantitiesByProduct: Record<string, number> = {};
-        waitingListItems.forEach(item => {
-          quantitiesByProduct[item.product_id] = (quantitiesByProduct[item.product_id] || 0) + item.quantity;
-        });
-
-        // Get old quantities if updating existing order
-        let oldQuantitiesByProduct: Record<string, number> = {};
-        if (existingOrder?.items) {
-          const oldItems = existingOrder.items as Array<{ product_id: string; quantity: number }>;
-          oldItems.forEach(item => {
-            oldQuantitiesByProduct[item.product_id] = (oldQuantitiesByProduct[item.product_id] || 0) + item.quantity;
-          });
-        }
-
         if (existingOrder) {
-          // Update existing order
+          // Update existing order - trigger will handle waiting_for_discount_count
           await supabase
             .from("user_orders")
             .update({
@@ -257,33 +242,8 @@ const CompletarDatosColectiva = () => {
               notes: phone,
             })
             .eq("id", existingOrder.id);
-
-          // Update waiting_for_discount_count for each product (difference from old to new)
-          for (const productId of Object.keys({ ...quantitiesByProduct, ...oldQuantitiesByProduct })) {
-            const newQty = quantitiesByProduct[productId] || 0;
-            const oldQty = oldQuantitiesByProduct[productId] || 0;
-            const diff = newQty - oldQty;
-            
-            if (diff !== 0) {
-              // Get current count and update
-              const { data: product } = await supabase
-                .from("products")
-                .select("waiting_for_discount_count")
-                .eq("id", productId)
-                .single();
-              
-              if (product) {
-                await supabase
-                  .from("products")
-                  .update({ 
-                    waiting_for_discount_count: Math.max(0, (product.waiting_for_discount_count || 0) + diff)
-                  })
-                  .eq("id", productId);
-              }
-            }
-          }
         } else {
-          // Create new collective order
+          // Create new collective order - trigger will handle waiting_for_discount_count
           const orderNumber = `OLA-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
           
           await supabase
@@ -300,24 +260,6 @@ const CompletarDatosColectiva = () => {
               collective_close_date: nextSunday.toISOString(),
               notes: phone,
             });
-
-          // Update waiting_for_discount_count for each product (add new quantities)
-          for (const [productId, quantity] of Object.entries(quantitiesByProduct)) {
-            const { data: product } = await supabase
-              .from("products")
-              .select("waiting_for_discount_count")
-              .eq("id", productId)
-              .single();
-            
-            if (product) {
-              await supabase
-                .from("products")
-                .update({ 
-                  waiting_for_discount_count: (product.waiting_for_discount_count || 0) + quantity 
-                })
-                .eq("id", productId);
-            }
-          }
         }
       }
 
