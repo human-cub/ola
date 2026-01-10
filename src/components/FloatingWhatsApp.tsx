@@ -8,8 +8,8 @@ export const FloatingWhatsApp = () => {
     window.open("http://wa.me/5491166650878", "_blank");
   };
 
-  // Hide on product pages completely
-  const isProductPage = location.pathname.startsWith("/producto/");
+  // Hide on product pages completely (both /producto/ and /product/)
+  const isProductPage = location.pathname.startsWith("/producto/") || location.pathname.startsWith("/product/");
   
   if (isProductPage) {
     return null;

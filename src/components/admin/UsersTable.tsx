@@ -74,6 +74,31 @@ interface LoginEntry {
 
 const ITEMS_PER_PAGE = 50;
 
+// Format address from JSON or string
+const formatAddress = (address: string | null): string => {
+  if (!address) return "-";
+  
+  try {
+    // Try parsing as JSON
+    const parsed = JSON.parse(address);
+    if (typeof parsed === 'object' && parsed !== null) {
+      const parts = [
+        parsed.street,
+        parsed.number,
+        parsed.floor,
+        parsed.postalCode,
+        parsed.city,
+        parsed.province
+      ].filter(Boolean);
+      return parts.length > 0 ? parts.join(', ') : "-";
+    }
+    return address;
+  } catch {
+    // Not JSON, return as-is
+    return address;
+  }
+};
+
 const UsersTable = () => {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -383,7 +408,7 @@ const UsersTable = () => {
                 </div>
                 <div className="col-span-2">
                   <p className="text-muted-foreground">Dirección</p>
-                  <p className="font-medium">{selectedUser.address || "-"}</p>
+                  <p className="font-medium">{formatAddress(selectedUser.address)}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Email</p>

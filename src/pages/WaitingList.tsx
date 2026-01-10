@@ -359,14 +359,9 @@ const WaitingList = () => {
               </div>
 
               <div className="flex flex-col gap-2">
-                <Button
-                  onClick={handleCheckout}
-                  className="w-full gap-2"
-                  size="lg"
-                >
-                  Confirmar pedido
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
+                <p className="text-sm text-center text-muted-foreground mb-2">
+                  Tu lista se guardará hasta que se cierre la compra colectiva el domingo a las 23:59
+                </p>
                 <Button
                   variant="outline"
                   onClick={handleBuyNow}
