@@ -43,24 +43,23 @@ export const Header = ({ isVisible }: HeaderProps) => {
         isVisible ? "translate-y-0" : "-translate-y-full"
       }`}
     >
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between relative">
-        <div className="z-20">
+      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+        <div className="flex items-center gap-2">
           <BurgerMenu />
-        </div>
-        
-        <div 
-          className="absolute left-1/2 transform -translate-x-1/2 flex items-center gap-1 cursor-pointer z-20" 
-          onClick={handleHomeClick}
-        >
-          <div className="w-12 h-12 flex items-center justify-center">
-            <img src={olaLogo} alt="Ola Wave Logo" className="w-8 h-8 object-contain" />
+          <div 
+            className="flex items-center gap-1 cursor-pointer" 
+            onClick={handleHomeClick}
+          >
+            <div className="w-10 h-10 flex items-center justify-center">
+              <img src={olaLogo} alt="Ola Wave Logo" className="w-8 h-8 object-contain" />
+            </div>
+            <span className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              Ola!
+            </span>
           </div>
-          <span className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-            Ola!
-          </span>
         </div>
 
-        <div className="flex items-center gap-2 z-20">
+        <div className="flex items-center gap-2">
           {/* Waiting List Icon */}
           <Link to="/lista-espera">
             <Button 

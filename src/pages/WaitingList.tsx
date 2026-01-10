@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -20,10 +19,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Minus, Trash2, Timer, ArrowLeft, ArrowRight, ShoppingCart, Clock, Users } from "lucide-react";
+import { Plus, Minus, Trash2, Timer, ArrowLeft, ArrowRight, ShoppingCart, Clock } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
+import { Separator } from "@/components/ui/separator";
 
 const WaitingList = () => {
   const navigate = useNavigate();
@@ -41,7 +41,6 @@ const WaitingList = () => {
   const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
   const [productFlavors, setProductFlavors] = useState<Record<string, string[]>>({});
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-  const [totalParticipants, setTotalParticipants] = useState(0);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -94,7 +93,7 @@ const WaitingList = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // Fetch flavors and participants
+  // Fetch flavors
   useEffect(() => {
     const fetchData = async () => {
       const productIds = [...new Set(waitingListItems.map(item => item.product_id))];
@@ -102,36 +101,19 @@ const WaitingList = () => {
 
       const { data } = await supabase
         .from("products")
-        .select("id, flavors, waiting_for_discount_count, virtual_orders_count")
+        .select("id, flavors")
         .in("id", productIds);
 
       if (data) {
         const flavorsMap: Record<string, string[]> = {};
-        let totalParts = 0;
         data.forEach((p) => {
           flavorsMap[p.id] = (p.flavors as string[]) || [];
-          totalParts += (p.waiting_for_discount_count || 0) + (p.virtual_orders_count || 0);
         });
         setProductFlavors(flavorsMap);
-        setTotalParticipants(totalParts);
       }
     };
 
     fetchData();
-
-    // Subscribe to realtime updates
-    const channel = supabase
-      .channel('waiting-list-products')
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'products' },
-        () => fetchData()
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, [waitingListItems]);
 
   const subtotal = waitingListItems.reduce(
@@ -139,7 +121,6 @@ const WaitingList = () => {
     0
   );
 
-  // Estimated discount (could be higher with more participants)
   const originalPrice = subtotal * 1.3;
   const discount = originalPrice - subtotal;
   const discountPercent = Math.round((discount / originalPrice) * 100);
@@ -206,60 +187,47 @@ const WaitingList = () => {
           <div className="mb-6">
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <Timer className="w-6 h-6 text-primary" />
-              Lista de Espera - Compra Colectiva
+              Lista de Espera
             </h1>
             <p className="text-muted-foreground">
               {waitingListCount} {waitingListCount === 1 ? "producto" : "productos"}
             </p>
           </div>
 
-          {/* Timer Card */}
-          <Card className="mb-6 bg-gradient-primary text-white">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <Clock className="w-5 h-5" />
-                <span className="font-medium">Cierre en:</span>
+          {/* Timer */}
+          <div className="mb-6 bg-gradient-primary text-white rounded-xl p-4">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <Clock className="w-5 h-5" />
+              <span className="font-medium">Cierre en:</span>
+            </div>
+            <div className="flex justify-center gap-4 text-center">
+              <div>
+                <div className="text-3xl font-bold">{timeLeft.days}</div>
+                <div className="text-xs opacity-80">días</div>
               </div>
-              <div className="flex justify-center gap-4 text-center">
-                <div>
-                  <div className="text-3xl font-bold">{timeLeft.days}</div>
-                  <div className="text-xs opacity-80">días</div>
-                </div>
-                <div className="text-3xl font-bold">:</div>
-                <div>
-                  <div className="text-3xl font-bold">{String(timeLeft.hours).padStart(2, '0')}</div>
-                  <div className="text-xs opacity-80">horas</div>
-                </div>
-                <div className="text-3xl font-bold">:</div>
-                <div>
-                  <div className="text-3xl font-bold">{String(timeLeft.minutes).padStart(2, '0')}</div>
-                  <div className="text-xs opacity-80">min</div>
-                </div>
-                <div className="text-3xl font-bold">:</div>
-                <div>
-                  <div className="text-3xl font-bold">{String(timeLeft.seconds).padStart(2, '0')}</div>
-                  <div className="text-xs opacity-80">seg</div>
-                </div>
+              <div className="text-3xl font-bold">:</div>
+              <div>
+                <div className="text-3xl font-bold">{String(timeLeft.hours).padStart(2, '0')}</div>
+                <div className="text-xs opacity-80">horas</div>
               </div>
-              <p className="text-center text-sm mt-2 opacity-90">
-                El pedido se cerrará el domingo a las 23:59
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Participants Info */}
-          <Card className="mb-6">
-            <CardContent className="p-4 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Users className="w-5 h-5 text-primary" />
-                <span>Participantes actuales:</span>
+              <div className="text-3xl font-bold">:</div>
+              <div>
+                <div className="text-3xl font-bold">{String(timeLeft.minutes).padStart(2, '0')}</div>
+                <div className="text-xs opacity-80">min</div>
               </div>
-              <span className="text-xl font-bold text-primary">{totalParticipants}</span>
-            </CardContent>
-          </Card>
+              <div className="text-3xl font-bold">:</div>
+              <div>
+                <div className="text-3xl font-bold">{String(timeLeft.seconds).padStart(2, '0')}</div>
+                <div className="text-xs opacity-80">seg</div>
+              </div>
+            </div>
+            <p className="text-center text-sm mt-2 opacity-90">
+              El pedido se cerrará el domingo a las 23:59
+            </p>
+          </div>
 
           {waitingListItems.length === 0 ? (
-            <Card className="p-8 text-center">
+            <div className="text-center py-12">
               <Timer className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
               <h2 className="text-xl font-semibold mb-2">Tu lista de espera está vacía</h2>
               <p className="text-muted-foreground mb-4">
@@ -268,107 +236,105 @@ const WaitingList = () => {
               <Button asChild>
                 <Link to="/">Explorar productos</Link>
               </Button>
-            </Card>
+            </div>
           ) : (
             <>
-              {/* Waiting List Items */}
+              {/* Waiting List Items - No Card wrapper */}
               <div className="space-y-4 mb-6">
-                {waitingListItems.map((item) => (
-                  <Card key={item.id} className="overflow-hidden">
-                    <CardContent className="p-4">
-                      <div className="flex gap-4">
-                        {item.product_image && (
-                          <img
-                            src={item.product_image}
-                            alt={item.product_name}
-                            className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
-                          />
+                {waitingListItems.map((item, index) => (
+                  <div key={item.id}>
+                    <div className="flex gap-4 py-4">
+                      {item.product_image && (
+                        <img
+                          src={item.product_image}
+                          alt={item.product_name}
+                          className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
+                        />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-start gap-2">
+                          <h3 className="font-semibold text-sm leading-tight">
+                            {item.product_name}
+                          </h3>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0 h-8 w-8"
+                            onClick={() => setDeleteItemId(item.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+
+                        {productFlavors[item.product_id]?.length > 0 && (
+                          <Select
+                            value={item.flavor || ""}
+                            onValueChange={(value) =>
+                              updateWaitingListItemFlavor(item.id, value)
+                            }
+                          >
+                            <SelectTrigger className="w-full mt-2 h-8 text-xs">
+                              <SelectValue placeholder="Seleccionar sabor" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {productFlavors[item.product_id].map((flavor) => (
+                                <SelectItem key={flavor} value={flavor}>
+                                  {flavor}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         )}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex justify-between items-start">
-                            <h3 className="font-semibold truncate pr-2">
-                              {item.product_name}
-                            </h3>
+
+                        <div className="flex items-center justify-between mt-3">
+                          <div className="flex items-center gap-2">
                             <Button
-                              variant="ghost"
+                              variant="outline"
                               size="icon"
-                              className="text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0"
-                              onClick={() => setDeleteItemId(item.id)}
+                              className="h-8 w-8"
+                              onClick={() =>
+                                handleQuantityChange(item.id, -1, item.quantity)
+                              }
+                              disabled={item.quantity <= 1}
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Minus className="w-3 h-3" />
+                            </Button>
+                            <span className="w-8 text-center font-medium text-sm">
+                              {item.quantity}
+                            </span>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() =>
+                                handleQuantityChange(item.id, 1, item.quantity)
+                              }
+                              disabled={item.quantity >= 99}
+                            >
+                              <Plus className="w-3 h-3" />
                             </Button>
                           </div>
 
-                          {/* Flavor selector */}
-                          {productFlavors[item.product_id]?.length > 0 && (
-                            <Select
-                              value={item.flavor || ""}
-                              onValueChange={(value) =>
-                                updateWaitingListItemFlavor(item.id, value)
-                              }
-                            >
-                              <SelectTrigger className="w-full mt-2 h-8 text-sm">
-                                <SelectValue placeholder="Seleccionar sabor" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {productFlavors[item.product_id].map((flavor) => (
-                                  <SelectItem key={flavor} value={flavor}>
-                                    {flavor}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          )}
-
-                          <div className="flex items-center justify-between mt-3">
-                            {/* Quantity */}
-                            <div className="flex items-center gap-2">
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={() =>
-                                  handleQuantityChange(item.id, -1, item.quantity)
-                                }
-                                disabled={item.quantity <= 1}
-                              >
-                                <Minus className="w-3 h-3" />
-                              </Button>
-                              <span className="w-8 text-center font-medium">
-                                {item.quantity}
-                              </span>
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={() =>
-                                  handleQuantityChange(item.id, 1, item.quantity)
-                                }
-                                disabled={item.quantity >= 99}
-                              >
-                                <Plus className="w-3 h-3" />
-                              </Button>
-                            </div>
-
-                            {/* Price */}
-                            <div className="text-right">
-                              <p className="text-sm text-muted-foreground">
-                                {formatPrice(item.current_price_per_unit)} c/u
-                              </p>
-                              <p className="font-semibold">
-                                {formatPrice(item.current_price_per_unit * item.quantity)}
-                              </p>
-                            </div>
+                          <div className="text-right">
+                            <p className="text-xs text-muted-foreground">
+                              {formatPrice(item.current_price_per_unit)} c/u
+                            </p>
+                            <p className="font-semibold">
+                              {formatPrice(item.current_price_per_unit * item.quantity)}
+                            </p>
                           </div>
                         </div>
                       </div>
-                    </CardContent>
-                  </Card>
+                    </div>
+                    {index < waitingListItems.length - 1 && <Separator />}
+                  </div>
                 ))}
               </div>
 
-              {/* Summary */}
-              <Card className="p-4 space-y-3">
+              <Separator className="my-6" />
+
+              {/* Summary - No Card wrapper */}
+              <div className="space-y-3 mb-6">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Precio sin descuento:</span>
                   <span className="line-through text-muted-foreground">
@@ -376,10 +342,11 @@ const WaitingList = () => {
                   </span>
                 </div>
                 <div className="flex justify-between text-sm text-green-600">
-                  <span>Descuento actual ({discountPercent}% por {totalParticipants} participantes):</span>
+                  <span>Descuento actual ({discountPercent}%):</span>
                   <span>-{formatPrice(discount)}</span>
                 </div>
-                <div className="border-t pt-3 flex justify-between text-lg font-bold">
+                <Separator />
+                <div className="flex justify-between text-lg font-bold pt-2">
                   <span>Total estimado:</span>
                   <span>{formatPrice(subtotal)}</span>
                 </div>
@@ -389,32 +356,31 @@ const WaitingList = () => {
                 <p className="text-xs text-muted-foreground text-center">
                   El precio final se calculará al cerrar la compra colectiva
                 </p>
+              </div>
 
-                <div className="flex flex-col gap-2 pt-2">
-                  <Button
-                    onClick={handleCheckout}
-                    className="w-full gap-2"
-                    size="lg"
-                  >
-                    Confirmar pedido
-                    <ArrowRight className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={handleBuyNow}
-                    className="w-full gap-2"
-                  >
-                    <ShoppingCart className="w-4 h-4" />
-                    Comprar ahora ({formatPrice(subtotal)})
-                  </Button>
-                </div>
-              </Card>
+              <div className="flex flex-col gap-2">
+                <Button
+                  onClick={handleCheckout}
+                  className="w-full gap-2"
+                  size="lg"
+                >
+                  Confirmar pedido
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleBuyNow}
+                  className="w-full gap-2"
+                >
+                  <ShoppingCart className="w-4 h-4" />
+                  Comprar ahora ({formatPrice(subtotal)})
+                </Button>
+              </div>
             </>
           )}
         </div>
       </main>
 
-      {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!deleteItemId} onOpenChange={() => setDeleteItemId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>

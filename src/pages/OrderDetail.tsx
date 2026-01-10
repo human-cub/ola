@@ -269,9 +269,15 @@ const OrderDetail = () => {
                 <div>
                   <span className="text-muted-foreground">Dirección: </span>
                   <span>
-                    {order.delivery_address.street} {order.delivery_address.number}
-                    {order.delivery_address.floor && `, ${order.delivery_address.floor}`}
-                    , {order.delivery_address.city}
+                    {[
+                      order.delivery_address.street,
+                      order.delivery_address.number,
+                      order.delivery_address.floor,
+                      order.delivery_address.postalCode,
+                      order.delivery_address.city,
+                      order.delivery_address.province !== order.delivery_address.city ? order.delivery_address.province : null,
+                      order.delivery_address.references
+                    ].filter(Boolean).join(', ')}
                   </span>
                 </div>
               )}
