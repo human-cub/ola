@@ -199,20 +199,22 @@ const UsersTable = () => {
     
     setDeleting(true);
     try {
-      const { error } = await supabase
-        .from("profiles")
-        .delete()
-        .eq("id", userToDelete.id);
+      // Call edge function to completely delete user from auth.users
+      const { data, error } = await supabase.functions.invoke("delete-user", {
+        body: { user_id: userToDelete.user_id },
+      });
 
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
-      toast.success("Perfil eliminado");
+      toast.success("Usuario eliminado completamente");
       setDeleteDialogOpen(false);
       setUserToDelete(null);
       setSelectedUser(null);
       fetchUsers();
     } catch (error: any) {
-      toast.error("Error al eliminar el perfil");
+      console.error("Error deleting user:", error);
+      toast.error(error.message || "Error al eliminar el usuario");
     } finally {
       setDeleting(false);
     }
