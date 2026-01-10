@@ -15,6 +15,7 @@ import Admin from "./pages/Admin";
 import Cart from "./pages/Cart";
 import WaitingList from "./pages/WaitingList";
 import Checkout from "./pages/Checkout";
+import CompletarDatosColectiva from "./pages/CompletarDatosColectiva";
 import OrderDetail from "./pages/OrderDetail";
 import NotFound from "./pages/NotFound";
 import { FloatingWhatsApp } from "./components/FloatingWhatsApp";
@@ -42,7 +43,7 @@ const App = () => (
           <Route path="/carrito" element={<Cart />} />
           <Route path="/lista-espera" element={<WaitingList />} />
           <Route path="/checkout" element={<Checkout />} />
-          <Route path="/checkout-colectivo" element={<Checkout isCollective />} />
+          <Route path="/completar-datos-colectiva" element={<CompletarDatosColectiva />} />
           <Route path="/pedido/:orderNumber" element={<OrderDetail />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

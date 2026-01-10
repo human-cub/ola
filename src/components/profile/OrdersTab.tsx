@@ -158,9 +158,13 @@ const OrdersTab = () => {
         <div className="space-y-4">
           {orders.map((order) => {
             const StatusIcon = statusConfig[order.status]?.icon || Package;
+            // Pending collective orders should redirect to waiting list
+            const isPendingCollective = order.order_type === 'collective' && order.status === 'pending';
+            const linkTo = isPendingCollective ? '/lista-espera' : `/mi-cuenta/pedidos/${order.id}`;
+            
             return (
               <Card key={order.id} className="overflow-hidden hover:shadow-md transition-shadow">
-                <Link to={`/mi-cuenta/pedidos/${order.id}`}>
+                <Link to={linkTo}>
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between mb-3">
                       <div>
@@ -177,12 +181,16 @@ const OrdersTab = () => {
                             {order.order_type === 'immediate' ? 'Compra inmediata' : 'Compra colectiva'}
                           </span>
                         </p>
-                        <p className="text-lg font-bold">{formatPrice(order.total_amount)}</p>
+                        {isPendingCollective ? (
+                          <p className="text-sm text-amber-600 font-medium">Esperando cierre del domingo</p>
+                        ) : (
+                          <p className="text-lg font-bold">{formatPrice(order.total_amount)}</p>
+                        )}
                       </div>
                       
                       <div className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm ${statusConfig[order.status]?.color}`}>
                         <StatusIcon className="w-4 h-4" />
-                        {statusConfig[order.status]?.label}
+                        {isPendingCollective ? 'En espera' : statusConfig[order.status]?.label}
                       </div>
                     </div>
                   </CardContent>

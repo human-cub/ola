@@ -19,7 +19,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Minus, Trash2, Timer, ArrowLeft, ArrowRight, ShoppingCart, Clock } from "lucide-react";
+import { Plus, Minus, Trash2, Timer, ArrowLeft, ArrowRight, ShoppingCart, Clock, Check } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
@@ -143,12 +143,12 @@ const WaitingList = () => {
     }
   };
 
-  const handleCheckout = async () => {
+  const handleCompletarDatos = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
-      navigate("/ingresar?redirect=/checkout-colectivo");
+      navigate("/ingresar?redirect=/completar-datos-colectiva");
     } else {
-      navigate("/checkout-colectivo");
+      navigate("/completar-datos-colectiva");
     }
   };
 
@@ -358,10 +358,18 @@ const WaitingList = () => {
                 </p>
               </div>
 
-              <div className="flex flex-col gap-2">
-                <p className="text-sm text-center text-muted-foreground mb-2">
+              <div className="flex flex-col gap-3">
+                <p className="text-sm text-center text-muted-foreground">
                   Tu lista se guardará hasta que se cierre la compra colectiva el domingo a las 23:59
                 </p>
+                <Button
+                  onClick={handleCompletarDatos}
+                  className="w-full gap-2"
+                  size="lg"
+                >
+                  <Check className="w-4 h-4" />
+                  Completar mis datos
+                </Button>
                 <Button
                   variant="outline"
                   onClick={handleBuyNow}
