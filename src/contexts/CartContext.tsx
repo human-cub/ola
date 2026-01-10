@@ -444,14 +444,55 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Update waiting list item quantity
+  // Update waiting list item quantity with price recalculation based on tiers
   const updateWaitingListItemQuantity = async (id: string, quantity: number) => {
     try {
       if (quantity < 1 || quantity > 99) return;
       
+      // Get the item to find product_id
+      const { data: item } = await supabase
+        .from('waiting_list_items')
+        .select('product_id')
+        .eq('id', id)
+        .single();
+      
+      if (!item) return;
+      
+      // Get product prices for tier calculation
+      const { data: product } = await supabase
+        .from('products')
+        .select('prices')
+        .eq('id', item.product_id)
+        .single();
+      
+      let newPrice: number | null = null;
+      
+      if (product?.prices && Array.isArray(product.prices)) {
+        const prices = product.prices as Array<{ people: number; price: number }>;
+        // Find the appropriate price tier based on quantity
+        const sortedPrices = [...prices].sort((a, b) => b.people - a.people);
+        for (const tier of sortedPrices) {
+          if (quantity >= tier.people) {
+            newPrice = tier.price;
+            break;
+          }
+        }
+        // If no tier matched, use the lowest tier price
+        if (newPrice === null && prices.length > 0) {
+          const lowestTier = prices.reduce((min, tier) => tier.people < min.people ? tier : min, prices[0]);
+          newPrice = lowestTier.price;
+        }
+      }
+      
+      // Update with new quantity and recalculated price
+      const updateData: { quantity: number; current_price_per_unit?: number } = { quantity };
+      if (newPrice !== null) {
+        updateData.current_price_per_unit = newPrice;
+      }
+      
       await supabase
         .from('waiting_list_items')
-        .update({ quantity })
+        .update(updateData)
         .eq('id', id);
       
       const waiting = await fetchWaitingListItemsInternal(currentUserId);
