@@ -12,6 +12,10 @@ import Profile from "./pages/Profile";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Admin from "./pages/Admin";
+import Cart from "./pages/Cart";
+import WaitingList from "./pages/WaitingList";
+import Checkout from "./pages/Checkout";
+import OrderDetail from "./pages/OrderDetail";
 import NotFound from "./pages/NotFound";
 import { FloatingWhatsApp } from "./components/FloatingWhatsApp";
 
@@ -35,6 +39,11 @@ const App = () => (
           <Route path="/restablecer-clave" element={<ResetPassword />} />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/carrito" element={<Cart />} />
+          <Route path="/lista-espera" element={<WaitingList />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/checkout-colectivo" element={<Checkout isCollective />} />
+          <Route path="/pedido/:orderNumber" element={<OrderDetail />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <FloatingWhatsApp />

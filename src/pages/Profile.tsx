@@ -10,8 +10,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { z } from "zod";
-import { Loader2, ArrowLeft, User, Shield, LogOut, Eye, EyeOff } from "lucide-react";
+import { Loader2, ArrowLeft, User, Shield, LogOut, Eye, EyeOff, Package } from "lucide-react";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
+import OrdersTab from "@/components/profile/OrdersTab";
 
 const profileSchema = z.object({
   firstName: z.string().min(1, "El nombre es requerido").max(50),
@@ -215,17 +216,28 @@ const Profile = () => {
           </Button>
         </div>
 
-        <Tabs defaultValue="profile">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
+        <Tabs defaultValue="orders">
+          <TabsList className="grid w-full grid-cols-3 mb-6">
+            <TabsTrigger value="orders" className="flex items-center gap-2">
+              <Package className="w-4 h-4" />
+              <span className="hidden sm:inline">Mis Pedidos</span>
+              <span className="sm:hidden">Pedidos</span>
+            </TabsTrigger>
             <TabsTrigger value="profile" className="flex items-center gap-2">
               <User className="w-4 h-4" />
-              Mi Perfil
+              <span className="hidden sm:inline">Mi Perfil</span>
+              <span className="sm:hidden">Perfil</span>
             </TabsTrigger>
             <TabsTrigger value="security" className="flex items-center gap-2">
               <Shield className="w-4 h-4" />
-              Seguridad
+              <span className="hidden sm:inline">Seguridad</span>
+              <span className="sm:hidden">Clave</span>
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="orders">
+            <OrdersTab />
+          </TabsContent>
 
           <TabsContent value="profile">
             <Card>

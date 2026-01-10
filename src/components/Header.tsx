@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { User, LogIn } from "lucide-react";
+import { User, LogIn, ShoppingCart, Clock } from "lucide-react";
 import olaLogo from "@/assets/ola-logo-new.png";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { BurgerMenu } from "@/components/BurgerMenu";
 import { supabase } from "@/integrations/supabase/client";
+import { useCart } from "@/contexts/CartContext";
 
 interface HeaderProps {
   isVisible: boolean;
@@ -12,6 +14,10 @@ interface HeaderProps {
 
 export const Header = ({ isVisible }: HeaderProps) => {
   const [user, setUser] = useState<any>(null);
+  const { cartItems, waitingListItems } = useCart();
+
+  const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const waitingCount = waitingListItems.reduce((sum, item) => sum + item.quantity, 0);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -54,25 +60,60 @@ export const Header = ({ isVisible }: HeaderProps) => {
           </span>
         </div>
 
-        <Link to={user ? "/mi-cuenta" : "/ingresar"} className="z-20">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="border-primary/20 hover:border-primary hover:bg-primary/5 gap-2 px-3"
-          >
-            {user ? (
-              <>
-                <User className="w-4 h-4" />
-                <span className="hidden sm:inline">Mi cuenta</span>
-              </>
-            ) : (
-              <>
-                <LogIn className="w-4 h-4" />
-                <span className="hidden sm:inline">Ingresar</span>
-              </>
-            )}
-          </Button>
-        </Link>
+        <div className="flex items-center gap-2 z-20">
+          {/* Waiting List Icon */}
+          <Link to="/lista-espera">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              className="relative hover:bg-primary/5"
+            >
+              <Clock className="w-5 h-5 text-muted-foreground" />
+              {waitingCount > 0 && (
+                <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs bg-amber-500 hover:bg-amber-500">
+                  {waitingCount}
+                </Badge>
+              )}
+            </Button>
+          </Link>
+
+          {/* Cart Icon */}
+          <Link to="/carrito">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              className="relative hover:bg-primary/5"
+            >
+              <ShoppingCart className="w-5 h-5 text-muted-foreground" />
+              {cartCount > 0 && (
+                <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs">
+                  {cartCount}
+                </Badge>
+              )}
+            </Button>
+          </Link>
+
+          {/* User Account */}
+          <Link to={user ? "/mi-cuenta" : "/ingresar"}>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="border-primary/20 hover:border-primary hover:bg-primary/5 gap-2 px-3"
+            >
+              {user ? (
+                <>
+                  <User className="w-4 h-4" />
+                  <span className="hidden sm:inline">Mi cuenta</span>
+                </>
+              ) : (
+                <>
+                  <LogIn className="w-4 h-4" />
+                  <span className="hidden sm:inline">Ingresar</span>
+                </>
+              )}
+            </Button>
+          </Link>
+        </div>
       </div>
     </header>
   );
