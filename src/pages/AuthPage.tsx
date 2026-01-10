@@ -15,29 +15,12 @@ const AuthPage = () => {
   const redirectTo = searchParams.get("redirect") || "/";
 
   useEffect(() => {
-    const checkProfileAndRedirect = async (userId: string) => {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("profile_completed")
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      if (profile?.profile_completed) {
-        // Redirect to the original destination or home
-        navigate(redirectTo);
-      } else {
-        // Store redirect for after profile completion
-        sessionStorage.setItem("auth_redirect", redirectTo);
-        navigate("/completar-perfil");
-      }
-    };
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (event === 'SIGNED_IN' && session) {
           // Give CartContext time to migrate cart items
           setTimeout(() => {
-            checkProfileAndRedirect(session.user.id);
+            navigate(redirectTo);
           }, 500);
         }
       }
@@ -46,7 +29,7 @@ const AuthPage = () => {
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        checkProfileAndRedirect(session.user.id);
+        navigate(redirectTo);
       }
     });
 
