@@ -19,11 +19,23 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Minus, Trash2, Timer, ArrowLeft, ArrowRight, ShoppingCart, Clock, Check } from "lucide-react";
+import { Plus, Minus, Trash2, Timer, ArrowLeft, ArrowRight, ShoppingCart, Clock, Check, Share2 } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import { Separator } from "@/components/ui/separator";
+
+interface PriceData {
+  people: number;
+  price: number;
+}
+
+interface ProductData {
+  id: string;
+  link: string;
+  waiting_for_discount_count: number;
+  prices: PriceData[];
+}
 
 const WaitingList = () => {
   const navigate = useNavigate();
@@ -42,6 +54,7 @@ const WaitingList = () => {
   const [productFlavors, setProductFlavors] = useState<Record<string, string[]>>({});
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [hasExistingOrder, setHasExistingOrder] = useState(false);
+  const [productData, setProductData] = useState<Record<string, ProductData>>({});
 
   // Check if user has pending collective order
   useEffect(() => {
@@ -117,7 +130,7 @@ const WaitingList = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // Fetch flavors
+  // Fetch flavors and product data
   useEffect(() => {
     const fetchData = async () => {
       const productIds = [...new Set(waitingListItems.map(item => item.product_id))];
@@ -125,32 +138,95 @@ const WaitingList = () => {
 
       const { data } = await supabase
         .from("products")
-        .select("id, flavors")
+        .select("id, flavors, link, waiting_for_discount_count, prices")
         .in("id", productIds);
 
       if (data) {
         const flavorsMap: Record<string, string[]> = {};
+        const prodDataMap: Record<string, ProductData> = {};
         data.forEach((p) => {
           flavorsMap[p.id] = (p.flavors as string[]) || [];
+          prodDataMap[p.id] = {
+            id: p.id,
+            link: p.link || "",
+            waiting_for_discount_count: p.waiting_for_discount_count || 0,
+            prices: (p.prices as unknown as PriceData[]) || [],
+          };
         });
         setProductFlavors(flavorsMap);
+        setProductData(prodDataMap);
       }
     };
 
     fetchData();
   }, [waitingListItems]);
 
+  // Helper functions for price calculations
+  const getFullPrice = (productId: string): number => {
+    const prod = productData[productId];
+    if (!prod || prod.prices.length === 0) return 0;
+    return prod.prices[0].price; // First tier = highest price
+  };
+
+  const getMaxDiscountPrice = (productId: string): number => {
+    const prod = productData[productId];
+    if (!prod || prod.prices.length === 0) return 0;
+    return prod.prices[prod.prices.length - 1].price; // Last tier = lowest price (100 participants)
+  };
+
+  const getNextDiscountThreshold = (productId: string): { people: number; price: number } | null => {
+    const prod = productData[productId];
+    if (!prod || prod.prices.length === 0) return null;
+    const current = prod.waiting_for_discount_count;
+    for (const tier of prod.prices) {
+      if (tier.people > current) {
+        return tier;
+      }
+    }
+    return null;
+  };
+
+  const getParticipantsRemaining = (productId: string): number => {
+    const prod = productData[productId];
+    if (!prod) return 0;
+    return Math.max(0, 100 - prod.waiting_for_discount_count);
+  };
+
+  // Current subtotal with current prices
   const subtotal = waitingListItems.reduce(
     (sum, item) => sum + item.current_price_per_unit * item.quantity,
     0
   );
 
-  const originalPrice = subtotal * 1.3;
-  const discount = originalPrice - subtotal;
-  const discountPercent = Math.round((discount / originalPrice) * 100);
+  // Full price (without any discount)
+  const fullPrice = waitingListItems.reduce((sum, item) => {
+    const price = getFullPrice(item.product_id);
+    return sum + price * item.quantity;
+  }, 0);
+
+  // Estimated total at 100 participants
+  const estimatedTotal = waitingListItems.reduce((sum, item) => {
+    const price = getMaxDiscountPrice(item.product_id);
+    return sum + price * item.quantity;
+  }, 0);
+
+  const currentDiscount = fullPrice - subtotal;
+  const estimatedDiscount = fullPrice - estimatedTotal;
 
   const formatPrice = (price: number) => {
     return `$${Math.round(price).toLocaleString('es-AR')}`;
+  };
+
+  const handleShare = (item: typeof waitingListItems[0]) => {
+    const prod = productData[item.product_id];
+    if (!prod) return;
+    const link = `${window.location.origin}${prod.link}`;
+    const text = `¡Sumate a la compra colectiva de ${item.product_name}! Seamos más, pagamos menos. ${link}`;
+    if (navigator.share) {
+      navigator.share({ title: item.product_name, text, url: link });
+    } else {
+      navigator.clipboard.writeText(text);
+    }
   };
 
   const handleQuantityChange = async (id: string, delta: number, currentQty: number) => {
@@ -265,94 +341,127 @@ const WaitingList = () => {
             <>
               {/* Waiting List Items - No Card wrapper */}
               <div className="space-y-4 mb-6">
-                {waitingListItems.map((item, index) => (
-                  <div key={item.id}>
-                    <div className="flex gap-4 py-4">
-                      {item.product_image && (
-                        <img
-                          src={item.product_image}
-                          alt={item.product_name}
-                          className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
-                        />
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-start gap-2">
-                          <h3 className="font-semibold text-sm leading-tight">
-                            {item.product_name}
-                          </h3>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0 h-8 w-8"
-                            onClick={() => setDeleteItemId(item.id)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
+                {waitingListItems.map((item, index) => {
+                  const prod = productData[item.product_id];
+                  const participantCount = prod?.waiting_for_discount_count || 0;
+                  const remaining = getParticipantsRemaining(item.product_id);
+                  const nextThreshold = getNextDiscountThreshold(item.product_id);
 
-                        {productFlavors[item.product_id]?.length > 0 && (
-                          <Select
-                            value={item.flavor || ""}
-                            onValueChange={(value) =>
-                              updateWaitingListItemFlavor(item.id, value)
-                            }
-                          >
-                            <SelectTrigger className="w-full mt-2 h-8 text-xs">
-                              <SelectValue placeholder="Seleccionar sabor" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {productFlavors[item.product_id].map((flavor) => (
-                                <SelectItem key={flavor} value={flavor}>
-                                  {flavor}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        )}
-
-                        <div className="flex items-center justify-between mt-3">
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() =>
-                                handleQuantityChange(item.id, -1, item.quantity)
-                              }
-                              disabled={item.quantity <= 1}
-                            >
-                              <Minus className="w-3 h-3" />
-                            </Button>
-                            <span className="w-8 text-center font-medium text-sm">
-                              {item.quantity}
-                            </span>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() =>
-                                handleQuantityChange(item.id, 1, item.quantity)
-                              }
-                              disabled={item.quantity >= 99}
-                            >
-                              <Plus className="w-3 h-3" />
-                            </Button>
+                  return (
+                    <div key={item.id}>
+                      <div className="flex gap-4 py-4">
+                        <Link to={prod?.link || "#"} className="flex-shrink-0">
+                          {item.product_image && (
+                            <img
+                              src={item.product_image}
+                              alt={item.product_name}
+                              className="w-20 h-20 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                            />
+                          )}
+                        </Link>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex justify-between items-start gap-2">
+                            <Link to={prod?.link || "#"} className="hover:underline">
+                              <h3 className="font-semibold text-sm leading-tight">
+                                {item.product_name}
+                              </h3>
+                            </Link>
+                            <div className="flex items-center gap-1 flex-shrink-0">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => handleShare(item)}
+                              >
+                                <Share2 className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8"
+                                onClick={() => setDeleteItemId(item.id)}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
                           </div>
 
-                          <div className="text-right">
-                            <p className="text-xs text-muted-foreground">
-                              {formatPrice(item.current_price_per_unit)} c/u
-                            </p>
-                            <p className="font-semibold">
-                              {formatPrice(item.current_price_per_unit * item.quantity)}
-                            </p>
+                          {/* Participant indicator */}
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-xs font-medium text-primary">
+                              {participantCount}/100
+                            </span>
+                            {nextThreshold && (
+                              <span className="text-xs text-muted-foreground">
+                                · Faltan {nextThreshold.people - participantCount} para {formatPrice(nextThreshold.price)}
+                              </span>
+                            )}
+                          </div>
+
+                          {productFlavors[item.product_id]?.length > 0 && (
+                            <Select
+                              value={item.flavor || ""}
+                              onValueChange={(value) =>
+                                updateWaitingListItemFlavor(item.id, value)
+                              }
+                            >
+                              <SelectTrigger className="w-full mt-2 h-8 text-xs">
+                                <SelectValue placeholder="Seleccionar sabor" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {productFlavors[item.product_id].map((flavor) => (
+                                  <SelectItem key={flavor} value={flavor}>
+                                    {flavor}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+
+                          <div className="flex items-center justify-between mt-3">
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() =>
+                                  handleQuantityChange(item.id, -1, item.quantity)
+                                }
+                                disabled={item.quantity <= 1}
+                              >
+                                <Minus className="w-3 h-3" />
+                              </Button>
+                              <span className="w-8 text-center font-medium text-sm">
+                                {item.quantity}
+                              </span>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() =>
+                                  handleQuantityChange(item.id, 1, item.quantity)
+                                }
+                                disabled={item.quantity >= 99}
+                              >
+                                <Plus className="w-3 h-3" />
+                              </Button>
+                            </div>
+
+                            <div className="text-right">
+                              <p className="text-xs text-muted-foreground">
+                                {formatPrice(item.current_price_per_unit)} c/u
+                              </p>
+                              <p className="font-semibold">
+                                {formatPrice(item.current_price_per_unit * item.quantity)}
+                              </p>
+                            </div>
                           </div>
                         </div>
                       </div>
+                      {index < waitingListItems.length - 1 && <Separator />}
                     </div>
-                    {index < waitingListItems.length - 1 && <Separator />}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               <Separator className="my-6" />
@@ -362,23 +471,28 @@ const WaitingList = () => {
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Precio sin descuento:</span>
                   <span className="line-through text-muted-foreground">
-                    {formatPrice(originalPrice)}
+                    {formatPrice(fullPrice)}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm text-green-600">
-                  <span>Descuento actual ({discountPercent}%):</span>
-                  <span>-{formatPrice(discount)}</span>
+                  <span>Descuento actual:</span>
+                  <span>-{formatPrice(currentDiscount)}</span>
                 </div>
-                <Separator />
-                <div className="flex justify-between text-lg font-bold pt-2">
-                  <span>Total estimado:</span>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Subtotal actual:</span>
                   <span>{formatPrice(subtotal)}</span>
                 </div>
-                <p className="text-sm text-green-600 text-center font-medium">
-                  ¡Ahorro estimado: {formatPrice(discount)} pesos!
-                </p>
+                <Separator />
+                <div className="flex justify-between text-sm text-primary">
+                  <span>Descuento estimado (100 uds):</span>
+                  <span>-{formatPrice(estimatedDiscount)}</span>
+                </div>
+                <div className="flex justify-between text-lg font-bold pt-2">
+                  <span>Total estimado (100 uds):</span>
+                  <span className="text-primary">{formatPrice(estimatedTotal)}</span>
+                </div>
                 <p className="text-xs text-muted-foreground text-center">
-                  El precio final se calculará al cerrar la compra colectiva
+                  El precio final se calculará al cerrar la compra colectiva el domingo 23:59
                 </p>
               </div>
 
@@ -388,8 +502,9 @@ const WaitingList = () => {
                 </p>
                 <Button
                   onClick={handleCompletarDatos}
-                  className="w-full gap-2"
+                  className={`w-full gap-2 ${hasExistingOrder ? "bg-white text-primary hover:bg-white/90 border border-primary" : ""}`}
                   size="lg"
+                  variant={hasExistingOrder ? "outline" : "default"}
                 >
                   <Check className="w-4 h-4" />
                   {hasExistingOrder ? "¡Ya participás! 🎉 / Editar datos" : "Entrar en lista de espera"}

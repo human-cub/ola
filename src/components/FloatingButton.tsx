@@ -78,18 +78,16 @@ export const FloatingButton = ({
     return () => clearInterval(timer);
   }, []);
 
-  // Calcular el precio actual basado en waitingCount
-  const getCurrentPrice = () => {
+  // Buy Now price = second tier price (prices[1]) - fixed price regardless of participants
+  const getBuyNowPrice = () => {
     if (prices.length === 0) return null;
-    for (let i = prices.length - 1; i >= 0; i--) {
-      if (waitingCount >= prices[i].people) {
-        return prices[i].price;
-      }
+    if (prices.length >= 2) {
+      return prices[1].price; // Second tier price
     }
-    return prices[0].price;
+    return prices[0].price; // Fallback to first tier if only one exists
   };
 
-  const currentPrice = getCurrentPrice();
+  const buyNowPrice = getBuyNowPrice();
 
   const handleBuyNow = () => {
     setIsWaitingList(false);
@@ -139,11 +137,11 @@ export const FloatingButton = ({
                 variant="secondary"
                 size="sm"
                 onClick={handleBuyNow}
-                className="bg-white/20 hover:bg-white/30 text-white border-0 gap-2 flex-1 h-auto py-3 sm:py-2"
+                className="bg-white hover:bg-white/90 text-primary border-0 gap-2 flex-1 h-auto py-3 sm:py-2 font-semibold"
               >
                 <ShoppingCart className="w-4 h-4 flex-shrink-0" />
                 <span className="text-sm font-medium">
-                  Comprar ahora {currentPrice && <span className="font-bold">${currentPrice.toLocaleString()}</span>}
+                  Comprar ahora {buyNowPrice && <span className="font-bold">${buyNowPrice.toLocaleString()}</span>}
                 </span>
               </Button>
             </div>

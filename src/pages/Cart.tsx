@@ -25,6 +25,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import { Separator } from "@/components/ui/separator";
 
+interface ProductLink {
+  id: string;
+  link: string;
+}
+
 const Cart = () => {
   const navigate = useNavigate();
   const {
@@ -39,6 +44,7 @@ const Cart = () => {
   const [lastScrollY, setLastScrollY] = useState(0);
   const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
   const [productFlavors, setProductFlavors] = useState<Record<string, string[]>>({});
+  const [productLinks, setProductLinks] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const handleScroll = () => {
@@ -56,25 +62,28 @@ const Cart = () => {
   }, [lastScrollY]);
 
   useEffect(() => {
-    const fetchFlavors = async () => {
+    const fetchProductData = async () => {
       const productIds = [...new Set(cartItems.map(item => item.product_id))];
       if (productIds.length === 0) return;
 
       const { data } = await supabase
         .from("products")
-        .select("id, flavors")
+        .select("id, flavors, link")
         .in("id", productIds);
 
       if (data) {
         const flavorsMap: Record<string, string[]> = {};
+        const linksMap: Record<string, string> = {};
         data.forEach((p) => {
           flavorsMap[p.id] = (p.flavors as string[]) || [];
+          linksMap[p.id] = p.link || "";
         });
         setProductFlavors(flavorsMap);
+        setProductLinks(linksMap);
       }
     };
 
-    fetchFlavors();
+    fetchProductData();
   }, [cartItems]);
 
   const subtotal = cartItems.reduce(
@@ -164,18 +173,22 @@ const Cart = () => {
                 {cartItems.map((item, index) => (
                   <div key={item.id}>
                     <div className="flex gap-4 py-4">
-                      {item.product_image && (
-                        <img
-                          src={item.product_image}
-                          alt={item.product_name}
-                          className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
-                        />
-                      )}
+                      <Link to={productLinks[item.product_id] || "#"} className="flex-shrink-0">
+                        {item.product_image && (
+                          <img
+                            src={item.product_image}
+                            alt={item.product_name}
+                            className="w-20 h-20 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                          />
+                        )}
+                      </Link>
                       <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-start gap-2">
-                          <h3 className="font-semibold text-sm leading-tight">
-                            {item.product_name}
-                          </h3>
+                          <Link to={productLinks[item.product_id] || "#"} className="hover:underline">
+                            <h3 className="font-semibold text-sm leading-tight">
+                              {item.product_name}
+                            </h3>
+                          </Link>
                           <Button
                             variant="ghost"
                             size="icon"
