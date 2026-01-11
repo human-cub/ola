@@ -78,11 +78,12 @@ export const FloatingButton = ({
     return () => clearInterval(timer);
   }, []);
 
-  // Buy Now price = second tier price (prices[1]) - fixed price regardless of participants
+  // Buy Now price = second tier price (index 1) - fixed price regardless of participants
   const getBuyNowPrice = () => {
     if (prices.length === 0) return null;
-    if (prices.length >= 2) {
-      return prices[1].price; // Second tier price
+    // prices[0] = highest price (1 person), prices[1] = second tier, etc.
+    if (prices.length > 1) {
+      return prices[1].price; // Second tier price (index 1)
     }
     return prices[0].price; // Fallback to first tier if only one exists
   };
