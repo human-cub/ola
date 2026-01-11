@@ -299,19 +299,15 @@ const CompletarDatosColectiva = () => {
             Volver a lista de espera
           </Link>
 
-          <h1 className="text-2xl font-bold mb-2">Completar mis datos</h1>
+          <h1 className="text-2xl font-bold mb-2">
+            {hasExistingData ? "¡Ya participás! 🎉" : "Entrar en lista de espera"}
+          </h1>
           <p className="text-muted-foreground mb-6">
-            Estos datos se usarán cuando se cierre la compra colectiva el domingo a las 23:59
+            {hasExistingData 
+              ? "Podés editar tus datos si querés"
+              : "Estos datos se usarán cuando se cierre la compra colectiva el domingo a las 23:59"
+            }
           </p>
-
-          {hasExistingData && (
-            <div className="bg-green-50 border border-green-200 p-3 rounded-lg text-sm mb-6">
-              <p className="text-green-800">
-                <Check className="w-4 h-4 inline mr-1" />
-                Ya tenés tus datos guardados. Podés actualizarlos si querés.
-              </p>
-            </div>
-          )}
 
           {/* Address Section */}
           <div className="mb-6">
@@ -473,7 +469,7 @@ const CompletarDatosColectiva = () => {
                 Guardando...
               </>
             ) : (
-              "Guardar mis datos"
+              "Listo"
             )}
           </Button>
 

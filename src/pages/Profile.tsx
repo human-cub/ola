@@ -41,6 +41,27 @@ interface ProfileData {
   address: string | null;
 }
 
+// Format address for display - remove labels and brackets
+const formatAddressForDisplay = (address: string): string => {
+  if (!address) return "";
+  
+  try {
+    const addr = JSON.parse(address);
+    const parts = [
+      addr.street,
+      addr.number,
+      addr.floor,
+      addr.postalCode,
+      addr.city,
+      addr.province,
+      addr.references,
+    ].filter(Boolean);
+    return parts.join(", ");
+  } catch {
+    return address;
+  }
+};
+
 const Profile = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -306,10 +327,15 @@ const Profile = () => {
                   <Label htmlFor="address">Dirección</Label>
                   <Textarea
                     id="address"
-                    value={address}
+                    value={formatAddressForDisplay(address)}
                     onChange={(e) => setAddress(e.target.value)}
                     rows={2}
+                    disabled
+                    className="bg-muted"
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Podés actualizar tu dirección en la lista de espera
+                  </p>
                 </div>
 
                 <Button onClick={handleSaveProfile} disabled={saving}>
