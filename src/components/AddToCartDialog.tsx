@@ -77,13 +77,11 @@ export const AddToCartDialog = ({
       }
       return prices[0].price;
     } else {
-      // For immediate purchase, use current price
-      for (let i = prices.length - 1; i >= 0; i--) {
-        if (currentParticipants >= prices[i].people) {
-          return prices[i].price;
-        }
+      // For immediate purchase, always use second tier price (fixed "buy now" price)
+      if (prices.length >= 2) {
+        return prices[1].price; // Second tier = buy now price
       }
-      return prices[0].price;
+      return prices[0].price; // Fallback
     }
   };
 
