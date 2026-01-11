@@ -41,6 +41,30 @@ const WaitingList = () => {
   const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
   const [productFlavors, setProductFlavors] = useState<Record<string, string[]>>({});
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const [hasExistingOrder, setHasExistingOrder] = useState(false);
+
+  // Check if user has pending collective order
+  useEffect(() => {
+    const checkExistingOrder = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setHasExistingOrder(false);
+        return;
+      }
+
+      const { data } = await supabase
+        .from("user_orders")
+        .select("id")
+        .eq("user_id", session.user.id)
+        .eq("order_type", "collective")
+        .eq("status", "pending")
+        .maybeSingle();
+
+      setHasExistingOrder(!!data);
+    };
+
+    checkExistingOrder();
+  }, [waitingListItems]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -368,7 +392,7 @@ const WaitingList = () => {
                   size="lg"
                 >
                   <Check className="w-4 h-4" />
-                  Completar mis datos
+                  {hasExistingOrder ? "¡Ya participás! 🎉 / Editar datos" : "Entrar en lista de espera"}
                 </Button>
                 <Button
                   variant="outline"

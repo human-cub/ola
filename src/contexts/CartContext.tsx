@@ -464,6 +464,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await supabase
         .from('waiting_list_items')
         .update({ quantity })
+        .eq('id', id);
 
       // Get product counts for price calculation
       const { data: product } = await supabase
