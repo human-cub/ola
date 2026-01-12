@@ -245,12 +245,6 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
               </div>
             </div>
             
-            {/* Precio actual */}
-            <div className="mt-3 pt-3 border-t border-border/50">
-              <p className="text-sm text-muted-foreground text-center">
-                Comprando ahora <span className="font-semibold text-primary">{formatPrice(currentActualPrice.price)}</span>
-              </p>
-            </div>
           </div>
         </div>
       </div>
