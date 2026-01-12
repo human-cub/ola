@@ -16,8 +16,9 @@ export const Header = ({ isVisible }: HeaderProps) => {
   const [user, setUser] = useState<any>(null);
   const { cartItems, waitingListItems } = useCart();
 
-  const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-  const waitingCount = waitingListItems.reduce((sum, item) => sum + item.quantity, 0);
+  // Show number of unique items (positions), not total quantities
+  const cartCount = cartItems.length;
+  const waitingCount = waitingListItems.length;
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
