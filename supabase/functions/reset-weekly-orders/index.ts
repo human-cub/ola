@@ -16,13 +16,21 @@ Deno.serve(async (req) => {
       throw fetchError;
     }
 
-    // Update each product with random virtual orders between 48 and 59
+    // Reset each product with new week parameters
+    // Target: 63-83 participants (not 48-59)
     const updates = products?.map(async (product) => {
-      const randomOrders = Math.floor(Math.random() * (59 - 48 + 1)) + 48;
+      const weekMax = 63 + Math.floor(Math.random() * 21); // 63-83
       
       return supabase
         .from('products')
-        .update({ virtual_orders_count: randomOrders })
+        .update({ 
+          virtual_orders_count: 0, // Reset to 0 on Monday
+          max_weekly_participants: weekMax,
+          week_start_date: new Date().toISOString().split('T')[0],
+          last_increment_at: null,
+          base_probability: 0.12 + Math.random() * 0.13, // 0.12-0.25
+          cooldown_minutes: 5 + Math.floor(Math.random() * 11) // 5-15 min
+        })
         .eq('id', product.id);
     });
 
@@ -30,12 +38,12 @@ Deno.serve(async (req) => {
       await Promise.all(updates);
     }
 
-    console.log(`Successfully reset virtual orders for ${products?.length || 0} products`);
+    console.log(`Successfully reset weekly orders for ${products?.length || 0} products to 0, new max: 63-83`);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: `Reset ${products?.length || 0} products`,
+        message: `Reset ${products?.length || 0} products to 0, new max: 63-83`,
         timestamp: new Date().toISOString()
       }),
       { 

@@ -651,8 +651,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-  const waitingListCount = waitingListItems.reduce((sum, item) => sum + item.quantity, 0);
+  // Show number of unique items (positions), not total quantities
+  const cartCount = cartItems.length;
+  const waitingListCount = waitingListItems.length;
 
   return (
     <CartContext.Provider
