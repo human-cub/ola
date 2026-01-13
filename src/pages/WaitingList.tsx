@@ -19,7 +19,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Minus, Trash2, Timer, ArrowLeft, ArrowRight, ShoppingCart, Clock, Check, Share2 } from "lucide-react";
+import { Plus, Minus, Trash2, Timer, ArrowLeft, ArrowRight, ShoppingCart, Clock, Check, Share2, AlertTriangle } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
@@ -48,6 +48,7 @@ const WaitingList = () => {
     updateWaitingListItemFlavor,
     removeFromWaitingList,
     clearWaitingList,
+    moveWaitingListToCart,
   } = useCart();
   const [headerVisible, setHeaderVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -58,6 +59,8 @@ const WaitingList = () => {
   const [productData, setProductData] = useState<Record<string, ProductData>>({});
   const [isCollectionEnded, setIsCollectionEnded] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [confirmationDeadline, setConfirmationDeadline] = useState<Date | null>(null);
+  const [isMovingToCart, setIsMovingToCart] = useState(false);
 
   // Check if user has pending collective order
   useEffect(() => {
@@ -99,6 +102,24 @@ const WaitingList = () => {
 
   // Countdown timer to Sunday 23:59 and check if collection ended
   useEffect(() => {
+    const getLastSundayClose = () => {
+      const now = new Date();
+      const lastSunday = new Date(now);
+      const daysSinceSunday = now.getDay();
+      
+      if (daysSinceSunday === 0) {
+        // It's Sunday - check if before or after 23:59
+        if (now.getHours() < 23 || (now.getHours() === 23 && now.getMinutes() < 59)) {
+          // Before close - last close was previous Sunday
+          lastSunday.setDate(now.getDate() - 7);
+        }
+      } else {
+        lastSunday.setDate(now.getDate() - daysSinceSunday);
+      }
+      lastSunday.setHours(23, 59, 59, 999);
+      return lastSunday;
+    };
+
     const getNextSunday = () => {
       const now = new Date();
       const nextSunday = new Date(now);
@@ -118,19 +139,32 @@ const WaitingList = () => {
 
     const calculateTimeLeft = () => {
       const targetDate = getNextSunday();
+      const now = new Date();
+      const lastClose = getLastSundayClose();
+      
+      // Calculate confirmation deadline (1 week after last close)
+      const deadline = new Date(lastClose);
+      deadline.setDate(deadline.getDate() + 7);
+      setConfirmationDeadline(deadline);
       
       // Check if it's Sunday after 23:59 and before Monday 00:00
-      const now = new Date();
       if (now.getDay() === 0 && now.getHours() >= 23 && now.getMinutes() >= 59) {
         setIsCollectionEnded(true);
         setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
         return;
       }
       
-      // Check if it's Monday before reset (00:00-01:00) - also treat as ended
-      if (now.getDay() === 1 && now.getHours() < 1) {
+      // Check if we're within the confirmation period (from Sunday 23:59 to next Sunday 23:59)
+      if (now > lastClose && now < deadline) {
         setIsCollectionEnded(true);
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        // Calculate time left until deadline
+        const diff = deadline.getTime() - now.getTime();
+        setTimeLeft({
+          days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+          minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+          seconds: Math.floor((diff % (1000 * 60)) / 1000),
+        });
         return;
       }
       
@@ -156,8 +190,9 @@ const WaitingList = () => {
   }, []);
 
   // Fetch flavors and product data - use total_orders_count
+  // Also update prices dynamically based on current participant count
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchDataAndUpdatePrices = async () => {
       const productIds = [...new Set(waitingListItems.map(item => item.product_id))];
       if (productIds.length === 0) return;
 
@@ -180,11 +215,56 @@ const WaitingList = () => {
         });
         setProductFlavors(flavorsMap);
         setProductData(prodDataMap);
+
+        // Update waiting list item prices based on current total_orders_count
+        for (const item of waitingListItems) {
+          const prod = prodDataMap[item.product_id];
+          if (!prod || !prod.prices.length) continue;
+
+          const totalParticipants = prod.total_orders_count;
+          let newPrice = prod.prices[0].price; // Default to first tier
+
+          // Find the correct tier based on total participants
+          for (let i = prod.prices.length - 1; i >= 0; i--) {
+            if (totalParticipants >= prod.prices[i].people) {
+              newPrice = prod.prices[i].price;
+              break;
+            }
+          }
+
+          // Update price if different
+          if (Math.abs(item.current_price_per_unit - newPrice) > 0.01) {
+            await supabase
+              .from("waiting_list_items")
+              .update({ current_price_per_unit: newPrice })
+              .eq("id", item.id);
+          }
+        }
       }
     };
 
-    fetchData();
-  }, [waitingListItems]);
+    fetchDataAndUpdatePrices();
+
+    // Subscribe to realtime updates on products table
+    const channel = supabase
+      .channel("products-price-updates")
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "products",
+        },
+        () => {
+          fetchDataAndUpdatePrices();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [waitingListItems.map(i => i.id).join(",")]);
 
   // Helper functions for price calculations
   const getFullPrice = (productId: string): number => {
@@ -217,11 +297,29 @@ const WaitingList = () => {
     return prod.total_orders_count + userQty;
   };
 
-  // Current subtotal with current prices
-  const subtotal = waitingListItems.reduce(
-    (sum, item) => sum + item.current_price_per_unit * item.quantity,
-    0
-  );
+  // Get current price based on total_orders_count
+  const getCurrentPrice = (productId: string): number => {
+    const prod = productData[productId];
+    if (!prod || prod.prices.length === 0) return 0;
+    
+    const totalParticipants = prod.total_orders_count;
+    let currentPrice = prod.prices[0].price; // Default to first tier (highest price)
+    
+    for (let i = prod.prices.length - 1; i >= 0; i--) {
+      if (totalParticipants >= prod.prices[i].people) {
+        currentPrice = prod.prices[i].price;
+        break;
+      }
+    }
+    
+    return currentPrice;
+  };
+
+  // Current subtotal with dynamically calculated prices
+  const subtotal = waitingListItems.reduce((sum, item) => {
+    const dynamicPrice = getCurrentPrice(item.product_id) || item.current_price_per_unit;
+    return sum + dynamicPrice * item.quantity;
+  }, 0);
 
   // Full price (without any discount)
   const fullPrice = waitingListItems.reduce((sum, item) => {
@@ -281,6 +379,21 @@ const WaitingList = () => {
   // Handle continue to checkout (when collection has ended)
   const handleContinueToCheckout = () => {
     navigate("/checkout?from=waiting-list");
+  };
+
+  // Handle "Comprar ahora" - move all items to cart and navigate
+  const handleBuyNow = async () => {
+    setIsMovingToCart(true);
+    try {
+      await moveWaitingListToCart();
+      await clearWaitingList();
+      navigate("/carrito");
+    } catch (error) {
+      console.error("Error moving to cart:", error);
+      toast.error("Error al mover productos al carrito");
+    } finally {
+      setIsMovingToCart(false);
+    }
   };
 
   // Handle finalize order (confirms the collective order)
@@ -347,9 +460,12 @@ const WaitingList = () => {
           </Link>
 
           <div className="mb-6">
-            <h1 className="text-2xl font-bold flex items-center gap-2">
+            <h1 className="text-2xl font-bold flex items-center gap-2 flex-wrap">
               <Timer className="w-6 h-6 text-primary" />
               Lista de Espera
+              {hasExistingOrder && !isCollectionEnded && (
+                <span className="text-primary text-lg font-medium">— ¡Ya participás! 🎉</span>
+              )}
             </h1>
             <p className="text-muted-foreground">
               {waitingListCount} {waitingListCount === 1 ? "producto" : "productos"}
@@ -358,14 +474,17 @@ const WaitingList = () => {
 
           {/* Timer or Collection Ended Notice */}
           {isCollectionEnded ? (
-            <div className="mb-6 bg-green-600 text-white rounded-xl p-4">
+            <div className="mb-6 bg-amber-500 text-white rounded-xl p-4">
               <div className="flex items-center justify-center gap-2 mb-2">
-                <Check className="w-5 h-5" />
+                <AlertTriangle className="w-5 h-5" />
                 <span className="font-medium">¡Compra colectiva cerrada!</span>
               </div>
-              <p className="text-center text-sm opacity-90">
-                Es momento de finalizar tu pedido
+              <p className="text-center text-sm opacity-90 mb-2">
+                Tenés hasta el domingo para confirmar tu pedido
               </p>
+              <div className="flex justify-center gap-3 text-center text-sm">
+                <span>{timeLeft.days}d {timeLeft.hours}h {timeLeft.minutes}m restantes</span>
+              </div>
             </div>
           ) : (
             <div className="mb-6 bg-gradient-primary text-white rounded-xl p-4">
@@ -419,6 +538,7 @@ const WaitingList = () => {
                   const prod = productData[item.product_id];
                   const participantCount = getParticipantsCount(item.product_id, item.quantity);
                   const nextThreshold = getNextDiscountThreshold(item.product_id, item.quantity);
+                  const dynamicPrice = getCurrentPrice(item.product_id) || item.current_price_per_unit;
 
                   return (
                     <div key={item.id}>
@@ -522,10 +642,10 @@ const WaitingList = () => {
 
                             <div className="text-right">
                               <p className="text-xs text-muted-foreground">
-                                {formatPrice(item.current_price_per_unit)} c/u
+                                {formatPrice(dynamicPrice)} c/u
                               </p>
                               <p className="font-semibold">
-                                {formatPrice(item.current_price_per_unit * item.quantity)}
+                                {formatPrice(dynamicPrice * item.quantity)}
                               </p>
                             </div>
                           </div>
@@ -615,9 +735,21 @@ const WaitingList = () => {
                 ) : (
                   // Collection active - show waiting list flow
                   <>
+                    {/* Comprar ahora button - moves items to cart */}
+                    <Button
+                      onClick={handleBuyNow}
+                      className="w-full gap-2"
+                      size="lg"
+                      disabled={isMovingToCart}
+                    >
+                      <ShoppingCart className="w-4 h-4" />
+                      {isMovingToCart ? "Moviendo al carrito..." : "Comprar ahora"}
+                    </Button>
+
                     <p className="text-sm text-center text-muted-foreground">
                       Tu lista se guardará hasta que se cierre la compra colectiva el domingo a las 23:59
                     </p>
+                    
                     <Button
                       onClick={handleCompletarDatos}
                       className={`w-full gap-2 ${hasExistingOrder ? "bg-white text-primary hover:bg-white/90 border border-primary" : ""}`}

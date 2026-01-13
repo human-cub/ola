@@ -87,7 +87,7 @@ const DynamicProduct = () => {
       };
 
       setProduct(productData);
-      setWaitingCount(data.waiting_for_discount_count + data.virtual_orders_count);
+      setWaitingCount(data.total_orders_count || 0);
       setLoading(false);
 
       // Subscribe to realtime updates
@@ -103,8 +103,8 @@ const DynamicProduct = () => {
           },
           (payload) => {
             const newData = payload.new as any;
-            if (newData.waiting_for_discount_count !== undefined && newData.virtual_orders_count !== undefined) {
-              setWaitingCount(newData.waiting_for_discount_count + newData.virtual_orders_count);
+            if (newData.total_orders_count !== undefined) {
+              setWaitingCount(newData.total_orders_count);
             }
           }
         )
