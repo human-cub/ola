@@ -61,25 +61,28 @@ const WaitingList = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmationDeadline, setConfirmationDeadline] = useState<Date | null>(null);
   const [isMovingToCart, setIsMovingToCart] = useState(false);
+  const [pendingOrderCreatedAt, setPendingOrderCreatedAt] = useState<Date | null>(null);
 
-  // Check if user has pending collective order
+  // Check if user has pending collective order and get its creation date
   useEffect(() => {
     const checkExistingOrder = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         setHasExistingOrder(false);
+        setPendingOrderCreatedAt(null);
         return;
       }
 
       const { data } = await supabase
         .from("user_orders")
-        .select("id")
+        .select("id, created_at")
         .eq("user_id", session.user.id)
         .eq("order_type", "collective")
         .eq("status", "pending")
         .maybeSingle();
 
       setHasExistingOrder(!!data);
+      setPendingOrderCreatedAt(data ? new Date(data.created_at) : null);
     };
 
     checkExistingOrder();
@@ -101,6 +104,7 @@ const WaitingList = () => {
   }, [lastScrollY]);
 
   // Countdown timer to Sunday 23:59 and check if collection ended
+  // Collection is ONLY ended if there's a pending order that was created BEFORE the last Sunday close
   useEffect(() => {
     const getLastSundayClose = () => {
       const now = new Date();
@@ -125,37 +129,43 @@ const WaitingList = () => {
       const nextSunday = new Date(now);
       const daysUntilSunday = (7 - now.getDay()) % 7;
       
-      if (daysUntilSunday === 0 && now.getHours() < 23) {
-        nextSunday.setHours(23, 59, 59, 999);
-      } else if (daysUntilSunday === 0 && now.getHours() >= 23) {
-        // It's Sunday after 23:00 - collection has ended
-        return null;
+      if (daysUntilSunday === 0) {
+        // It's Sunday
+        if (now.getHours() < 23 || (now.getHours() === 23 && now.getMinutes() < 59)) {
+          // Before 23:59 - target is today
+          nextSunday.setHours(23, 59, 59, 999);
+        } else {
+          // After 23:59 - target is next Sunday
+          nextSunday.setDate(now.getDate() + 7);
+          nextSunday.setHours(23, 59, 59, 999);
+        }
       } else {
-        nextSunday.setDate(now.getDate() + (daysUntilSunday || 7));
+        nextSunday.setDate(now.getDate() + daysUntilSunday);
         nextSunday.setHours(23, 59, 59, 999);
       }
       return nextSunday;
     };
 
     const calculateTimeLeft = () => {
-      const targetDate = getNextSunday();
       const now = new Date();
       const lastClose = getLastSundayClose();
+      const nextSunday = getNextSunday();
       
       // Calculate confirmation deadline (1 week after last close)
       const deadline = new Date(lastClose);
       deadline.setDate(deadline.getDate() + 7);
       setConfirmationDeadline(deadline);
       
-      // Check if it's Sunday after 23:59 and before Monday 00:00
-      if (now.getDay() === 0 && now.getHours() >= 23 && now.getMinutes() >= 59) {
-        setIsCollectionEnded(true);
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-        return;
-      }
+      // Collection is ONLY ended if:
+      // 1. There's a pending order that was created BEFORE the last Sunday close
+      // 2. We're currently within the confirmation period (after last close, before deadline)
+      const hasPendingOrderFromPreviousCycle = 
+        pendingOrderCreatedAt && 
+        pendingOrderCreatedAt < lastClose &&
+        now > lastClose && 
+        now < deadline;
       
-      // Check if we're within the confirmation period (from Sunday 23:59 to next Sunday 23:59)
-      if (now > lastClose && now < deadline) {
+      if (hasPendingOrderFromPreviousCycle) {
         setIsCollectionEnded(true);
         // Calculate time left until deadline
         const diff = deadline.getTime() - now.getTime();
@@ -168,26 +178,25 @@ const WaitingList = () => {
         return;
       }
       
+      // Otherwise, collection is active - show countdown to next Sunday
       setIsCollectionEnded(false);
       
-      if (targetDate) {
-        const difference = targetDate.getTime() - now.getTime();
+      const difference = nextSunday.getTime() - now.getTime();
 
-        if (difference > 0) {
-          setTimeLeft({
-            days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-            hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-            minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
-            seconds: Math.floor((difference % (1000 * 60)) / 1000),
-          });
-        }
+      if (difference > 0) {
+        setTimeLeft({
+          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+          minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
+          seconds: Math.floor((difference % (1000 * 60)) / 1000),
+        });
       }
     };
 
     calculateTimeLeft();
     const timer = setInterval(calculateTimeLeft, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [pendingOrderCreatedAt]);
 
   // Fetch flavors and product data - use total_orders_count
   // Also update prices dynamically based on current participant count
