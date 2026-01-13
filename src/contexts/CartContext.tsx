@@ -469,15 +469,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Get product counts for price calculation
       const { data: product } = await supabase
         .from('products')
-        .select('prices, waiting_for_discount_count, virtual_orders_count')
+        .select('prices, total_orders_count')
         .eq('id', item.product_id)
         .single();
       
       let newPrice: number | null = null;
       
-      const baseParticipants =
-        Number(product?.waiting_for_discount_count ?? 0) +
-        Number(product?.virtual_orders_count ?? 0);
+      const totalParticipants = Number(product?.total_orders_count ?? 0);
 
       if (product?.prices && Array.isArray(product.prices)) {
         const normalized = (product.prices as any[])
@@ -489,14 +487,14 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .sort((a, b) => a.people - b.people);
 
         if (normalized.length > 0) {
-          // Find the nearest lower threshold based on total participants
+          // Find the correct tier based on total participants
+          newPrice = normalized[0].price; // Default to first tier
           for (let i = normalized.length - 1; i >= 0; i--) {
-            if (baseParticipants >= normalized[i].people) {
+            if (totalParticipants >= normalized[i].people) {
               newPrice = normalized[i].price;
               break;
             }
           }
-          if (newPrice === null) newPrice = normalized[0].price;
         }
       }
       
@@ -634,6 +632,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Move waiting list items to cart
   const moveWaitingListToCart = async () => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
       for (const item of waitingListItems) {
         await addToCart({
           product_id: item.product_id,
@@ -644,6 +644,17 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           product_image: item.product_image,
         });
       }
+      
+      // Delete pending collective order if exists
+      if (session?.user) {
+        await supabase
+          .from("user_orders")
+          .delete()
+          .eq("user_id", session.user.id)
+          .eq("order_type", "collective")
+          .eq("status", "pending");
+      }
+      
       toast.success('Productos movidos al carrito');
     } catch (error) {
       console.error('Error moving to cart:', error);
