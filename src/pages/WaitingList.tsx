@@ -351,6 +351,28 @@ const WaitingList = () => {
     const newQty = currentQty + delta;
     if (newQty >= 1 && newQty <= 99) {
       await updateWaitingListItemQuantity(id, newQty);
+      
+      // Refetch product data to get updated total_orders_count after sync
+      const productIds = [...new Set(waitingListItems.map((item) => item.product_id))];
+      if (productIds.length > 0) {
+        const { data } = await supabase
+          .from("products")
+          .select("id, flavors, link, total_orders_count, prices")
+          .in("id", productIds);
+
+        if (data) {
+          const prodDataMap: Record<string, ProductData> = {};
+          data.forEach((p) => {
+            prodDataMap[p.id] = {
+              id: p.id,
+              link: p.link || "",
+              total_orders_count: p.total_orders_count || 0,
+              prices: (p.prices as unknown as PriceData[]) || [],
+            };
+          });
+          setProductData(prodDataMap);
+        }
+      }
     }
   };
 

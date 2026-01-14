@@ -457,24 +457,28 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } = await supabase.auth.getSession();
       const userId = session?.user?.id ?? null;
 
-      // Get the item to find product_id
+      // Get the item to find product_id and current quantity
       const { data: item } = await supabase
         .from("waiting_list_items")
-        .select("product_id")
+        .select("product_id, quantity")
         .eq("id", id)
         .maybeSingle();
 
       if (!item) return;
 
+      const oldQuantity = item.quantity;
+      const quantityDiff = quantity - oldQuantity;
+
       // 1) Update quantity in waiting_list_items
       await supabase.from("waiting_list_items").update({ quantity }).eq("id", id);
 
-      // 2) If user already has a pending collective order, sync it FIRST so the DB counters update
+      // 2) If user already has a pending collective order, sync it so the DB counters update
+      // This will trigger the database trigger that updates waiting_for_discount_count
       if (userId) {
         await syncWaitingListOrder(userId);
       }
 
-      // 3) Fetch updated product total_orders_count and compute tier price
+      // 3) Now fetch the updated product data with refreshed total_orders_count
       const { data: product } = await supabase
         .from("products")
         .select("prices, total_orders_count")
@@ -494,7 +498,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .sort((a, b) => a.people - b.people);
 
         if (normalized.length > 0) {
-          newPrice = normalized[0].price;
+          // Find the correct tier based on total participants
+          newPrice = normalized[0].price; // Default to highest price (first tier)
           for (let i = normalized.length - 1; i >= 0; i--) {
             if (totalParticipants >= normalized[i].people) {
               newPrice = normalized[i].price;
