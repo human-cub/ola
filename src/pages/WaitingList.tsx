@@ -390,12 +390,13 @@ const WaitingList = () => {
     navigate("/checkout?from=waiting-list");
   };
 
-  // Handle "Comprar ahora" - move all items to cart and navigate
+  // Handle "Comprar ahora" - copy items to cart (keep in waiting list) and navigate
   const handleBuyNow = async () => {
     setIsMovingToCart(true);
     try {
+      // Move items to cart but don't clear waiting list
       await moveWaitingListToCart();
-      await clearWaitingList();
+      // Note: waiting list items will be cleared when order is finalized in cart checkout
       navigate("/carrito");
     } catch (error) {
       console.error("Error moving to cart:", error);
@@ -744,21 +745,7 @@ const WaitingList = () => {
                 ) : (
                   // Collection active - show waiting list flow
                   <>
-                    {/* Comprar ahora button - moves items to cart */}
-                    <Button
-                      onClick={handleBuyNow}
-                      className="w-full gap-2"
-                      size="lg"
-                      disabled={isMovingToCart}
-                    >
-                      <ShoppingCart className="w-4 h-4" />
-                      {isMovingToCart ? "Moviendo al carrito..." : "Comprar ahora"}
-                    </Button>
-
-                    <p className="text-sm text-center text-muted-foreground">
-                      Tu lista se guardará hasta que se cierre la compra colectiva el domingo a las 23:59
-                    </p>
-                    
+                    {/* Entrar en lista de espera / Editar datos button - PRIMARY */}
                     <Button
                       onClick={handleCompletarDatos}
                       className={`w-full gap-2 ${hasExistingOrder ? "bg-white text-primary hover:bg-white/90 border border-primary" : ""}`}
@@ -768,6 +755,22 @@ const WaitingList = () => {
                       <Check className="w-4 h-4" />
                       {hasExistingOrder ? "¡Ya participás! 🎉 / Editar datos" : "Entrar en lista de espera"}
                     </Button>
+
+                    {/* Comprar ahora button - moves items to cart */}
+                    <Button
+                      onClick={handleBuyNow}
+                      variant="outline"
+                      className="w-full gap-2"
+                      size="lg"
+                      disabled={isMovingToCart}
+                    >
+                      <ShoppingCart className="w-4 h-4" />
+                      {isMovingToCart ? "Moviendo al carrito..." : `Comprar ahora ${formatPrice(subtotal)}`}
+                    </Button>
+
+                    <p className="text-sm text-center text-muted-foreground">
+                      Tu lista se guardará hasta que se cierre la compra colectiva el domingo a las 23:59
+                    </p>
 
                     {/* Share Block */}
                     <Separator className="my-4" />

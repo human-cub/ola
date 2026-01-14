@@ -41,7 +41,7 @@ const CompletarDatosColectiva = () => {
   const [lastScrollY, setLastScrollY] = useState(0);
   const [loading, setLoading] = useState(false);
   const [dataLoading, setDataLoading] = useState(true);
-  const [hasExistingData, setHasExistingData] = useState(false);
+  const [hasExistingOrder, setHasExistingOrder] = useState(false);
   
   // Address fields
   const [street, setStreet] = useState("");
@@ -61,7 +61,7 @@ const CompletarDatosColectiva = () => {
   
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Load profile data
+  // Load profile data and check for existing order
   useEffect(() => {
     const loadProfile = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -71,6 +71,17 @@ const CompletarDatosColectiva = () => {
       }
 
       setEmail(session.user.email || "");
+
+      // Check for existing pending collective order
+      const { data: existingOrder } = await supabase
+        .from("user_orders")
+        .select("id")
+        .eq("user_id", session.user.id)
+        .eq("order_type", "collective")
+        .eq("status", "pending")
+        .maybeSingle();
+      
+      setHasExistingOrder(!!existingOrder);
 
       const { data: profile } = await supabase
         .from("profiles")
@@ -90,11 +101,6 @@ const CompletarDatosColectiva = () => {
             setCity(addr.city || "Ciudad Autónoma de Buenos Aires");
             setProvince(addr.province || "Buenos Aires");
             setReferences(addr.references || "");
-            
-            // Check if user already has address data
-            if (addr.street && addr.number && addr.postalCode) {
-              setHasExistingData(true);
-            }
           } catch {
             setStreet(profile.address);
           }
@@ -300,10 +306,10 @@ const CompletarDatosColectiva = () => {
           </Link>
 
           <h1 className="text-2xl font-bold mb-2">
-            {hasExistingData ? "¡Ya participás! 🎉" : "Entrar en lista de espera"}
+            {hasExistingOrder ? "¡Ya participás! 🎉" : "Entrar en lista de espera"}
           </h1>
           <p className="text-muted-foreground mb-6">
-            {hasExistingData 
+            {hasExistingOrder 
               ? "Podés editar tus datos si querés"
               : "Estos datos se usarán cuando se cierre la compra colectiva el domingo a las 23:59"
             }

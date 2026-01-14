@@ -629,11 +629,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Move waiting list items to cart
+  // Move waiting list items to cart (copy items, don't clear waiting list)
   const moveWaitingListToCart = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
       for (const item of waitingListItems) {
         await addToCart({
           product_id: item.product_id,
@@ -645,15 +643,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
       }
       
-      // Delete pending collective order if exists
-      if (session?.user) {
-        await supabase
-          .from("user_orders")
-          .delete()
-          .eq("user_id", session.user.id)
-          .eq("order_type", "collective")
-          .eq("status", "pending");
-      }
+      // Note: We do NOT clear waiting list or delete pending order here
+      // That will happen when the cart order is finalized in checkout
       
       toast.success('Productos movidos al carrito');
     } catch (error) {
