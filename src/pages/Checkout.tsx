@@ -276,8 +276,24 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
 
       if (isCollective) {
         await clearWaitingList();
+        // Delete any pending collective order since we're finalizing
+        await supabase
+          .from("user_orders")
+          .delete()
+          .eq("user_id", session.user.id)
+          .eq("order_type", "collective")
+          .eq("status", "pending");
       } else {
         await clearCart();
+        // Also clear waiting list and pending collective order if user is buying from cart
+        // (items may have been moved from waiting list)
+        await clearWaitingList();
+        await supabase
+          .from("user_orders")
+          .delete()
+          .eq("user_id", session.user.id)
+          .eq("order_type", "collective")
+          .eq("status", "pending");
       }
 
       setOrderNumber(order.order_number);
