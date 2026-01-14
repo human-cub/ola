@@ -199,10 +199,9 @@ const WaitingList = () => {
   }, [pendingOrderCreatedAt]);
 
   // Fetch flavors and product data - use total_orders_count
-  // Also update prices dynamically based on current participant count
   useEffect(() => {
-    const fetchDataAndUpdatePrices = async () => {
-      const productIds = [...new Set(waitingListItems.map(item => item.product_id))];
+    const fetchData = async () => {
+      const productIds = [...new Set(waitingListItems.map((item) => item.product_id))];
       if (productIds.length === 0) return;
 
       const { data } = await supabase
@@ -213,6 +212,7 @@ const WaitingList = () => {
       if (data) {
         const flavorsMap: Record<string, string[]> = {};
         const prodDataMap: Record<string, ProductData> = {};
+
         data.forEach((p) => {
           flavorsMap[p.id] = (p.flavors as string[]) || [];
           prodDataMap[p.id] = {
@@ -222,37 +222,13 @@ const WaitingList = () => {
             prices: (p.prices as unknown as PriceData[]) || [],
           };
         });
+
         setProductFlavors(flavorsMap);
         setProductData(prodDataMap);
-
-        // Update waiting list item prices based on current total_orders_count
-        for (const item of waitingListItems) {
-          const prod = prodDataMap[item.product_id];
-          if (!prod || !prod.prices.length) continue;
-
-          const totalParticipants = prod.total_orders_count;
-          let newPrice = prod.prices[0].price; // Default to first tier
-
-          // Find the correct tier based on total participants
-          for (let i = prod.prices.length - 1; i >= 0; i--) {
-            if (totalParticipants >= prod.prices[i].people) {
-              newPrice = prod.prices[i].price;
-              break;
-            }
-          }
-
-          // Update price if different
-          if (Math.abs(item.current_price_per_unit - newPrice) > 0.01) {
-            await supabase
-              .from("waiting_list_items")
-              .update({ current_price_per_unit: newPrice })
-              .eq("id", item.id);
-          }
-        }
       }
     };
 
-    fetchDataAndUpdatePrices();
+    void fetchData();
 
     // Subscribe to realtime updates on products table
     const channel = supabase
@@ -265,7 +241,7 @@ const WaitingList = () => {
           table: "products",
         },
         () => {
-          fetchDataAndUpdatePrices();
+          void fetchData();
         }
       )
       .subscribe();
@@ -273,7 +249,10 @@ const WaitingList = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [waitingListItems.map(i => i.id).join(",")]);
+  }, [
+    // Re-fetch if items/quantities change (covers cases where realtime isn't available)
+    waitingListItems.map((i) => `${i.id}:${i.quantity}`).join(","),
+  ]);
 
   // Helper functions for price calculations
   const getFullPrice = (productId: string): number => {
