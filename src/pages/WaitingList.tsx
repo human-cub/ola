@@ -291,7 +291,8 @@ const WaitingList = () => {
   const getNextDiscountThreshold = (productId: string, userQty: number): { people: number; price: number } | null => {
     const prod = productData[productId];
     if (!prod || prod.prices.length === 0) return null;
-    const current = prod.total_orders_count + userQty;
+    // If user already has an order, their quantity is ALREADY included in total_orders_count
+    const current = hasExistingOrder ? prod.total_orders_count : prod.total_orders_count + userQty;
     for (const tier of prod.prices) {
       if (tier.people > current) {
         return tier;
@@ -303,6 +304,11 @@ const WaitingList = () => {
   const getParticipantsCount = (productId: string, userQty: number): number => {
     const prod = productData[productId];
     if (!prod) return userQty;
+    // If user already has an order, their quantity is ALREADY included in total_orders_count
+    // via waiting_for_discount_count, so don't add it again
+    if (hasExistingOrder) {
+      return prod.total_orders_count;
+    }
     return prod.total_orders_count + userQty;
   };
 
