@@ -447,17 +447,18 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Update waiting list item quantity with price recalculation based on tiers
+  // IMPORTANT: Only sync to DB counters if user already has a pending order
+  // Before order creation, changes are LOCAL ONLY (personal preview)
   const updateWaitingListItemQuantity = async (id: string, quantity: number) => {
     try {
       if (quantity < 1 || quantity > 99) return;
 
-      // Always use the live session user id to avoid race conditions with state
       const {
         data: { session },
       } = await supabase.auth.getSession();
       const userId = session?.user?.id ?? null;
 
-      // Get the item to find product_id and current quantity
+      // Get the item to find product_id
       const { data: item } = await supabase
         .from("waiting_list_items")
         .select("product_id, quantity")
@@ -466,28 +467,56 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (!item) return;
 
-      const oldQuantity = item.quantity;
-      const quantityDiff = quantity - oldQuantity;
-
       // 1) Update quantity in waiting_list_items
       await supabase.from("waiting_list_items").update({ quantity }).eq("id", id);
 
-      // 2) If user already has a pending collective order, sync it so the DB counters update
-      // This will trigger the database trigger that updates waiting_for_discount_count
+      // 2) Check if user has an existing pending collective order
+      let hasExistingOrder = false;
       if (userId) {
-        await syncWaitingListOrder(userId);
+        const { data: existingOrder } = await supabase
+          .from("user_orders")
+          .select("id")
+          .eq("user_id", userId)
+          .eq("order_type", "collective")
+          .eq("status", "pending")
+          .maybeSingle();
+        
+        hasExistingOrder = !!existingOrder;
+        
+        // Only sync if order already exists - this updates global counters
+        if (hasExistingOrder) {
+          await syncWaitingListOrder(userId);
+        }
       }
 
-      // 3) Now fetch the updated product data with refreshed total_orders_count
+      // 3) Fetch product data
       const { data: product } = await supabase
         .from("products")
         .select("prices, total_orders_count")
         .eq("id", item.product_id)
         .maybeSingle();
 
-      let newPrice: number | null = null;
-      const totalParticipants = Number(product?.total_orders_count ?? 0);
+      // 4) Get all user's waiting list items for this product to calculate personal total
+      let userTotalQty = 0;
+      if (userId) {
+        const { data: userItems } = await supabase
+          .from("waiting_list_items")
+          .select("quantity, product_id")
+          .eq("user_id", userId)
+          .eq("product_id", item.product_id);
+        
+        userTotalQty = (userItems || []).reduce((sum, i) => sum + (i.quantity || 0), 0);
+      }
 
+      // 5) Calculate effective participants for price tier
+      // If order exists: use total_orders_count (already includes user's qty via trigger)
+      // If no order: use total_orders_count + user's qty (personal preview)
+      const baseParticipants = Number(product?.total_orders_count ?? 0);
+      const effectiveParticipants = hasExistingOrder 
+        ? baseParticipants 
+        : baseParticipants + userTotalQty;
+
+      let newPrice: number | null = null;
       if (product?.prices && Array.isArray(product.prices)) {
         const normalized = (product.prices as any[])
           .map((p) => ({
@@ -498,10 +527,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .sort((a, b) => a.people - b.people);
 
         if (normalized.length > 0) {
-          // Find the correct tier based on total participants
-          newPrice = normalized[0].price; // Default to highest price (first tier)
+          newPrice = normalized[0].price;
           for (let i = normalized.length - 1; i >= 0; i--) {
-            if (totalParticipants >= normalized[i].people) {
+            if (effectiveParticipants >= normalized[i].people) {
               newPrice = normalized[i].price;
               break;
             }
@@ -509,7 +537,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
 
-      // 4) Persist the new per-unit price on the waiting list item
+      // 6) Update price on waiting list item
       if (newPrice !== null) {
         await supabase
           .from("waiting_list_items")
@@ -517,12 +545,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .eq("id", id);
       }
 
-      // 5) Refresh local state
+      // 7) Refresh local state
       const waiting = await fetchWaitingListItemsInternal(userId);
       setWaitingListItems(waiting);
 
-      // 6) Sync order AGAIN so order subtotal / item prices stay consistent
-      if (userId) {
+      // 8) Sync order again only if it exists (to update subtotals)
+      if (userId && hasExistingOrder) {
         await syncWaitingListOrder(userId);
       }
     } catch (error) {
