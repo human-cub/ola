@@ -291,12 +291,18 @@ const WaitingList = () => {
     return prod.total_orders_count + userQty;
   };
 
-  // Get current price based on total_orders_count
-  const getCurrentPrice = (productId: string): number => {
+  // Get current price based on participants count
+  // If no order exists, add user's personal quantity (preview mode)
+  const getCurrentPrice = (productId: string, userQty: number): number => {
     const prod = productData[productId];
     if (!prod || prod.prices.length === 0) return 0;
     
-    const totalParticipants = prod.total_orders_count;
+    // If user already has an order, their qty is included in total_orders_count
+    // If not, we show a "preview" of what price would be with their qty
+    const totalParticipants = hasExistingOrder 
+      ? prod.total_orders_count 
+      : prod.total_orders_count + userQty;
+    
     let currentPrice = prod.prices[0].price; // Default to first tier (highest price)
     
     for (let i = prod.prices.length - 1; i >= 0; i--) {
@@ -309,9 +315,17 @@ const WaitingList = () => {
     return currentPrice;
   };
 
+  // Calculate user's total quantity per product for pricing
+  const getUserQtyForProduct = (productId: string): number => {
+    return waitingListItems
+      .filter(i => i.product_id === productId)
+      .reduce((sum, i) => sum + i.quantity, 0);
+  };
+
   // Current subtotal with dynamically calculated prices
   const subtotal = waitingListItems.reduce((sum, item) => {
-    const dynamicPrice = getCurrentPrice(item.product_id) || item.current_price_per_unit;
+    const userQty = getUserQtyForProduct(item.product_id);
+    const dynamicPrice = getCurrentPrice(item.product_id, userQty) || item.current_price_per_unit;
     return sum + dynamicPrice * item.quantity;
   }, 0);
 
@@ -555,7 +569,7 @@ const WaitingList = () => {
                   const prod = productData[item.product_id];
                   const participantCount = getParticipantsCount(item.product_id, item.quantity);
                   const nextThreshold = getNextDiscountThreshold(item.product_id, item.quantity);
-                  const dynamicPrice = getCurrentPrice(item.product_id) || item.current_price_per_unit;
+                  const dynamicPrice = getCurrentPrice(item.product_id, item.quantity) || item.current_price_per_unit;
 
                   return (
                     <div key={item.id}>
