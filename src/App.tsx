@@ -42,7 +42,8 @@ const App = () => (
           <Route path="/lista-espera" element={<WaitingList />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/completar-datos-colectiva" element={<CompletarDatosColectiva />} />
-          <Route path="/pedido/:orderNumber" element={<OrderDetail />} />
+          <Route path="/pedido/:orderId" element={<OrderDetail />} />
+          <Route path="/mi-cuenta/pedidos/:orderId" element={<OrderDetail />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <FloatingWhatsApp />
