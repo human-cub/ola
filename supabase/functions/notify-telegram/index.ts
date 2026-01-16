@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -7,12 +6,14 @@ const corsHeaders = {
 };
 
 interface OrderData {
-  product_name: string;
+  order_id?: string;
+  order_number: string;
+  order_type: string;
   customer_name: string;
   phone: string;
-  comment?: string;
+  total: string;
+  order_url?: string;
   waiting_for_discount?: boolean;
-  created_at: string;
 }
 
 serve(async (req) => {
@@ -34,19 +35,21 @@ serve(async (req) => {
 
     const orderData: OrderData = await req.json();
     
-    const waitingStatus = orderData.waiting_for_discount 
-      ? "🕐 <b>SÍ</b> - Espera descuento hasta domingo" 
-      : "❌ No";
+    const waitingStatus = orderData.waiting_for_discount ? "Sí" : "No";
+    
+    // Create clickable order link if URL is provided
+    const orderLink = orderData.order_url 
+      ? `<a href="${orderData.order_url}">${orderData.order_number}</a>`
+      : orderData.order_number;
     
     const message = `
 🔔 <b>Nueva Orden Recibida</b>
 
-📦 <b>Producto:</b> ${orderData.product_name}
 👤 <b>Cliente:</b> ${orderData.customer_name}
 📱 <b>Teléfono:</b> ${orderData.phone}
-💬 <b>Comentario:</b> ${orderData.comment || 'Sin comentarios'}
 ⏳ <b>Espera Descuento:</b> ${waitingStatus}
-📅 <b>Fecha:</b> ${new Date(orderData.created_at).toLocaleString('es-AR')}
+🧾 <b>Pedido:</b> ${orderLink}
+💰 <b>Total:</b> ${orderData.total}
     `.trim();
 
     const telegramResponse = await fetch(
@@ -58,6 +61,7 @@ serve(async (req) => {
           chat_id: TELEGRAM_CHAT_ID,
           text: message,
           parse_mode: 'HTML',
+          disable_web_page_preview: false,
         }),
       }
     );

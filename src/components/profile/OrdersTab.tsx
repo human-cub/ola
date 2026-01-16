@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Package, Clock, Truck, CheckCircle, XCircle, ChevronRight, Filter } from "lucide-react";
+import { Package, Clock, Truck, CheckCircle, XCircle, ChevronRight, FileText } from "lucide-react";
 
 interface OrderItem {
   product_id: string;
@@ -164,37 +164,42 @@ const OrdersTab = () => {
             
             return (
               <Card key={order.id} className="overflow-hidden hover:shadow-md transition-shadow">
-                <Link to={linkTo}>
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <h3 className="font-semibold">Pedido {order.order_number}</h3>
-                        <p className="text-sm text-muted-foreground">{formatDate(order.created_at)}</p>
-                      </div>
-                      <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <h3 className="font-semibold">Pedido {order.order_number}</h3>
+                      <p className="text-sm text-muted-foreground">{formatDate(order.created_at)}</p>
                     </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-1">
-                        <p className="text-sm">
-                          Tipo: <span className="font-medium">
-                            {order.order_type === 'immediate' ? 'Compra inmediata' : 'Compra colectiva'}
-                          </span>
-                        </p>
-                        {isPendingCollective ? (
-                          <p className="text-sm text-amber-600 font-medium">Esperando cierre del domingo</p>
-                        ) : (
-                          <p className="text-lg font-bold">{formatPrice(order.total_amount)}</p>
-                        )}
-                      </div>
-                      
-                      <div className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm ${statusConfig[order.status]?.color}`}>
-                        <StatusIcon className="w-4 h-4" />
-                        {isPendingCollective ? 'En espera' : statusConfig[order.status]?.label}
-                      </div>
+                    <div className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm ${statusConfig[order.status]?.color}`}>
+                      <StatusIcon className="w-4 h-4" />
+                      {isPendingCollective ? 'En espera' : statusConfig[order.status]?.label}
                     </div>
-                  </CardContent>
-                </Link>
+                  </div>
+                  
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="space-y-1">
+                      <p className="text-sm">
+                        Tipo: <span className="font-medium">
+                          {order.order_type === 'immediate' ? 'Compra inmediata' : 'Compra colectiva'}
+                        </span>
+                      </p>
+                      {isPendingCollective ? (
+                        <p className="text-sm text-amber-600 font-medium">Esperando cierre del domingo</p>
+                      ) : (
+                        <p className="text-lg font-bold">{formatPrice(order.total_amount)}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button asChild variant="outline" size="sm" className="flex-1">
+                      <Link to={linkTo}>
+                        <FileText className="w-4 h-4 mr-1" />
+                        {isPendingCollective ? 'Ver lista' : 'Ver comprobante'}
+                      </Link>
+                    </Button>
+                  </div>
+                </CardContent>
               </Card>
             );
           })}
