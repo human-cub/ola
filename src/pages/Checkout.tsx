@@ -24,7 +24,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, ChevronDown, ChevronUp, Check, MapPin, Loader2, Share2, MessageCircle, FileText } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronUp, Check, MapPin, Loader2, Share2, MessageCircle, FileText, Truck } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -83,8 +83,8 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
   // Payment
   const [paymentMethod, setPaymentMethod] = useState("");
   
-  // Delivery
-  const [isInCABA, setIsInCABA] = useState(true);
+  // Delivery zone: 'caba' | 'amba' | 'other'
+  const [deliveryZone, setDeliveryZone] = useState<'caba' | 'amba' | 'other'>('caba');
   
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -142,13 +142,31 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
 
-  // Check if address is in CABA
+  // Determine delivery zone based on postal code
   useEffect(() => {
-    const cabaPostalCodes = ['1000', '1001', '1002', '1003', '1004', '1005'];
-    const isCaba = city.toLowerCase().includes('buenos aires') && 
-                   city.toLowerCase().includes('ciudad') ||
-                   cabaPostalCodes.some(cp => postalCode.startsWith(cp.slice(0, 2)));
-    setIsInCABA(isCaba);
+    // CABA postal codes: 1000-1499
+    // AMBA postal codes: 1600-1900 range (varies by partido)
+    const cp = parseInt(postalCode, 10);
+    
+    if (!isNaN(cp)) {
+      if (cp >= 1000 && cp <= 1499) {
+        setDeliveryZone('caba');
+      } else if (
+        (cp >= 1600 && cp <= 1699) || // Zona Norte
+        (cp >= 1700 && cp <= 1799) || // Zona Oeste  
+        (cp >= 1800 && cp <= 1899) || // Zona Sur
+        (cp >= 1900 && cp <= 1999) || // La Plata, Berisso, Ensenada
+        (cp >= 1400 && cp <= 1499)    // Límite CABA/Provincia
+      ) {
+        setDeliveryZone('amba');
+      } else {
+        setDeliveryZone('other');
+      }
+    } else if (city === 'Ciudad Autónoma de Buenos Aires') {
+      setDeliveryZone('caba');
+    } else {
+      setDeliveryZone('other');
+    }
   }, [city, postalCode]);
 
   const subtotal = items.reduce(
@@ -161,8 +179,8 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
 
   const originalPrice = subtotal * 1.2;
   const discount = originalPrice - subtotal;
-  const deliveryCost = isInCABA ? 0 : null;
-  const total = subtotal + (deliveryCost || 0);
+  const deliveryCost = deliveryZone === 'caba' ? 0 : deliveryZone === 'amba' ? 3000 : 5000;
+  const total = subtotal + deliveryCost;
 
   const formatPrice = (price: number) => {
     return `$${Math.round(price).toLocaleString('es-AR')}`;
@@ -510,15 +528,20 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
                 />
               </div>
 
-              {isInCABA ? (
+              {deliveryZone === 'caba' ? (
                 <div className="flex items-center gap-2 text-green-600 bg-green-50 p-3 rounded-lg">
                   <Check className="w-5 h-5 flex-shrink-0" />
                   <span className="font-medium text-sm">¡Envío gratis en CABA!</span>
                 </div>
+              ) : deliveryZone === 'amba' ? (
+                <div className="flex items-center gap-2 text-blue-600 bg-blue-50 p-3 rounded-lg">
+                  <Truck className="w-5 h-5 flex-shrink-0" />
+                  <span className="font-medium text-sm">Envío AMBA: $3.000</span>
+                </div>
               ) : (
-                <div className="bg-amber-50 border border-amber-200 p-3 rounded-lg text-sm">
-                  <p className="font-medium text-amber-800">Tu dirección está fuera de CABA</p>
-                  <p className="text-amber-700 text-xs">Nos pondremos en contacto para coordinar la entrega.</p>
+                <div className="flex items-center gap-2 text-amber-600 bg-amber-50 p-3 rounded-lg">
+                  <Truck className="w-5 h-5 flex-shrink-0" />
+                  <span className="font-medium text-sm">Envío resto del país: $5.000</span>
                 </div>
               )}
             </div>
@@ -588,7 +611,7 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Envío:</span>
-              <span>{isInCABA ? "Gratis" : "A confirmar"}</span>
+              <span>{deliveryCost === 0 ? "Gratis" : formatPrice(deliveryCost)}</span>
             </div>
             <Separator />
             <div className="flex justify-between text-xl font-bold pt-2">
