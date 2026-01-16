@@ -24,7 +24,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, ChevronDown, ChevronUp, Check, MapPin, Loader2, Share2, MessageCircle } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronUp, Check, MapPin, Loader2, Share2, MessageCircle, FileText } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -64,6 +64,8 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
   const [orderSummaryOpen, setOrderSummaryOpen] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [orderNumber, setOrderNumber] = useState("");
+  const [orderId, setOrderId] = useState("");
+  const [finalTotal, setFinalTotal] = useState(0);
   
   // Address fields
   const [street, setStreet] = useState("");
@@ -245,10 +247,17 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
           payment_method: paymentMethod,
           status: 'pending' as const,
         }])
-        .select('order_number')
+        .select('id, order_number')
         .single();
 
       if (orderError) throw orderError;
+
+      // Get user profile for name
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("first_name, last_name")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
 
       await supabase
         .from("profiles")
@@ -258,16 +267,20 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
         })
         .eq("user_id", session.user.id);
 
+      const customerName = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') || 'Sin nombre';
+      const orderUrl = `https://ola.lovable.app/mi-cuenta/pedidos/${order.id}`;
+
       try {
         await supabase.functions.invoke("notify-telegram", {
           body: {
+            order_id: order.id,
             order_number: order.order_number,
             order_type: isCollective ? 'Compra Colectiva' : 'Compra Inmediata',
-            customer_email: email,
+            customer_name: customerName,
             phone,
             total: formatPrice(total),
-            items: orderItems.map(i => `${i.quantity}x ${i.product_name} (${i.flavor || 'Sin sabor'})`).join(', '),
-            address: `${street} ${streetNumber}, ${city}`,
+            order_url: orderUrl,
+            waiting_for_discount: isCollective,
           },
         });
       } catch {
@@ -297,6 +310,8 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
       }
 
       setOrderNumber(order.order_number);
+      setOrderId(order.id);
+      setFinalTotal(total);
       setShowSuccess(true);
     } catch (error: any) {
       toast.error(error.message || "Error al procesar el pedido");
@@ -620,7 +635,7 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
               <div className="bg-muted rounded-lg p-4 text-left text-sm space-y-1">
                 <div className="flex justify-between">
                   <span>Total:</span>
-                  <span className="font-bold">{formatPrice(total)}</span>
+                  <span className="font-bold">{formatPrice(finalTotal)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Forma de pago:</span>
@@ -649,11 +664,12 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
           </AlertDialogHeader>
 
           <div className="flex flex-col gap-2 pt-4">
-            <Button onClick={() => navigate("/mi-cuenta/pedidos")} className="w-full">
-              Ver mi pedido
+            <Button onClick={() => navigate(`/mi-cuenta/pedidos/${orderId}`)} className="w-full">
+              <FileText className="w-4 h-4 mr-2" />
+              Ver comprobante
             </Button>
-            <Button variant="outline" onClick={() => navigate("/")} className="w-full">
-              Seguir comprando
+            <Button variant="outline" onClick={() => navigate("/mi-cuenta")} className="w-full">
+              Ir a Mis Pedidos
             </Button>
           </div>
         </AlertDialogContent>
