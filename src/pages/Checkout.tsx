@@ -1,10 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -24,13 +23,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, ChevronDown, ChevronUp, Check, MapPin, Loader2, Share2, MessageCircle, FileText, Truck } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronUp, Check, Loader2, Share2, MessageCircle, FileText } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { z } from "zod";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import { Separator } from "@/components/ui/separator";
+import { AddressForm } from "@/components/AddressForm";
 
 const addressSchema = z.object({
   street: z.string().min(1, "La calle es requerida").max(200),
@@ -142,32 +142,10 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
 
-  // Determine delivery zone based on postal code
-  useEffect(() => {
-    // CABA postal codes: 1000-1499
-    // AMBA postal codes: 1600-1900 range (varies by partido)
-    const cp = parseInt(postalCode, 10);
-    
-    if (!isNaN(cp)) {
-      if (cp >= 1000 && cp <= 1499) {
-        setDeliveryZone('caba');
-      } else if (
-        (cp >= 1600 && cp <= 1699) || // Zona Norte
-        (cp >= 1700 && cp <= 1799) || // Zona Oeste  
-        (cp >= 1800 && cp <= 1899) || // Zona Sur
-        (cp >= 1900 && cp <= 1999) || // La Plata, Berisso, Ensenada
-        (cp >= 1400 && cp <= 1499)    // Límite CABA/Provincia
-      ) {
-        setDeliveryZone('amba');
-      } else {
-        setDeliveryZone('other');
-      }
-    } else if (city === 'Ciudad Autónoma de Buenos Aires') {
-      setDeliveryZone('caba');
-    } else {
-      setDeliveryZone('other');
-    }
-  }, [city, postalCode]);
+  // Handle delivery zone change from AddressForm
+  const handleDeliveryZoneChange = useCallback((zone: 'caba' | 'amba' | 'other') => {
+    setDeliveryZone(zone);
+  }, []);
 
   const subtotal = items.reduce(
     (sum, item) => {
@@ -428,123 +406,24 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
 
           {/* Address Section */}
           <div className="mb-6">
-            <h2 className="text-lg font-semibold flex items-center gap-2 mb-4">
-              <MapPin className="w-5 h-5" />
-              Dirección de entrega
-            </h2>
-            
-            <div className="space-y-4">
-              <div className="grid grid-cols-3 gap-3">
-                <div className="col-span-2 space-y-1">
-                  <Label htmlFor="street" className="text-sm">Calle *</Label>
-                  <Input
-                    id="street"
-                    value={street}
-                    onChange={(e) => setStreet(e.target.value)}
-                    placeholder="Av. Corrientes"
-                    className={errors.street ? "border-destructive" : ""}
-                  />
-                  {errors.street && <p className="text-xs text-destructive">{errors.street}</p>}
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="number" className="text-sm">Número *</Label>
-                  <Input
-                    id="number"
-                    value={streetNumber}
-                    onChange={(e) => setStreetNumber(e.target.value)}
-                    placeholder="1234"
-                    className={errors.number ? "border-destructive" : ""}
-                  />
-                  {errors.number && <p className="text-xs text-destructive">{errors.number}</p>}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <Label htmlFor="floor" className="text-sm">Piso/Depto</Label>
-                  <Input
-                    id="floor"
-                    value={floor}
-                    onChange={(e) => setFloor(e.target.value)}
-                    placeholder="3° B"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="postalCode" className="text-sm">CP *</Label>
-                  <Input
-                    id="postalCode"
-                    value={postalCode}
-                    onChange={(e) => setPostalCode(e.target.value)}
-                    placeholder="1043"
-                    maxLength={4}
-                    className={errors.postalCode ? "border-destructive" : ""}
-                  />
-                  {errors.postalCode && <p className="text-xs text-destructive">{errors.postalCode}</p>}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <Label htmlFor="city" className="text-sm">Ciudad *</Label>
-                  <Select value={city} onValueChange={setCity}>
-                    <SelectTrigger id="city">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Ciudad Autónoma de Buenos Aires">CABA</SelectItem>
-                      <SelectItem value="La Plata">La Plata</SelectItem>
-                      <SelectItem value="Mar del Plata">Mar del Plata</SelectItem>
-                      <SelectItem value="Córdoba">Córdoba</SelectItem>
-                      <SelectItem value="Rosario">Rosario</SelectItem>
-                      <SelectItem value="Mendoza">Mendoza</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="province" className="text-sm">Provincia *</Label>
-                  <Select value={province} onValueChange={setProvince}>
-                    <SelectTrigger id="province">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Buenos Aires">Buenos Aires</SelectItem>
-                      <SelectItem value="Córdoba">Córdoba</SelectItem>
-                      <SelectItem value="Santa Fe">Santa Fe</SelectItem>
-                      <SelectItem value="Mendoza">Mendoza</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <Label htmlFor="references" className="text-sm">Referencias</Label>
-                <Textarea
-                  id="references"
-                  value={references}
-                  onChange={(e) => setReferences(e.target.value)}
-                  placeholder="Timbre, indicaciones, etc."
-                  rows={2}
-                  className="resize-none"
-                />
-              </div>
-
-              {deliveryZone === 'caba' ? (
-                <div className="flex items-center gap-2 text-green-600 bg-green-50 p-3 rounded-lg">
-                  <Check className="w-5 h-5 flex-shrink-0" />
-                  <span className="font-medium text-sm">¡Envío gratis en CABA!</span>
-                </div>
-              ) : deliveryZone === 'amba' ? (
-                <div className="flex items-center gap-2 text-blue-600 bg-blue-50 p-3 rounded-lg">
-                  <Truck className="w-5 h-5 flex-shrink-0" />
-                  <span className="font-medium text-sm">Envío AMBA: $3.000</span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2 text-amber-600 bg-amber-50 p-3 rounded-lg">
-                  <Truck className="w-5 h-5 flex-shrink-0" />
-                  <span className="font-medium text-sm">Envío resto del país: $5.000</span>
-                </div>
-              )}
-            </div>
+            <AddressForm
+              street={street}
+              setStreet={setStreet}
+              streetNumber={streetNumber}
+              setStreetNumber={setStreetNumber}
+              floor={floor}
+              setFloor={setFloor}
+              postalCode={postalCode}
+              setPostalCode={setPostalCode}
+              city={city}
+              setCity={setCity}
+              province={province}
+              setProvince={setProvince}
+              references={references}
+              setReferences={setReferences}
+              errors={errors}
+              onDeliveryZoneChange={handleDeliveryZoneChange}
+            />
           </div>
 
           <Separator className="mb-6" />

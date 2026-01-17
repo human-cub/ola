@@ -36,7 +36,7 @@ export const ServiceDescription = () => {
               </p>
               <p className="text-sm flex items-center gap-2">
                 <span className="w-2 h-2 bg-primary rounded-full flex-shrink-0"></span>
-                Cada colecta dura una semana (de lunes a domingo). Si se llena antes, hacemos el pedido más rápido
+                Cada colecta dura una semana (de lunes a domingo)
               </p>
             </div>
 
