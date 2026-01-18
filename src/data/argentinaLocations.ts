@@ -26,7 +26,7 @@ export const ARGENTINA_PROVINCES = [
   "Tucumán"
 ] as const;
 
-// Major cities in CABA (barrios)
+// All CABA barrios
 export const CABA_LOCALITIES = [
   "Agronomía", "Almagro", "Balvanera", "Barracas", "Belgrano", "Boedo", 
   "Caballito", "Chacarita", "Coghlan", "Colegiales", "Constitución", 
@@ -40,8 +40,9 @@ export const CABA_LOCALITIES = [
   "Villa Santa Rita", "Villa Soldati", "Villa Urquiza", "Vélez Sársfield"
 ];
 
-// Major cities in AMBA (Gran Buenos Aires)
+// All AMBA localities (partidos and main cities)
 export const AMBA_LOCALITIES = [
+  // Partidos
   "Almirante Brown", "Avellaneda", "Berazategui", "Berisso", "Campana",
   "Cañuelas", "Ensenada", "Escobar", "Esteban Echeverría", "Exaltación de la Cruz",
   "Ezeiza", "Florencio Varela", "General Las Heras", "General Rodríguez",
@@ -50,7 +51,7 @@ export const AMBA_LOCALITIES = [
   "Marcos Paz", "Merlo", "Moreno", "Morón", "Pilar", "Presidente Perón",
   "Quilmes", "San Fernando", "San Isidro", "San Miguel", "San Vicente",
   "Tigre", "Tres de Febrero", "Vicente López", "Zárate",
-  // Specific localities
+  // Main localities
   "Adrogué", "Banfield", "Bernal", "Burzaco", "Caseros", "Castelar",
   "City Bell", "Claypole", "Dock Sud", "Don Bosco", "El Palomar",
   "El Talar", "Florencio Varela", "Gonnet", "González Catán", "Grand Bourg",
@@ -58,88 +59,282 @@ export const AMBA_LOCALITIES = [
   "Martínez", "Olivos", "Pablo Podestá", "Quilmes Oeste", "Rafael Calzada",
   "Ramos Mejía", "Remedios de Escalada", "Sarandí", "San Justo",
   "Temperley", "Turdera", "Villa Ballester", "Villa Bosch", "Villa Domínico",
-  "Villa Luzuriaga", "Villa Madero", "Wilde", "William Morris"
+  "Villa Luzuriaga", "Villa Madero", "Wilde", "William Morris",
+  // Additional localities
+  "Acassuso", "Beccar", "Boulogne", "Florida", "La Lucila", "Munro",
+  "San Fernando", "Victoria", "Villa Adelina", "Villa Martelli",
+  "Bella Vista", "Del Viso", "Fátima", "Manuel Alberti", "Maquinista Savio",
+  "Villa Rosa", "Tortuguitas", "Ing. Maschwitz", "Garín", "Matheu",
+  "Pacheco", "Talar de Pacheco", "General Pacheco", "Benavídez", "Dique Luján",
+  "Don Torcuato", "El Talar", "Los Troncos", "Nordelta", "Ricardo Rojas",
+  "Rincón de Milberg", "San Isidro Labrador",
+  "Ciudadela", "El Libertador", "Loma Hermosa", "José Ingenieros",
+  "San Andrés", "Santos Lugares", "Villa Ballester", "Villa Lynch",
+  "Villa Maipú", "Billinghurst",
+  "Carapachay", "Florida Este", "Florida Oeste", "La Lucila", "Munro",
+  "Olivos", "Vicente López", "Villa Martelli",
+  "Aldo Bonzi", "Ciudad Evita", "González Catán", "Gregorio de Laferrere",
+  "Isidro Casanova", "La Tablada", "Lomas del Mirador", "Rafael Castillo",
+  "San Justo", "Tapiales", "Villa Luzuriaga", "Virrey del Pino",
+  "20 de Junio", "9 de Abril", "Canning", "El Jagüel", "Luis Guillón",
+  "Monte Grande", "Tristán Suárez",
+  "Alejandro Korn", "Domselaar", "San Vicente",
+  "Glew", "Longchamps", "José Mármol", "Ministro Rivadavia", "Rafael Calzada",
+  "Abasto", "Arturo Seguí", "City Bell", "El Peligro", "Etcheverry",
+  "Gorina", "Gonnet", "Hernández", "Lisandro Olmos", "Los Hornos",
+  "Manuel B. Gonnet", "Melchor Romero", "Ringuelet", "San Carlos",
+  "Tolosa", "Villa Elisa", "Villa Elvira",
+  "Ezpeleta", "Quilmes Oeste", "San Francisco Solano",
+  "Solano", "Bernal Oeste", "Don Bosco",
+  "Área de Promoción El Triángulo", "Bosques", "Hudson", "Pereyra",
+  "Ranelagh", "Sourigues", "Villa España", "Plátanos", "Gutiérrez",
+  "Ingeniero Allan", "La Capilla", "Villa Brown",
+  "Gerli", "Lanús Este", "Lanús Oeste", "Monte Chingolo", "Remedios de Escalada",
+  "Valentín Alsina", "Crucecita",
+  "Banfield", "Llavallol", "Temperley", "Turdera",
+  "Villa Fiorito", "Villa Centenario", "Villa Industriales",
+  "Avellaneda Centro", "Dock Sud", "Piñeyro", "Sarandí", "Villa Domínico", "Wilde",
+  "Berazategui Centro", "El Pato", "Juan María Gutiérrez", "Villa España",
+  "Caseros", "Ciudad Jardín Lomas del Palomar", "Ciudadela", "El Libertador",
+  "José Ingenieros", "Loma Hermosa", "Martín Coronado", "Pablo Podestá",
+  "Sáenz Peña", "Santos Lugares", "Villa Bosch", "Villa Raffo",
+  "Hurlingham Centro", "Villa Santos Tesei", "William C. Morris",
+  "Bella Vista", "Muñiz", "San Miguel Centro",
+  "Grand Bourg", "Ingeniero Pablo Nogués", "Los Polvorines", "Pablo Nogués",
+  "Tortuguitas",
+  "Del Viso", "Fátima", "La Lonja", "Manuel Alberti", "Manzanares",
+  "Presidente Derqui", "Villa Astolfi", "Villa del Pilar", "Villa Rosa",
+  "Bosques", "El Pato", "Francisco Álvarez", "La Reja", "Mariano Acosta",
+  "Paso del Rey", "Pontevedra", "San Antonio de Padua", "Libertad",
+  "Cuartel V", "La Perlita", "Moreno Centro", "Trujui",
+  "Castelar", "El Palomar", "Haedo", "Morón Centro", "Villa Sarmiento",
+  "Ituzaingó Centro", "Villa Udaondo",
+  "Garín", "Ingeniero Maschwitz", "Loma Verde", "Maquinista Savio",
+  "Campana Centro", "Los Cardales",
+  "Zárate Centro", "Lima",
+  "Luján Centro", "Olivera", "Open Door", "Torres",
+  "Capilla del Señor", "Los Cardales", "Pavón",
+  "General Rodríguez Centro", "La Bota",
+  "Marcos Paz Centro", "Libertad",
+  "Cañuelas Centro", "Máximo Paz", "Vicente Casares",
+  "Presidente Perón", "Guernica",
+  "Ezeiza Centro", "La Unión", "Tristán Suárez",
+  "Ensenada Centro", "Punta Lara",
+  "Berisso Centro", "Los Talas"
 ];
 
-// Major cities in other provinces
+// Complete list of cities by province
 export const MAJOR_CITIES: Record<string, string[]> = {
   "Buenos Aires": [
     ...AMBA_LOCALITIES,
+    // Interior de Buenos Aires
     "Bahía Blanca", "Mar del Plata", "Tandil", "Necochea", "Olavarría",
-    "Junín", "Pergamino", "San Nicolás", "Zárate", "Campana"
+    "Junín", "Pergamino", "San Nicolás de los Arroyos", "Azul", "Tres Arroyos",
+    "Chivilcoy", "Mercedes", "Bragado", "Chacabuco", "9 de Julio",
+    "Trenque Lauquen", "Pehuajó", "Carlos Casares", "General Villegas",
+    "Lincoln", "Bolívar", "General Pico", "25 de Mayo", "Saladillo",
+    "Lobos", "Navarro", "Suipacha", "Carmen de Areco", "San Antonio de Areco",
+    "Zárate", "Campana", "Baradero", "San Pedro", "Ramallo", "Arrecifes",
+    "Salto", "Rojas", "Colón", "Lobería", "General Alvarado", "Miramar",
+    "Mar de Ajó", "San Clemente del Tuyú", "Santa Teresita", "Mar del Tuyú",
+    "San Bernardo", "Pinamar", "Villa Gesell", "Cariló", "Valeria del Mar",
+    "Monte Hermoso", "Punta Alta", "Coronel Rosales", "Villarino", "Patagones",
+    "General Pueyrredón", "Balcarce", "General Belgrano", "Las Flores",
+    "Rauch", "Ayacucho", "Dolores", "Maipú", "General Madariaga",
+    "General Lavalle", "Tordillo", "Castelli", "Chascomús", "Pila",
+    "Lezama", "Magdalena", "Brandsen", "Punta Indio", "Coronel Brandsen"
   ],
   "Córdoba": [
     "Córdoba Capital", "Río Cuarto", "Villa María", "San Francisco", 
     "Villa Carlos Paz", "Alta Gracia", "Río Tercero", "Bell Ville",
-    "Villa Allende", "La Calera", "Jesús María", "Cosquín"
+    "Villa Allende", "La Calera", "Jesús María", "Cosquín", "Cruz del Eje",
+    "La Falda", "Carlos Paz", "Mina Clavero", "Villa Dolores", "Dean Funes",
+    "Morteros", "Arroyito", "Las Varillas", "Oncativo", "Río Segundo",
+    "Pilar", "Río Ceballos", "Salsipuedes", "Unquillo", "Mendiolaza",
+    "Villa General Belgrano", "Santa Rosa de Calamuchita", "Embalse",
+    "Almafuerte", "General Deheza", "General Cabrera", "Laboulaye",
+    "Huinca Renancó", "Marcos Juárez", "Leones", "Monte Maíz",
+    "Villa Cura Brochero", "Nono", "Villa de las Rosas", "San Javier",
+    "Villa Giardino", "La Cumbre", "Los Cocos", "Capilla del Monte",
+    "Agua de Oro", "El Manzano", "Colonia Caroya", "Sinsacate",
+    "Anisacate", "La Bolsa", "Villa Ciudad de América", "San Antonio de Arredondo"
   ],
   "Santa Fe": [
     "Rosario", "Santa Fe Capital", "Rafaela", "Venado Tuerto", 
-    "Reconquista", "Villa Gobernador Gálvez", "Casilda", "San Lorenzo"
+    "Reconquista", "Villa Gobernador Gálvez", "Casilda", "San Lorenzo",
+    "Santo Tomé", "Esperanza", "Cañada de Gómez", "Sunchales", "Villa Constitución",
+    "Funes", "Roldán", "Capitán Bermúdez", "Granadero Baigorria", "Pérez",
+    "Arroyo Seco", "Carcarañá", "Alcorta", "Arequito", "Armstrong",
+    "Las Parejas", "Las Rosas", "San Jorge", "Sastre", "Totoras",
+    "Avellaneda", "Tostado", "Vera", "Calchaquí", "Ceres", "San Cristóbal",
+    "San Justo", "San Javier", "Helvecia", "Cayastá", "Coronda",
+    "Gálvez", "San Genaro", "Firmat", "Rufino", "Melincué",
+    "Wheelwright", "Villa Cañás", "Murphy", "Bouquet", "Christophersen"
   ],
   "Mendoza": [
     "Mendoza Capital", "San Rafael", "Godoy Cruz", "Guaymallén",
-    "Las Heras", "Maipú", "Luján de Cuyo", "Tunuyán", "San Martín"
+    "Las Heras", "Maipú", "Luján de Cuyo", "Tunuyán", "San Martín",
+    "Rivadavia", "Junín", "Tupungato", "General Alvear", "Malargüe",
+    "Santa Rosa", "La Paz", "Lavalle", "Chacras de Coria", "Vistalba",
+    "Agrelo", "Perdriel", "Ugarteche", "Coquimbito", "Fray Luis Beltrán",
+    "Rodeo de la Cruz", "Palmira", "La Consulta", "Eugenio Bustos",
+    "Colonia Las Rosas", "Alto Verde", "Villa Atuel", "Monte Comán",
+    "Bowen", "Real del Padre", "Jaime Prats", "25 de Mayo", "Medrano",
+    "Villa Seca", "Barrio La Gloria", "El Algarrobal", "El Plumerillo"
   ],
   "Tucumán": [
     "San Miguel de Tucumán", "Yerba Buena", "Tafí Viejo", "Banda del Río Salí",
-    "Concepción", "Monteros", "Famaillá"
+    "Concepción", "Monteros", "Famaillá", "Aguilares", "Juan Bautista Alberdi",
+    "Simoca", "Lules", "Bella Vista", "Tafí del Valle", "Amaicha del Valle",
+    "El Mollar", "Graneros", "La Cocha", "Leales", "Trancas", "Burruyacú",
+    "Delfín Gallo", "El Manantial", "San Pablo", "Las Talitas",
+    "Alderetes", "Villa Mariano Moreno", "San Andrés", "El Bracho",
+    "Los Ralos", "Santa Lucía", "Villa Quinteros", "Acheral", "San Isidro de Lules"
   ],
   "Salta": [
     "Salta Capital", "San Ramón de la Nueva Orán", "Tartagal", 
-    "General Güemes", "Cafayate", "Metán"
+    "General Güemes", "Cafayate", "Metán", "Rosario de la Frontera",
+    "Joaquín V. González", "Embarcación", "Aguaray", "Profesor Salvador Mazza",
+    "General Mosconi", "Pichanal", "Colonia Santa Rosa", "Hipólito Yrigoyen",
+    "San José de Orquera", "Campo Quijano", "La Caldera", "Vaqueros",
+    "San Lorenzo", "Cerrillos", "La Merced", "El Carril", "Chicoana",
+    "Cachi", "Molinos", "San Carlos", "Animaná", "Angastaco",
+    "Santa María", "La Candelaria", "El Jardín", "El Tala", "Apolinario Saravia",
+    "Las Lajitas", "Rivadavia Banda Norte", "Rivadavia Banda Sur", "Iruya"
   ],
   "Entre Ríos": [
     "Paraná", "Concordia", "Gualeguaychú", "Concepción del Uruguay",
-    "Gualeguay", "Colón", "Victoria", "Villaguay"
+    "Gualeguay", "Colón", "Victoria", "Villaguay", "Chajarí", "Federación",
+    "San José", "Basavilbaso", "Nogoyá", "Crespo", "Diamante", "La Paz",
+    "Federal", "Feliciano", "Islas del Ibicuy", "Larroque", "Urdinarrain",
+    "Rosario del Tala", "Maciá", "Hasenkamp", "Hernández", "Bovril",
+    "Villa Elisa", "San Salvador", "Santa Elena", "Villa Mantero",
+    "Ubajay", "Villa del Rosario", "Aldea San Antonio", "Oro Verde",
+    "San Benito", "Cerrito", "María Grande", "Seguí", "Viale",
+    "Ramírez", "Hernandarias", "Puerto Yeruá", "Pueblo General Belgrano"
   ],
   "Misiones": [
-    "Posadas", "Oberá", "Eldorado", "Puerto Iguazú", "Montecarlo"
+    "Posadas", "Oberá", "Eldorado", "Puerto Iguazú", "Montecarlo",
+    "San Vicente", "Leandro N. Alem", "Apóstoles", "Jardín América",
+    "Puerto Rico", "San Pedro", "Aristóbulo del Valle", "Campo Grande",
+    "25 de Mayo", "Ruiz de Montoya", "Campo Viera", "Santo Pipó",
+    "San Ignacio", "Puerto Esperanza", "Wanda", "Puerto Libertad",
+    "Bernardo de Irigoyen", "San Antonio", "Alba Posse", "Panambí",
+    "Dos de Mayo", "Colonia Aurora", "Campo Ramón", "Guaraní",
+    "El Soberbio", "San Javier", "Florentino Ameghino", "Capioví",
+    "Garuhapé", "Colonia Delicia", "Cerro Azul", "Gobernador Roca"
   ],
   "Corrientes": [
-    "Corrientes Capital", "Goya", "Paso de los Libres", "Mercedes", "Curuzú Cuatiá"
+    "Corrientes Capital", "Goya", "Paso de los Libres", "Mercedes", "Curuzú Cuatiá",
+    "Monte Caseros", "Esquina", "Bella Vista", "Santo Tomé", "Ituzaingó",
+    "Alvear", "Empedrado", "Saladas", "San Luis del Palmar", "Itatí",
+    "San Roque", "Sauce", "Lavalle", "Goya", "Santa Lucía",
+    "Gobernador Virasoro", "Garruchos", "La Cruz", "Yapeyú", "Mburucuyá",
+    "Concepción", "San Miguel", "Loreto", "Caá Catí", "Berón de Astrada"
   ],
   "Chaco": [
     "Resistencia", "Presidencia Roque Sáenz Peña", "Villa Ángela", 
-    "General San Martín", "Barranqueras"
+    "General San Martín", "Barranqueras", "Charata", "Quitilipi",
+    "Las Breñas", "Machagai", "Juan José Castelli", "Fontana",
+    "Puerto Tirol", "Tres Isletas", "General Pinedo", "Corzuela",
+    "Pampa del Infierno", "Taco Pozo", "Miraflores", "Laguna Blanca",
+    "Presidencia de la Plaza", "Villa Berthet", "Colonia Elisa",
+    "Hermoso Campo", "San Bernardo", "Capitán Solari", "Colonia Benítez",
+    "Puerto Vilelas", "Margarita Belén", "Basail", "Makallé"
   ],
   "San Juan": [
-    "San Juan Capital", "Rawson", "Rivadavia", "Chimbas", "Santa Lucía"
+    "San Juan Capital", "Rawson", "Rivadavia", "Chimbas", "Santa Lucía",
+    "Pocito", "Albardón", "Caucete", "9 de Julio", "Jáchal",
+    "San Martín", "Sarmiento", "25 de Mayo", "Iglesia", "Calingasta",
+    "Valle Fértil", "Ullum", "Zonda", "Angaco", "Desamparados",
+    "Villa Media Agua", "Las Flores", "Trinidad", "Carpintería"
   ],
   "Jujuy": [
     "San Salvador de Jujuy", "Palpalá", "San Pedro de Jujuy", 
-    "Libertador General San Martín", "Humahuaca", "Tilcara"
+    "Libertador General San Martín", "Humahuaca", "Tilcara",
+    "La Quiaca", "Perico", "El Carmen", "Monterrico", "Abra Pampa",
+    "Yuto", "Calilegua", "Fraile Pintado", "Purmamarca", "Maimará",
+    "Volcán", "Tumbaya", "Susques", "Coranzulí", "Rinconada",
+    "Santa Catalina", "Yala", "Lozano", "San Antonio", "Reyes"
   ],
   "Río Negro": [
-    "Viedma", "San Carlos de Bariloche", "General Roca", "Cipolletti", "Villa Regina"
+    "Viedma", "San Carlos de Bariloche", "General Roca", "Cipolletti", "Villa Regina",
+    "Allen", "Catriel", "El Bolsón", "Choele Choel", "Cinco Saltos",
+    "Centenario", "Fernández Oro", "Ingeniero Huergo", "Mainqué",
+    "Cervantes", "Chichinales", "General Enrique Godoy", "Lamarque",
+    "Luis Beltrán", "Darwin", "Pomona", "Río Colorado", "Conesa",
+    "San Antonio Oeste", "Las Grutas", "Sierra Grande", "Valcheta",
+    "Los Menucos", "Maquinchao", "Ingeniero Jacobacci", "Comallo",
+    "Pilcaniyeu", "Ñorquinco", "El Cuy", "Dina Huapi", "Lago Puelo"
   ],
   "Neuquén": [
     "Neuquén Capital", "San Martín de los Andes", "Cutral Có", 
-    "Centenario", "Plottier", "Villa La Angostura"
+    "Centenario", "Plottier", "Villa La Angostura", "Junín de los Andes",
+    "Zapala", "Chos Malal", "Senillosa", "Rincón de los Sauces",
+    "Plaza Huincul", "Añelo", "San Patricio del Chañar", "Vista Alegre",
+    "Las Lajas", "Loncopué", "Andacollo", "Buta Ranquil", "El Cholar",
+    "Aluminé", "Villa Pehuenia", "Caviahue", "Copahue", "Piedra del Águila",
+    "El Huecú", "Tricao Malal", "Los Miches", "Mariano Moreno"
   ],
   "Formosa": [
-    "Formosa Capital", "Clorinda", "Pirané", "El Colorado"
+    "Formosa Capital", "Clorinda", "Pirané", "El Colorado",
+    "Las Lomitas", "Ingeniero Juárez", "Laguna Blanca", "Ibarreta",
+    "Comandante Fontana", "Estanislao del Campo", "General Güemes",
+    "Laguna Yema", "Los Chiriguanos", "Misión Tacaaglé", "Pozo del Tigre",
+    "Villa General Güemes", "Riacho He-Hé", "Laguna Naick Neck",
+    "San Martín II", "Gran Guardia", "Mayor Villafañe", "El Espinillo"
   ],
   "Chubut": [
-    "Rawson", "Comodoro Rivadavia", "Trelew", "Puerto Madryn", "Esquel"
+    "Rawson", "Comodoro Rivadavia", "Trelew", "Puerto Madryn", "Esquel",
+    "Rada Tilly", "Gaiman", "Dolavon", "Puerto Pirámides", "Camarones",
+    "Sarmiento", "Lago Puelo", "El Hoyo", "Epuyén", "Cholila",
+    "Gobernador Costa", "Río Pico", "José de San Martín", "Tecka",
+    "Paso de Indios", "Alto Río Senguer", "Río Mayo", "Facundo",
+    "Ricardo Rojas", "28 de Julio", "Playa Unión", "Las Plumas"
   ],
   "San Luis": [
-    "San Luis Capital", "Villa Mercedes", "Merlo", "La Punta"
+    "San Luis Capital", "Villa Mercedes", "Merlo", "La Punta",
+    "Justo Daract", "La Toma", "Concarán", "Tilisarao", "Naschel",
+    "Quines", "Candelaria", "Luján", "Juana Koslay", "Potrero de los Funes",
+    "El Trapiche", "El Volcán", "Cortaderas", "Villa Larca", "Papagayos",
+    "Santa Rosa del Conlara", "Villa del Carmen", "Buena Esperanza",
+    "Unión", "Nueva Galia", "Fortuna", "Arizona", "Bagual"
   ],
   "Catamarca": [
-    "San Fernando del Valle de Catamarca", "Santa María", "Andalgalá", "Tinogasta"
+    "San Fernando del Valle de Catamarca", "Santa María", "Andalgalá", "Tinogasta",
+    "Belén", "Recreo", "Chumbicha", "Fiambalá", "Londres", "Hualfín",
+    "San José", "Pomán", "Saujil", "Mutquín", "Colpes", "El Alto",
+    "Ancasti", "La Paz", "Icaño", "Capayán", "Fray Mamerto Esquiú",
+    "Valle Viejo", "Paclín", "Ambato", "La Puerta", "Los Varela"
   ],
   "La Rioja": [
-    "La Rioja Capital", "Chilecito", "Aimogasta", "Chamical"
+    "La Rioja Capital", "Chilecito", "Aimogasta", "Chamical",
+    "Villa Unión", "Chepes", "Sanagasta", "Famatina", "Nonogasta",
+    "Arauco", "Aminga", "Anillaco", "Chuquis", "Malanzán", "Olta",
+    "Patquía", "Ulapes", "Tama", "Vichigasta", "Los Sarmientos",
+    "Guandacol", "Villa Castelli", "Jagüé", "Alto Carrizal"
   ],
   "La Pampa": [
-    "Santa Rosa", "General Pico", "Toay", "General Acha"
+    "Santa Rosa", "General Pico", "Toay", "General Acha",
+    "Eduardo Castex", "Victorica", "Realicó", "Ingeniero Luiggi",
+    "Intendente Alvear", "Macachín", "Catriló", "Quemú Quemú",
+    "25 de Mayo", "Guatraché", "Winifreda", "Trenel", "Rancul",
+    "Jacinto Arauz", "General San Martín", "Bernasconi", "La Adela",
+    "Miguel Riglos", "Lonquimay", "Alpachiri", "Doblas", "Ataliva Roca"
   ],
   "Santiago del Estero": [
-    "Santiago del Estero Capital", "La Banda", "Termas de Río Hondo", "Añatuya"
+    "Santiago del Estero Capital", "La Banda", "Termas de Río Hondo", "Añatuya",
+    "Frías", "Monte Quemado", "Quimilí", "Fernández", "Loreto", "Suncho Corral",
+    "Bandera", "Campo Gallo", "Tintina", "Pinto", "Los Juríes",
+    "Colonia Dora", "Herrera", "Villa Ojo de Agua", "Sumampa",
+    "Selva", "Icaño", "Vilmer", "Beltrán", "Clodomira", "Choya"
   ],
   "Santa Cruz": [
-    "Río Gallegos", "Caleta Olivia", "El Calafate", "Pico Truncado", "Puerto Deseado"
+    "Río Gallegos", "Caleta Olivia", "El Calafate", "Pico Truncado", "Puerto Deseado",
+    "Las Heras", "San Julián", "Puerto Santa Cruz", "Perito Moreno",
+    "Comandante Luis Piedra Buena", "28 de Noviembre", "Río Turbio",
+    "Gobernador Gregores", "Los Antiguos", "El Chaltén", "Cañadón Seco",
+    "Jaramillo", "Fitz Roy", "Koluel Kaike", "Bajo Caracoles"
   ],
   "Tierra del Fuego": [
     "Ushuaia", "Río Grande", "Tolhuin"

@@ -4,20 +4,13 @@ import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { ArrowLeft, Check, MapPin, Loader2 } from "lucide-react";
+import { ArrowLeft, Check, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { z } from "zod";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import { Separator } from "@/components/ui/separator";
+import { AddressForm } from "@/components/AddressForm";
 
 const addressSchema = z.object({
   street: z.string().min(1, "La calle es requerida").max(200),
@@ -48,16 +41,13 @@ const CompletarDatosColectiva = () => {
   const [streetNumber, setStreetNumber] = useState("");
   const [floor, setFloor] = useState("");
   const [postalCode, setPostalCode] = useState("");
-  const [city, setCity] = useState("Ciudad Autónoma de Buenos Aires");
-  const [province, setProvince] = useState("Buenos Aires");
+  const [city, setCity] = useState("");
+  const [province, setProvince] = useState("Ciudad Autónoma de Buenos Aires");
   const [references, setReferences] = useState("");
   
   // Contact fields
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-  
-  // Delivery
-  const [isInCABA, setIsInCABA] = useState(true);
   
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -98,8 +88,8 @@ const CompletarDatosColectiva = () => {
             setStreetNumber(addr.number || "");
             setFloor(addr.floor || "");
             setPostalCode(addr.postalCode || "");
-            setCity(addr.city || "Ciudad Autónoma de Buenos Aires");
-            setProvince(addr.province || "Buenos Aires");
+            setCity(addr.city || "");
+            setProvince(addr.province || "Ciudad Autónoma de Buenos Aires");
             setReferences(addr.references || "");
           } catch {
             setStreet(profile.address);
@@ -127,14 +117,9 @@ const CompletarDatosColectiva = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
 
-  // Check if address is in CABA
-  useEffect(() => {
-    const cabaPostalCodes = ['1000', '1001', '1002', '1003', '1004', '1005'];
-    const isCaba = city.toLowerCase().includes('buenos aires') && 
-                   city.toLowerCase().includes('ciudad') ||
-                   cabaPostalCodes.some(cp => postalCode.startsWith(cp.slice(0, 2)));
-    setIsInCABA(isCaba);
-  }, [city, postalCode]);
+  const formatPrice = (price: number) => {
+    return `$${Math.round(price).toLocaleString('es-AR')}`;
+  };
 
   const handleSubmit = async () => {
     setErrors({});
@@ -184,6 +169,15 @@ const CompletarDatosColectiva = () => {
         references: references || null,
       };
 
+      // Get profile for customer name
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("first_name, last_name")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
+
+      const customerName = profile ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : 'Cliente';
+
       // Save profile data
       await supabase
         .from("profiles")
@@ -229,14 +223,17 @@ const CompletarDatosColectiva = () => {
         // Check if pending collective order already exists
         const { data: existingOrder } = await supabase
           .from("user_orders")
-          .select("id, items")
+          .select("id, items, order_number")
           .eq("user_id", session.user.id)
           .eq("order_type", "collective")
           .eq("status", "pending")
           .maybeSingle();
 
+        let orderNumber = existingOrder?.order_number;
+        let orderId = existingOrder?.id;
+
         if (existingOrder) {
-          // Update existing order - trigger will handle waiting_for_discount_count
+          // Update existing order
           await supabase
             .from("user_orders")
             .update({
@@ -249,10 +246,10 @@ const CompletarDatosColectiva = () => {
             })
             .eq("id", existingOrder.id);
         } else {
-          // Create new collective order - trigger will handle waiting_for_discount_count
-          const orderNumber = `OLA-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+          // Create new collective order
+          orderNumber = `OLA-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
           
-          await supabase
+          const { data: newOrder } = await supabase
             .from("user_orders")
             .insert({
               user_id: session.user.id,
@@ -265,13 +262,37 @@ const CompletarDatosColectiva = () => {
               status: "pending",
               collective_close_date: nextSunday.toISOString(),
               notes: phone,
-            });
+            })
+            .select("id, order_number")
+            .single();
+          
+          orderId = newOrder?.id;
+          orderNumber = newOrder?.order_number;
+        }
+
+        // Send Telegram notification
+        if (orderId && orderNumber) {
+          const orderUrl = `${window.location.origin}/mi-cuenta/pedidos/${orderId}`;
+          
+          await supabase.functions.invoke("notify-telegram", {
+            body: {
+              order_id: orderId,
+              order_number: orderNumber,
+              order_type: 'Compra Colectiva',
+              customer_name: customerName,
+              phone,
+              total: formatPrice(subtotal),
+              order_url: orderUrl,
+              waiting_for_discount: true,
+            },
+          });
         }
       }
 
       toast.success("¡Datos guardados correctamente!");
       navigate("/lista-espera");
     } catch (error: any) {
+      console.error("Error saving data:", error);
       toast.error(error.message || "Error al guardar los datos");
     } finally {
       setLoading(false);
@@ -317,118 +338,23 @@ const CompletarDatosColectiva = () => {
 
           {/* Address Section */}
           <div className="mb-6">
-            <h2 className="text-lg font-semibold flex items-center gap-2 mb-4">
-              <MapPin className="w-5 h-5" />
-              Dirección de entrega
-            </h2>
-            
-            <div className="space-y-4">
-              <div className="grid grid-cols-3 gap-3">
-                <div className="col-span-2 space-y-1">
-                  <Label htmlFor="street" className="text-sm">Calle *</Label>
-                  <Input
-                    id="street"
-                    value={street}
-                    onChange={(e) => setStreet(e.target.value)}
-                    placeholder="Av. Corrientes"
-                    className={errors.street ? "border-destructive" : ""}
-                  />
-                  {errors.street && <p className="text-xs text-destructive">{errors.street}</p>}
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="number" className="text-sm">Número *</Label>
-                  <Input
-                    id="number"
-                    value={streetNumber}
-                    onChange={(e) => setStreetNumber(e.target.value)}
-                    placeholder="1234"
-                    className={errors.number ? "border-destructive" : ""}
-                  />
-                  {errors.number && <p className="text-xs text-destructive">{errors.number}</p>}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <Label htmlFor="floor" className="text-sm">Piso/Depto</Label>
-                  <Input
-                    id="floor"
-                    value={floor}
-                    onChange={(e) => setFloor(e.target.value)}
-                    placeholder="3° B"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="postalCode" className="text-sm">CP *</Label>
-                  <Input
-                    id="postalCode"
-                    value={postalCode}
-                    onChange={(e) => setPostalCode(e.target.value)}
-                    placeholder="1043"
-                    maxLength={4}
-                    className={errors.postalCode ? "border-destructive" : ""}
-                  />
-                  {errors.postalCode && <p className="text-xs text-destructive">{errors.postalCode}</p>}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <Label htmlFor="city" className="text-sm">Ciudad *</Label>
-                  <Select value={city} onValueChange={setCity}>
-                    <SelectTrigger id="city">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Ciudad Autónoma de Buenos Aires">CABA</SelectItem>
-                      <SelectItem value="La Plata">La Plata</SelectItem>
-                      <SelectItem value="Mar del Plata">Mar del Plata</SelectItem>
-                      <SelectItem value="Córdoba">Córdoba</SelectItem>
-                      <SelectItem value="Rosario">Rosario</SelectItem>
-                      <SelectItem value="Mendoza">Mendoza</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="province" className="text-sm">Provincia *</Label>
-                  <Select value={province} onValueChange={setProvince}>
-                    <SelectTrigger id="province">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Buenos Aires">Buenos Aires</SelectItem>
-                      <SelectItem value="Córdoba">Córdoba</SelectItem>
-                      <SelectItem value="Santa Fe">Santa Fe</SelectItem>
-                      <SelectItem value="Mendoza">Mendoza</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <Label htmlFor="references" className="text-sm">Referencias</Label>
-                <Textarea
-                  id="references"
-                  value={references}
-                  onChange={(e) => setReferences(e.target.value)}
-                  placeholder="Timbre, indicaciones, etc."
-                  rows={2}
-                  className="resize-none"
-                />
-              </div>
-
-              {isInCABA ? (
-                <div className="flex items-center gap-2 text-green-600 bg-green-50 p-3 rounded-lg">
-                  <Check className="w-5 h-5 flex-shrink-0" />
-                  <span className="font-medium text-sm">¡Envío gratis en CABA!</span>
-                </div>
-              ) : (
-                <div className="bg-amber-50 border border-amber-200 p-3 rounded-lg text-sm">
-                  <p className="font-medium text-amber-800">Tu dirección está fuera de CABA</p>
-                  <p className="text-amber-700 text-xs">Nos pondremos en contacto para coordinar la entrega.</p>
-                </div>
-              )}
-            </div>
+            <AddressForm
+              street={street}
+              setStreet={setStreet}
+              streetNumber={streetNumber}
+              setStreetNumber={setStreetNumber}
+              floor={floor}
+              setFloor={setFloor}
+              postalCode={postalCode}
+              setPostalCode={setPostalCode}
+              city={city}
+              setCity={setCity}
+              province={province}
+              setProvince={setProvince}
+              references={references}
+              setReferences={setReferences}
+              errors={errors}
+            />
           </div>
 
           <Separator className="mb-6" />
@@ -480,7 +406,7 @@ const CompletarDatosColectiva = () => {
           </Button>
 
           <p className="text-sm text-center text-muted-foreground mt-4">
-            Tus datos se guardarán para cuando se cierre la compra colectiva
+            Al confirmar, entrás en la lista de espera para la compra colectiva de esta semana
           </p>
         </div>
       </main>
