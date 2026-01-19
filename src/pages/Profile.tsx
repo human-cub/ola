@@ -1,10 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
@@ -13,6 +12,8 @@ import { z } from "zod";
 import { Loader2, ArrowLeft, User, Shield, LogOut, Eye, EyeOff, Package } from "lucide-react";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import OrdersTab from "@/components/profile/OrdersTab";
+import { AddressForm } from "@/components/AddressForm";
+import { isCABAProvince } from "@/data/argentinaLocations";
 
 const profileSchema = z.object({
   firstName: z.string().min(1, "El nombre es requerido").max(50),
@@ -41,12 +42,22 @@ interface ProfileData {
   address: string | null;
 }
 
+interface AddressData {
+  street: string;
+  number: string;
+  floor: string;
+  postalCode: string;
+  city: string;
+  province: string;
+  references: string;
+}
+
 // Format address for display - remove labels and brackets
 const formatAddressForDisplay = (address: string): string => {
   if (!address) return "";
   
   try {
-    const addr = JSON.parse(address);
+    const addr = JSON.parse(address) as AddressData;
     const parts = [
       addr.street,
       addr.number,
@@ -62,6 +73,32 @@ const formatAddressForDisplay = (address: string): string => {
   }
 };
 
+// Parse stored address JSON to individual fields
+const parseStoredAddress = (address: string): AddressData => {
+  try {
+    const addr = JSON.parse(address);
+    return {
+      street: addr.street || "",
+      number: addr.number || "",
+      floor: addr.floor || "",
+      postalCode: addr.postalCode || "",
+      city: addr.city || "",
+      province: addr.province || "",
+      references: addr.references || "",
+    };
+  } catch {
+    return {
+      street: "",
+      number: "",
+      floor: "",
+      postalCode: "",
+      city: "",
+      province: "",
+      references: "",
+    };
+  }
+};
+
 const Profile = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -71,8 +108,16 @@ const Profile = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Address fields
+  const [street, setStreet] = useState("");
+  const [streetNumber, setStreetNumber] = useState("");
+  const [floor, setFloor] = useState("");
+  const [postalCode, setPostalCode] = useState("");
+  const [city, setCity] = useState("");
+  const [province, setProvince] = useState("");
+  const [references, setReferences] = useState("");
 
   // Password change
   const [currentPassword, setCurrentPassword] = useState("");
@@ -103,7 +148,18 @@ const Profile = () => {
         setFirstName(profile.first_name || "");
         setLastName(profile.last_name || "");
         setPhone(profile.phone || "");
-        setAddress(profile.address || "");
+        
+        // Parse stored address
+        if (profile.address) {
+          const addr = parseStoredAddress(profile.address);
+          setStreet(addr.street);
+          setStreetNumber(addr.number);
+          setFloor(addr.floor);
+          setPostalCode(addr.postalCode);
+          setCity(addr.city);
+          setProvince(addr.province);
+          setReferences(addr.references);
+        }
       }
 
       setLoading(false);
@@ -119,7 +175,15 @@ const Profile = () => {
       firstName,
       lastName,
       phone,
-      address: address || undefined,
+      address: street ? JSON.stringify({
+        street,
+        number: streetNumber,
+        floor,
+        postalCode,
+        city: isCABAProvince(province) ? province : city,
+        province,
+        references,
+      }) : undefined,
     });
 
     if (!validation.success) {
@@ -137,13 +201,24 @@ const Profile = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
+      // Build address JSON
+      const addressJson = street ? JSON.stringify({
+        street,
+        number: streetNumber,
+        floor,
+        postalCode,
+        city: isCABAProvince(province) ? province : city,
+        province,
+        references,
+      }) : null;
+
       const { error } = await supabase
         .from("profiles")
         .update({
           first_name: firstName.trim(),
           last_name: lastName.trim(),
           phone: phone.trim(),
-          address: address.trim() || null,
+          address: addressJson,
         })
         .eq("user_id", session.user.id);
 
@@ -323,20 +398,25 @@ const Profile = () => {
                   )}
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="address">Dirección</Label>
-                  <Textarea
-                    id="address"
-                    value={formatAddressForDisplay(address)}
-                    onChange={(e) => setAddress(e.target.value)}
-                    rows={2}
-                    disabled
-                    className="bg-muted"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Podés actualizar tu dirección en la lista de espera
-                  </p>
-                </div>
+                <Separator className="my-4" />
+
+                <AddressForm
+                  street={street}
+                  setStreet={setStreet}
+                  streetNumber={streetNumber}
+                  setStreetNumber={setStreetNumber}
+                  floor={floor}
+                  setFloor={setFloor}
+                  postalCode={postalCode}
+                  setPostalCode={setPostalCode}
+                  city={city}
+                  setCity={setCity}
+                  province={province}
+                  setProvince={setProvince}
+                  references={references}
+                  setReferences={setReferences}
+                  errors={errors}
+                />
 
                 <Button onClick={handleSaveProfile} disabled={saving}>
                   {saving ? (

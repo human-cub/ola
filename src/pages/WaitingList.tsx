@@ -3,13 +3,6 @@ import { useNavigate, Link } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -19,12 +12,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Minus, Trash2, Timer, ArrowLeft, ArrowRight, ShoppingCart, Clock, Check, Share2, AlertTriangle } from "lucide-react";
+import { Timer, ArrowLeft, ArrowRight, ShoppingCart, Clock, Check, Share2, AlertTriangle } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
+import { WaitingListProductItem } from "@/components/WaitingListProductItem";
 
 interface PriceData {
   people: number;
@@ -566,7 +560,7 @@ const WaitingList = () => {
           ) : (
             <>
               {/* Waiting List Items - No Card wrapper */}
-              <div className="space-y-4 mb-6">
+              <div className="space-y-0 mb-6">
                 {waitingListItems.map((item, index) => {
                   const prod = productData[item.product_id];
                   const participantCount = getParticipantsCount(item.product_id, item.quantity);
@@ -575,115 +569,24 @@ const WaitingList = () => {
 
                   return (
                     <div key={item.id}>
-                      <div className="flex gap-4 py-4">
-                        <Link to={prod?.link || "#"} className="flex-shrink-0">
-                          {item.product_image && (
-                            <img
-                              src={item.product_image}
-                              alt={item.product_name}
-                              className="w-20 h-20 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
-                            />
-                          )}
-                        </Link>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex justify-between items-start gap-2">
-                            <Link to={prod?.link || "#"} className="hover:underline">
-                              <h3 className="font-semibold text-sm leading-tight">
-                                {item.product_name}
-                              </h3>
-                            </Link>
-                            <div className="flex items-center gap-1 flex-shrink-0">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={() => handleShare(item)}
-                              >
-                                <Share2 className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8"
-                                onClick={() => setDeleteItemId(item.id)}
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </div>
-
-                          {/* Participant indicator - use total_orders_count + user quantity */}
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-xs font-medium text-primary">
-                              {participantCount}/100
-                            </span>
-                            {nextThreshold && nextThreshold.people > participantCount && (
-                              <span className="text-xs text-muted-foreground">
-                                · Faltan {nextThreshold.people - participantCount} para {formatPrice(nextThreshold.price)}
-                              </span>
-                            )}
-                          </div>
-
-                          {productFlavors[item.product_id]?.length > 0 && (
-                            <Select
-                              value={item.flavor || ""}
-                              onValueChange={(value) =>
-                                updateWaitingListItemFlavor(item.id, value)
-                              }
-                            >
-                              <SelectTrigger className="w-full mt-2 h-8 text-xs">
-                                <SelectValue placeholder="Seleccionar sabor" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {productFlavors[item.product_id].map((flavor) => (
-                                  <SelectItem key={flavor} value={flavor}>
-                                    {flavor}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          )}
-
-                          <div className="flex items-center justify-between mt-3">
-                            <div className="flex items-center gap-2">
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={() =>
-                                  handleQuantityChange(item.id, -1, item.quantity)
-                                }
-                                disabled={item.quantity <= 1}
-                              >
-                                <Minus className="w-3 h-3" />
-                              </Button>
-                              <span className="w-8 text-center font-medium text-sm">
-                                {item.quantity}
-                              </span>
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={() =>
-                                  handleQuantityChange(item.id, 1, item.quantity)
-                                }
-                                disabled={item.quantity >= 99}
-                              >
-                                <Plus className="w-3 h-3" />
-                              </Button>
-                            </div>
-
-                            <div className="text-right">
-                              <p className="text-xs text-muted-foreground">
-                                {formatPrice(dynamicPrice)} c/u
-                              </p>
-                              <p className="font-semibold">
-                                {formatPrice(dynamicPrice * item.quantity)}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                      <WaitingListProductItem
+                        id={item.id}
+                        productId={item.product_id}
+                        productName={item.product_name}
+                        productImage={item.product_image}
+                        pricePerUnit={dynamicPrice}
+                        quantity={item.quantity}
+                        flavor={item.flavor}
+                        flavors={productFlavors[item.product_id] || []}
+                        productLink={prod?.link || "#"}
+                        participantCount={participantCount}
+                        nextThreshold={nextThreshold}
+                        onQuantityChange={handleQuantityChange}
+                        onFlavorChange={updateWaitingListItemFlavor}
+                        onDelete={(id) => setDeleteItemId(id)}
+                        onShare={() => handleShare(item)}
+                        formatPrice={formatPrice}
+                      />
                       {index < waitingListItems.length - 1 && <Separator />}
                     </div>
                   );
