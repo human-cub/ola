@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,14 @@ import { useProducts } from "@/hooks/useProducts";
 export const MainProductCarousel = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
-  const { data: products = [], isLoading, isError, refetch } = useProducts();
+  const { data: allProducts = [], isLoading, isError, refetch } = useProducts();
+  
+  // Shuffle and limit to 10 random products
+  const products = useMemo(() => {
+    if (allProducts.length === 0) return [];
+    const shuffled = [...allProducts].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, 10);
+  }, [allProducts]);
   
   const [emblaRef, emblaApi] = useEmblaCarousel({ 
     loop: true,
@@ -137,7 +144,7 @@ export const MainProductCarousel = () => {
                           <img 
                             src={product.image} 
                             alt={product.name}
-                            className="w-full h-full object-cover rounded-xl"
+                            className="w-full h-full object-contain rounded-xl"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
                               target.style.display = 'none';

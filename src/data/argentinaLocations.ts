@@ -1,6 +1,15 @@
 // Argentina provinces with their localities
+// CABA, Capital Federal are aliases for Ciudad Autónoma de Buenos Aires
+export const CABA_PROVINCE_ALIASES = [
+  "Ciudad Autónoma de Buenos Aires",
+  "CABA",
+  "Capital Federal"
+];
+
 export const ARGENTINA_PROVINCES = [
   "Buenos Aires",
+  "CABA",
+  "Capital Federal",
   "Catamarca",
   "Chaco",
   "Chubut",
@@ -25,6 +34,11 @@ export const ARGENTINA_PROVINCES = [
   "Tierra del Fuego",
   "Tucumán"
 ] as const;
+
+// Check if a province is CABA (any alias)
+export function isCABAProvince(province: string): boolean {
+  return CABA_PROVINCE_ALIASES.includes(province);
+}
 
 // All CABA barrios
 export const CABA_LOCALITIES = [
@@ -126,6 +140,8 @@ export const AMBA_LOCALITIES = [
 // Complete list of cities by province
 export const MAJOR_CITIES: Record<string, string[]> = {
   "Buenos Aires": [
+    // Add CABA aliases as valid localities in Buenos Aires
+    "Ciudad Autónoma de Buenos Aires", "CABA", "Capital Federal",
     ...AMBA_LOCALITIES,
     // Interior de Buenos Aires
     "Bahía Blanca", "Mar del Plata", "Tandil", "Necochea", "Olavarría",
@@ -362,12 +378,19 @@ export function getDeliveryZone(postalCode: string, province: string, city: stri
     }
   }
   
-  // Check by province
-  if (province === "Ciudad Autónoma de Buenos Aires") {
+  // Check by province (including CABA aliases)
+  if (isCABAProvince(province)) {
     return 'caba';
   }
   
-  // Check by city name
+  // Check if city is a CABA alias (when province is Buenos Aires)
+  if (CABA_PROVINCE_ALIASES.some(alias => 
+    city.toLowerCase() === alias.toLowerCase()
+  )) {
+    return 'caba';
+  }
+  
+  // Check by city name for AMBA
   if (AMBA_LOCALITIES.some(loc => 
     city.toLowerCase().includes(loc.toLowerCase()) || 
     loc.toLowerCase().includes(city.toLowerCase())
@@ -380,7 +403,8 @@ export function getDeliveryZone(postalCode: string, province: string, city: stri
 
 // Get localities for a province
 export function getLocalitiesForProvince(province: string): string[] {
-  if (province === "Ciudad Autónoma de Buenos Aires") {
+  // For any CABA alias, return CABA localities
+  if (isCABAProvince(province)) {
     return CABA_LOCALITIES;
   }
   return MAJOR_CITIES[province] || [];

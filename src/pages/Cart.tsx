@@ -3,13 +3,6 @@ import { useNavigate, Link } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -19,11 +12,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Minus, Trash2, ShoppingBag, ArrowLeft, ArrowRight } from "lucide-react";
+import { ShoppingBag, ArrowLeft, ArrowRight } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import { Separator } from "@/components/ui/separator";
+import { CartProductItem } from "@/components/CartProductItem";
 
 interface ProductLink {
   id: string;
@@ -169,96 +163,24 @@ const Cart = () => {
           ) : (
             <>
               {/* Cart Items - No Card wrapper */}
-              <div className="space-y-4 mb-6">
+              <div className="space-y-0 mb-6">
                 {cartItems.map((item, index) => (
                   <div key={item.id}>
-                    <div className="flex gap-4 py-4">
-                      <Link to={productLinks[item.product_id] || "#"} className="flex-shrink-0">
-                        {item.product_image && (
-                          <img
-                            src={item.product_image}
-                            alt={item.product_name}
-                            className="w-20 h-20 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
-                          />
-                        )}
-                      </Link>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-start gap-2">
-                          <Link to={productLinks[item.product_id] || "#"} className="hover:underline">
-                            <h3 className="font-semibold text-sm leading-tight">
-                              {item.product_name}
-                            </h3>
-                          </Link>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0 h-8 w-8"
-                            onClick={() => setDeleteItemId(item.id)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-
-                        {productFlavors[item.product_id]?.length > 0 && (
-                          <Select
-                            value={item.flavor || ""}
-                            onValueChange={(value) =>
-                              updateCartItemFlavor(item.id, value)
-                            }
-                          >
-                            <SelectTrigger className="w-full mt-2 h-8 text-xs">
-                              <SelectValue placeholder="Seleccionar sabor" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {productFlavors[item.product_id].map((flavor) => (
-                                <SelectItem key={flavor} value={flavor}>
-                                  {flavor}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        )}
-
-                        <div className="flex items-center justify-between mt-3">
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() =>
-                                handleQuantityChange(item.id, -1, item.quantity)
-                              }
-                              disabled={item.quantity <= 1}
-                            >
-                              <Minus className="w-3 h-3" />
-                            </Button>
-                            <span className="w-8 text-center font-medium text-sm">
-                              {item.quantity}
-                            </span>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() =>
-                                handleQuantityChange(item.id, 1, item.quantity)
-                              }
-                              disabled={item.quantity >= 99}
-                            >
-                              <Plus className="w-3 h-3" />
-                            </Button>
-                          </div>
-
-                          <div className="text-right">
-                            <p className="text-xs text-muted-foreground">
-                              {formatPrice(item.price_per_unit)} c/u
-                            </p>
-                            <p className="font-semibold">
-                              {formatPrice(item.price_per_unit * item.quantity)}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                    <CartProductItem
+                      id={item.id}
+                      productId={item.product_id}
+                      productName={item.product_name}
+                      productImage={item.product_image}
+                      pricePerUnit={item.price_per_unit}
+                      quantity={item.quantity}
+                      flavor={item.flavor}
+                      flavors={productFlavors[item.product_id] || []}
+                      productLink={productLinks[item.product_id] || "#"}
+                      onQuantityChange={handleQuantityChange}
+                      onFlavorChange={updateCartItemFlavor}
+                      onDelete={(id) => setDeleteItemId(id)}
+                      formatPrice={formatPrice}
+                    />
                     {index < cartItems.length - 1 && <Separator />}
                   </div>
                 ))}

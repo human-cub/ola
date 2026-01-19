@@ -14,6 +14,7 @@ import {
   ARGENTINA_PROVINCES,
   getDeliveryZone,
   searchLocalities,
+  isCABAProvince,
 } from "@/data/argentinaLocations";
 
 interface AddressFormProps {
@@ -60,6 +61,9 @@ export const AddressForm = ({
   const cityInputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
 
+  // Check if current province is CABA (hide city field)
+  const isCABA = isCABAProvince(province);
+
   // Update delivery zone when address changes
   useEffect(() => {
     const zone = getDeliveryZone(postalCode, province, city);
@@ -69,13 +73,17 @@ export const AddressForm = ({
 
   // Update city suggestions based on province and query
   useEffect(() => {
+    if (isCABA) {
+      setCitySuggestions([]);
+      return;
+    }
     if (cityQuery.length >= 2) {
       const suggestions = searchLocalities(province, cityQuery);
       setCitySuggestions(suggestions);
     } else {
       setCitySuggestions(searchLocalities(province, ""));
     }
-  }, [cityQuery, province]);
+  }, [cityQuery, province, isCABA]);
 
   // Handle clicks outside to close suggestions
   useEffect(() => {
@@ -102,14 +110,17 @@ export const AddressForm = ({
 
   const handleProvinceChange = (newProvince: string) => {
     setProvince(newProvince);
-    // Reset city when province changes
-    setCity("");
-    setCityQuery("");
     
-    // Auto-detect zone for CABA
-    if (newProvince === "Ciudad Autónoma de Buenos Aires") {
+    // If CABA is selected, clear city (not needed)
+    if (isCABAProvince(newProvince)) {
+      setCity("");
+      setCityQuery("");
       setDeliveryZone('caba');
       onDeliveryZoneChange?.('caba');
+    } else {
+      // Reset city when province changes
+      setCity("");
+      setCityQuery("");
     }
   };
 
@@ -189,42 +200,45 @@ export const AddressForm = ({
         {errors.province && <p className="text-xs text-destructive">{errors.province}</p>}
       </div>
 
-      <div className="space-y-1 relative">
-        <Label htmlFor="city" className="text-sm">Ciudad/Localidad *</Label>
-        <Input
-          ref={cityInputRef}
-          id="city"
-          value={cityQuery}
-          onChange={(e) => {
-            setCityQuery(e.target.value);
-            setCity(e.target.value);
-            setShowCitySuggestions(true);
-          }}
-          onFocus={() => setShowCitySuggestions(true)}
-          placeholder="Escribí tu ciudad o localidad"
-          className={errors.city ? "border-destructive" : ""}
-          autoComplete="off"
-        />
-        {errors.city && <p className="text-xs text-destructive">{errors.city}</p>}
-        
-        {showCitySuggestions && citySuggestions.length > 0 && (
-          <div 
-            ref={suggestionsRef}
-            className="absolute z-50 w-full mt-1 bg-background border border-border rounded-md shadow-lg max-h-[200px] overflow-auto"
-          >
-            {citySuggestions.map((suggestion) => (
-              <button
-                key={suggestion}
-                type="button"
-                className="w-full px-3 py-2 text-left text-sm hover:bg-accent transition-colors"
-                onClick={() => handleCitySelect(suggestion)}
-              >
-                {suggestion}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+      {/* City field - hidden for CABA provinces */}
+      {!isCABA && (
+        <div className="space-y-1 relative">
+          <Label htmlFor="city" className="text-sm">Ciudad/Localidad *</Label>
+          <Input
+            ref={cityInputRef}
+            id="city"
+            value={cityQuery}
+            onChange={(e) => {
+              setCityQuery(e.target.value);
+              setCity(e.target.value);
+              setShowCitySuggestions(true);
+            }}
+            onFocus={() => setShowCitySuggestions(true)}
+            placeholder="Escribí tu ciudad o localidad"
+            className={errors.city ? "border-destructive" : ""}
+            autoComplete="off"
+          />
+          {errors.city && <p className="text-xs text-destructive">{errors.city}</p>}
+          
+          {showCitySuggestions && citySuggestions.length > 0 && (
+            <div 
+              ref={suggestionsRef}
+              className="absolute z-50 w-full mt-1 bg-background border border-border rounded-md shadow-lg max-h-[200px] overflow-auto"
+            >
+              {citySuggestions.map((suggestion) => (
+                <button
+                  key={suggestion}
+                  type="button"
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-accent transition-colors"
+                  onClick={() => handleCitySelect(suggestion)}
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="space-y-1">
         <Label htmlFor="references" className="text-sm">Referencias</Label>
