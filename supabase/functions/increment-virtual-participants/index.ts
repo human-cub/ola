@@ -62,12 +62,20 @@ function generateNewWeekParams() {
   // Total week target: 63-83 (averaging ~73)
   const weekMax = 63 + Math.floor(Math.random() * 21); // 63-83
   
+  // Get this Monday as week start (for proper first-day detection)
+  const now = new Date();
+  const dayOfWeek = now.getDay(); // 0=Sunday, 1=Monday, etc.
+  const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Days since Monday
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - daysFromMonday);
+  monday.setHours(0, 0, 0, 0);
+  
   return {
     max_weekly_participants: weekMax,
     base_probability: 0.12 + Math.random() * 0.13, // 0.12-0.25 for slow phase
     cooldown_minutes: 5 + Math.floor(Math.random() * 11), // 5-15 min for first day
     virtual_orders_count: 0, // Reset to 0
-    week_start_date: new Date().toISOString().split('T')[0],
+    week_start_date: monday.toISOString().split('T')[0], // Monday of this week
     last_increment_at: null,
   };
 }

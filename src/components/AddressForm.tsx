@@ -15,6 +15,7 @@ import {
   getDeliveryZone,
   searchLocalities,
   isCABAProvince,
+  getLocationByPostalCode,
 } from "@/data/argentinaLocations";
 
 interface AddressFormProps {
@@ -34,6 +35,8 @@ interface AddressFormProps {
   setReferences: (value: string) => void;
   errors: Record<string, string>;
   onDeliveryZoneChange?: (zone: 'caba' | 'amba' | 'other') => void;
+  hideReferences?: boolean;
+  title?: string;
 }
 
 export const AddressForm = ({
@@ -53,6 +56,8 @@ export const AddressForm = ({
   setReferences,
   errors,
   onDeliveryZoneChange,
+  hideReferences = false,
+  title = "Dirección de entrega",
 }: AddressFormProps) => {
   const [deliveryZone, setDeliveryZone] = useState<'caba' | 'amba' | 'other'>('caba');
   const [cityQuery, setCityQuery] = useState(city);
@@ -64,12 +69,31 @@ export const AddressForm = ({
   // Check if current province is CABA (hide city field)
   const isCABA = isCABAProvince(province);
 
+  // Sync cityQuery with city prop
+  useEffect(() => {
+    setCityQuery(city);
+  }, [city]);
+
   // Update delivery zone when address changes
   useEffect(() => {
     const zone = getDeliveryZone(postalCode, province, city);
     setDeliveryZone(zone);
     onDeliveryZoneChange?.(zone);
   }, [postalCode, province, city, onDeliveryZoneChange]);
+
+  // Auto-fill province and city based on postal code
+  useEffect(() => {
+    if (postalCode.length === 4) {
+      const location = getLocationByPostalCode(postalCode);
+      if (location) {
+        setProvince(location.province);
+        if (location.city) {
+          setCity(location.city);
+          setCityQuery(location.city);
+        }
+      }
+    }
+  }, [postalCode, setProvince, setCity]);
 
   // Update city suggestions based on province and query
   useEffect(() => {
@@ -128,7 +152,7 @@ export const AddressForm = ({
     <div className="space-y-4">
       <h2 className="text-lg font-semibold flex items-center gap-2">
         <MapPin className="w-5 h-5" />
-        Dirección de entrega
+        {title}
       </h2>
 
       <div className="grid grid-cols-3 gap-3">
@@ -163,7 +187,7 @@ export const AddressForm = ({
             id="floor"
             value={floor}
             onChange={(e) => setFloor(e.target.value)}
-            placeholder="3° B"
+            placeholder="3 B"
           />
         </div>
         <div className="space-y-1">
@@ -240,17 +264,19 @@ export const AddressForm = ({
         </div>
       )}
 
-      <div className="space-y-1">
-        <Label htmlFor="references" className="text-sm">Referencias</Label>
-        <Textarea
-          id="references"
-          value={references}
-          onChange={(e) => setReferences(e.target.value)}
-          placeholder="Timbre, indicaciones, etc."
-          rows={2}
-          className="resize-none"
-        />
-      </div>
+      {!hideReferences && (
+        <div className="space-y-1">
+          <Label htmlFor="references" className="text-sm">Referencias</Label>
+          <Textarea
+            id="references"
+            value={references}
+            onChange={(e) => setReferences(e.target.value)}
+            placeholder="Código promocional, preferencias, timbre, indicaciones, etc."
+            rows={2}
+            className="resize-none"
+          />
+        </div>
+      )}
 
       {/* Delivery Zone Indicator */}
       {deliveryZone === 'caba' ? (
