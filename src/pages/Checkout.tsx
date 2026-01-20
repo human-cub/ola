@@ -469,7 +469,7 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="efectivo">Efectivo</SelectItem>
-                <SelectItem value="transferencia">Transferencia (Alias: klesh.mp)</SelectItem>
+                <SelectItem value="transferencia">Transferencia</SelectItem>
                 <SelectItem value="tarjeta" disabled>Tarjeta (Próximamente)</SelectItem>
               </SelectContent>
             </Select>

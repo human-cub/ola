@@ -338,6 +338,21 @@ const WaitingList = () => {
   const currentDiscount = fullPrice - subtotal;
   const estimatedDiscount = fullPrice - estimatedTotal;
 
+  // Get second tier price for "Comprar ahora" button (Buy Now)
+  const getSecondTierPrice = (productId: string): number => {
+    const prod = productData[productId];
+    if (!prod || prod.prices.length < 2) return 0;
+    return prod.prices[1].price; // Second tier = Buy Now price
+  };
+
+  // Calculate Buy Now total using second tier prices
+  const getBuyNowTotal = (): number => {
+    return waitingListItems.reduce((sum, item) => {
+      const secondTierPrice = getSecondTierPrice(item.product_id) || item.current_price_per_unit;
+      return sum + secondTierPrice * item.quantity;
+    }, 0);
+  };
+
   const formatPrice = (price: number) => {
     return `$${Math.round(price).toLocaleString('es-AR')}`;
   };
@@ -682,7 +697,7 @@ const WaitingList = () => {
                       {hasExistingOrder ? "¡Ya participás! 🎉 / Editar datos" : "Entrar en lista de espera"}
                     </Button>
 
-                    {/* Comprar ahora button - moves items to cart */}
+                    {/* Comprar ahora button - moves items to cart with second tier price */}
                     <Button
                       onClick={handleBuyNow}
                       variant="outline"
@@ -691,7 +706,7 @@ const WaitingList = () => {
                       disabled={isMovingToCart}
                     >
                       <ShoppingCart className="w-4 h-4" />
-                      {isMovingToCart ? "Moviendo al carrito..." : `Comprar ahora ${formatPrice(subtotal)}`}
+                      {isMovingToCart ? "Moviendo al carrito..." : `Comprar ahora ${formatPrice(getBuyNowTotal())}`}
                     </Button>
 
                     <p className="text-sm text-center text-muted-foreground">

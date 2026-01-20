@@ -416,6 +416,8 @@ const Profile = () => {
                   references={references}
                   setReferences={setReferences}
                   errors={errors}
+                  hideReferences={true}
+                  title="Dirección"
                 />
 
                 <Button onClick={handleSaveProfile} disabled={saving}>

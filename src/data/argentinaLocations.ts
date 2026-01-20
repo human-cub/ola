@@ -1,19 +1,18 @@
 // Argentina provinces with their localities
 // CABA, Capital Federal are aliases for Ciudad Autónoma de Buenos Aires
 export const CABA_PROVINCE_ALIASES = [
+  "Capital Federal (CABA)",
   "Ciudad Autónoma de Buenos Aires",
   "CABA",
   "Capital Federal"
 ];
 
 export const ARGENTINA_PROVINCES = [
+  "Capital Federal (CABA)",
   "Buenos Aires",
-  "CABA",
-  "Capital Federal",
   "Catamarca",
   "Chaco",
   "Chubut",
-  "Ciudad Autónoma de Buenos Aires",
   "Córdoba",
   "Corrientes",
   "Entre Ríos",
@@ -37,7 +36,13 @@ export const ARGENTINA_PROVINCES = [
 
 // Check if a province is CABA (any alias)
 export function isCABAProvince(province: string): boolean {
-  return CABA_PROVINCE_ALIASES.includes(province);
+  const normalizedProvince = province.toLowerCase().trim();
+  return CABA_PROVINCE_ALIASES.some(alias => 
+    normalizedProvince === alias.toLowerCase() ||
+    normalizedProvince.includes("capital federal") ||
+    normalizedProvince.includes("caba") ||
+    normalizedProvince.includes("ciudad autónoma")
+  );
 }
 
 // All CABA barrios
@@ -141,7 +146,7 @@ export const AMBA_LOCALITIES = [
 export const MAJOR_CITIES: Record<string, string[]> = {
   "Buenos Aires": [
     // Add CABA aliases as valid localities in Buenos Aires
-    "Ciudad Autónoma de Buenos Aires", "CABA", "Capital Federal",
+    "Capital Federal (CABA)",
     ...AMBA_LOCALITIES,
     // Interior de Buenos Aires
     "Bahía Blanca", "Mar del Plata", "Tandil", "Necochea", "Olavarría",
@@ -419,4 +424,176 @@ export function searchLocalities(province: string, query: string): string[] {
   return localities
     .filter(loc => loc.toLowerCase().includes(lowerQuery))
     .slice(0, 10);
+}
+
+// Postal code to location mapping (common ranges)
+// Returns province and optionally city based on postal code
+export function getLocationByPostalCode(postalCode: string): { province: string; city?: string } | null {
+  const cp = parseInt(postalCode, 10);
+  if (isNaN(cp)) return null;
+
+  // CABA: 1000-1499
+  if (cp >= 1000 && cp <= 1499) {
+    return { province: "Capital Federal (CABA)" };
+  }
+
+  // AMBA - Zona Norte: 1600-1699
+  if (cp >= 1600 && cp <= 1699) {
+    return { province: "Buenos Aires" };
+  }
+  
+  // AMBA - Zona Oeste: 1700-1799
+  if (cp >= 1700 && cp <= 1799) {
+    return { province: "Buenos Aires" };
+  }
+  
+  // AMBA - Zona Sur: 1800-1899
+  if (cp >= 1800 && cp <= 1899) {
+    return { province: "Buenos Aires" };
+  }
+  
+  // La Plata, Berisso, Ensenada: 1900-1999
+  if (cp >= 1900 && cp <= 1999) {
+    if (cp >= 1900 && cp <= 1925) {
+      return { province: "Buenos Aires", city: "La Plata" };
+    }
+    return { province: "Buenos Aires" };
+  }
+
+  // Córdoba Capital: 5000-5099
+  if (cp >= 5000 && cp <= 5099) {
+    return { province: "Córdoba", city: "Córdoba Capital" };
+  }
+
+  // Rosario: 2000-2099
+  if (cp >= 2000 && cp <= 2099) {
+    return { province: "Santa Fe", city: "Rosario" };
+  }
+
+  // Santa Fe Capital: 3000-3099
+  if (cp >= 3000 && cp <= 3099) {
+    return { province: "Santa Fe", city: "Santa Fe Capital" };
+  }
+
+  // Mendoza: 5500-5599
+  if (cp >= 5500 && cp <= 5599) {
+    return { province: "Mendoza", city: "Mendoza Capital" };
+  }
+
+  // Tucumán: 4000-4099
+  if (cp >= 4000 && cp <= 4099) {
+    return { province: "Tucumán", city: "San Miguel de Tucumán" };
+  }
+
+  // Salta: 4400-4499
+  if (cp >= 4400 && cp <= 4499) {
+    return { province: "Salta", city: "Salta Capital" };
+  }
+
+  // Mar del Plata: 7600-7699
+  if (cp >= 7600 && cp <= 7699) {
+    return { province: "Buenos Aires", city: "Mar del Plata" };
+  }
+
+  // Bahía Blanca: 8000-8099
+  if (cp >= 8000 && cp <= 8099) {
+    return { province: "Buenos Aires", city: "Bahía Blanca" };
+  }
+
+  // Neuquén: 8300-8399
+  if (cp >= 8300 && cp <= 8399) {
+    return { province: "Neuquén", city: "Neuquén Capital" };
+  }
+
+  // Resistencia/Chaco: 3500-3599
+  if (cp >= 3500 && cp <= 3599) {
+    return { province: "Chaco", city: "Resistencia" };
+  }
+
+  // Corrientes: 3400-3499
+  if (cp >= 3400 && cp <= 3499) {
+    return { province: "Corrientes", city: "Corrientes Capital" };
+  }
+
+  // Posadas/Misiones: 3300-3399
+  if (cp >= 3300 && cp <= 3399) {
+    return { province: "Misiones", city: "Posadas" };
+  }
+
+  // Paraná/Entre Ríos: 3100-3199
+  if (cp >= 3100 && cp <= 3199) {
+    return { province: "Entre Ríos", city: "Paraná" };
+  }
+
+  // San Juan: 5400-5499
+  if (cp >= 5400 && cp <= 5499) {
+    return { province: "San Juan", city: "San Juan Capital" };
+  }
+
+  // Santiago del Estero: 4200-4299
+  if (cp >= 4200 && cp <= 4299) {
+    return { province: "Santiago del Estero", city: "Santiago del Estero Capital" };
+  }
+
+  // Jujuy: 4600-4699
+  if (cp >= 4600 && cp <= 4699) {
+    return { province: "Jujuy", city: "San Salvador de Jujuy" };
+  }
+
+  // Formosa: 3600-3699
+  if (cp >= 3600 && cp <= 3699) {
+    return { province: "Formosa", city: "Formosa Capital" };
+  }
+
+  // La Rioja: 5300-5399
+  if (cp >= 5300 && cp <= 5399) {
+    return { province: "La Rioja", city: "La Rioja Capital" };
+  }
+
+  // Catamarca: 4700-4799
+  if (cp >= 4700 && cp <= 4799) {
+    return { province: "Catamarca", city: "San Fernando del Valle de Catamarca" };
+  }
+
+  // San Luis: 5700-5799
+  if (cp >= 5700 && cp <= 5799) {
+    return { province: "San Luis", city: "San Luis Capital" };
+  }
+
+  // La Pampa: 6300-6399
+  if (cp >= 6300 && cp <= 6399) {
+    return { province: "La Pampa", city: "Santa Rosa" };
+  }
+
+  // Río Negro - Viedma: 8500-8599
+  if (cp >= 8500 && cp <= 8599) {
+    return { province: "Río Negro", city: "Viedma" };
+  }
+
+  // Río Negro - Bariloche: 8400-8499
+  if (cp >= 8400 && cp <= 8499) {
+    return { province: "Río Negro", city: "San Carlos de Bariloche" };
+  }
+
+  // Chubut - Rawson: 9100-9199
+  if (cp >= 9100 && cp <= 9199) {
+    return { province: "Chubut", city: "Rawson" };
+  }
+
+  // Chubut - Comodoro: 9000-9099
+  if (cp >= 9000 && cp <= 9099) {
+    return { province: "Chubut", city: "Comodoro Rivadavia" };
+  }
+
+  // Santa Cruz: 9400-9499
+  if (cp >= 9400 && cp <= 9499) {
+    return { province: "Santa Cruz", city: "Río Gallegos" };
+  }
+
+  // Tierra del Fuego: 9410, 9420
+  if (cp >= 9410 && cp <= 9420) {
+    return { province: "Tierra del Fuego", city: "Ushuaia" };
+  }
+
+  return null;
 }
