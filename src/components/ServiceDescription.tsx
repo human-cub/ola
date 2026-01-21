@@ -3,7 +3,7 @@ import instagramIcon from '../assets/instagram-icon-new.png';
 export const ServiceDescription = () => {
   return <section id="service-description" className="px-4 py-2">
       <div className="container mx-auto max-w-md">
-        <div className="bg-gradient-card rounded-xl p-6 shadow-soft">
+        <div className="py-6">
           <div className="text-center mb-6">
             <h3 className="text-2xl font-bold text-foreground mb-3">
               ¿Buscás precios más bajos?
