@@ -87,13 +87,14 @@ export const AddressForm = ({
       return;
     }
     
-    // Buenos Aires province - need city to determine zone
+    // Buenos Aires province - MUST wait for city selection
     if (isBuenosAires) {
+      // No city selected yet - show nothing
       if (!city || city.trim().length < 2) {
         setDeliveryZone('pending');
         return;
       }
-      // Check if city is CABA
+      // Check if city is CABA variant
       if (CABA_PROVINCE_ALIASES.some(alias => 
         city.toLowerCase() === alias.toLowerCase()
       )) {
@@ -101,19 +102,22 @@ export const AddressForm = ({
         onDeliveryZoneChange?.('caba');
         return;
       }
+      // City selected - calculate zone based on postal code or default to amba/other
+      const zone = getDeliveryZone(postalCode, province, city);
+      setDeliveryZone(zone);
+      onDeliveryZoneChange?.(zone);
+      return;
     }
     
-    // Other provinces - always $5000
+    // Other provinces - always $5000 immediately
     if (province && !isBuenosAires && !isCABA) {
       setDeliveryZone('other');
       onDeliveryZoneChange?.('other');
       return;
     }
     
-    // Calculate zone based on all fields
-    const zone = getDeliveryZone(postalCode, province, city);
-    setDeliveryZone(zone);
-    onDeliveryZoneChange?.(zone);
+    // No province selected yet
+    setDeliveryZone('pending');
   }, [postalCode, province, city, onDeliveryZoneChange, isCABA, isBuenosAires]);
 
   // Auto-fill province and city based on postal code
@@ -226,7 +230,7 @@ export const AddressForm = ({
           />
         </div>
         <div className="space-y-1">
-          <Label htmlFor="postalCode" className="text-sm">CP *</Label>
+          <Label htmlFor="postalCode" className="text-sm">Código postal *</Label>
           <Input
             id="postalCode"
             value={postalCode}
