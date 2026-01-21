@@ -12,6 +12,7 @@ import {
 import { Check, Truck, MapPin } from "lucide-react";
 import {
   ARGENTINA_PROVINCES,
+  CABA_PROVINCE_ALIASES,
   getDeliveryZone,
   searchLocalities,
   isCABAProvince,
@@ -59,7 +60,7 @@ export const AddressForm = ({
   hideReferences = false,
   title = "Dirección de entrega",
 }: AddressFormProps) => {
-  const [deliveryZone, setDeliveryZone] = useState<'caba' | 'amba' | 'other'>('caba');
+  const [deliveryZone, setDeliveryZone] = useState<'caba' | 'amba' | 'other' | 'pending'>('pending');
   const [cityQuery, setCityQuery] = useState(city);
   const [citySuggestions, setCitySuggestions] = useState<string[]>([]);
   const [showCitySuggestions, setShowCitySuggestions] = useState(false);
@@ -68,6 +69,9 @@ export const AddressForm = ({
 
   // Check if current province is CABA (hide city field)
   const isCABA = isCABAProvince(province);
+  
+  // Check if Buenos Aires province (needs city selection before showing shipping cost)
+  const isBuenosAires = province === "Buenos Aires";
 
   // Sync cityQuery with city prop
   useEffect(() => {
@@ -76,10 +80,41 @@ export const AddressForm = ({
 
   // Update delivery zone when address changes
   useEffect(() => {
+    // CABA province - always free
+    if (isCABA) {
+      setDeliveryZone('caba');
+      onDeliveryZoneChange?.('caba');
+      return;
+    }
+    
+    // Buenos Aires province - need city to determine zone
+    if (isBuenosAires) {
+      if (!city || city.trim().length < 2) {
+        setDeliveryZone('pending');
+        return;
+      }
+      // Check if city is CABA
+      if (CABA_PROVINCE_ALIASES.some(alias => 
+        city.toLowerCase() === alias.toLowerCase()
+      )) {
+        setDeliveryZone('caba');
+        onDeliveryZoneChange?.('caba');
+        return;
+      }
+    }
+    
+    // Other provinces - always $5000
+    if (province && !isBuenosAires && !isCABA) {
+      setDeliveryZone('other');
+      onDeliveryZoneChange?.('other');
+      return;
+    }
+    
+    // Calculate zone based on all fields
     const zone = getDeliveryZone(postalCode, province, city);
     setDeliveryZone(zone);
     onDeliveryZoneChange?.(zone);
-  }, [postalCode, province, city, onDeliveryZoneChange]);
+  }, [postalCode, province, city, onDeliveryZoneChange, isCABA, isBuenosAires]);
 
   // Auto-fill province and city based on postal code
   useEffect(() => {
@@ -278,23 +313,26 @@ export const AddressForm = ({
         </div>
       )}
 
-      {/* Delivery Zone Indicator */}
-      {deliveryZone === 'caba' ? (
+      {/* Delivery Zone Indicator - hide if pending */}
+      {deliveryZone === 'caba' && (
         <div className="flex items-center gap-2 text-green-600 bg-green-50 p-3 rounded-lg">
           <Check className="w-5 h-5 flex-shrink-0" />
           <span className="font-medium text-sm">¡Envío gratis en CABA!</span>
         </div>
-      ) : deliveryZone === 'amba' ? (
+      )}
+      {deliveryZone === 'amba' && (
         <div className="flex items-center gap-2 text-blue-600 bg-blue-50 p-3 rounded-lg">
           <Truck className="w-5 h-5 flex-shrink-0" />
           <span className="font-medium text-sm">Envío AMBA: $3.000</span>
         </div>
-      ) : (
+      )}
+      {deliveryZone === 'other' && (
         <div className="flex items-center gap-2 text-amber-600 bg-amber-50 p-3 rounded-lg">
           <Truck className="w-5 h-5 flex-shrink-0" />
           <span className="font-medium text-sm">Envío resto del país: $5.000</span>
         </div>
       )}
+      {/* No indicator shown when deliveryZone is 'pending' */}
     </div>
   );
 };

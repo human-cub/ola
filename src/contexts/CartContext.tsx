@@ -137,7 +137,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(false);
   }, [currentUserId, getSessionId]);
 
-  // Migrate guest cart to user cart
+  // Migrate guest cart to user cart - IMPORTANT: Must be done before fetching user items
   const migrateGuestCart = async (newUserId: string) => {
     const guestSessionId = localStorage.getItem(SESSION_ID_KEY);
     if (!guestSessionId) return;
@@ -145,21 +145,44 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('Migrating guest cart for session:', guestSessionId, 'to user:', newUserId);
       
-      // Migrate cart items
+      // Check if there are guest items to migrate
+      const { data: guestCartItems } = await supabase
+        .from('cart_items')
+        .select('id')
+        .eq('session_id', guestSessionId);
+        
+      const { data: guestWaitingItems } = await supabase
+        .from('waiting_list_items')
+        .select('id')
+        .eq('session_id', guestSessionId);
+      
+      const hasGuestItems = (guestCartItems && guestCartItems.length > 0) || 
+                           (guestWaitingItems && guestWaitingItems.length > 0);
+      
+      if (!hasGuestItems) {
+        console.log('No guest items to migrate');
+        return;
+      }
+      
+      // Migrate cart items - update session_id items to user_id
       const { error: cartError } = await supabase
         .from('cart_items')
         .update({ user_id: newUserId, session_id: null })
-        .eq('session_id', guestSessionId);
+        .eq('session_id', guestSessionId)
+        .is('user_id', null);
       
       if (cartError) console.error('Cart migration error:', cartError);
+      else console.log('Cart items migrated successfully');
       
       // Migrate waiting list items  
       const { error: waitingError } = await supabase
         .from('waiting_list_items')
         .update({ user_id: newUserId, session_id: null })
-        .eq('session_id', guestSessionId);
+        .eq('session_id', guestSessionId)
+        .is('user_id', null);
       
       if (waitingError) console.error('Waiting list migration error:', waitingError);
+      else console.log('Waiting list items migrated successfully');
       
       console.log('Cart migration complete');
     } catch (error) {

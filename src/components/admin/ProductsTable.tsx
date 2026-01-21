@@ -4,6 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Pencil } from "lucide-react";
 import AddProductDialog from "./AddProductDialog";
@@ -39,6 +40,7 @@ const ProductsTable = () => {
   const [virtualCount, setVirtualCount] = useState<number>(0);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
 
   const fetchProducts = async () => {
     const { data, error } = await supabase
@@ -66,6 +68,14 @@ const ProductsTable = () => {
   useEffect(() => {
     fetchProducts();
   }, []);
+
+  // Get unique categories for filter
+  const categories = Array.from(new Set(products.map(p => p.category).filter(Boolean))) as string[];
+  
+  // Filter products by category
+  const filteredProducts = categoryFilter === "all" 
+    ? products 
+    : products.filter(p => p.category === categoryFilter);
 
   const handleUpdateVirtualCount = async (id: string) => {
     const { error } = await supabase
@@ -101,9 +111,25 @@ const ProductsTable = () => {
 
   return (
     <>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Gestión de Productos</CardTitle>
+       <Card>
+        <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-4 flex-wrap">
+            <CardTitle>Gestión de Productos</CardTitle>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Filtrar por categoría" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas las categorías</SelectItem>
+                {categories.map((cat) => (
+                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <span className="text-sm text-muted-foreground">
+              {filteredProducts.length} productos
+            </span>
+          </div>
           <AddProductDialog onProductAdded={fetchProducts} />
         </CardHeader>
         <CardContent>
@@ -112,6 +138,7 @@ const ProductsTable = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Producto</TableHead>
+                  <TableHead>Categoría</TableHead>
                   <TableHead>Peso</TableHead>
                   <TableHead>Comprar Ahora</TableHead>
                   <TableHead>Esperando Descuento</TableHead>
@@ -121,13 +148,14 @@ const ProductsTable = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {products.map((product) => (
+                {filteredProducts.map((product) => (
                   <TableRow 
                     key={product.id} 
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() => handleRowClick(product)}
                   >
                     <TableCell className="font-medium">{product.name}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{product.category || '-'}</TableCell>
                     <TableCell>{product.weight}</TableCell>
                     <TableCell>{product.buynow_count}</TableCell>
                     <TableCell className="font-semibold text-primary">{product.waiting_for_discount_count}</TableCell>

@@ -231,9 +231,10 @@ const CompletarDatosColectiva = () => {
 
         let orderNumber = existingOrder?.order_number;
         let orderId = existingOrder?.id;
+        let isNewOrder = false;
 
         if (existingOrder) {
-          // Update existing order
+          // Update existing order - NO Telegram notification
           await supabase
             .from("user_orders")
             .update({
@@ -246,7 +247,8 @@ const CompletarDatosColectiva = () => {
             })
             .eq("id", existingOrder.id);
         } else {
-          // Create new collective order
+          // Create new collective order - SEND Telegram notification
+          isNewOrder = true;
           orderNumber = `OLA-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
           
           const { data: newOrder } = await supabase
@@ -270,8 +272,8 @@ const CompletarDatosColectiva = () => {
           orderNumber = newOrder?.order_number;
         }
 
-        // Send Telegram notification
-        if (orderId && orderNumber) {
+        // Send Telegram notification ONLY for new orders
+        if (isNewOrder && orderId && orderNumber) {
           const orderUrl = `${window.location.origin}/mi-cuenta/pedidos/${orderId}`;
           
           await supabase.functions.invoke("notify-telegram", {
