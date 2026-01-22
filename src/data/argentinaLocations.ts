@@ -148,14 +148,14 @@ export const MAJOR_CITIES: Record<string, string[]> = {
     // Add CABA aliases as valid localities in Buenos Aires
     "Capital Federal (CABA)",
     ...AMBA_LOCALITIES,
-    // Interior de Buenos Aires
+    // Interior de Buenos Aires (excluding duplicates already in AMBA_LOCALITIES)
     "Bahía Blanca", "Mar del Plata", "Tandil", "Necochea", "Olavarría",
     "Junín", "Pergamino", "San Nicolás de los Arroyos", "Azul", "Tres Arroyos",
     "Chivilcoy", "Mercedes", "Bragado", "Chacabuco", "9 de Julio",
     "Trenque Lauquen", "Pehuajó", "Carlos Casares", "General Villegas",
     "Lincoln", "Bolívar", "General Pico", "25 de Mayo", "Saladillo",
     "Lobos", "Navarro", "Suipacha", "Carmen de Areco", "San Antonio de Areco",
-    "Zárate", "Campana", "Baradero", "San Pedro", "Ramallo", "Arrecifes",
+    "Baradero", "San Pedro", "Ramallo", "Arrecifes",
     "Salto", "Rojas", "Colón", "Lobería", "General Alvarado", "Miramar",
     "Mar de Ajó", "San Clemente del Tuyú", "Santa Teresita", "Mar del Tuyú",
     "San Bernardo", "Pinamar", "Villa Gesell", "Cariló", "Valeria del Mar",

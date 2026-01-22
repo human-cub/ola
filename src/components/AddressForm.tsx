@@ -78,7 +78,7 @@ export const AddressForm = ({
     setCityQuery(city);
   }, [city]);
 
-  // Update delivery zone when address changes
+  // Update delivery zone when address changes (based on Provincia + Ciudad only, not postal code)
   useEffect(() => {
     // CABA province - always free
     if (isCABA) {
@@ -102,8 +102,8 @@ export const AddressForm = ({
         onDeliveryZoneChange?.('caba');
         return;
       }
-      // City selected - calculate zone based on postal code or default to amba/other
-      const zone = getDeliveryZone(postalCode, province, city);
+      // City selected - calculate zone based on city name (no postal code)
+      const zone = getDeliveryZone('', province, city);
       setDeliveryZone(zone);
       onDeliveryZoneChange?.(zone);
       return;
@@ -118,21 +118,10 @@ export const AddressForm = ({
     
     // No province selected yet
     setDeliveryZone('pending');
-  }, [postalCode, province, city, onDeliveryZoneChange, isCABA, isBuenosAires]);
+  }, [province, city, onDeliveryZoneChange, isCABA, isBuenosAires]);
 
-  // Auto-fill province and city based on postal code
-  useEffect(() => {
-    if (postalCode.length === 4) {
-      const location = getLocationByPostalCode(postalCode);
-      if (location) {
-        setProvince(location.province);
-        if (location.city) {
-          setCity(location.city);
-          setCityQuery(location.city);
-        }
-      }
-    }
-  }, [postalCode, setProvince, setCity]);
+  // Postal code is now optional and does not auto-fill province/city
+  // Delivery cost is calculated based on Provincia + Ciudad/Localidad only
 
   // Update city suggestions based on province and query
   useEffect(() => {
@@ -230,19 +219,17 @@ export const AddressForm = ({
           />
         </div>
         <div className="space-y-1">
-          <Label htmlFor="postalCode" className="text-sm">Código postal *</Label>
+          <Label htmlFor="postalCode" className="text-sm">Código postal</Label>
           <Input
             id="postalCode"
             value={postalCode}
             onChange={(e) => {
-              const value = e.target.value.replace(/\D/g, '').slice(0, 4);
+              const value = e.target.value.replace(/\D/g, '').slice(0, 8);
               setPostalCode(value);
             }}
             placeholder="1043"
-            maxLength={4}
-            className={errors.postalCode ? "border-destructive" : ""}
+            maxLength={8}
           />
-          {errors.postalCode && <p className="text-xs text-destructive">{errors.postalCode}</p>}
         </div>
       </div>
 
