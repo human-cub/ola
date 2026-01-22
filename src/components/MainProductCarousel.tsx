@@ -192,7 +192,7 @@ export const MainProductCarousel = () => {
             variant="outline"
             size="icon"
             onClick={scrollPrev}
-            className="absolute -left-4 sm:-left-6 md:-left-12 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white border-border/50 shadow-elegant z-20"
+            className="absolute -left-6 sm:-left-8 md:-left-12 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white border-border/50 shadow-elegant z-20"
           >
             <ChevronLeft className="w-6 h-6 text-blue-500" />
           </Button>
@@ -201,7 +201,7 @@ export const MainProductCarousel = () => {
             variant="outline"
             size="icon"
             onClick={scrollNext}
-            className="absolute -right-4 sm:-right-6 md:-right-12 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white border-border/50 shadow-elegant z-20"
+            className="absolute -right-6 sm:-right-8 md:-right-12 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white border-border/50 shadow-elegant z-20"
           >
             <ChevronRight className="w-6 h-6 text-blue-500" />
           </Button>
