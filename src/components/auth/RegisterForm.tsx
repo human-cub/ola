@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Eye, EyeOff, Loader2, CheckCircle } from "lucide-react";
@@ -16,9 +15,6 @@ const registerSchema = z.object({
     .regex(/[a-zA-Z]/, "La contraseña debe contener al menos una letra")
     .regex(/[0-9]/, "La contraseña debe contener al menos un número"),
   confirmPassword: z.string(),
-  acceptTerms: z.literal(true, {
-    errorMap: () => ({ message: "Debés aceptar la política de privacidad" }),
-  }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Las contraseñas no coinciden",
   path: ["confirmPassword"],
@@ -29,7 +25,6 @@ export const RegisterForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [acceptTerms, setAcceptTerms] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
@@ -43,7 +38,6 @@ export const RegisterForm = () => {
       email,
       password,
       confirmPassword,
-      acceptTerms,
     });
 
     if (!validation.success) {
@@ -165,23 +159,6 @@ export const RegisterForm = () => {
         )}
       </div>
 
-      <div className="flex items-start space-x-2">
-        <Checkbox
-          id="terms"
-          checked={acceptTerms}
-          onCheckedChange={(checked) => setAcceptTerms(checked as boolean)}
-          className={errors.acceptTerms ? "border-destructive" : ""}
-        />
-        <Label htmlFor="terms" className="text-sm font-normal cursor-pointer leading-relaxed">
-          Acepto la{" "}
-          <a href="/privacidad" className="text-primary hover:underline">
-            política de privacidad
-          </a>
-        </Label>
-      </div>
-      {errors.acceptTerms && (
-        <p className="text-sm text-destructive">{errors.acceptTerms}</p>
-      )}
 
       <Button type="submit" className="w-full" disabled={loading}>
         {loading ? (

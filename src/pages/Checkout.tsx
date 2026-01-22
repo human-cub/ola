@@ -36,7 +36,7 @@ const addressSchema = z.object({
   street: z.string().min(1, "La calle es requerida").max(200),
   number: z.string().min(1, "El número es requerido").max(20),
   floor: z.string().max(20).optional(),
-  postalCode: z.string().regex(/^\d{4}$/, "Código postal debe tener 4 dígitos"),
+  postalCode: z.string().max(8).optional(),
   city: z.string().min(1, "La ciudad es requerida"),
   province: z.string().min(1, "La provincia es requerida"),
   references: z.string().max(500).optional(),

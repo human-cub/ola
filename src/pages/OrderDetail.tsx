@@ -64,6 +64,16 @@ const OrderDetail = () => {
     const fetchOrder = async () => {
       if (!orderId) return;
 
+      // Get current session
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast.error("Debés iniciar sesión para ver este pedido");
+        navigate("/ingresar?redirect=/mi-cuenta/pedidos/" + orderId);
+        return;
+      }
+
+      // Fetch order - RLS will only return if user owns it or is admin
       const { data, error } = await supabase
         .from("user_orders")
         .select("*")
@@ -71,9 +81,41 @@ const OrderDetail = () => {
         .maybeSingle();
 
       if (error || !data) {
+        // Check if user is admin
+        const { data: roleData } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", session.user.id)
+          .eq("role", "admin")
+          .maybeSingle();
+        
+        if (!roleData) {
+          toast.error("No tenés permiso para ver este pedido");
+          navigate("/mi-cuenta");
+          return;
+        }
+        
+        // Admin but order not found
         toast.error("Pedido no encontrado");
-        navigate("/mi-cuenta");
+        navigate("/admin");
         return;
+      }
+
+      // Verify ownership (extra client-side check)
+      if (data.user_id !== session.user.id) {
+        // Check if admin
+        const { data: roleData } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", session.user.id)
+          .eq("role", "admin")
+          .maybeSingle();
+        
+        if (!roleData) {
+          toast.error("No tenés permiso para ver este pedido");
+          navigate("/mi-cuenta");
+          return;
+        }
       }
 
       setOrder(data as unknown as Order);

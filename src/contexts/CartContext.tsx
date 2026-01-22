@@ -140,49 +140,72 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Migrate guest cart to user cart - IMPORTANT: Must be done before fetching user items
   const migrateGuestCart = async (newUserId: string) => {
     const guestSessionId = localStorage.getItem(SESSION_ID_KEY);
-    if (!guestSessionId) return;
+    if (!guestSessionId) {
+      console.log('No guest session ID found, skipping migration');
+      return;
+    }
     
     try {
       console.log('Migrating guest cart for session:', guestSessionId, 'to user:', newUserId);
       
-      // Check if there are guest items to migrate
-      const { data: guestCartItems } = await supabase
+      // Get guest cart items (using anon key before auth context fully updates)
+      const { data: guestCartItems, error: cartFetchError } = await supabase
         .from('cart_items')
         .select('id')
-        .eq('session_id', guestSessionId);
+        .eq('session_id', guestSessionId)
+        .is('user_id', null);
+      
+      if (cartFetchError) {
+        console.error('Error fetching guest cart items:', cartFetchError);
+      }
         
-      const { data: guestWaitingItems } = await supabase
+      const { data: guestWaitingItems, error: waitingFetchError } = await supabase
         .from('waiting_list_items')
         .select('id')
-        .eq('session_id', guestSessionId);
+        .eq('session_id', guestSessionId)
+        .is('user_id', null);
       
-      const hasGuestItems = (guestCartItems && guestCartItems.length > 0) || 
-                           (guestWaitingItems && guestWaitingItems.length > 0);
+      if (waitingFetchError) {
+        console.error('Error fetching guest waiting items:', waitingFetchError);
+      }
       
-      if (!hasGuestItems) {
+      const cartItemIds = guestCartItems?.map(item => item.id) || [];
+      const waitingItemIds = guestWaitingItems?.map(item => item.id) || [];
+      
+      console.log('Found guest items to migrate:', { cartItemIds, waitingItemIds });
+      
+      if (cartItemIds.length === 0 && waitingItemIds.length === 0) {
         console.log('No guest items to migrate');
         return;
       }
       
-      // Migrate cart items - update session_id items to user_id
-      const { error: cartError } = await supabase
-        .from('cart_items')
-        .update({ user_id: newUserId, session_id: null })
-        .eq('session_id', guestSessionId)
-        .is('user_id', null);
+      // Migrate cart items by ID (more reliable than session_id filter after auth)
+      if (cartItemIds.length > 0) {
+        const { error: cartError, count: cartCount } = await supabase
+          .from('cart_items')
+          .update({ user_id: newUserId, session_id: null })
+          .in('id', cartItemIds);
+        
+        if (cartError) {
+          console.error('Cart migration error:', cartError);
+        } else {
+          console.log('Cart items migrated successfully, count:', cartCount);
+        }
+      }
       
-      if (cartError) console.error('Cart migration error:', cartError);
-      else console.log('Cart items migrated successfully');
-      
-      // Migrate waiting list items  
-      const { error: waitingError } = await supabase
-        .from('waiting_list_items')
-        .update({ user_id: newUserId, session_id: null })
-        .eq('session_id', guestSessionId)
-        .is('user_id', null);
-      
-      if (waitingError) console.error('Waiting list migration error:', waitingError);
-      else console.log('Waiting list items migrated successfully');
+      // Migrate waiting list items by ID
+      if (waitingItemIds.length > 0) {
+        const { error: waitingError, count: waitingCount } = await supabase
+          .from('waiting_list_items')
+          .update({ user_id: newUserId, session_id: null })
+          .in('id', waitingItemIds);
+        
+        if (waitingError) {
+          console.error('Waiting list migration error:', waitingError);
+        } else {
+          console.log('Waiting list items migrated successfully, count:', waitingCount);
+        }
+      }
       
       console.log('Cart migration complete');
     } catch (error) {
