@@ -12,7 +12,8 @@ import { products } from "@/data/products";
 import { z } from "zod";
 
 const orderSchema = z.object({
-  customerName: z.string().trim().min(1, "El nombre es requerido").max(100, "El nombre es demasiado largo"),
+  firstName: z.string().trim().min(1, "El nombre es requerido").max(100, "El nombre es demasiado largo"),
+  lastName: z.string().trim().max(100, "El apellido es demasiado largo").optional(),
   phone: z.string().trim().regex(/^[\+]?[0-9\s\-()]{7,20}$/, "Formato de teléfono inválido"),
   comment: z.string().max(500, "El comentario es demasiado largo").optional(),
 });
@@ -20,7 +21,8 @@ const orderSchema = z.object({
 const OrderForm = () => {
   const [loading, setLoading] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState("");
-  const [customerName, setCustomerName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
   const [comment, setComment] = useState("");
   const [waitForDiscount, setWaitForDiscount] = useState(false);
@@ -32,7 +34,8 @@ const OrderForm = () => {
     try {
       // Validate input
       const validated = orderSchema.parse({
-        customerName,
+        firstName,
+        lastName: lastName || undefined,
         phone,
         comment: comment || undefined,
       });
@@ -52,7 +55,7 @@ const OrderForm = () => {
       const orderData = {
         product_id: dbProduct?.id || null,
         product_name: productData.name,
-        customer_name: validated.customerName,
+        customer_name: [validated.firstName, validated.lastName].filter(Boolean).join(" "),
         phone: validated.phone,
         comment: validated.comment || null,
         waiting_for_discount: waitForDiscount,
@@ -84,7 +87,8 @@ const OrderForm = () => {
       
       // Reset form
       setSelectedProduct("");
-      setCustomerName("");
+      setFirstName("");
+      setLastName("");
       setPhone("");
       setComment("");
       setWaitForDiscount(false);
@@ -126,14 +130,25 @@ const OrderForm = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="name">Nombre</Label>
+            <Label htmlFor="firstName">Имя</Label>
             <Input
-              id="name"
+              id="firstName"
               type="text"
-              placeholder="Tu nombre"
-              value={customerName}
-              onChange={(e) => setCustomerName(e.target.value)}
+              placeholder="Имя"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
               required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="lastName">Фамилия</Label>
+            <Input
+              id="lastName"
+              type="text"
+              placeholder="Фамилия (необязательно)"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
             />
           </div>
 

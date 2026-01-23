@@ -224,7 +224,7 @@ export const AddressForm = ({
             id="postalCode"
             value={postalCode}
             onChange={(e) => {
-              const value = e.target.value.replace(/\D/g, '').slice(0, 8);
+              const value = e.target.value.slice(0, 8);
               setPostalCode(value);
             }}
             placeholder="1043"
@@ -314,7 +314,7 @@ export const AddressForm = ({
       {deliveryZone === 'amba' && (
         <div className="flex items-center gap-2 text-blue-600 bg-blue-50 p-3 rounded-lg">
           <Truck className="w-5 h-5 flex-shrink-0" />
-          <span className="font-medium text-sm">Envío AMBA: $3.000</span>
+          <span className="font-medium text-sm">Envío GBA: $3.000</span>
         </div>
       )}
       {deliveryZone === 'other' && (
