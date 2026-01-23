@@ -23,8 +23,7 @@ import { Copy, Instagram, Share2, MessageCircle, Send } from "lucide-react";
 import { z } from "zod";
 
 const orderSchema = z.object({
-  firstName: z.string().trim().min(1, "El nombre es requerido").max(100, "El nombre es demasiado largo"),
-  lastName: z.string().trim().max(100, "El apellido es demasiado largo").optional(),
+  customerName: z.string().trim().min(1, "El nombre es requerido").max(100, "El nombre es demasiado largo"),
   phone: z.string().trim().regex(/^[\+]?[0-9\s\-()]{7,20}$/, "Formato de teléfono inválido"),
   comment: z.string().max(500, "El comentario es demasiado largo").optional(),
 });
@@ -45,8 +44,7 @@ const OrderDialog = ({
   waitForDiscount,
 }: OrderDialogProps) => {
   const [loading, setLoading] = useState(false);
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
+  const [customerName, setCustomerName] = useState("");
   const [phone, setPhone] = useState("");
   const [comment, setComment] = useState("");
   const [orderNumber, setOrderNumber] = useState(0);
@@ -88,8 +86,7 @@ const OrderDialog = ({
     try {
       // Validate input
       const validated = orderSchema.parse({
-        firstName,
-        lastName: lastName || undefined,
+        customerName,
         phone,
         comment: comment || undefined,
       });
@@ -106,7 +103,7 @@ const OrderDialog = ({
       const orderData = {
         product_id: dbProduct?.id || null,
         product_name: productName,
-        customer_name: [validated.firstName, validated.lastName].filter(Boolean).join(" "),
+        customer_name: validated.customerName,
         phone: validated.phone,
         comment: validated.comment || null,
         waiting_for_discount: waitForDiscount,
@@ -136,8 +133,7 @@ const OrderDialog = ({
       }
 
       // Reset form and close order dialog
-      setFirstName("");
-      setLastName("");
+      setCustomerName("");
       setPhone("");
       setComment("");
       onOpenChange(false);
@@ -227,26 +223,14 @@ const OrderDialog = ({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="firstName">Имя *</Label>
+            <Label htmlFor="name">Nombre *</Label>
             <Input
-              id="firstName"
+              id="name"
               type="text"
-              placeholder="Имя"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
+              placeholder="Tu nombre"
+              value={customerName}
+              onChange={(e) => setCustomerName(e.target.value)}
               required
-              className="placeholder:opacity-50"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="lastName">Фамилия</Label>
-            <Input
-              id="lastName"
-              type="text"
-              placeholder="Фамилия (необязательно)"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
               className="placeholder:opacity-50"
             />
           </div>

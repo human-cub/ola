@@ -74,24 +74,6 @@ interface LoginEntry {
 
 const ITEMS_PER_PAGE = 50;
 
-const getInvokeErrorMessage = (err: any): string => {
-  if (!err) return "Error al eliminar el usuario";
-  if (typeof err === "string") return err;
-
-  const anyErr = err as any;
-  const body = anyErr?.context?.body;
-  if (body) {
-    try {
-      const parsed = typeof body === "string" ? JSON.parse(body) : body;
-      return parsed?.error || parsed?.message || anyErr.message || "Error al eliminar el usuario";
-    } catch {
-      return anyErr.message ? `${anyErr.message}: ${String(body)}` : String(body);
-    }
-  }
-
-  return anyErr.message || "Error al eliminar el usuario";
-};
-
 // Format address from JSON or string
 const formatAddress = (address: string | null): string => {
   if (!address) return "-";
@@ -232,7 +214,7 @@ const UsersTable = () => {
       fetchUsers();
     } catch (error: any) {
       console.error("Error deleting user:", error);
-      toast.error(getInvokeErrorMessage(error));
+      toast.error(error.message || "Error al eliminar el usuario");
     } finally {
       setDeleting(false);
     }

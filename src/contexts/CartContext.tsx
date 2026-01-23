@@ -146,60 +146,68 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     
     try {
-      console.log('[migrateGuestCart] start', { guestSessionId, newUserId });
-
-      // IMPORTANT:
-      // We do this in TWO steps to be maximally compatible with RLS:
-      // 1) Claim orphan rows (session_id matches, user_id IS NULL) by setting user_id
-      // 2) Clear session_id ONLY for rows we now own (auth.uid() = user_id)
-
-      const { data: claimedCartRows, error: claimCartError } = await supabase
+      console.log('Migrating guest cart for session:', guestSessionId, 'to user:', newUserId);
+      
+      // Get guest cart items (using anon key before auth context fully updates)
+      const { data: guestCartItems, error: cartFetchError } = await supabase
         .from('cart_items')
-        .update({ user_id: newUserId })
+        .select('id')
         .eq('session_id', guestSessionId)
-        .is('user_id', null)
-        .select('id');
-
-      if (claimCartError) {
-        console.error('[migrateGuestCart] cart claim error:', claimCartError);
+        .is('user_id', null);
+      
+      if (cartFetchError) {
+        console.error('Error fetching guest cart items:', cartFetchError);
       }
-
-      const cartIds = (claimedCartRows ?? []).map((r: any) => r.id).filter(Boolean);
-      if (cartIds.length > 0) {
-        const { error: clearCartSidError } = await supabase
-          .from('cart_items')
-          .update({ session_id: null })
-          .in('id', cartIds);
-
-        if (clearCartSidError) {
-          console.error('[migrateGuestCart] cart clear session_id error:', clearCartSidError);
-        }
-      }
-
-      const { data: claimedWaitingRows, error: claimWaitingError } = await supabase
+        
+      const { data: guestWaitingItems, error: waitingFetchError } = await supabase
         .from('waiting_list_items')
-        .update({ user_id: newUserId })
+        .select('id')
         .eq('session_id', guestSessionId)
-        .is('user_id', null)
-        .select('id');
-
-      if (claimWaitingError) {
-        console.error('[migrateGuestCart] waiting list claim error:', claimWaitingError);
+        .is('user_id', null);
+      
+      if (waitingFetchError) {
+        console.error('Error fetching guest waiting items:', waitingFetchError);
       }
-
-      const waitingIds = (claimedWaitingRows ?? []).map((r: any) => r.id).filter(Boolean);
-      if (waitingIds.length > 0) {
-        const { error: clearWaitingSidError } = await supabase
-          .from('waiting_list_items')
-          .update({ session_id: null })
-          .in('id', waitingIds);
-
-        if (clearWaitingSidError) {
-          console.error('[migrateGuestCart] waiting list clear session_id error:', clearWaitingSidError);
+      
+      const cartItemIds = guestCartItems?.map(item => item.id) || [];
+      const waitingItemIds = guestWaitingItems?.map(item => item.id) || [];
+      
+      console.log('Found guest items to migrate:', { cartItemIds, waitingItemIds });
+      
+      if (cartItemIds.length === 0 && waitingItemIds.length === 0) {
+        console.log('No guest items to migrate');
+        return;
+      }
+      
+      // Migrate cart items by ID (more reliable than session_id filter after auth)
+      if (cartItemIds.length > 0) {
+        const { error: cartError, count: cartCount } = await supabase
+          .from('cart_items')
+          .update({ user_id: newUserId, session_id: null })
+          .in('id', cartItemIds);
+        
+        if (cartError) {
+          console.error('Cart migration error:', cartError);
+        } else {
+          console.log('Cart items migrated successfully, count:', cartCount);
         }
       }
-
-      console.log('[migrateGuestCart] done', { cartClaimed: cartIds.length, waitingClaimed: waitingIds.length });
+      
+      // Migrate waiting list items by ID
+      if (waitingItemIds.length > 0) {
+        const { error: waitingError, count: waitingCount } = await supabase
+          .from('waiting_list_items')
+          .update({ user_id: newUserId, session_id: null })
+          .in('id', waitingItemIds);
+        
+        if (waitingError) {
+          console.error('Waiting list migration error:', waitingError);
+        } else {
+          console.log('Waiting list items migrated successfully, count:', waitingCount);
+        }
+      }
+      
+      console.log('Cart migration complete');
     } catch (error) {
       console.error('Error migrating guest cart:', error);
     }
