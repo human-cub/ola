@@ -146,32 +146,60 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     
     try {
-      console.log('Migrating guest cart for session:', guestSessionId, 'to user:', newUserId);
+      console.log('[migrateGuestCart] start', { guestSessionId, newUserId });
 
       // IMPORTANT:
-      // Do NOT SELECT guest rows here: authenticated users typically cannot SELECT
-      // rows where user_id IS NULL due to RLS. We only need UPDATE.
-      const { error: cartError } = await supabase
+      // We do this in TWO steps to be maximally compatible with RLS:
+      // 1) Claim orphan rows (session_id matches, user_id IS NULL) by setting user_id
+      // 2) Clear session_id ONLY for rows we now own (auth.uid() = user_id)
+
+      const { data: claimedCartRows, error: claimCartError } = await supabase
         .from('cart_items')
-        .update({ user_id: newUserId, session_id: null })
+        .update({ user_id: newUserId })
         .eq('session_id', guestSessionId)
-        .is('user_id', null);
+        .is('user_id', null)
+        .select('id');
 
-      if (cartError) {
-        console.error('Cart migration error:', cartError);
+      if (claimCartError) {
+        console.error('[migrateGuestCart] cart claim error:', claimCartError);
       }
 
-      const { error: waitingError } = await supabase
+      const cartIds = (claimedCartRows ?? []).map((r: any) => r.id).filter(Boolean);
+      if (cartIds.length > 0) {
+        const { error: clearCartSidError } = await supabase
+          .from('cart_items')
+          .update({ session_id: null })
+          .in('id', cartIds);
+
+        if (clearCartSidError) {
+          console.error('[migrateGuestCart] cart clear session_id error:', clearCartSidError);
+        }
+      }
+
+      const { data: claimedWaitingRows, error: claimWaitingError } = await supabase
         .from('waiting_list_items')
-        .update({ user_id: newUserId, session_id: null })
+        .update({ user_id: newUserId })
         .eq('session_id', guestSessionId)
-        .is('user_id', null);
+        .is('user_id', null)
+        .select('id');
 
-      if (waitingError) {
-        console.error('Waiting list migration error:', waitingError);
+      if (claimWaitingError) {
+        console.error('[migrateGuestCart] waiting list claim error:', claimWaitingError);
       }
 
-      console.log('Cart migration complete');
+      const waitingIds = (claimedWaitingRows ?? []).map((r: any) => r.id).filter(Boolean);
+      if (waitingIds.length > 0) {
+        const { error: clearWaitingSidError } = await supabase
+          .from('waiting_list_items')
+          .update({ session_id: null })
+          .in('id', waitingIds);
+
+        if (clearWaitingSidError) {
+          console.error('[migrateGuestCart] waiting list clear session_id error:', clearWaitingSidError);
+        }
+      }
+
+      console.log('[migrateGuestCart] done', { cartClaimed: cartIds.length, waitingClaimed: waitingIds.length });
     } catch (error) {
       console.error('Error migrating guest cart:', error);
     }

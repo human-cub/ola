@@ -43,6 +43,8 @@ const addressSchema = z.object({
 });
 
 const contactSchema = z.object({
+  firstName: z.string().trim().min(1, "El nombre es requerido").max(100, "El nombre es demasiado largo"),
+  lastName: z.string().trim().max(100, "El apellido es demasiado largo").optional(),
   phone: z.string().regex(/^[\+]?[0-9\s\-()]{7,20}$/, "Formato de teléfono inválido"),
   email: z.string().email("Email inválido"),
 });
@@ -77,6 +79,8 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
   const [references, setReferences] = useState("");
   
   // Contact fields
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   
@@ -106,6 +110,8 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
         .maybeSingle();
 
       if (profile) {
+        setFirstName(profile.first_name || "");
+        setLastName(profile.last_name || "");
         setPhone(profile.phone || "");
         if (profile.address) {
           try {
@@ -186,7 +192,12 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
       return;
     }
 
-    const contactValidation = contactSchema.safeParse({ phone, email });
+    const contactValidation = contactSchema.safeParse({
+      firstName,
+      lastName: lastName || undefined,
+      phone,
+      email,
+    });
     if (!contactValidation.success) {
       const fieldErrors: Record<string, string> = {};
       contactValidation.error.errors.forEach((err) => {
@@ -248,22 +259,17 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
 
       if (orderError) throw orderError;
 
-      // Get user profile for name
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("first_name, last_name")
-        .eq("user_id", session.user.id)
-        .maybeSingle();
-
       await supabase
         .from("profiles")
         .update({
+          first_name: firstName,
+          last_name: lastName || null,
           phone,
           address: JSON.stringify(addressData),
         })
         .eq("user_id", session.user.id);
 
-      const customerName = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') || 'Sin nombre';
+      const customerName = [firstName, lastName].filter(Boolean).join(" ") || "Sin nombre";
       const orderUrl = `https://ola.lovable.app/mi-cuenta/pedidos/${order.id}`;
 
       try {
@@ -432,6 +438,28 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
           <div className="mb-6">
             <h2 className="text-lg font-semibold mb-4">Datos de contacto</h2>
             <div className="space-y-4">
+              <div className="space-y-1">
+                <Label htmlFor="firstName" className="text-sm">Nombre *</Label>
+                <Input
+                  id="firstName"
+                  type="text"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className={errors.firstName ? "border-destructive" : ""}
+                />
+                {errors.firstName && <p className="text-xs text-destructive">{errors.firstName}</p>}
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="lastName" className="text-sm">Apellido</Label>
+                <Input
+                  id="lastName"
+                  type="text"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className={errors.lastName ? "border-destructive" : ""}
+                />
+                {errors.lastName && <p className="text-xs text-destructive">{errors.lastName}</p>}
+              </div>
               <div className="space-y-1">
                 <Label htmlFor="phone" className="text-sm">Teléfono *</Label>
                 <Input
