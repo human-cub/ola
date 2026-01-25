@@ -35,7 +35,7 @@ interface AddressFormProps {
   references: string;
   setReferences: (value: string) => void;
   errors: Record<string, string>;
-  onDeliveryZoneChange?: (zone: 'caba' | 'amba' | 'other') => void;
+  onDeliveryZoneChange?: (zone: 'caba' | 'gba' | 'other') => void;
   hideReferences?: boolean;
   title?: string;
 }
@@ -60,7 +60,7 @@ export const AddressForm = ({
   hideReferences = false,
   title = "Dirección de entrega",
 }: AddressFormProps) => {
-  const [deliveryZone, setDeliveryZone] = useState<'caba' | 'amba' | 'other' | 'pending'>('pending');
+  const [deliveryZone, setDeliveryZone] = useState<'caba' | 'gba' | 'other' | 'pending'>('pending');
   const [cityQuery, setCityQuery] = useState(city);
   const [citySuggestions, setCitySuggestions] = useState<string[]>([]);
   const [showCitySuggestions, setShowCitySuggestions] = useState(false);
@@ -224,7 +224,7 @@ export const AddressForm = ({
             id="postalCode"
             value={postalCode}
             onChange={(e) => {
-              const value = e.target.value.replace(/\D/g, '').slice(0, 8);
+              const value = e.target.value.slice(0, 8);
               setPostalCode(value);
             }}
             placeholder="1043"
@@ -311,10 +311,10 @@ export const AddressForm = ({
           <span className="font-medium text-sm">¡Envío gratis en CABA!</span>
         </div>
       )}
-      {deliveryZone === 'amba' && (
+      {deliveryZone === 'gba' && (
         <div className="flex items-center gap-2 text-blue-600 bg-blue-50 p-3 rounded-lg">
           <Truck className="w-5 h-5 flex-shrink-0" />
-          <span className="font-medium text-sm">Envío AMBA: $3.000</span>
+          <span className="font-medium text-sm">Envío GBA: $3.000</span>
         </div>
       )}
       {deliveryZone === 'other' && (

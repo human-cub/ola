@@ -83,8 +83,8 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
   // Payment
   const [paymentMethod, setPaymentMethod] = useState("");
   
-  // Delivery zone: 'caba' | 'amba' | 'other'
-  const [deliveryZone, setDeliveryZone] = useState<'caba' | 'amba' | 'other'>('caba');
+  // Delivery zone: 'caba' | 'gba' | 'other'
+  const [deliveryZone, setDeliveryZone] = useState<'caba' | 'gba' | 'other'>('caba');
   
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -143,7 +143,7 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
   }, [lastScrollY]);
 
   // Handle delivery zone change from AddressForm
-  const handleDeliveryZoneChange = useCallback((zone: 'caba' | 'amba' | 'other') => {
+  const handleDeliveryZoneChange = useCallback((zone: 'caba' | 'gba' | 'other') => {
     setDeliveryZone(zone);
   }, []);
 
@@ -157,7 +157,7 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
 
   const originalPrice = subtotal * 1.2;
   const discount = originalPrice - subtotal;
-  const deliveryCost = deliveryZone === 'caba' ? 0 : deliveryZone === 'amba' ? 3000 : 5000;
+  const deliveryCost = deliveryZone === 'caba' ? 0 : deliveryZone === 'gba' ? 3000 : 5000;
   const total = subtotal + deliveryCost;
 
   const formatPrice = (price: number) => {
