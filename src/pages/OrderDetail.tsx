@@ -36,6 +36,8 @@ interface Order {
   notes: string | null;
   collective_close_date: string | null;
   created_at: string;
+  is_promo: boolean;
+  promo_tier: number | null;
 }
 
 const statusConfig = {
@@ -290,7 +292,7 @@ const OrderDetail = () => {
                 </div>
                 {order.discount_amount > 0 && (
                   <div className="flex justify-between text-sm text-green-600">
-                    <span>Descuento:</span>
+                    <span>{order.is_promo ? 'Descuento (PROMO):' : 'Descuento:'}</span>
                     <span>-{formatPrice(order.discount_amount)}</span>
                   </div>
                 )}

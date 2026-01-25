@@ -286,12 +286,14 @@ export type Database = {
           discount_amount: number
           discount_percentage: number | null
           id: string
+          is_promo: boolean | null
           items: Json
           notes: string | null
           order_number: string
           order_type: Database["public"]["Enums"]["order_type"]
           participants_count: number | null
           payment_method: string | null
+          promo_tier: number | null
           status: Database["public"]["Enums"]["extended_order_status"]
           subtotal: number
           total_amount: number
@@ -307,12 +309,14 @@ export type Database = {
           discount_amount?: number
           discount_percentage?: number | null
           id?: string
+          is_promo?: boolean | null
           items?: Json
           notes?: string | null
           order_number: string
           order_type?: Database["public"]["Enums"]["order_type"]
           participants_count?: number | null
           payment_method?: string | null
+          promo_tier?: number | null
           status?: Database["public"]["Enums"]["extended_order_status"]
           subtotal?: number
           total_amount?: number
@@ -328,12 +332,14 @@ export type Database = {
           discount_amount?: number
           discount_percentage?: number | null
           id?: string
+          is_promo?: boolean | null
           items?: Json
           notes?: string | null
           order_number?: string
           order_type?: Database["public"]["Enums"]["order_type"]
           participants_count?: number | null
           payment_method?: string | null
+          promo_tier?: number | null
           status?: Database["public"]["Enums"]["extended_order_status"]
           subtotal?: number
           total_amount?: number
