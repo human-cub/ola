@@ -33,6 +33,8 @@ interface Order {
   created_at: string;
   delivery_address: any;
   payment_method: string;
+  is_promo: boolean;
+  promo_tier: number | null;
 }
 
 const statusConfig = {
@@ -181,6 +183,7 @@ const OrdersTab = () => {
                       <p className="text-sm">
                         Tipo: <span className="font-medium">
                           {order.order_type === 'immediate' ? 'Compra inmediata' : 'Compra colectiva'}
+                          {order.is_promo && <span className="text-green-600 ml-1">(PROMO)</span>}
                         </span>
                       </p>
                       {isPendingCollective ? (

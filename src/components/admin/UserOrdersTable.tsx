@@ -20,7 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Loader2, Search, Save, Trash2, Eye, Package, ShoppingCart, Clock } from "lucide-react";
+import { Loader2, Search, Save, Trash2, Eye, Package, ShoppingCart, Clock, Tag } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -81,6 +81,8 @@ interface UserOrder {
   collective_close_date: string | null;
   created_at: string;
   updated_at: string;
+  is_promo: boolean;
+  promo_tier: number | null;
   // Profile data
   profiles?: {
     email: string | null;
@@ -250,6 +252,70 @@ const UserOrdersTable = () => {
     }
   };
 
+  // Apply PROMO tier to order - recalculates prices based on the selected tier
+  const handleApplyPromo = async (orderId: string, tier: number) => {
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return;
+
+    try {
+      // Fetch product prices for all items in the order
+      const productIds = [...new Set(order.items.map(item => item.product_id))];
+      const { data: productsData } = await supabase
+        .from("products")
+        .select("id, prices")
+        .in("id", productIds);
+
+      if (!productsData) {
+        toast.error("Error al obtener precios de productos");
+        return;
+      }
+
+      // Create a map of product prices
+      const productPricesMap: Record<string, any[]> = {};
+      productsData.forEach((p: any) => {
+        productPricesMap[p.id] = p.prices || [];
+      });
+
+      // Recalculate items with new prices based on tier (1-5 maps to prices[0]-prices[4])
+      const updatedItems = order.items.map(item => {
+        const prices = productPricesMap[item.product_id] || [];
+        const priceIndex = tier - 1; // tier 1 = prices[0], tier 5 = prices[4]
+        const newPrice = prices[priceIndex]?.price || item.price_per_unit;
+        return {
+          ...item,
+          price_per_unit: newPrice,
+        };
+      });
+
+      // Calculate new totals
+      const newSubtotal = updatedItems.reduce((sum, item) => sum + item.price_per_unit * item.quantity, 0);
+      const originalSubtotal = order.items.reduce((sum, item) => sum + item.price_per_unit * item.quantity, 0);
+      const discountAmount = originalSubtotal - newSubtotal;
+      const newTotal = newSubtotal + order.delivery_cost;
+
+      const { error } = await supabase
+        .from("user_orders")
+        .update({
+          items: updatedItems,
+          subtotal: newSubtotal,
+          discount_amount: discountAmount,
+          total_amount: newTotal,
+          is_promo: true,
+          promo_tier: tier,
+        })
+        .eq("id", orderId);
+
+      if (error) {
+        toast.error("Error al aplicar promoción");
+      } else {
+        toast.success(`Promoción tier ${tier} aplicada`);
+        fetchOrders();
+      }
+    } catch (err) {
+      toast.error("Error al aplicar promoción");
+    }
+  };
+
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString("es-AR", {
       day: "2-digit",
@@ -375,13 +441,14 @@ const UserOrdersTable = () => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline" className="gap-1">
+                    <Badge variant="outline" className={`gap-1 ${order.is_promo ? 'bg-green-50 border-green-300' : ''}`}>
                       {order.order_type === "immediate" ? (
                         <ShoppingCart className="w-3 h-3" />
                       ) : (
                         <Clock className="w-3 h-3" />
                       )}
                       {orderTypeLabels[order.order_type]}
+                      {order.is_promo && <span className="text-green-600 font-semibold">(PROMO)</span>}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -427,6 +494,23 @@ const UserOrdersTable = () => {
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
+                      {/* PROMO Tier Selector */}
+                      <Select
+                        value={order.promo_tier?.toString() || ""}
+                        onValueChange={(value) => handleApplyPromo(order.id, parseInt(value))}
+                      >
+                        <SelectTrigger className="w-[70px]">
+                          <Tag className="w-3 h-3 mr-1" />
+                          {order.promo_tier || "-"}
+                        </SelectTrigger>
+                        <SelectContent>
+                          {[1, 2, 3, 4, 5].map((tier) => (
+                            <SelectItem key={tier} value={tier.toString()}>
+                              Tier {tier}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <Button
                         variant="ghost"
                         size="icon"
@@ -484,6 +568,7 @@ const UserOrdersTable = () => {
                   <p className="text-sm text-muted-foreground">Tipo</p>
                   <p className="font-medium">
                     {orderTypeLabels[selectedOrder.order_type]}
+                    {selectedOrder.is_promo && <span className="text-green-600 ml-1">(PROMO)</span>}
                   </p>
                 </div>
                 <div>
@@ -591,7 +676,9 @@ const UserOrdersTable = () => {
                 </div>
                 {selectedOrder.discount_amount > 0 && (
                   <div className="flex justify-between text-green-600">
-                    <span>Descuento:</span>
+                    <span>
+                      {selectedOrder.is_promo ? "Descuento (PROMO):" : "Descuento:"}
+                    </span>
                     <span>-{formatPrice(selectedOrder.discount_amount)}</span>
                   </div>
                 )}
