@@ -59,8 +59,8 @@ export const CABA_LOCALITIES = [
   "Villa Santa Rita", "Villa Soldati", "Villa Urquiza", "Vélez Sársfield"
 ];
 
-// All AMBA localities (partidos and main cities)
-export const AMBA_LOCALITIES = [
+// All GBA localities (partidos and main cities)
+export const GBA_LOCALITIES = [
   // Partidos
   "Almirante Brown", "Avellaneda", "Berazategui", "Berisso", "Campana",
   "Cañuelas", "Ensenada", "Escobar", "Esteban Echeverría", "Exaltación de la Cruz",
@@ -147,8 +147,8 @@ export const MAJOR_CITIES: Record<string, string[]> = {
   "Buenos Aires": [
     // Add CABA aliases as valid localities in Buenos Aires
     "Capital Federal (CABA)",
-    ...AMBA_LOCALITIES,
-    // Interior de Buenos Aires (excluding duplicates already in AMBA_LOCALITIES)
+    ...GBA_LOCALITIES,
+    // Interior de Buenos Aires (excluding duplicates already in GBA_LOCALITIES)
     "Bahía Blanca", "Mar del Plata", "Tandil", "Necochea", "Olavarría",
     "Junín", "Pergamino", "San Nicolás de los Arroyos", "Azul", "Tres Arroyos",
     "Chivilcoy", "Mercedes", "Bragado", "Chacabuco", "9 de Julio",
@@ -363,7 +363,7 @@ export const MAJOR_CITIES: Record<string, string[]> = {
 };
 
 // Postal code ranges for delivery zones
-export function getDeliveryZone(postalCode: string, province: string, city: string): 'caba' | 'amba' | 'other' {
+export function getDeliveryZone(postalCode: string, province: string, city: string): 'caba' | 'gba' | 'other' {
   const cp = parseInt(postalCode, 10);
   
   // Check by postal code first
@@ -372,14 +372,14 @@ export function getDeliveryZone(postalCode: string, province: string, city: stri
     if (cp >= 1000 && cp <= 1499) {
       return 'caba';
     }
-    // AMBA postal codes (approximate ranges)
+    // GBA postal codes (approximate ranges)
     if (
       (cp >= 1600 && cp <= 1699) || // Zona Norte
       (cp >= 1700 && cp <= 1799) || // Zona Oeste  
       (cp >= 1800 && cp <= 1899) || // Zona Sur
       (cp >= 1900 && cp <= 1999)    // La Plata, Berisso, Ensenada
     ) {
-      return 'amba';
+      return 'gba';
     }
   }
   
@@ -395,12 +395,12 @@ export function getDeliveryZone(postalCode: string, province: string, city: stri
     return 'caba';
   }
   
-  // Check by city name for AMBA
-  if (AMBA_LOCALITIES.some(loc => 
+  // Check by city name for GBA
+  if (GBA_LOCALITIES.some(loc => 
     city.toLowerCase().includes(loc.toLowerCase()) || 
     loc.toLowerCase().includes(city.toLowerCase())
   )) {
-    return 'amba';
+    return 'gba';
   }
   
   return 'other';
@@ -459,7 +459,7 @@ export function getLocationByPostalCode(postalCode: string): { province: string;
   }
 
   // Buenos Aires province - extensive mapping
-  // AMBA - Zona Norte: 1600-1699
+  // GBA - Zona Norte: 1600-1699
   if (cp >= 1600 && cp <= 1699) {
     if (cp >= 1602 && cp <= 1605) return { province: "Buenos Aires", city: "Vicente López" };
     if (cp >= 1606 && cp <= 1609) return { province: "Buenos Aires", city: "San Isidro" };
@@ -473,7 +473,7 @@ export function getLocationByPostalCode(postalCode: string): { province: string;
     return { province: "Buenos Aires" };
   }
   
-  // AMBA - Zona Oeste: 1700-1799
+  // GBA - Zona Oeste: 1700-1799
   if (cp >= 1700 && cp <= 1799) {
     if (cp >= 1702 && cp <= 1709) return { province: "Buenos Aires", city: "Ciudadela" };
     if (cp >= 1712 && cp <= 1719) return { province: "Buenos Aires", city: "Castelar" };
@@ -487,7 +487,7 @@ export function getLocationByPostalCode(postalCode: string): { province: string;
     return { province: "Buenos Aires" };
   }
   
-  // AMBA - Zona Sur: 1800-1899
+  // GBA - Zona Sur: 1800-1899
   if (cp >= 1800 && cp <= 1899) {
     if (cp >= 1802 && cp <= 1809) return { province: "Buenos Aires", city: "Avellaneda" };
     if (cp >= 1810 && cp <= 1819) return { province: "Buenos Aires", city: "Lanús" };
