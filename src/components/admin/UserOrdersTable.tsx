@@ -253,11 +253,31 @@ const UserOrdersTable = () => {
   };
 
   // Apply PROMO tier to order - recalculates prices based on the selected tier
-  const handleApplyPromo = async (orderId: string, tier: number) => {
+  const handleApplyPromo = async (orderId: string, tier: number | null) => {
     const order = orders.find(o => o.id === orderId);
     if (!order) return;
 
     try {
+      // If tier is null, cancel the promo (restore original prices would need to be stored)
+      if (tier === null) {
+        const { error } = await supabase
+          .from("user_orders")
+          .update({
+            is_promo: false,
+            promo_tier: null,
+            discount_amount: 0,
+          })
+          .eq("id", orderId);
+
+        if (error) {
+          toast.error("Error al cancelar promoción");
+        } else {
+          toast.success("Promoción cancelada");
+          fetchOrders();
+        }
+        return;
+      }
+
       // Fetch product prices for all items in the order
       const productIds = [...new Set(order.items.map(item => item.product_id))];
       const { data: productsData } = await supabase
@@ -496,14 +516,15 @@ const UserOrdersTable = () => {
                     <div className="flex gap-2">
                       {/* PROMO Tier Selector */}
                       <Select
-                        value={order.promo_tier?.toString() || ""}
-                        onValueChange={(value) => handleApplyPromo(order.id, parseInt(value))}
+                        value={order.promo_tier?.toString() || "-"}
+                        onValueChange={(value) => handleApplyPromo(order.id, value === "-" ? null : parseInt(value))}
                       >
                         <SelectTrigger className="w-[70px]">
                           <Tag className="w-3 h-3 mr-1" />
                           {order.promo_tier || "-"}
                         </SelectTrigger>
                         <SelectContent>
+                          <SelectItem value="-">-</SelectItem>
                           {[1, 2, 3, 4, 5].map((tier) => (
                             <SelectItem key={tier} value={tier.toString()}>
                               Tier {tier}
