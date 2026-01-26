@@ -56,6 +56,18 @@ const WaitingList = () => {
   const [confirmationDeadline, setConfirmationDeadline] = useState<Date | null>(null);
   const [isMovingToCart, setIsMovingToCart] = useState(false);
   const [pendingOrderCreatedAt, setPendingOrderCreatedAt] = useState<Date | null>(null);
+  const [frozenOrderData, setFrozenOrderData] = useState<{
+    items: Array<{
+      product_id: string;
+      product_name: string;
+      quantity: number;
+      price_per_unit: number;
+      flavor: string | null;
+      product_image: string | null;
+    }>;
+    subtotal: number;
+    total_orders_counts: Record<string, number>;
+  } | null>(null);
 
   // Check if user has pending collective order and get its creation date
   useEffect(() => {
@@ -64,12 +76,13 @@ const WaitingList = () => {
       if (!session) {
         setHasExistingOrder(false);
         setPendingOrderCreatedAt(null);
+        setFrozenOrderData(null);
         return;
       }
 
       const { data } = await supabase
         .from("user_orders")
-        .select("id, created_at")
+        .select("id, created_at, items, subtotal")
         .eq("user_id", session.user.id)
         .eq("order_type", "collective")
         .eq("status", "pending")
@@ -77,6 +90,31 @@ const WaitingList = () => {
 
       setHasExistingOrder(!!data);
       setPendingOrderCreatedAt(data ? new Date(data.created_at) : null);
+      
+      // If order exists, store frozen snapshot
+      if (data) {
+        const items = data.items as any[];
+        const productIds = items.map((i: any) => i.product_id);
+        
+        // Fetch total_orders_count snapshot
+        const { data: productsSnapshot } = await supabase
+          .from("products")
+          .select("id, total_orders_count")
+          .in("id", productIds);
+        
+        const countsMap: Record<string, number> = {};
+        productsSnapshot?.forEach(p => {
+          countsMap[p.id] = p.total_orders_count || 0;
+        });
+        
+        setFrozenOrderData({
+          items,
+          subtotal: data.subtotal || 0,
+          total_orders_counts: countsMap,
+        });
+      } else {
+        setFrozenOrderData(null);
+      }
     };
 
     checkExistingOrder();
@@ -262,6 +300,10 @@ const WaitingList = () => {
   };
 
   const getNextDiscountThreshold = (productId: string, userQty: number): { people: number; price: number } | null => {
+    // If collection ended, no next threshold
+    if (isCollectionEnded) {
+      return null;
+    }
     const prod = productData[productId];
     if (!prod || prod.prices.length === 0) return null;
     // If user already has an order, their quantity is ALREADY included in total_orders_count
@@ -275,6 +317,10 @@ const WaitingList = () => {
   };
 
   const getParticipantsCount = (productId: string, userQty: number): number => {
+    // If collection ended, use frozen count
+    if (isCollectionEnded && frozenOrderData) {
+      return frozenOrderData.total_orders_counts[productId] || 0;
+    }
     const prod = productData[productId];
     if (!prod) return userQty;
     // If user already has an order, their quantity is ALREADY included in total_orders_count
@@ -288,6 +334,13 @@ const WaitingList = () => {
   // Get current price based on participants count
   // If no order exists, add user's personal quantity (preview mode)
   const getCurrentPrice = (productId: string, userQty: number): number => {
+    // If collection ended and we have frozen data, use the frozen price
+    if (isCollectionEnded && frozenOrderData) {
+      const frozenItem = frozenOrderData.items.find(i => i.product_id === productId);
+      if (frozenItem) {
+        return frozenItem.price_per_unit;
+      }
+    }
     const prod = productData[productId];
     if (!prod || prod.prices.length === 0) return 0;
     
@@ -318,6 +371,13 @@ const WaitingList = () => {
 
   // Current subtotal with dynamically calculated prices
   const subtotal = waitingListItems.reduce((sum, item) => {
+    // If collection ended, use frozen prices
+    if (isCollectionEnded && frozenOrderData) {
+      const frozenItem = frozenOrderData.items.find(i => i.product_id === item.product_id && i.flavor === item.flavor);
+      if (frozenItem) {
+        return sum + frozenItem.price_per_unit * frozenItem.quantity;
+      }
+    }
     const userQty = getUserQtyForProduct(item.product_id);
     const dynamicPrice = getCurrentPrice(item.product_id, userQty) || item.current_price_per_unit;
     return sum + dynamicPrice * item.quantity;
@@ -325,12 +385,28 @@ const WaitingList = () => {
 
   // Full price (without any discount)
   const fullPrice = waitingListItems.reduce((sum, item) => {
+    // If collection ended, calculate from frozen prices
+    if (isCollectionEnded && frozenOrderData) {
+      const frozenItem = frozenOrderData.items.find(i => i.product_id === item.product_id && i.flavor === item.flavor);
+      if (frozenItem) {
+        // Full price = first tier price
+        const prod = productData[item.product_id];
+        if (prod && prod.prices.length > 0) {
+          return sum + prod.prices[0].price * frozenItem.quantity;
+        }
+        return sum + frozenItem.price_per_unit * frozenItem.quantity * 1.2;
+      }
+    }
     const price = getFullPrice(item.product_id);
     return sum + price * item.quantity;
   }, 0);
 
   // Estimated total at 100 participants
   const estimatedTotal = waitingListItems.reduce((sum, item) => {
+    // If collection ended, don't show estimated (use actual)
+    if (isCollectionEnded) {
+      return sum;
+    }
     const price = getMaxDiscountPrice(item.product_id);
     return sum + price * item.quantity;
   }, 0);
@@ -596,6 +672,7 @@ const WaitingList = () => {
                         productLink={prod?.link || "#"}
                         participantCount={participantCount}
                         nextThreshold={nextThreshold}
+                        isCollectionEnded={isCollectionEnded}
                         onQuantityChange={handleQuantityChange}
                         onFlavorChange={updateWaitingListItemFlavor}
                         onDelete={(id) => setDeleteItemId(id)}
