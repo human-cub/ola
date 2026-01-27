@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -17,6 +18,7 @@ import {
 import { Plus, Minus, ShoppingCart, Timer, Check } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { supabase } from "@/integrations/supabase/client";
+import { setPendingAddAction } from "@/lib/postAuthAction";
 
 interface PriceData {
   people: number;
@@ -47,6 +49,7 @@ export const AddToCartDialog = ({
   currentParticipants = 0,
 }: AddToCartDialogProps) => {
   const { addToCart, addToWaitingList } = useCart();
+  const navigate = useNavigate();
   const [selectedFlavor, setSelectedFlavor] = useState<string>("");
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -70,12 +73,14 @@ export const AddToCartDialog = ({
     if (isWaitingList) {
       // For waiting list, price changes based on participants + user's quantity
       const totalParticipants = currentParticipants + qty;
+      const buyNowPrice = prices.length > 1 ? prices[1].price : prices[0].price;
       for (let i = prices.length - 1; i >= 0; i--) {
         if (totalParticipants >= prices[i].people) {
-          return prices[i].price;
+          return Math.min(prices[i].price, buyNowPrice);
         }
       }
-      return prices[0].price;
+      // Before reaching 2nd tier threshold, don't exceed "Comprar ahora" price
+      return buyNowPrice;
     } else {
       // For immediate purchase, always use second tier price (index 1, fixed "buy now" price)
       // prices[0] = highest price (1 person), prices[1] = second tier
@@ -108,6 +113,43 @@ export const AddToCartDialog = ({
     setLoading(true);
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      // Auth-gate: for guests, redirect to auth and perform add after login
+      if (!session?.user) {
+        if (isWaitingList) {
+          setPendingAddAction({
+            kind: "waiting_list",
+            redirectTo: "/lista-espera",
+            item: {
+              product_id: productId,
+              product_name: productName,
+              flavor: selectedFlavor || null,
+              quantity,
+              current_price_per_unit: pricePerUnit,
+              product_image: productImage,
+            },
+          });
+        } else {
+          setPendingAddAction({
+            kind: "cart",
+            redirectTo: "/carrito",
+            item: {
+              product_id: productId,
+              product_name: productName,
+              flavor: selectedFlavor || null,
+              quantity,
+              price_per_unit: pricePerUnit,
+              product_image: productImage,
+            },
+          });
+        }
+
+        onOpenChange(false);
+        navigate(`/ingresar?redirect=${encodeURIComponent(isWaitingList ? "/lista-espera" : "/carrito")}`);
+        return;
+      }
+
       if (isWaitingList) {
         await addToWaitingList({
           product_id: productId,
@@ -241,12 +283,16 @@ export const AddToCartDialog = ({
             {/* Price Summary */}
             <div className="bg-muted rounded-lg p-4 space-y-2">
               <div className="flex justify-between text-sm">
-                <span>Precio unitario:</span>
+                <span>{isWaitingList ? "Precio unitario ahora:" : "Precio unitario:"}</span>
                 <span>{formatPrice(pricePerUnit)}</span>
               </div>
               <div className="flex justify-between font-semibold text-lg">
-                <span>Total:</span>
-                <span className="text-primary">{formatPrice(totalPrice)}</span>
+                <span>{isWaitingList ? "Precio estimado:" : "Total:"}</span>
+                <span className="text-primary">
+                  {isWaitingList
+                    ? formatPrice((prices[prices.length - 1]?.price ?? pricePerUnit) * quantity)
+                    : formatPrice(totalPrice)}
+                </span>
               </div>
               {isWaitingList && (
                 <p className="text-xs text-muted-foreground">

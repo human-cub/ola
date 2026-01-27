@@ -139,78 +139,121 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Migrate guest cart to user cart - IMPORTANT: Must be done before fetching user items
   const migrateGuestCart = async (newUserId: string) => {
-    const guestSessionId = localStorage.getItem(SESSION_ID_KEY);
-    if (!guestSessionId) {
-      console.log('No guest session ID found, skipping migration');
+    // Disabled by request: no guest cart migration on auth.
+    void newUserId;
+    return;
+  };
+
+  const formatPrice = (price: number) => `$${Math.round(price).toLocaleString('es-AR')}`;
+
+  const computeNextSundayCloseIso = (): string => {
+    const now = new Date();
+    const nextSunday = new Date(now);
+    const daysUntilSunday = (7 - now.getDay()) % 7;
+
+    if (daysUntilSunday === 0 && now.getHours() < 23) {
+      nextSunday.setHours(23, 59, 59, 999);
+    } else {
+      nextSunday.setDate(now.getDate() + (daysUntilSunday || 7));
+      nextSunday.setHours(23, 59, 59, 999);
+    }
+    return nextSunday.toISOString();
+  };
+
+  const ensurePendingCollectiveOrder = async (userId: string) => {
+    // If order already exists, sync items only.
+    const { data: existingOrder } = await supabase
+      .from("user_orders")
+      .select("id, order_number")
+      .eq("user_id", userId)
+      .eq("order_type", "collective")
+      .eq("status", "pending")
+      .maybeSingle();
+
+    if (existingOrder) {
+      await syncWaitingListOrder(userId);
       return;
     }
-    
-    try {
-      console.log('Migrating guest cart for session:', guestSessionId, 'to user:', newUserId);
-      
-      // Get guest cart items (using anon key before auth context fully updates)
-      const { data: guestCartItems, error: cartFetchError } = await supabase
-        .from('cart_items')
-        .select('id')
-        .eq('session_id', guestSessionId)
-        .is('user_id', null);
-      
-      if (cartFetchError) {
-        console.error('Error fetching guest cart items:', cartFetchError);
+
+    // Create new pending order from current waiting list items
+    const { data: waitingListData } = await supabase
+      .from("waiting_list_items")
+      .select("*")
+      .eq("user_id", userId);
+
+    if (!waitingListData || waitingListData.length === 0) return;
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("first_name, last_name, phone, address")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    const customerName = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || "Cliente";
+    const phone = profile?.phone || "";
+
+    // delivery_address expects jsonb; keep null if not available or not parseable
+    let deliveryAddress: any = null;
+    if (profile?.address) {
+      try {
+        deliveryAddress = JSON.parse(profile.address);
+      } catch {
+        deliveryAddress = null;
       }
-        
-      const { data: guestWaitingItems, error: waitingFetchError } = await supabase
-        .from('waiting_list_items')
-        .select('id')
-        .eq('session_id', guestSessionId)
-        .is('user_id', null);
-      
-      if (waitingFetchError) {
-        console.error('Error fetching guest waiting items:', waitingFetchError);
-      }
-      
-      const cartItemIds = guestCartItems?.map(item => item.id) || [];
-      const waitingItemIds = guestWaitingItems?.map(item => item.id) || [];
-      
-      console.log('Found guest items to migrate:', { cartItemIds, waitingItemIds });
-      
-      if (cartItemIds.length === 0 && waitingItemIds.length === 0) {
-        console.log('No guest items to migrate');
-        return;
-      }
-      
-      // Migrate cart items by ID (more reliable than session_id filter after auth)
-      if (cartItemIds.length > 0) {
-        const { error: cartError, count: cartCount } = await supabase
-          .from('cart_items')
-          .update({ user_id: newUserId, session_id: null })
-          .in('id', cartItemIds);
-        
-        if (cartError) {
-          console.error('Cart migration error:', cartError);
-        } else {
-          console.log('Cart items migrated successfully, count:', cartCount);
-        }
-      }
-      
-      // Migrate waiting list items by ID
-      if (waitingItemIds.length > 0) {
-        const { error: waitingError, count: waitingCount } = await supabase
-          .from('waiting_list_items')
-          .update({ user_id: newUserId, session_id: null })
-          .in('id', waitingItemIds);
-        
-        if (waitingError) {
-          console.error('Waiting list migration error:', waitingError);
-        } else {
-          console.log('Waiting list items migrated successfully, count:', waitingCount);
-        }
-      }
-      
-      console.log('Cart migration complete');
-    } catch (error) {
-      console.error('Error migrating guest cart:', error);
     }
+
+    const orderItems = waitingListData.map((item) => ({
+      product_id: item.product_id,
+      product_name: item.product_name,
+      flavor: item.flavor,
+      quantity: item.quantity,
+      price_per_unit: item.current_price_per_unit,
+      product_image: item.product_image,
+    }));
+
+    const subtotal = waitingListData.reduce(
+      (sum, item) => sum + Number(item.current_price_per_unit) * item.quantity,
+      0
+    );
+
+    const orderNumber = `OLA-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}-${Math.random()
+      .toString(36)
+      .substring(2, 6)
+      .toUpperCase()}`;
+
+    const { data: newOrder, error: insertError } = await supabase
+      .from("user_orders")
+      .insert({
+        user_id: userId,
+        order_number: orderNumber,
+        order_type: "collective",
+        items: orderItems,
+        subtotal,
+        total_amount: subtotal,
+        delivery_address: deliveryAddress,
+        status: "pending",
+        collective_close_date: computeNextSundayCloseIso(),
+        notes: phone || null,
+      })
+      .select("id, order_number")
+      .single();
+
+    if (insertError) throw insertError;
+
+    // Notify only for NEW orders
+    const orderUrl = `${window.location.origin}/mi-cuenta/pedidos/${newOrder.id}`;
+    await supabase.functions.invoke("notify-telegram", {
+      body: {
+        order_id: newOrder.id,
+        order_number: newOrder.order_number,
+        order_type: "Compra Colectiva",
+        customer_name: customerName,
+        phone,
+        total: formatPrice(subtotal),
+        order_url: orderUrl,
+        waiting_for_discount: true,
+      },
+    });
   };
 
   // Listen to auth changes (IMPORTANT: keep callback synchronous to avoid auth deadlocks)
@@ -462,9 +505,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const waiting = await fetchWaitingListItemsInternal(session?.user?.id || null);
       setWaitingListItems(waiting);
       
-      // Sync order if user is authenticated
+      // For authenticated users: ensure pending collective order exists (and sync items)
       if (session?.user) {
-        await syncWaitingListOrder(session.user.id);
+        await ensurePendingCollectiveOrder(session.user.id);
       }
       
       toast.success('Producto agregado a la lista de espera');
