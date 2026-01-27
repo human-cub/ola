@@ -177,7 +177,7 @@ const CompletarDatosColectiva = () => {
 
       const customerName = [firstName, lastName].filter(Boolean).join(' ') || 'Cliente';
 
-      // Save profile data including first_name and last_name
+      // Save profile data including first_name and last_name + set profile_completed
       await supabase
         .from("profiles")
         .update({
@@ -185,6 +185,7 @@ const CompletarDatosColectiva = () => {
           last_name: lastName || null,
           phone,
           address: JSON.stringify(addressData),
+          profile_completed: true,
         })
         .eq("user_id", session.user.id);
 
