@@ -126,6 +126,11 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
               Ya se reservaron <span className="font-semibold text-primary">{waitingCount}</span> unidades entre distintos compradores
             </p>
             {(() => {
+              // Only show "Faltan..." once we've reached at least the 2nd tier threshold
+              const secondTierThreshold = priceData.length > 1 ? priceData[1].people : 0;
+              if (waitingCount < secondTierThreshold) {
+                return null; // Hide until second tier is reached
+              }
               const nextThreshold = getNextDiscountThreshold(waitingCount);
               if (nextThreshold) {
                 const remaining = nextThreshold.people - waitingCount;
@@ -191,6 +196,7 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
                                   index === 3 ? '75%' : '100%';
                   const isNearSelected = Math.abs(selectedPeople - item.people) <= 
                     (index < priceData.length - 1 ? (priceData[index + 1].people - item.people) * 0.1 : 5);
+                  const isFirstPrice = index === 0;
                   return (
                     <div 
                       key={index} 
@@ -198,9 +204,11 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
                       style={{ left: position }}
                     >
                       <span className={`transition-colors whitespace-nowrap ${
-                        isNearSelected 
-                          ? 'text-xs text-primary font-medium' 
-                          : 'text-xs text-muted-foreground'
+                        isFirstPrice 
+                          ? 'text-xs text-muted-foreground line-through opacity-60'
+                          : isNearSelected 
+                            ? 'text-xs text-primary font-medium' 
+                            : 'text-xs text-muted-foreground'
                       }`}>
                         {formatPrice(item.price)}
                       </span>

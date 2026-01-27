@@ -219,6 +219,7 @@ const Profile = () => {
           last_name: lastName.trim(),
           phone: phone.trim(),
           address: addressJson,
+          profile_completed: true,
         })
         .eq("user_id", session.user.id);
 

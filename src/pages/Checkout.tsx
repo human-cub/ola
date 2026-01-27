@@ -268,6 +268,7 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
           last_name: lastName || null,
           phone,
           address: JSON.stringify(addressData),
+          profile_completed: true,
         })
         .eq("user_id", session.user.id);
 

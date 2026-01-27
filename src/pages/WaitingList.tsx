@@ -763,7 +763,7 @@ const WaitingList = () => {
                 ) : (
                   // Collection active - show waiting list flow
                   <>
-                    {/* Entrar en lista de espera / Editar datos button - PRIMARY */}
+                    {/* Completar información / Editar datos button - PRIMARY */}
                     <Button
                       onClick={handleCompletarDatos}
                       className={`w-full gap-2 ${hasExistingOrder ? "bg-white text-primary hover:bg-white/90 border border-primary" : ""}`}
@@ -771,7 +771,7 @@ const WaitingList = () => {
                       variant={hasExistingOrder ? "outline" : "default"}
                     >
                       <Check className="w-4 h-4" />
-                      {hasExistingOrder ? "¡Ya participás! 🎉 / Editar datos" : "Entrar en lista de espera"}
+                      {hasExistingOrder ? "¡Ya participás! 🎉 / Editar datos" : "Completar información"}
                     </Button>
 
                     {/* Comprar ahora button - moves items to cart with second tier price */}
