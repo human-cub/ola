@@ -56,14 +56,23 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
   }, [waitingCount]);
   
   // Функция для получения цены по количеству людей (точные значения, без интерполяции)
+  // From 1 to 2nd tier threshold, use 2nd tier price (not higher)
   const getPriceForPeople = (people: number) => {
-    // Находим ближайший порог снизу
+    const secondTierThreshold = priceData.length > 1 ? priceData[1].people : 0;
+    const secondTierPrice = priceData.length > 1 ? priceData[1].price : priceData[0].price;
+    
+    // Before reaching 2nd tier, use 2nd tier price (buy now price)
+    if (people < secondTierThreshold) {
+      return secondTierPrice;
+    }
+    
+    // After 2nd tier, calculate normally
     for (let i = priceData.length - 1; i >= 0; i--) {
       if (people >= priceData[i].people) {
         return priceData[i].price;
       }
     }
-    return priceData[0].price;
+    return secondTierPrice;
   };
   
   // Функция для получения следующего порога скидки

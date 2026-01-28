@@ -78,20 +78,7 @@ export const RegisterForm = () => {
     }
   };
 
-  if (emailSent) {
-    return (
-      <div className="text-center py-8 space-y-4">
-        <CheckCircle className="w-16 h-16 text-success mx-auto" />
-        <h3 className="text-xl font-semibold">¡Revisá tu email!</h3>
-        <p className="text-muted-foreground">
-          Te enviamos un email a <strong>{email}</strong> para confirmar tu registro.
-        </p>
-        <p className="text-sm text-muted-foreground">
-          El enlace es válido por 24 horas. Revisá también tu carpeta de spam.
-        </p>
-      </div>
-    );
-  }
+  // Email verification page removed - auth auto-confirms
 
   return (
     <form onSubmit={handleRegister} className="space-y-4">

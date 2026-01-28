@@ -70,24 +70,28 @@ export const AddToCartDialog = ({
   const calculatePrice = (qty: number) => {
     if (prices.length === 0) return 0;
     
+    const buyNowPrice = prices.length > 1 ? prices[1].price : prices[0].price;
+    const secondTierThreshold = prices.length > 1 ? prices[1].people : 0;
+    
     if (isWaitingList) {
       // For waiting list, price changes based on participants + user's quantity
       const totalParticipants = currentParticipants + qty;
-      const buyNowPrice = prices.length > 1 ? prices[1].price : prices[0].price;
+      
+      // Before reaching 2nd tier threshold, use 2nd tier price (buy now price)
+      if (totalParticipants < secondTierThreshold) {
+        return buyNowPrice;
+      }
+      
+      // After 2nd tier, calculate based on tiers but never exceed buyNowPrice
       for (let i = prices.length - 1; i >= 0; i--) {
         if (totalParticipants >= prices[i].people) {
           return Math.min(prices[i].price, buyNowPrice);
         }
       }
-      // Before reaching 2nd tier threshold, don't exceed "Comprar ahora" price
       return buyNowPrice;
     } else {
-      // For immediate purchase, always use second tier price (index 1, fixed "buy now" price)
-      // prices[0] = highest price (1 person), prices[1] = second tier
-      if (prices.length > 1) {
-        return prices[1].price; // Second tier = buy now price (index 1)
-      }
-      return prices[0].price; // Fallback
+      // For immediate purchase, always use second tier price
+      return buyNowPrice;
     }
   };
 
