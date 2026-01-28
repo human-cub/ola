@@ -17,8 +17,8 @@ import { isCABAProvince } from "@/data/argentinaLocations";
 
 const profileSchema = z.object({
   firstName: z.string().min(1, "El nombre es requerido").max(50),
-  lastName: z.string().min(1, "El apellido es requerido").max(50),
-  phone: z.string().min(8, "Teléfono inválido").max(20),
+  lastName: z.string().max(50).optional(),
+  phone: z.string().min(8, "El teléfono es requerido").max(20),
   address: z.string().max(200).optional(),
 });
 
@@ -360,7 +360,7 @@ const Profile = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="firstName">Nombre</Label>
+                  <Label htmlFor="firstName">Nombre <span className="text-destructive">*</span></Label>
                   <Input
                     id="firstName"
                     value={firstName}
@@ -386,7 +386,7 @@ const Profile = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Teléfono</Label>
+                  <Label htmlFor="phone">Teléfono <span className="text-destructive">*</span></Label>
                   <Input
                     id="phone"
                     type="tel"

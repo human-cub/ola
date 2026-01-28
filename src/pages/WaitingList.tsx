@@ -50,6 +50,7 @@ const WaitingList = () => {
   const [productFlavors, setProductFlavors] = useState<Record<string, string[]>>({});
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [hasExistingOrder, setHasExistingOrder] = useState(false);
+  const [profileCompleted, setProfileCompleted] = useState(false);
   const [productData, setProductData] = useState<Record<string, ProductData>>({});
   const [isCollectionEnded, setIsCollectionEnded] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -69,7 +70,7 @@ const WaitingList = () => {
     total_orders_counts: Record<string, number>;
   } | null>(null);
 
-  // Check if user has pending collective order and get its creation date
+  // Check if user has pending collective order and get its creation date + profile status
   useEffect(() => {
     const checkExistingOrder = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -77,19 +78,37 @@ const WaitingList = () => {
         setHasExistingOrder(false);
         setPendingOrderCreatedAt(null);
         setFrozenOrderData(null);
+        setProfileCompleted(false);
         return;
       }
 
-      const { data } = await supabase
-        .from("user_orders")
-        .select("id, created_at, items, subtotal")
-        .eq("user_id", session.user.id)
-        .eq("order_type", "collective")
-        .eq("status", "pending")
-        .maybeSingle();
+      // Fetch order and profile in parallel
+      const [orderResult, profileResult] = await Promise.all([
+        supabase
+          .from("user_orders")
+          .select("id, created_at, items, subtotal")
+          .eq("user_id", session.user.id)
+          .eq("order_type", "collective")
+          .eq("status", "pending")
+          .maybeSingle(),
+        supabase
+          .from("profiles")
+          .select("profile_completed, first_name, phone")
+          .eq("user_id", session.user.id)
+          .maybeSingle()
+      ]);
+
+      const data = orderResult.data;
+      const profile = profileResult.data;
 
       setHasExistingOrder(!!data);
       setPendingOrderCreatedAt(data ? new Date(data.created_at) : null);
+      
+      // Check if profile is truly completed (has name and phone)
+      const isComplete = profile?.profile_completed === true && 
+                         !!profile?.first_name?.trim() && 
+                         !!profile?.phone?.trim();
+      setProfileCompleted(isComplete);
       
       // If order exists, store frozen snapshot
       if (data) {
@@ -306,8 +325,18 @@ const WaitingList = () => {
     }
     const prod = productData[productId];
     if (!prod || prod.prices.length === 0) return null;
+    
+    // Only show "Faltan..." after reaching 2nd tier threshold
+    const secondTierThreshold = prod.prices.length > 1 ? prod.prices[1].people : 0;
+    
     // If user already has an order, their quantity is ALREADY included in total_orders_count
     const current = hasExistingOrder ? prod.total_orders_count : prod.total_orders_count + userQty;
+    
+    // Don't show next threshold if we haven't reached 2nd tier yet
+    if (current < secondTierThreshold) {
+      return null;
+    }
+    
     for (const tier of prod.prices) {
       if (tier.people > current) {
         return tier;
@@ -333,6 +362,7 @@ const WaitingList = () => {
 
   // Get current price based on participants count
   // If no order exists, add user's personal quantity (preview mode)
+  // Before 2nd tier, use 2nd tier price (buy now price)
   const getCurrentPrice = (productId: string, userQty: number): number => {
     // If collection ended and we have frozen data, use the frozen price
     if (isCollectionEnded && frozenOrderData) {
@@ -344,14 +374,22 @@ const WaitingList = () => {
     const prod = productData[productId];
     if (!prod || prod.prices.length === 0) return 0;
     
+    const secondTierThreshold = prod.prices.length > 1 ? prod.prices[1].people : 0;
+    const secondTierPrice = prod.prices.length > 1 ? prod.prices[1].price : prod.prices[0].price;
+    
     // If user already has an order, their qty is included in total_orders_count
     // If not, we show a "preview" of what price would be with their qty
     const totalParticipants = hasExistingOrder 
       ? prod.total_orders_count 
       : prod.total_orders_count + userQty;
     
-    let currentPrice = prod.prices[0].price; // Default to first tier (highest price)
+    // Before 2nd tier, use 2nd tier price (don't charge higher)
+    if (totalParticipants < secondTierThreshold) {
+      return secondTierPrice;
+    }
     
+    // After 2nd tier, find the matching tier price
+    let currentPrice = secondTierPrice;
     for (let i = prod.prices.length - 1; i >= 0; i--) {
       if (totalParticipants >= prod.prices[i].people) {
         currentPrice = prod.prices[i].price;
@@ -581,7 +619,7 @@ const WaitingList = () => {
             <h1 className="text-2xl font-bold flex items-center gap-2 flex-wrap">
               <Timer className="w-6 h-6 text-primary" />
               Lista de Espera
-              {hasExistingOrder && !isCollectionEnded && (
+              {hasExistingOrder && profileCompleted && !isCollectionEnded && (
                 <span className="text-primary text-lg font-medium">— ¡Ya participás! 🎉</span>
               )}
             </h1>
@@ -766,12 +804,12 @@ const WaitingList = () => {
                     {/* Completar información / Editar datos button - PRIMARY */}
                     <Button
                       onClick={handleCompletarDatos}
-                      className={`w-full gap-2 ${hasExistingOrder ? "bg-white text-primary hover:bg-white/90 border border-primary" : ""}`}
+                      className={`w-full gap-2 ${hasExistingOrder && profileCompleted ? "bg-white text-primary hover:bg-white/90 border border-primary" : ""}`}
                       size="lg"
-                      variant={hasExistingOrder ? "outline" : "default"}
+                      variant={hasExistingOrder && profileCompleted ? "outline" : "default"}
                     >
                       <Check className="w-4 h-4" />
-                      {hasExistingOrder ? "¡Ya participás! 🎉 / Editar datos" : "Completar información"}
+                      {hasExistingOrder && profileCompleted ? "¡Ya participás! 🎉 / Editar datos" : "Completar información"}
                     </Button>
 
                     {/* Comprar ahora button - moves items to cart with second tier price */}
