@@ -5,13 +5,7 @@ const waitingListSteps = [
   {
     icon: Users,
     title: "Te sumás a la compra del producto",
-    subtitle: "(sin compromiso, sin prepago)",
-    description: "Sumáte en la lista de espera con otros que quieren el mismo producto de lunes a domingo"
-  },
-  {
-    icon: Users,
-    title: "Invitás a tus amigos",
-    description: "Cuantos más se suman, más baja el precio"
+    description: "Sumáte en la lista de espera con otros que quieren el mismo producto de lunes a domingo (sin compromiso, sin prepago)"
   },
   {
     icon: Calculator,
@@ -26,7 +20,7 @@ const waitingListSteps = [
   {
     icon: Truck,
     title: "Envío el mismo día después de confirmar o retirás vos cuando quieras",
-    description: "Envío gratis en CABA (GBA $3.000 • Interior $5.000 • Gratis en todo el país desde $100.000)"
+    description: "Envío gratis en CABA (GBA $3.000 • Interior $5.000\n• Gratis en todo el país desde $100.000)"
   },
   {
     icon: CreditCard,
@@ -49,7 +43,7 @@ const buyNowSteps = [
   {
     icon: Truck,
     title: "Te lo llevamos o lo retirás vos",
-    description: "Envío gratis en CABA (GBA $3.000 • Interior $5.000 • Gratis en todo el país desde $100.000)",
+    description: "Envío gratis en CABA (GBA $3.000 • Interior $5.000\n• Gratis en todo el país desde $100.000)",
     subtitle: "Pedidos antes de las 14:00 hs: entrega el mismo día en CABA y GBA"
   },
   {
@@ -121,16 +115,15 @@ export const ProcessSteps = () => {
                      </div>
                    </div>
                    
-                    {/* Content */}
                      <h3 className="text-lg font-semibold text-foreground mb-2 text-center">
                        {step.title}
                        {'subtitle' in step && step.subtitle && (
                          <span className="block text-sm font-normal text-muted-foreground mt-1">
-                           {step.subtitle}
+                           {step.subtitle as string}
                          </span>
                        )}
                      </h3>
-                    <p className="text-muted-foreground text-center text-sm leading-relaxed">
+                    <p className="text-muted-foreground text-center text-sm leading-relaxed whitespace-pre-line">
                       {step.description}
                     </p>
                 </div>
