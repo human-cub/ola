@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Users, ShoppingCart, Calculator, FileCheck, Truck, CreditCard, Package, ClipboardCheck } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
 
 const waitingListSteps = [
   {
@@ -21,12 +20,12 @@ const waitingListSteps = [
   },
   {
     icon: FileCheck,
-    title: "Confirmás tus datos de entrega",
-    description: "Te mandamos un mensaje con la info de entrega y el precio final"
+    title: "El lunes confirmás tu pedido",
+    description: "Chequeás el precio final y confirmás el pedido en la lista de espera"
   },
   {
     icon: Truck,
-    title: "El lunes te lo enviamos o lo retirás vos cuando quieras",
+    title: "Envío el mismo día después de confirmar o retirás vos cuando quieras",
     description: "Envío gratis en CABA (GBA $3.000 • Interior $5.000 • Gratis en todo el país desde $100.000)"
   },
   {
@@ -56,7 +55,7 @@ const buyNowSteps = [
   {
     icon: CreditCard,
     title: "Revisás y pagás al recibirlo",
-    description: "Sin riesgos: revisás el producto y pagás en el momento"
+    description: "Sin riesgos: revisás el producto y pagás en el momento en efectivo o transferencia"
   }
 ];
 
@@ -74,19 +73,28 @@ export const ProcessSteps = () => {
           </h2>
           <div className="w-20 h-1 bg-gradient-primary mx-auto rounded-full mb-6"></div>
           
-          {/* Toggle Switch */}
-          <div className="flex items-center justify-center gap-4">
-            <span className={`text-sm font-medium transition-colors ${isWaitingList ? 'text-primary' : 'text-muted-foreground'}`}>
+          {/* Segmented Toggle */}
+          <div className="inline-flex bg-muted rounded-full p-1 gap-1">
+            <button
+              onClick={() => setIsWaitingList(true)}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                isWaitingList 
+                  ? 'bg-primary text-primary-foreground shadow-md' 
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
               Esperar y pagar menos
-            </span>
-            <Switch
-              checked={!isWaitingList}
-              onCheckedChange={(checked) => setIsWaitingList(!checked)}
-              className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-primary"
-            />
-            <span className={`text-sm font-medium transition-colors ${!isWaitingList ? 'text-primary' : 'text-muted-foreground'}`}>
+            </button>
+            <button
+              onClick={() => setIsWaitingList(false)}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                !isWaitingList 
+                  ? 'bg-primary text-primary-foreground shadow-md' 
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
               Comprar ahora
-            </span>
+            </button>
           </div>
         </div>
         
