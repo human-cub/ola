@@ -77,7 +77,7 @@ export const ProcessSteps = () => {
           <div className="inline-flex bg-muted rounded-full p-1 gap-1">
             <button
               onClick={() => setIsWaitingList(true)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+              className={`w-44 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
                 isWaitingList 
                   ? 'bg-primary text-primary-foreground shadow-md' 
                   : 'text-muted-foreground hover:text-foreground'
@@ -87,7 +87,7 @@ export const ProcessSteps = () => {
             </button>
             <button
               onClick={() => setIsWaitingList(false)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+              className={`w-44 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
                 !isWaitingList 
                   ? 'bg-primary text-primary-foreground shadow-md' 
                   : 'text-muted-foreground hover:text-foreground'
