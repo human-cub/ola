@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
+import { TopHeader } from "@/components/TopHeader";
 import { HeroSection } from "@/components/HeroSection";
 import { MainProductCarousel } from "@/components/MainProductCarousel";
 import { Benefits } from "@/components/Benefits";
@@ -29,6 +30,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <TopHeader />
       <Header isVisible={headerVisible} />
       
       <main>

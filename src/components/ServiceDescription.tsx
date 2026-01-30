@@ -28,20 +28,23 @@ export const ServiceDescription = () => {
               </p>
               <p className="text-sm flex items-center gap-2">
                 <span className="w-2 h-2 bg-primary rounded-full flex-shrink-0"></span>
-                El descuento depende de cuántos se sumen. Mové el deslizador y mirá cómo baja el precio
+                El descuento depende de cuántos se sumen. Mové el deslizador y mirá cómo baja el precio.
               </p>
               <p className="text-sm flex items-center gap-2">
                 <span className="w-2 h-2 bg-primary rounded-full flex-shrink-0"></span>
-                Solo necesitás unirte e invitar a tus amigos para conseguir un mejor precio. Del resto nos encargamos nosotros
+                Solo necesitás sumarte e invitar a tus amigos para conseguir un mejor precio. Del resto nos encargamos nosotros.
               </p>
               <p className="text-sm flex items-center gap-2">
                 <span className="w-2 h-2 bg-primary rounded-full flex-shrink-0"></span>
-                Cada colecta dura una semana (de lunes a domingo)
+                Cada colecta dura de lunes a domingo
               </p>
             </div>
 
-            <p className="text-sm leading-relaxed">Cuando se cierra el pedido colectivo, compramos al mayorista y arrancamos con las entregas.
-Pagás en efectivo al recibir y revisar el producto.</p>
+            <p className="text-sm leading-relaxed">Cuando se cierra el pedido colectivo, confirmás el pedido y arrancamos con las entregas. Pagás al recibir y revisar el producto en efectivo o transferencia.</p>
+            
+            <p className="text-sm leading-relaxed font-medium text-primary">
+              ¿No querés esperar? Podés comprar ahora mismo sin esperar a la colecta con un 20% de descuento. Si pedís antes de las 14:00 hs, te lo llevamos el mismo día en CABA y GBA!
+            </p>
 
             <div className="bg-gradient-primary/10 rounded-lg p-4 border border-primary/20">
               <p className="text-sm font-semibold text-primary text-center mb-1">
