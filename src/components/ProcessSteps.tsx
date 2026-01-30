@@ -71,23 +71,33 @@ export const ProcessSteps = () => {
           <div className="inline-flex bg-muted rounded-full p-1 gap-1 max-w-full">
             <button
               onClick={() => setIsWaitingList(true)}
-              className={`flex-1 min-w-0 py-2 px-3 sm:px-6 rounded-full text-xs sm:text-sm font-medium transition-all duration-300 whitespace-nowrap ${
+              className={`flex-1 min-w-0 py-2 px-3 sm:px-6 rounded-full text-[11px] sm:text-sm font-medium leading-tight transition-all duration-300 whitespace-nowrap flex items-center justify-center text-center ${
                 isWaitingList 
                   ? 'bg-primary text-primary-foreground shadow-md' 
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              Esperar y pagar menos
+              <span className="sm:hidden">
+                Esperar y pagar
+                <br />
+                menos
+              </span>
+              <span className="hidden sm:inline">Esperar y pagar menos</span>
             </button>
             <button
               onClick={() => setIsWaitingList(false)}
-              className={`flex-1 min-w-0 py-2 px-3 sm:px-6 rounded-full text-xs sm:text-sm font-medium transition-all duration-300 whitespace-nowrap ${
+              className={`flex-1 min-w-0 py-2 px-3 sm:px-6 rounded-full text-[11px] sm:text-sm font-medium leading-tight transition-all duration-300 whitespace-nowrap flex items-center justify-center text-center ${
                 !isWaitingList 
                   ? 'bg-primary text-primary-foreground shadow-md' 
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              Comprar ahora
+              <span className="sm:hidden">
+                Comprar
+                <br />
+                ahora
+              </span>
+              <span className="hidden sm:inline">Comprar ahora</span>
             </button>
           </div>
         </div>
