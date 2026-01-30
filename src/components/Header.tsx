@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { User, LogIn, ShoppingCart, Clock } from "lucide-react";
 import olaLogo from "@/assets/ola-logo-new.png";
+import { TopHeader } from "@/components/TopHeader";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BurgerMenu } from "@/components/BurgerMenu";
@@ -40,10 +41,11 @@ export const Header = ({ isVisible }: HeaderProps) => {
 
   return (
     <header
-      className={`fixed top-[36px] sm:top-[40px] left-0 right-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b shadow-soft transition-transform duration-300 ${
+      className={`fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b shadow-soft transition-transform duration-300 ${
         isVisible ? "translate-y-0" : "-translate-y-full"
       }`}
     >
+      <TopHeader />
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <BurgerMenu />

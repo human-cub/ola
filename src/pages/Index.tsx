@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
-import { TopHeader } from "@/components/TopHeader";
 import { HeroSection } from "@/components/HeroSection";
 import { MainProductCarousel } from "@/components/MainProductCarousel";
 import { Benefits } from "@/components/Benefits";
@@ -29,8 +28,7 @@ const Index = () => {
   }, [lastScrollY]);
 
   return (
-    <div className="min-h-screen bg-background pt-[100px] sm:pt-[104px]">
-      <TopHeader />
+    <div className="min-h-screen bg-background pt-[96px] sm:pt-[104px]">
       <Header isVisible={headerVisible} />
       
       <main>
