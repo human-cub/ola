@@ -5,7 +5,7 @@ const waitingListSteps = [
   {
     icon: Users,
     title: "Te sumás a la compra del producto",
-    description: "Sumáte en la lista de espera con otros que quieren el mismo producto de lunes a domingo (sin compromiso, sin prepago)"
+    description: "Sumáte en la lista de espera de lunes a domingo (sin compromiso)"
   },
   {
     icon: Calculator,
@@ -68,10 +68,10 @@ export const ProcessSteps = () => {
           <div className="w-20 h-1 bg-gradient-primary mx-auto rounded-full mb-6"></div>
           
           {/* Segmented Toggle */}
-          <div className="inline-flex bg-muted rounded-full p-1 gap-1">
+          <div className="inline-flex bg-muted rounded-full p-1 gap-1 max-w-full">
             <button
               onClick={() => setIsWaitingList(true)}
-              className={`w-44 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+              className={`flex-1 min-w-0 py-2 px-3 sm:px-6 rounded-full text-xs sm:text-sm font-medium transition-all duration-300 whitespace-nowrap ${
                 isWaitingList 
                   ? 'bg-primary text-primary-foreground shadow-md' 
                   : 'text-muted-foreground hover:text-foreground'
@@ -81,7 +81,7 @@ export const ProcessSteps = () => {
             </button>
             <button
               onClick={() => setIsWaitingList(false)}
-              className={`w-44 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+              className={`flex-1 min-w-0 py-2 px-3 sm:px-6 rounded-full text-xs sm:text-sm font-medium transition-all duration-300 whitespace-nowrap ${
                 !isWaitingList 
                   ? 'bg-primary text-primary-foreground shadow-md' 
                   : 'text-muted-foreground hover:text-foreground'
