@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Breadcrumb } from "@/components/Breadcrumb";
+import { Footer } from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { HeroSection } from "@/components/HeroSection";
 
@@ -153,6 +154,8 @@ const Category = () => {
           )}
         </div>
       </main>
+
+      <Footer showCategories />
     </div>
   );
 };

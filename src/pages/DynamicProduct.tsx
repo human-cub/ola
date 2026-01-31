@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Breadcrumb } from "@/components/Breadcrumb";
+import { Footer } from "@/components/Footer";
 import { PriceSlider } from "@/components/PriceSlider";
 import { RelatedProducts } from "@/components/RelatedProducts";
 import { FloatingButton } from "@/components/FloatingButton";
@@ -177,6 +178,8 @@ const DynamicProduct = () => {
         <DynamicProductDescription description={product.description} />
         <RelatedProducts currentProduct={product.id} />
       </main>
+
+      <Footer showCategories />
 
       <FloatingButton 
         productName={product.name} 
