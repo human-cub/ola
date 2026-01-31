@@ -1,10 +1,44 @@
 import { MapPin, Clock, Phone, Mail } from "lucide-react";
+import { Link } from "react-router-dom";
 import instagramIcon from "@/assets/instagram-icon-new.png";
 
-export const Footer = () => {
+interface FooterProps {
+  showCategories?: boolean;
+}
+
+const categories = [
+  { slug: "proteinas", label: "Proteínas" },
+  { slug: "creatinas", label: "Creatinas" },
+  { slug: "aminoacidos", label: "Aminoácidos" },
+  { slug: "aumentadores", label: "Aumentadores de masa" },
+  { slug: "barras", label: "Barras y snacks" },
+  { slug: "pre-entrenos", label: "Pre-entrenos" },
+  { slug: "colageno", label: "Colágeno" },
+  { slug: "vitaminas", label: "Vitaminas y minerales" },
+];
+
+export const Footer = ({ showCategories = false }: FooterProps) => {
   return (
     <footer className="bg-muted/50 border-t py-8 px-4">
       <div className="container mx-auto">
+        {showCategories && (
+          <div className="mb-8">
+            <h4 className="font-semibold text-foreground mb-4 text-center">Categorías</h4>
+            <div className="flex flex-wrap justify-center gap-2">
+              {categories.map((cat) => (
+                <Link
+                  key={cat.slug}
+                  to={`/categoria/${cat.slug}`}
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors px-3 py-1.5 rounded-full bg-background border hover:border-primary"
+                >
+                  {cat.label}
+                </Link>
+              ))}
+            </div>
+            <div className="mt-6 border-t" />
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Address */}
           <div className="flex items-start gap-3">

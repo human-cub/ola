@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -598,6 +599,8 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
           </div>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Footer showCategories />
 
       <FloatingWhatsApp />
     </div>
