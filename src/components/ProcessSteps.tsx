@@ -67,11 +67,11 @@ export const ProcessSteps = () => {
           </h2>
           <div className="w-20 h-1 bg-gradient-primary mx-auto rounded-full mb-6"></div>
           
-          {/* Segmented Toggle - centered in viewport */}
-          <div className="w-[92%] sm:w-auto mx-auto flex bg-muted rounded-full p-1 gap-1">
+          {/* Segmented Toggle - centered in viewport, ignoring parent padding */}
+          <div className="w-[95vw] max-w-md mx-auto -ml-[calc((95vw-100%)/2)] sm:w-auto sm:max-w-none sm:ml-0 flex bg-muted rounded-full p-1 gap-1">
             <button
               onClick={() => setIsWaitingList(true)}
-              className={`flex-1 py-2.5 px-3 sm:px-6 rounded-full text-[13px] sm:text-sm font-medium transition-all duration-300 flex items-center justify-center whitespace-nowrap ${
+              className={`w-1/2 py-2.5 px-2 sm:px-6 rounded-full text-[13px] sm:text-sm font-medium transition-all duration-300 flex items-center justify-center whitespace-nowrap ${
                 isWaitingList 
                   ? 'bg-primary text-primary-foreground shadow-md' 
                   : 'text-muted-foreground hover:text-foreground'
@@ -81,7 +81,7 @@ export const ProcessSteps = () => {
             </button>
             <button
               onClick={() => setIsWaitingList(false)}
-              className={`flex-1 py-2.5 px-3 sm:px-6 rounded-full text-[13px] sm:text-sm font-medium transition-all duration-300 flex items-center justify-center whitespace-nowrap ${
+              className={`w-1/2 py-2.5 px-2 sm:px-6 rounded-full text-[13px] sm:text-sm font-medium transition-all duration-300 flex items-center justify-center whitespace-nowrap ${
                 !isWaitingList 
                   ? 'bg-primary text-primary-foreground shadow-md' 
                   : 'text-muted-foreground hover:text-foreground'
