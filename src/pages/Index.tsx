@@ -5,6 +5,7 @@ import { MainProductCarousel } from "@/components/MainProductCarousel";
 import { Benefits } from "@/components/Benefits";
 import { ProcessSteps } from "@/components/ProcessSteps";
 import { ServiceDescription } from "@/components/ServiceDescription";
+import { Footer } from "@/components/Footer";
 
 const Index = () => {
   const [headerVisible, setHeaderVisible] = useState(true);
@@ -38,6 +39,8 @@ const Index = () => {
         <ProcessSteps />
         <ServiceDescription />
       </main>
+      
+      <Footer />
     </div>
   );
 };
