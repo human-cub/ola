@@ -29,7 +29,7 @@ const Index = () => {
   }, [lastScrollY]);
 
   return (
-    <div className="min-h-screen bg-background pt-[96px] sm:pt-[104px]">
+    <div className="min-h-screen bg-background pt-[120px] sm:pt-[104px]">
       <Header isVisible={headerVisible} />
       
       <main>

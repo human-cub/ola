@@ -18,6 +18,7 @@ import CompletarDatosColectiva from "./pages/CompletarDatosColectiva";
 import OrderDetail from "./pages/OrderDetail";
 import NotFound from "./pages/NotFound";
 import { FloatingWhatsApp } from "./components/FloatingWhatsApp";
+import { ScrollToTop } from "./components/ScrollToTop";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +28,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <ScrollToTop />
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/categoria/:category" element={<Category />} />
