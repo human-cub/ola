@@ -91,7 +91,7 @@ const Category = () => {
     <div className="min-h-screen bg-background">
       <Header isVisible={headerVisible} />
       
-      <main className="pb-24 pt-16">
+      <main className="pb-24 pt-[96px] sm:pt-[104px]">
         <Breadcrumb items={[{ label: categoryName }]} />
         <HeroSection />
         
