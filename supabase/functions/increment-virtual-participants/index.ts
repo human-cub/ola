@@ -2,7 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.76.1';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-cron-secret',
 };
 
 // Get time factor based on hour (simulates user activity patterns)
@@ -100,9 +100,54 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Authenticate: either valid cron secret OR admin user token
+    const cronSecret = req.headers.get('x-cron-secret');
+    const authHeader = req.headers.get('Authorization');
+    const expectedCronSecret = Deno.env.get('CRON_SECRET');
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     
+    // Option 1: Cron job authentication via secret
+    const isCronAuth = cronSecret && cronSecret === expectedCronSecret;
+    
+    // Option 2: Admin user authentication via JWT
+    let isAdminAuth = false;
+    if (!isCronAuth && authHeader && authHeader.startsWith('Bearer ')) {
+      const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: authHeader } }
+      });
+
+      const token = authHeader.replace('Bearer ', '');
+      const { data: claimsData, error: claimsError } = await supabaseClient.auth.getClaims(token);
+      
+      if (!claimsError && claimsData?.claims?.sub) {
+        const userId = claimsData.claims.sub;
+        
+        // Check if user is admin
+        const supabase = createClient(supabaseUrl, supabaseServiceKey);
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', userId)
+          .eq('role', 'admin')
+          .maybeSingle();
+
+        isAdminAuth = !!roleData;
+      }
+    }
+
+    if (!isCronAuth && !isAdminAuth) {
+      console.error('Unauthorized access attempt to increment-virtual-participants');
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - admin or cron access required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`Authenticated via: ${isCronAuth ? 'cron secret' : 'admin user'}`);
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Get all products with their virtual participant settings

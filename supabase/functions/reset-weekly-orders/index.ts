@@ -1,10 +1,65 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.76.1';
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-cron-secret',
+};
+
 Deno.serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
   try {
+    // Authenticate: either valid cron secret OR admin user token
+    const cronSecret = req.headers.get('x-cron-secret');
+    const authHeader = req.headers.get('Authorization');
+    const expectedCronSecret = Deno.env.get('CRON_SECRET');
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     
+    // Option 1: Cron job authentication via secret
+    const isCronAuth = cronSecret && cronSecret === expectedCronSecret;
+    
+    // Option 2: Admin user authentication via JWT
+    let isAdminAuth = false;
+    if (!isCronAuth && authHeader && authHeader.startsWith('Bearer ')) {
+      const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: authHeader } }
+      });
+
+      const token = authHeader.replace('Bearer ', '');
+      const { data: claimsData, error: claimsError } = await supabaseClient.auth.getClaims(token);
+      
+      if (!claimsError && claimsData?.claims?.sub) {
+        const userId = claimsData.claims.sub;
+        
+        // Check if user is admin
+        const supabase = createClient(supabaseUrl, supabaseServiceKey);
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', userId)
+          .eq('role', 'admin')
+          .maybeSingle();
+
+        isAdminAuth = !!roleData;
+      }
+    }
+
+    if (!isCronAuth && !isAdminAuth) {
+      console.error('Unauthorized access attempt to reset-weekly-orders');
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - admin or cron access required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`Authenticated via: ${isCronAuth ? 'cron secret' : 'admin user'}`);
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Get all products
@@ -47,7 +102,7 @@ Deno.serve(async (req) => {
         timestamp: new Date().toISOString()
       }),
       { 
-        headers: { 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200 
       }
     );
@@ -59,7 +114,7 @@ Deno.serve(async (req) => {
         error: error instanceof Error ? error.message : 'Unknown error'
       }),
       { 
-        headers: { 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500 
       }
     );
