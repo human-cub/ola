@@ -155,7 +155,7 @@ const Category = () => {
         </div>
       </main>
 
-      <Footer showCategories />
+      <Footer />
     </div>
   );
 };

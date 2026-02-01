@@ -179,7 +179,7 @@ const DynamicProduct = () => {
         <RelatedProducts currentProduct={product.id} />
       </main>
 
-      <Footer showCategories />
+      <Footer />
 
       <FloatingButton 
         productName={product.name} 
