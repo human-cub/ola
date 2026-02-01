@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { Slider } from "@/components/ui/slider";
 
 interface PriceData {
   people: number;
@@ -12,61 +11,18 @@ interface PriceSliderProps {
 }
 
 export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) => {
-  // Преобразование количества людей в позицию слайдера (0-4)
-  const peopleToSliderPosition = (people: number): number => {
-    for (let i = 0; i < priceData.length - 1; i++) {
-      const current = priceData[i];
-      const next = priceData[i + 1];
-      
-      if (people <= current.people) {
-        return i;
-      }
-      
-      if (people > current.people && people <= next.people) {
-        // Линейная интерполяция между позициями i и i+1
-        const ratio = (people - current.people) / (next.people - current.people);
-        return i + ratio;
-      }
-    }
-    return priceData.length - 1;
-  };
-  
-  // Преобразование позиции слайдера (0-4) в количество людей
-  const sliderPositionToPeople = (position: number): number => {
-    const index = Math.floor(position);
-    const fraction = position - index;
-    
-    if (index >= priceData.length - 1) {
-      return priceData[priceData.length - 1].people;
-    }
-    
-    const current = priceData[index];
-    const next = priceData[index + 1];
-    
-    return Math.round(current.people + (next.people - current.people) * fraction);
-  };
-  
-  const initialPosition = peopleToSliderPosition(waitingCount || priceData[0].people);
-  const [sliderPosition, setSliderPosition] = useState(initialPosition);
-  const [showMaxGlow, setShowMaxGlow] = useState(false);
-  
-  // Обновляем позицию слайдера при изменении количества участников
-  useEffect(() => {
-    setSliderPosition(peopleToSliderPosition(waitingCount || priceData[0].people));
-  }, [waitingCount]);
-  
-  // Функция для получения цены по количеству людей (точные значения, без интерполяции)
-  // From 1 to 2nd tier threshold, use 2nd tier price (not higher)
+  // Ensure we have at least 2 tiers
+  if (priceData.length < 2) return null;
+
+  // Функция для получения цены по количеству людей
   const getPriceForPeople = (people: number) => {
     const secondTierThreshold = priceData.length > 1 ? priceData[1].people : 0;
     const secondTierPrice = priceData.length > 1 ? priceData[1].price : priceData[0].price;
     
-    // Before reaching 2nd tier, use 2nd tier price (buy now price)
     if (people < secondTierThreshold) {
       return secondTierPrice;
     }
     
-    // After 2nd tier, calculate normally
     for (let i = priceData.length - 1; i >= 0; i--) {
       if (people >= priceData[i].people) {
         return priceData[i].price;
@@ -74,7 +30,7 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
     }
     return secondTierPrice;
   };
-  
+
   // Функция для получения следующего порога скидки
   const getNextDiscountThreshold = (currentPeople: number) => {
     for (let i = 0; i < priceData.length; i++) {
@@ -83,33 +39,6 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
       }
     }
     return null;
-  };
-  
-  const selectedPeople = sliderPositionToPeople(sliderPosition);
-  
-  // Получаем текущую цену для реального количества участников
-  const currentActualPrice = {
-    people: waitingCount,
-    price: getPriceForPeople(waitingCount)
-  };
-  
-  // Получаем цену для выбранной позиции слайдера
-  const selectedPrice = {
-    people: selectedPeople,
-    price: getPriceForPeople(selectedPeople)
-  };
-  
-  const maxPrice = priceData[priceData.length - 1];
-
-  const handleSliderChange = (value: number[]) => {
-    const newPosition = value[0];
-    setSliderPosition(newPosition);
-    
-    // Trigger glow animation when reaching maximum
-    if (newPosition >= priceData.length - 1) {
-      setShowMaxGlow(true);
-      setTimeout(() => setShowMaxGlow(false), 1000);
-    }
   };
 
   const formatPrice = (price: number) => {
@@ -120,25 +49,47 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
     return `$${formatted}`;
   };
 
+  const maxPrice = priceData[priceData.length - 1];
+  const numSegments = priceData.length - 1;
+
+  // Segment colors from expensive (red) to cheap (green)
+  const segmentColors = [
+    "bg-red-500",
+    "bg-orange-400",
+    "bg-yellow-400",
+    "bg-green-500",
+  ];
+
+  // Calculate current tier index based on waitingCount
+  const getCurrentTierIndex = () => {
+    for (let i = priceData.length - 1; i >= 0; i--) {
+      if (waitingCount >= priceData[i].people) {
+        return i;
+      }
+    }
+    return 0;
+  };
+
+  const currentTierIndex = getCurrentTierIndex();
+
   return (
     <section className="px-4 pt-1 pb-4">
       <div className="container mx-auto max-w-md">
-        <div className="relative bg-gradient-card rounded-2xl p-9 sm:p-8 shadow-floating animate-glow-pulse animate-float hover:scale-105 transition-all duration-500 border-[3px] animate-border-pulse backdrop-blur-sm">
+        <div className="relative bg-gradient-card rounded-2xl p-6 sm:p-8 shadow-floating animate-glow-pulse animate-float hover:scale-105 transition-all duration-500 border-[3px] animate-border-pulse backdrop-blur-sm">
           
           <h3 className="text-lg font-bold text-center mb-3 text-primary animate-scale-in">
             Precio por unidad en compra grupal
           </h3>
           
           {/* Información de participantes */}
-          <div className="mb-3 text-center space-y-1">
+          <div className="mb-4 text-center space-y-1">
             <p className="text-sm text-muted-foreground">
               Ya se reservaron <span className="font-semibold text-primary">{waitingCount}</span> unidades entre distintos compradores
             </p>
             {(() => {
-              // Only show "Faltan..." once we've reached at least the 2nd tier threshold
               const secondTierThreshold = priceData.length > 1 ? priceData[1].people : 0;
               if (waitingCount < secondTierThreshold) {
-                return null; // Hide until second tier is reached
+                return null;
               }
               const nextThreshold = getNextDiscountThreshold(waitingCount);
               if (nextThreshold) {
@@ -153,98 +104,74 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
             })()}
           </div>
           
-          {/* Price Scale */}
-          <div className="relative mb-4">
-            {/* People numbers (top) */}
-            <div className="relative mb-2">
-              <div className="absolute inset-0 flex items-center">
+          {/* Volume Discount Slider - New Geometry */}
+          <div className="w-full max-w-[400px] mx-auto">
+            {/* Internal container with 15px horizontal margin */}
+            <div className="mx-[15px] h-[80px] relative flex flex-col justify-between">
+              
+              {/* Top Labels (Quantity Tick Marks) */}
+              <div className="relative h-5">
                 {priceData.map((item, index) => {
-                  const position = index === 0 ? '0%' : 
-                                  index === 1 ? '25%' :
-                                  index === 2 ? '50%' :
-                                  index === 3 ? '75%' : '100%';
-                  const isNearSelected = Math.abs(selectedPeople - item.people) <= 
-                    (index < priceData.length - 1 ? (priceData[index + 1].people - item.people) * 0.1 : 5);
+                  const isFirst = index === 0;
+                  const isLast = index === priceData.length - 1;
+                  const position = (index / (priceData.length - 1)) * 100;
+                  
                   return (
-                    <div 
-                      key={index} 
-                      className="absolute transform -translate-x-1/2 flex items-center gap-1"
-                      style={{ left: position }}
+                    <span
+                      key={index}
+                      className={`absolute text-[11px] xs:text-xs font-medium text-muted-foreground whitespace-nowrap ${
+                        isFirst ? "left-0" : isLast ? "right-0" : "-translate-x-1/2"
+                      }`}
+                      style={
+                        !isFirst && !isLast
+                          ? { left: `${position}%` }
+                          : undefined
+                      }
                     >
-                      <span className={`text-sm font-medium transition-colors ${
-                        isNearSelected ? 'text-primary' : 'text-muted-foreground'
-                      }`}>
-                        {item.people}
-                      </span>
+                      {item.people}
+                    </span>
+                  );
+                })}
+              </div>
+
+              {/* Slider Track - 4 equal segments */}
+              <div className="flex h-3 rounded-full overflow-hidden">
+                {segmentColors.slice(0, numSegments).map((color, index) => (
+                  <div
+                    key={index}
+                    className={`flex-1 transition-opacity duration-300 ${color} ${
+                      index < currentTierIndex ? "opacity-40" : "opacity-100"
+                    }`}
+                  />
+                ))}
+              </div>
+
+              {/* Bottom Labels (Price Values) - Grid with equal columns */}
+              <div
+                className="grid h-5"
+                style={{
+                  gridTemplateColumns: `repeat(${numSegments}, 1fr)`,
+                }}
+              >
+                {priceData.slice(1).map((item, index) => {
+                  const isActive = index + 1 <= currentTierIndex;
+                  return (
+                    <div
+                      key={index}
+                      className={`text-center text-[11px] xs:text-xs font-semibold transition-colors ${
+                        isActive ? "text-primary" : "text-foreground"
+                      }`}
+                    >
+                      {formatPrice(item.price)}
                     </div>
                   );
                 })}
               </div>
-              <div className="h-6"></div>
-            </div>
-            
-            {/* Slider */}
-            <div className="mb-2 -mx-3">
-              <Slider
-                value={[sliderPosition]}
-                onValueChange={handleSliderChange}
-                max={priceData.length - 1}
-                min={0}
-                step={0.01}
-                className="w-full"
-              />
-            </div>
-            
-            {/* Price numbers (bottom) */}
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                {priceData.map((item, index) => {
-                  const position = index === 0 ? '0%' : 
-                                  index === 1 ? '25%' :
-                                  index === 2 ? '50%' :
-                                  index === 3 ? '75%' : '100%';
-                  const isNearSelected = Math.abs(selectedPeople - item.people) <= 
-                    (index < priceData.length - 1 ? (priceData[index + 1].people - item.people) * 0.1 : 5);
-                  const isFirstPrice = index === 0;
-                  return (
-                    <div 
-                      key={index} 
-                      className="absolute transform -translate-x-1/2"
-                      style={{ left: position }}
-                    >
-                      <span className={`transition-colors whitespace-nowrap ${
-                        isFirstPrice 
-                          ? 'text-xs text-muted-foreground line-through opacity-60'
-                          : isNearSelected 
-                            ? 'text-xs text-primary font-medium' 
-                            : 'text-xs text-muted-foreground'
-                      }`}>
-                        {formatPrice(item.price)}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="h-4"></div>
             </div>
           </div>
 
           {/* Current Price Display */}
-          <div className="text-center relative space-y-1 -mt-2">
-            <div className={`absolute inset-0 -z-10 ${showMaxGlow ? 'shadow-glow animate-pulse' : ''}`}></div>
-            
-            {/* Выбранная цена на слайдере */}
-            {selectedPeople !== waitingCount && (
-              <div className="mb-1">
-                <p className="text-xs text-muted-foreground mb-0.5">
-                  Precio al llegar a {selectedPeople} participantes
-                </p>
-                <p className="text-2xl font-bold text-primary/80">
-                  {formatPrice(selectedPrice.price)}
-                </p>
-              </div>
-            )}
-            
+          <div className="text-center mt-4 space-y-1">
             {/* Mensaje de precio mayorista */}
             <div>
               <p className="text-sm text-muted-foreground mb-1 font-medium text-center">
@@ -261,7 +188,6 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
                 </p>
               </div>
             </div>
-            
           </div>
         </div>
       </div>
