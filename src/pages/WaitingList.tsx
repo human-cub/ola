@@ -592,7 +592,7 @@ const WaitingList = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header isVisible={true} />
-        <main className="pt-[96px] sm:pt-[104px] pb-8 px-4">
+        <main className="pt-[120px] sm:pt-[104px] pb-8 px-4">
           <div className="container mx-auto max-w-2xl">
             <p className="text-center text-muted-foreground">Cargando lista de espera...</p>
           </div>
@@ -605,7 +605,7 @@ const WaitingList = () => {
     <div className="min-h-screen bg-background">
       <Header isVisible={headerVisible} />
 
-      <main className="pt-[96px] sm:pt-[104px] pb-8 px-4">
+      <main className="pt-[120px] sm:pt-[104px] pb-8 px-4">
         <div className="container mx-auto max-w-2xl">
           <Link
             to="/"

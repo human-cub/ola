@@ -356,7 +356,7 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
     return (
       <div className="min-h-screen bg-background">
         <Header isVisible={true} />
-        <main className="pt-[96px] sm:pt-[104px] pb-8 px-4">
+        <main className="pt-[120px] sm:pt-[104px] pb-8 px-4">
           <div className="container mx-auto max-w-2xl text-center">
             <p className="text-muted-foreground mb-4">No hay productos para checkout</p>
             <Button asChild>
@@ -372,7 +372,7 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
     <div className="min-h-screen bg-background">
       <Header isVisible={headerVisible} />
 
-      <main className="pt-[96px] sm:pt-[104px] pb-8 px-4">
+      <main className="pt-[120px] sm:pt-[104px] pb-8 px-4">
         <div className="container mx-auto max-w-2xl">
           <Link
             to={isCollective ? "/lista-espera" : "/carrito"}
