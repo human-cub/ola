@@ -193,7 +193,7 @@ const OrderDetail = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header isVisible={true} />
-        <main className="pt-20 pb-8 px-4">
+        <main className="pt-[96px] sm:pt-[104px] pb-8 px-4">
           <div className="container mx-auto max-w-2xl text-center">
             <p className="text-muted-foreground">Cargando pedido...</p>
           </div>
@@ -211,7 +211,7 @@ const OrderDetail = () => {
     <div className="min-h-screen bg-background">
       <Header isVisible={headerVisible} />
 
-      <main className="pt-20 pb-8 px-4">
+      <main className="pt-[96px] sm:pt-[104px] pb-8 px-4">
         <div className="container mx-auto max-w-2xl">
           <Link
             to="/mi-cuenta"
