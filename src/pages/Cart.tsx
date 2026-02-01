@@ -241,7 +241,7 @@ const Cart = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      <Footer showCategories />
+      <Footer />
 
       <FloatingWhatsApp />
     </div>

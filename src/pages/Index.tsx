@@ -40,7 +40,7 @@ const Index = () => {
         <ServiceDescription />
       </main>
       
-      <Footer />
+      <Footer isHomePage />
     </div>
   );
 };

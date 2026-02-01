@@ -600,7 +600,7 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
         </AlertDialogContent>
       </AlertDialog>
 
-      <Footer showCategories />
+      <Footer />
 
       <FloatingWhatsApp />
     </div>
