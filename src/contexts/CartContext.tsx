@@ -149,12 +149,25 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const computeNextSundayCloseIso = (): string => {
     const now = new Date();
     const nextSunday = new Date(now);
-    const daysUntilSunday = (7 - now.getDay()) % 7;
+    const currentDay = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
 
-    if (daysUntilSunday === 0 && now.getHours() < 23) {
-      nextSunday.setHours(23, 59, 59, 999);
+    if (currentDay === 0) {
+      // It's Sunday
+      const currentHour = now.getHours();
+      const currentMinute = now.getMinutes();
+      
+      if (currentHour < 23 || (currentHour === 23 && currentMinute < 59)) {
+        // Before 23:59 - target is today at 23:59
+        nextSunday.setHours(23, 59, 59, 999);
+      } else {
+        // After 23:59 - target is next Sunday
+        nextSunday.setDate(now.getDate() + 7);
+        nextSunday.setHours(23, 59, 59, 999);
+      }
     } else {
-      nextSunday.setDate(now.getDate() + (daysUntilSunday || 7));
+      // Not Sunday - calculate days until next Sunday
+      const daysUntilSunday = 7 - currentDay;
+      nextSunday.setDate(now.getDate() + daysUntilSunday);
       nextSunday.setHours(23, 59, 59, 999);
     }
     return nextSunday.toISOString();
@@ -182,6 +195,18 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       .eq("user_id", userId);
 
     if (!waitingListData || waitingListData.length === 0) return;
+
+    // Get product prices for full price calculation
+    const productIds = [...new Set(waitingListData.map(i => i.product_id))];
+    const { data: productsData } = await supabase
+      .from("products")
+      .select("id, prices")
+      .in("id", productIds);
+
+    const productPricesMap = new Map<string, any[]>();
+    productsData?.forEach(p => {
+      productPricesMap.set(p.id, (p.prices as any[]) || []);
+    });
 
     const { data: profile } = await supabase
       .from("profiles")
@@ -211,10 +236,28 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       product_image: item.product_image,
     }));
 
+    // Calculate subtotal (current tiered prices)
     const subtotal = waitingListData.reduce(
       (sum, item) => sum + Number(item.current_price_per_unit) * item.quantity,
       0
     );
+
+    // Calculate full price (first tier = highest price) for discount
+    let fullPrice = 0;
+    waitingListData.forEach(item => {
+      const prices = productPricesMap.get(item.product_id);
+      if (prices && prices.length > 0) {
+        // Sort by people ascending, first tier is the highest price
+        const sortedPrices = [...prices].sort((a, b) => (a.people || 0) - (b.people || 0));
+        const firstTierPrice = sortedPrices[0]?.price || item.current_price_per_unit;
+        fullPrice += firstTierPrice * item.quantity;
+      } else {
+        fullPrice += Number(item.current_price_per_unit) * item.quantity;
+      }
+    });
+
+    // Discount = full price - current subtotal
+    const discountAmount = fullPrice - subtotal;
 
     const orderNumber = `OLA-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}-${Math.random()
       .toString(36)
@@ -230,6 +273,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         items: orderItems,
         subtotal,
         total_amount: subtotal,
+        discount_amount: discountAmount,
         delivery_address: deliveryAddress,
         status: "pending",
         collective_close_date: computeNextSundayCloseIso(),
@@ -409,16 +453,17 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
-      // Calculate next Sunday 23:59
-      const now = new Date();
-      const nextSunday = new Date(now);
-      const daysUntilSunday = (7 - now.getDay()) % 7;
-      if (daysUntilSunday === 0 && now.getHours() < 23) {
-        nextSunday.setHours(23, 59, 59, 999);
-      } else {
-        nextSunday.setDate(now.getDate() + (daysUntilSunday || 7));
-        nextSunday.setHours(23, 59, 59, 999);
-      }
+      // Get product prices for full price calculation
+      const productIds = [...new Set(waitingListData.map(i => i.product_id))];
+      const { data: productsData } = await supabase
+        .from("products")
+        .select("id, prices")
+        .in("id", productIds);
+
+      const productPricesMap = new Map<string, any[]>();
+      productsData?.forEach(p => {
+        productPricesMap.set(p.id, (p.prices as any[]) || []);
+      });
 
       // Prepare order items
       const orderItems = waitingListData.map(item => ({
@@ -430,10 +475,28 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         product_image: item.product_image,
       }));
 
+      // Calculate subtotal (current tiered prices)
       const subtotal = waitingListData.reduce(
         (sum, item) => sum + Number(item.current_price_per_unit) * item.quantity,
         0
       );
+
+      // Calculate full price (first tier = highest price) for discount
+      let fullPrice = 0;
+      waitingListData.forEach(item => {
+        const prices = productPricesMap.get(item.product_id);
+        if (prices && prices.length > 0) {
+          // Sort by people ascending, first tier is the highest price
+          const sortedPrices = [...prices].sort((a, b) => (a.people || 0) - (b.people || 0));
+          const firstTierPrice = sortedPrices[0]?.price || item.current_price_per_unit;
+          fullPrice += firstTierPrice * item.quantity;
+        } else {
+          fullPrice += Number(item.current_price_per_unit) * item.quantity;
+        }
+      });
+
+      // Discount = full price - current subtotal
+      const discountAmount = fullPrice - subtotal;
 
       // Update existing order
       await supabase
@@ -442,7 +505,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           items: orderItems,
           subtotal,
           total_amount: subtotal,
-          collective_close_date: nextSunday.toISOString(),
+          discount_amount: discountAmount,
+          collective_close_date: computeNextSundayCloseIso(),
         })
         .eq("id", existingOrder.id);
     } catch (error) {
