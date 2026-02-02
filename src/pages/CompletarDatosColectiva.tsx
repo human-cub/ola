@@ -11,16 +11,21 @@ import { z } from "zod";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import { Separator } from "@/components/ui/separator";
 import { AddressForm } from "@/components/AddressForm";
+import { isCABAProvince } from "@/data/argentinaLocations";
 
 const addressSchema = z.object({
   street: z.string().min(1, "La calle es requerida").max(200),
   number: z.string().min(1, "El número es requerido").max(20),
   floor: z.string().max(20).optional(),
   postalCode: z.string().max(8).optional(),
-  city: z.string().min(1, "La ciudad es requerida"),
+  city: z.string().optional(), // City is optional when CABA is selected
   province: z.string().min(1, "La provincia es requerida"),
   references: z.string().max(500).optional(),
-});
+  isCABA: z.boolean().optional(),
+}).refine(
+  (data) => data.isCABA || (data.city && data.city.length >= 1),
+  { message: "La ciudad es requerida", path: ["city"] }
+);
 
 const contactSchema = z.object({
   firstName: z.string().trim().min(1, "El nombre es requerido").max(100, "El nombre es demasiado largo"),
@@ -126,14 +131,17 @@ const CompletarDatosColectiva = () => {
   const handleSubmit = async () => {
     setErrors({});
 
+    const isCABA = isCABAProvince(province);
+    
     const addressValidation = addressSchema.safeParse({
       street,
       number: streetNumber,
       floor: floor || undefined,
       postalCode,
-      city,
+      city: isCABA ? undefined : city,
       province,
       references: references || undefined,
+      isCABA,
     });
 
     if (!addressValidation.success) {
