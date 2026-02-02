@@ -67,7 +67,7 @@ const WaitingList = () => {
       product_image: string | null;
     }>;
     subtotal: number;
-    total_orders_counts: Record<string, number>;
+    participants_count: number; // Frozen participant count from order
   } | null>(null);
 
   // Check if user has pending collective order and get its creation date + profile status
@@ -86,7 +86,7 @@ const WaitingList = () => {
       const [orderResult, profileResult] = await Promise.all([
         supabase
           .from("user_orders")
-          .select("id, created_at, items, subtotal")
+          .select("id, created_at, items, subtotal, participants_count")
           .eq("user_id", session.user.id)
           .eq("order_type", "collective")
           .eq("status", "pending")
@@ -110,26 +110,15 @@ const WaitingList = () => {
                          !!profile?.phone?.trim();
       setProfileCompleted(isComplete);
       
-      // If order exists, store frozen snapshot
+      // If order exists, store frozen snapshot from the order itself
+      // The order's participants_count and items.price_per_unit are frozen at cycle close
       if (data) {
         const items = data.items as any[];
-        const productIds = items.map((i: any) => i.product_id);
-        
-        // Fetch total_orders_count snapshot
-        const { data: productsSnapshot } = await supabase
-          .from("products")
-          .select("id, total_orders_count")
-          .in("id", productIds);
-        
-        const countsMap: Record<string, number> = {};
-        productsSnapshot?.forEach(p => {
-          countsMap[p.id] = p.total_orders_count || 0;
-        });
         
         setFrozenOrderData({
           items,
           subtotal: data.subtotal || 0,
-          total_orders_counts: countsMap,
+          participants_count: data.participants_count || 1,
         });
       } else {
         setFrozenOrderData(null);
@@ -351,9 +340,9 @@ const WaitingList = () => {
   };
 
   const getParticipantsCount = (productId: string, userQty: number): number => {
-    // If collection ended, use frozen count
+    // If collection ended, use frozen participant count from the order snapshot
     if (isCollectionEnded && frozenOrderData) {
-      return frozenOrderData.total_orders_counts[productId] || 0;
+      return frozenOrderData.participants_count;
     }
     const prod = productData[productId];
     if (!prod) return userQty;
