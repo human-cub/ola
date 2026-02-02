@@ -178,12 +178,15 @@ const WaitingList = () => {
     const getNextSunday = () => {
       const now = new Date();
       const nextSunday = new Date(now);
-      const daysUntilSunday = (7 - now.getDay()) % 7;
+      const currentDay = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
       
-      if (daysUntilSunday === 0) {
+      if (currentDay === 0) {
         // It's Sunday
-        if (now.getHours() < 23 || (now.getHours() === 23 && now.getMinutes() < 59)) {
-          // Before 23:59 - target is today
+        const currentHour = now.getHours();
+        const currentMinute = now.getMinutes();
+        
+        if (currentHour < 23 || (currentHour === 23 && currentMinute < 59)) {
+          // Before 23:59 - target is today at 23:59
           nextSunday.setHours(23, 59, 59, 999);
         } else {
           // After 23:59 - target is next Sunday
@@ -191,6 +194,8 @@ const WaitingList = () => {
           nextSunday.setHours(23, 59, 59, 999);
         }
       } else {
+        // Not Sunday - calculate days until next Sunday
+        const daysUntilSunday = 7 - currentDay;
         nextSunday.setDate(now.getDate() + daysUntilSunday);
         nextSunday.setHours(23, 59, 59, 999);
       }

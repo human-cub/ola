@@ -5,6 +5,41 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-cron-secret',
 };
 
+interface PriceTier {
+  people: number;
+  price: number;
+}
+
+interface OrderItem {
+  product_id: string;
+  product_name: string;
+  quantity: number;
+  price_per_unit: number;
+  flavor: string | null;
+  product_image: string | null;
+}
+
+// Calculate price based on total participants and pricing tiers
+function calculatePrice(prices: PriceTier[], totalParticipants: number): number {
+  if (!prices || prices.length === 0) return 0;
+  
+  // Sort tiers by people ascending
+  const sortedPrices = [...prices].sort((a, b) => a.people - b.people);
+  
+  // Find the applicable tier (highest tier where people <= totalParticipants)
+  let applicablePrice = sortedPrices[0].price; // Default to first tier (highest price)
+  
+  for (const tier of sortedPrices) {
+    if (totalParticipants >= tier.people) {
+      applicablePrice = tier.price;
+    } else {
+      break;
+    }
+  }
+  
+  return applicablePrice;
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -58,21 +93,119 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log(`Authenticated via: ${isCronAuth ? 'cron secret' : 'admin user'}`);
+    console.log(`[reset-weekly-orders] Authenticated via: ${isCronAuth ? 'cron secret' : 'admin user'}`);
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get all products
-    const { data: products, error: fetchError } = await supabase
-      .from('products')
-      .select('id');
+    // ==========================================
+    // STEP 1: Snapshot prices in pending collective orders
+    // ==========================================
+    
+    // Get all pending collective orders
+    const { data: pendingOrders, error: ordersError } = await supabase
+      .from('user_orders')
+      .select('id, items, subtotal')
+      .eq('order_type', 'collective')
+      .eq('status', 'pending');
 
-    if (fetchError) {
-      throw fetchError;
+    if (ordersError) {
+      console.error('[reset-weekly-orders] Error fetching pending orders:', ordersError);
+      throw ordersError;
     }
 
-    // Reset each product with new week parameters
-    // Target: 63-83 participants (not 48-59)
+    console.log(`[reset-weekly-orders] Found ${pendingOrders?.length || 0} pending collective orders to snapshot`);
+
+    // Get all products with their current counts and prices
+    const { data: products, error: productsError } = await supabase
+      .from('products')
+      .select('id, total_orders_count, prices');
+
+    if (productsError) {
+      console.error('[reset-weekly-orders] Error fetching products:', productsError);
+      throw productsError;
+    }
+
+    // Build a map of product_id -> { total_orders_count, prices }
+    const productMap = new Map<string, { total_orders_count: number; prices: PriceTier[] }>();
+    products?.forEach((p) => {
+      productMap.set(p.id, {
+        total_orders_count: p.total_orders_count || 0,
+        prices: (p.prices as PriceTier[]) || [],
+      });
+    });
+
+    // Update each pending order with snapshot prices
+    let snapshotCount = 0;
+    for (const order of pendingOrders || []) {
+      const items = order.items as OrderItem[];
+      if (!items || items.length === 0) continue;
+
+      // Calculate final price for each item based on current total_orders_count
+      let newSubtotal = 0;
+      const updatedItems = items.map((item) => {
+        const productInfo = productMap.get(item.product_id);
+        if (!productInfo) return item;
+
+        // Calculate the final unit price based on total participants
+        const finalPrice = calculatePrice(productInfo.prices, productInfo.total_orders_count);
+        newSubtotal += finalPrice * item.quantity;
+
+        return {
+          ...item,
+          price_per_unit: finalPrice,
+        };
+      });
+
+      // Get the full price (first tier) for discount calculation
+      let fullPrice = 0;
+      updatedItems.forEach((item) => {
+        const productInfo = productMap.get(item.product_id);
+        if (productInfo && productInfo.prices.length > 0) {
+          // First tier = highest price (people: 1)
+          const sortedPrices = [...productInfo.prices].sort((a, b) => a.people - b.people);
+          fullPrice += sortedPrices[0].price * item.quantity;
+        }
+      });
+
+      // Calculate discount from full price
+      const discountAmount = fullPrice - newSubtotal;
+
+      // Get total participants count (sum across all items' products)
+      const productIds = [...new Set(updatedItems.map((i) => i.product_id))];
+      let maxParticipants = 0;
+      productIds.forEach((pid) => {
+        const productInfo = productMap.get(pid);
+        if (productInfo) {
+          maxParticipants = Math.max(maxParticipants, productInfo.total_orders_count);
+        }
+      });
+
+      // Update the order with snapshot data
+      const { error: updateError } = await supabase
+        .from('user_orders')
+        .update({
+          items: updatedItems,
+          subtotal: newSubtotal,
+          total_amount: newSubtotal, // For collective, no delivery cost yet
+          discount_amount: discountAmount,
+          participants_count: maxParticipants,
+        })
+        .eq('id', order.id);
+
+      if (updateError) {
+        console.error(`[reset-weekly-orders] Error updating order ${order.id}:`, updateError);
+      } else {
+        snapshotCount++;
+        console.log(`[reset-weekly-orders] Snapshot order ${order.id}: participants=${maxParticipants}, subtotal=${newSubtotal}, discount=${discountAmount}`);
+      }
+    }
+
+    console.log(`[reset-weekly-orders] Successfully snapshot ${snapshotCount} pending orders`);
+
+    // ==========================================
+    // STEP 2: Reset product counters for new week
+    // ==========================================
+    
     const updates = products?.map(async (product) => {
       const weekMax = 63 + Math.floor(Math.random() * 21); // 63-83
       
@@ -93,12 +226,14 @@ Deno.serve(async (req) => {
       await Promise.all(updates);
     }
 
-    console.log(`Successfully reset weekly orders for ${products?.length || 0} products to 0, new max: 63-83`);
+    console.log(`[reset-weekly-orders] Successfully reset virtual counters for ${products?.length || 0} products`);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: `Reset ${products?.length || 0} products to 0, new max: 63-83`,
+        message: `Snapshot ${snapshotCount} orders, reset ${products?.length || 0} products`,
+        ordersSnapshot: snapshotCount,
+        productsReset: products?.length || 0,
         timestamp: new Date().toISOString()
       }),
       { 
@@ -107,7 +242,7 @@ Deno.serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error('Error resetting weekly orders:', error);
+    console.error('[reset-weekly-orders] Error:', error);
     return new Response(
       JSON.stringify({ 
         success: false, 
