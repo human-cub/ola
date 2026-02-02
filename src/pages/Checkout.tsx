@@ -58,6 +58,8 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
   const [searchParams] = useSearchParams();
   const { cartItems, waitingListItems, clearCart, clearWaitingList } = useCart();
   
+  // Check if coming from waiting list (for back navigation)
+  const fromWaitingList = searchParams.get('from') === 'waiting-list';
   const items = isCollective ? waitingListItems : cartItems;
   
   const [headerVisible, setHeaderVisible] = useState(true);
@@ -375,7 +377,7 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
       <main className="pt-[120px] sm:pt-[104px] pb-8 px-4">
         <div className="container mx-auto max-w-2xl">
           <Link
-            to={isCollective ? "/lista-espera" : "/carrito"}
+            to={isCollective || fromWaitingList ? "/lista-espera" : "/carrito"}
             className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />

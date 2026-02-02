@@ -547,6 +547,40 @@ const WaitingList = () => {
   };
 
   // Handle finalize order (confirms the collective order)
+  // Handle cancel order (deletes the pending collective order)
+  const handleCancelOrder = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      navigate("/ingresar?redirect=/lista-espera");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Delete the pending collective order
+      const { error: deleteError } = await supabase
+        .from("user_orders")
+        .delete()
+        .eq("user_id", session.user.id)
+        .eq("order_type", "collective")
+        .eq("status", "pending");
+
+      if (deleteError) throw deleteError;
+
+      // Clear waiting list items
+      await clearWaitingList();
+
+      toast.success("Pedido cancelado.");
+      navigate("/");
+    } catch (error) {
+      console.error("Error canceling order:", error);
+      toast.error("Error al cancelar el pedido. Intentá de nuevo.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleFinalizeOrder = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
@@ -779,18 +813,15 @@ const WaitingList = () => {
                       <ArrowRight className="w-4 h-4" />
                       Continuar con la compra
                     </Button>
-                    {hasExistingOrder && (
-                      <Button
-                        onClick={handleFinalizeOrder}
-                        variant="outline"
-                        className="w-full gap-2"
-                        size="lg"
-                        disabled={isSubmitting}
-                      >
-                        <Check className="w-4 h-4" />
-                        {isSubmitting ? "Finalizando..." : "Finalizar pedido"}
-                      </Button>
-                    )}
+                    <Button
+                      onClick={handleCancelOrder}
+                      variant="outline"
+                      className="w-full gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                      size="lg"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? "Cancelando..." : "Cancelar el pedido"}
+                    </Button>
                   </>
                 ) : (
                   // Collection active - show waiting list flow
