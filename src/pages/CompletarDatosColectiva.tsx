@@ -58,6 +58,24 @@ const CompletarDatosColectiva = () => {
   
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  const scrollToFirstError = (fieldErrors: Record<string, string>) => {
+    const firstField = Object.keys(fieldErrors)[0];
+    if (!firstField) return;
+    // Field names match input ids
+    const el = document.getElementById(firstField);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      // Small delay to allow scroll before focusing
+      setTimeout(() => {
+        try {
+          (el as HTMLElement).focus?.();
+        } catch {
+          // no-op
+        }
+      }, 200);
+    }
+  };
+
   // Load profile data and check for existing order
   useEffect(() => {
     const loadProfile = async () => {
@@ -130,6 +148,7 @@ const CompletarDatosColectiva = () => {
 
   const handleSubmit = async () => {
     setErrors({});
+    const loadingToastId = toast.loading("Guardando...");
 
     const isCABA = isCABAProvince(province);
     
@@ -150,6 +169,8 @@ const CompletarDatosColectiva = () => {
         fieldErrors[err.path[0] as string] = err.message;
       });
       setErrors(fieldErrors);
+      toast.error("Revisá los campos marcados", { id: loadingToastId });
+      scrollToFirstError(fieldErrors);
       return;
     }
 
@@ -164,6 +185,8 @@ const CompletarDatosColectiva = () => {
         fieldErrors[err.path[0] as string] = err.message;
       });
       setErrors((prev) => ({ ...prev, ...fieldErrors }));
+      toast.error("Revisá los campos marcados", { id: loadingToastId });
+      scrollToFirstError(fieldErrors);
       return;
     }
 
@@ -186,7 +209,7 @@ const CompletarDatosColectiva = () => {
       const customerName = [firstName, lastName].filter(Boolean).join(' ') || 'Cliente';
 
       // Save profile data including first_name and last_name + set profile_completed
-      await supabase
+      const { error: profileError } = await supabase
         .from("profiles")
         .update({
           first_name: firstName,
@@ -196,12 +219,14 @@ const CompletarDatosColectiva = () => {
           profile_completed: true,
         })
         .eq("user_id", session.user.id);
+      if (profileError) throw profileError;
 
       // Fetch waiting list items
-      const { data: waitingListItems } = await supabase
+      const { data: waitingListItems, error: waitingListError } = await supabase
         .from("waiting_list_items")
         .select("*")
         .eq("user_id", session.user.id);
+      if (waitingListError) throw waitingListError;
 
       if (waitingListItems && waitingListItems.length > 0) {
         // Calculate next Sunday 23:59
@@ -245,7 +270,7 @@ const CompletarDatosColectiva = () => {
 
         if (existingOrder) {
           // Update existing order - NO Telegram notification
-          await supabase
+          const { error: updateOrderError } = await supabase
             .from("user_orders")
             .update({
               items: orderItems,
@@ -256,6 +281,7 @@ const CompletarDatosColectiva = () => {
               notes: phone,
             })
             .eq("id", existingOrder.id);
+          if (updateOrderError) throw updateOrderError;
         } else {
           // Create new collective order - SEND Telegram notification
           isNewOrder = true;
@@ -301,11 +327,11 @@ const CompletarDatosColectiva = () => {
         }
       }
 
-      toast.success("¡Datos guardados correctamente!");
-      navigate("/lista-espera");
+      toast.success("¡Datos guardados correctamente!", { id: loadingToastId });
+      navigate("/lista-espera", { replace: true });
     } catch (error: any) {
       console.error("Error saving data:", error);
-      toast.error(error.message || "Error al guardar los datos");
+      toast.error(error?.message || "Error al guardar los datos", { id: loadingToastId });
     } finally {
       setLoading(false);
     }
