@@ -129,12 +129,15 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     
-    // Option 1: Cron job authentication via secret
-    const isCronAuth = cronSecret && cronSecret === expectedCronSecret;
+    // Option 1: Cron job authentication via secret header
+    const isCronAuth = cronSecret && expectedCronSecret && cronSecret === expectedCronSecret;
     
-    // Option 2: Admin user authentication via JWT
+    // Option 2: Service role key in Authorization header (for cron via pg_net)
+    const isServiceRoleAuth = authHeader === `Bearer ${supabaseServiceKey}`;
+    
+    // Option 3: Admin user authentication via JWT
     let isAdminAuth = false;
-    if (!isCronAuth && authHeader && authHeader.startsWith('Bearer ')) {
+    if (!isCronAuth && !isServiceRoleAuth && authHeader && authHeader.startsWith('Bearer ')) {
       const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
         global: { headers: { Authorization: authHeader } }
       });
@@ -158,15 +161,16 @@ Deno.serve(async (req) => {
       }
     }
 
-    if (!isCronAuth && !isAdminAuth) {
+    if (!isCronAuth && !isServiceRoleAuth && !isAdminAuth) {
       console.error('Unauthorized access attempt to increment-virtual-participants');
       return new Response(
-        JSON.stringify({ error: 'Unauthorized - admin or cron access required' }),
+        JSON.stringify({ error: 'Unauthorized - admin, service role, or cron access required' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log(`[increment-virtual-participants] Authenticated via: ${isCronAuth ? 'cron secret' : 'admin user'}`);
+    const authMethod = isCronAuth ? 'cron secret' : (isServiceRoleAuth ? 'service role' : 'admin user');
+    console.log(`[increment-virtual-participants] Authenticated via: ${authMethod}`);
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
