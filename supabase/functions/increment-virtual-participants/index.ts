@@ -5,14 +5,33 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-cron-secret',
 };
 
+// ============================================================
+// CONFIGURATION - Agreed upon targets:
+// First 24 hours: Rapid growth to 27-34 units
+// After: Slow growth to 53-77 units per week
+// Reset: Every Monday at 00:00
+// ============================================================
+const FIRST_DAY_MIN = 27;
+const FIRST_DAY_MAX = 34;
+const WEEK_MIN = 53;
+const WEEK_MAX = 77;
+
 // Get time factor based on hour (simulates user activity patterns)
 function getTimeFactor(hour: number): number {
-  // Night hours (22-10): low activity
-  if (hour >= 22 || hour < 10) {
-    return 0.1 + Math.random() * 0.3; // 0.1-0.4
+  // Night hours (0-8): low activity
+  if (hour >= 0 && hour < 8) {
+    return 0.2 + Math.random() * 0.3; // 0.2-0.5
   }
-  // Peak hours (12-21): high activity
-  return 0.9 + Math.random() * 0.5; // 0.9-1.4
+  // Morning (8-12): medium activity
+  if (hour >= 8 && hour < 12) {
+    return 0.6 + Math.random() * 0.3; // 0.6-0.9
+  }
+  // Afternoon/evening (12-22): peak activity
+  if (hour >= 12 && hour < 22) {
+    return 0.9 + Math.random() * 0.3; // 0.9-1.2
+  }
+  // Late night (22-24): low activity
+  return 0.3 + Math.random() * 0.3; // 0.3-0.6
 }
 
 // Get hours since week start (or product creation)
@@ -31,17 +50,11 @@ function isFirstDay(startDate: string): boolean {
 function getSaturationFactor(current: number, max: number): number {
   const ratio = current / max;
   
-  if (ratio < 0.4) return 1.0;
-  if (ratio < 0.7) return 0.6;
-  if (ratio < 0.9) return 0.25;
-  return 0.05;
-}
-
-// Check if it's Monday 00:00-01:00 (new week reset time)
-function isNewWeekResetTime(): boolean {
-  const now = new Date();
-  // Monday is day 1
-  return now.getDay() === 1 && now.getHours() < 1;
+  if (ratio < 0.5) return 1.0;
+  if (ratio < 0.7) return 0.7;
+  if (ratio < 0.85) return 0.4;
+  if (ratio < 0.95) return 0.15;
+  return 0.03;
 }
 
 // Check if week_start_date is from previous week (needs reset)
@@ -56,42 +69,49 @@ function needsWeeklyReset(weekStartDate: string): boolean {
   return daysSinceStart >= 7;
 }
 
-// Generate new random parameters for a new week
-function generateNewWeekParams() {
-  // First day target: 27-48 participants
-  // Total week target: 63-83 (averaging ~73)
-  const weekMax = 63 + Math.floor(Math.random() * 21); // 63-83
-  
-  // Get this Monday as week start (for proper first-day detection)
+// Get this Monday's date
+function getThisMonday(): string {
   const now = new Date();
   const dayOfWeek = now.getDay(); // 0=Sunday, 1=Monday, etc.
-  const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Days since Monday
+  const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
   const monday = new Date(now);
   monday.setDate(now.getDate() - daysFromMonday);
   monday.setHours(0, 0, 0, 0);
+  return monday.toISOString().split('T')[0];
+}
+
+// Generate new random parameters for a new week
+function generateNewWeekParams() {
+  // Week target: 53-77
+  const weekMax = WEEK_MIN + Math.floor(Math.random() * (WEEK_MAX - WEEK_MIN + 1));
   
   return {
     max_weekly_participants: weekMax,
-    base_probability: 0.12 + Math.random() * 0.13, // 0.12-0.25 for slow phase
-    cooldown_minutes: 5 + Math.floor(Math.random() * 11), // 5-15 min for first day
-    virtual_orders_count: 0, // Reset to 0
-    week_start_date: monday.toISOString().split('T')[0], // Monday of this week
+    base_probability: 0.08 + Math.random() * 0.07, // 0.08-0.15 for slow phase
+    cooldown_minutes: 20 + Math.floor(Math.random() * 40), // 20-60 min
+    virtual_orders_count: 0,
+    week_start_date: getThisMonday(),
     last_increment_at: null,
   };
 }
 
-// Generate params for a newly added product (apply first-day logic regardless of day of week)
+// Generate params for a newly added product (apply first-day logic)
 function generateNewProductParams() {
-  const weekMax = 63 + Math.floor(Math.random() * 21); // 63-83
+  const weekMax = WEEK_MIN + Math.floor(Math.random() * (WEEK_MAX - WEEK_MIN + 1));
   
   return {
     max_weekly_participants: weekMax,
-    base_probability: 0.12 + Math.random() * 0.13,
-    cooldown_minutes: 5 + Math.floor(Math.random() * 11),
-    virtual_orders_count: Math.floor(Math.random() * 4), // 0-3 start
-    week_start_date: new Date().toISOString().split('T')[0], // Today as start date for first-day logic
+    base_probability: 0.08 + Math.random() * 0.07,
+    cooldown_minutes: 5 + Math.floor(Math.random() * 6), // 5-10 min for first day
+    virtual_orders_count: Math.floor(Math.random() * 3), // 0-2 start
+    week_start_date: new Date().toISOString().split('T')[0], // Today as start
     last_increment_at: null,
   };
+}
+
+// Calculate first day target for this product
+function getFirstDayTarget(): number {
+  return FIRST_DAY_MIN + Math.floor(Math.random() * (FIRST_DAY_MAX - FIRST_DAY_MIN + 1));
 }
 
 Deno.serve(async (req) => {
@@ -146,14 +166,14 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log(`Authenticated via: ${isCronAuth ? 'cron secret' : 'admin user'}`);
+    console.log(`[increment-virtual-participants] Authenticated via: ${isCronAuth ? 'cron secret' : 'admin user'}`);
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get all products with their virtual participant settings
+    // Get all products
     const { data: products, error: fetchError } = await supabase
       .from('products')
-      .select('id, virtual_orders_count, max_weekly_participants, base_probability, last_increment_at, cooldown_minutes, week_start_date');
+      .select('id, name, virtual_orders_count, max_weekly_participants, base_probability, last_increment_at, cooldown_minutes, week_start_date');
 
     if (fetchError) {
       throw fetchError;
@@ -162,33 +182,38 @@ Deno.serve(async (req) => {
     const now = new Date();
     const currentHour = now.getHours();
     const timeFactor = getTimeFactor(currentHour);
-    const isResetTime = isNewWeekResetTime();
     
     const updates: Promise<any>[] = [];
-    const results: { id: string; action: string; newCount?: number; phase?: string }[] = [];
+    const results: { id: string; name: string; action: string; newCount?: number; phase?: string; details?: string }[] = [];
+
+    console.log(`[increment-virtual-participants] Processing ${products?.length || 0} products at hour ${currentHour}, timeFactor=${timeFactor.toFixed(2)}`);
 
     for (const product of products || []) {
-      // Check if weekly reset is needed (7+ days passed or Monday 00:00)
-      if (product.week_start_date && (needsWeeklyReset(product.week_start_date) || isResetTime)) {
-        const daysSinceStart = Math.floor((now.getTime() - new Date(product.week_start_date).getTime()) / (1000 * 60 * 60 * 24));
-        
-        // Only reset if actually 7+ days passed (avoid double reset)
-        if (daysSinceStart >= 7) {
-          const newParams = generateNewWeekParams();
-          updates.push(
-            (async () => {
-              await supabase
-                .from('products')
-                .update(newParams)
-                .eq('id', product.id);
-            })()
-          );
-          results.push({ id: product.id, action: 'reset_week', newCount: 0 });
-          continue;
-        }
+      const productName = product.name || product.id;
+      
+      // Check if weekly reset is needed (7+ days passed)
+      if (product.week_start_date && needsWeeklyReset(product.week_start_date)) {
+        const newParams = generateNewWeekParams();
+        updates.push(
+          (async () => {
+            await supabase
+              .from('products')
+              .update(newParams)
+              .eq('id', product.id);
+          })()
+        );
+        results.push({ 
+          id: product.id, 
+          name: productName, 
+          action: 'reset_week', 
+          newCount: 0,
+          details: `Reset to 0, new max: ${newParams.max_weekly_participants}`
+        });
+        console.log(`[${productName}] Weekly reset - new max: ${newParams.max_weekly_participants}`);
+        continue;
       }
 
-      // Initialize if no week_start_date (new product - apply first-day logic)
+      // Initialize if no week_start_date (new product)
       if (!product.week_start_date) {
         const newParams = generateNewProductParams();
         updates.push(
@@ -199,54 +224,71 @@ Deno.serve(async (req) => {
               .eq('id', product.id);
           })()
         );
-        results.push({ id: product.id, action: 'initialized', newCount: newParams.virtual_orders_count });
+        results.push({ 
+          id: product.id, 
+          name: productName, 
+          action: 'initialized', 
+          newCount: newParams.virtual_orders_count,
+          details: `New product, max: ${newParams.max_weekly_participants}`
+        });
+        console.log(`[${productName}] Initialized - start: ${newParams.virtual_orders_count}, max: ${newParams.max_weekly_participants}`);
         continue;
       }
 
       const currentCount = product.virtual_orders_count || 0;
-      const maxCount = product.max_weekly_participants || 73; // Default to midpoint of 63-83
-      
-      // First day target: 27-48 (use midpoint 37 as default)
-      const firstDayTarget = 27 + Math.floor((maxCount - 63) * 0.5) + Math.floor(Math.random() * 10); // Scale with max
-      
-      // Check if still in first 24 hours (fast growth phase)
-      const inFirstDay = isFirstDay(product.week_start_date);
+      const maxCount = product.max_weekly_participants || Math.floor((WEEK_MIN + WEEK_MAX) / 2);
       const hoursSinceStart = getHoursSinceStart(product.week_start_date);
+      const inFirstDay = isFirstDay(product.week_start_date);
       
-      // Determine current target based on phase
-      let currentPhaseMax: number;
-      let cooldownMin: number;
-      let cooldownMax: number;
-      let baseProbability: number;
+      // Determine targets and parameters based on phase
+      let targetForPhase: number;
+      let minCooldown: number;
+      let maxCooldown: number;
+      let incrementProbability: number;
       
       if (inFirstDay) {
-        // First 24 hours: aggressive growth to reach 27-48
-        currentPhaseMax = Math.min(firstDayTarget, 48);
-        cooldownMin = 3; // 3-10 min cooldown (very fast)
-        cooldownMax = 10;
+        // FIRST 24 HOURS: Aggressive growth to 27-34
+        targetForPhase = getFirstDayTarget();
+        minCooldown = 3;  // 3-8 min cooldown (very fast)
+        maxCooldown = 8;
         
-        // Calculate how many we need per hour to hit target
+        // Calculate how many we need and how fast
         const remainingHours = Math.max(1, 24 - hoursSinceStart);
-        const needed = Math.max(0, currentPhaseMax - currentCount);
+        const needed = Math.max(0, targetForPhase - currentCount);
         const neededPerHour = needed / remainingHours;
         
-        // With 4 runs per hour (every 15 min), we need high probability
-        baseProbability = Math.min(0.85, Math.max(0.3, neededPerHour / 3));
+        // With ~4 runs per hour, we need high probability
+        // If behind schedule, increase probability
+        const urgency = neededPerHour > 2 ? 1.2 : (neededPerHour > 1 ? 1.0 : 0.8);
+        incrementProbability = Math.min(0.9, 0.5 * urgency + Math.random() * 0.2);
+        
+        console.log(`[${productName}] First day: ${currentCount}/${targetForPhase}, hours left: ${remainingHours.toFixed(1)}, need/hour: ${neededPerHour.toFixed(1)}, prob: ${incrementProbability.toFixed(2)}`);
       } else {
-        // After first day: slow growth from current to max (63-83)
-        currentPhaseMax = maxCount;
-        cooldownMin = 30; // 30-120 min cooldown (slower)
-        cooldownMax = 120;
-        baseProbability = product.base_probability || 0.15;
+        // AFTER FIRST DAY: Slow growth to 53-77
+        targetForPhase = maxCount;
+        minCooldown = 30;  // 30-90 min cooldown
+        maxCooldown = 90;
+        
+        // Base probability with saturation
+        const baseProbability = product.base_probability || 0.12;
+        const saturationFactor = getSaturationFactor(currentCount, maxCount);
+        incrementProbability = baseProbability * timeFactor * saturationFactor;
+        
+        // Random skip for natural feel
+        if (Math.random() < 0.1) {
+          incrementProbability = 0;
+        }
       }
       
-      // Check if at current phase max
-      if (currentCount >= currentPhaseMax) {
-        if (inFirstDay) {
-          results.push({ id: product.id, action: 'at_first_day_target', phase: 'first_day' });
-        } else {
-          results.push({ id: product.id, action: 'at_max', phase: 'slow' });
-        }
+      // Check if at target
+      if (currentCount >= targetForPhase) {
+        results.push({ 
+          id: product.id, 
+          name: productName, 
+          action: inFirstDay ? 'at_first_day_target' : 'at_max', 
+          phase: inFirstDay ? 'first_day' : 'slow',
+          details: `${currentCount}/${targetForPhase}`
+        });
         continue;
       }
 
@@ -255,34 +297,27 @@ Deno.serve(async (req) => {
         const lastIncrement = new Date(product.last_increment_at);
         const minutesSinceLastIncrement = (now.getTime() - lastIncrement.getTime()) / (1000 * 60);
         
-        // Use shorter cooldown for first day
         const requiredCooldown = inFirstDay 
-          ? Math.min(product.cooldown_minutes || 5, 10) 
+          ? Math.min(product.cooldown_minutes || 5, maxCooldown) 
           : (product.cooldown_minutes || 30);
         
         if (minutesSinceLastIncrement < requiredCooldown) {
-          results.push({ id: product.id, action: 'cooldown', phase: inFirstDay ? 'first_day' : 'slow' });
+          results.push({ 
+            id: product.id, 
+            name: productName, 
+            action: 'cooldown', 
+            phase: inFirstDay ? 'first_day' : 'slow',
+            details: `${minutesSinceLastIncrement.toFixed(0)}/${requiredCooldown}min`
+          });
           continue;
         }
       }
 
-      // Calculate final probability
-      let finalProbability: number;
-      
-      if (inFirstDay) {
-        // First day: high probability with slight time variation
-        finalProbability = baseProbability * (0.8 + Math.random() * 0.4);
-      } else {
-        // After first day: use saturation and time factors for natural slow growth
-        const saturationFactor = getSaturationFactor(currentCount, maxCount);
-        const skipFactor = Math.random() < 0.08 ? 0 : 1; // 8% chance of skip
-        finalProbability = baseProbability * timeFactor * saturationFactor * skipFactor;
-      }
-      
       // Roll the dice
-      if (Math.random() < finalProbability) {
+      const roll = Math.random();
+      if (roll < incrementProbability) {
         const newCount = currentCount + 1;
-        const newCooldown = cooldownMin + Math.floor(Math.random() * (cooldownMax - cooldownMin + 1));
+        const newCooldown = minCooldown + Math.floor(Math.random() * (maxCooldown - minCooldown + 1));
         
         updates.push(
           (async () => {
@@ -298,19 +333,25 @@ Deno.serve(async (req) => {
         );
         results.push({ 
           id: product.id, 
+          name: productName, 
           action: 'incremented', 
           newCount, 
-          phase: inFirstDay ? 'first_day' : 'slow' 
+          phase: inFirstDay ? 'first_day' : 'slow',
+          details: `${currentCount} -> ${newCount} (target: ${targetForPhase})`
         });
+        console.log(`[${productName}] Incremented: ${currentCount} -> ${newCount} (target: ${targetForPhase})`);
       } else {
         results.push({ 
           id: product.id, 
+          name: productName, 
           action: 'no_increment', 
-          phase: inFirstDay ? 'first_day' : 'slow' 
+          phase: inFirstDay ? 'first_day' : 'slow',
+          details: `roll ${roll.toFixed(2)} > prob ${incrementProbability.toFixed(2)}`
         });
       }
     }
 
+    // Execute all updates
     if (updates.length > 0) {
       await Promise.all(updates);
     }
@@ -319,7 +360,7 @@ Deno.serve(async (req) => {
     const resetCount = results.filter(r => r.action === 'reset_week').length;
     const firstDayProducts = results.filter(r => r.phase === 'first_day').length;
 
-    console.log(`Processed ${products?.length || 0} products: ${incrementedCount} incremented, ${resetCount} reset, ${firstDayProducts} in first-day phase, hour=${currentHour}, timeFactor=${timeFactor.toFixed(2)}`);
+    console.log(`[increment-virtual-participants] Summary: ${products?.length || 0} products, ${incrementedCount} incremented, ${resetCount} reset, ${firstDayProducts} in first-day phase`);
 
     return new Response(
       JSON.stringify({ 
@@ -330,7 +371,10 @@ Deno.serve(async (req) => {
         firstDayProducts,
         hour: currentHour,
         timeFactor: timeFactor.toFixed(2),
-        isResetTime,
+        config: {
+          firstDayTarget: `${FIRST_DAY_MIN}-${FIRST_DAY_MAX}`,
+          weeklyTarget: `${WEEK_MIN}-${WEEK_MAX}`
+        },
         details: results,
         timestamp: now.toISOString()
       }),
@@ -340,7 +384,7 @@ Deno.serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error('Error processing virtual participants:', error);
+    console.error('[increment-virtual-participants] Error:', error);
     return new Response(
       JSON.stringify({ 
         success: false, 
