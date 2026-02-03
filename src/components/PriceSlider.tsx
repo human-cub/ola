@@ -120,6 +120,24 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
     return `$${formatted}`;
   };
 
+  const getTickPosition = (index: number) => {
+    const isFirst = index === 0;
+    const isLast = index === priceData.length - 1;
+
+    if (isFirst) {
+      return { style: { left: 0 } as const, className: "left-0 text-left" };
+    }
+    if (isLast) {
+      return { style: { right: 0 } as const, className: "right-0 text-right" };
+    }
+
+    const percent = (index / (priceData.length - 1)) * 100;
+    return {
+      style: { left: `${percent}%` } as const,
+      className: "text-center -translate-x-1/2",
+    };
+  };
+
   return (
     <section className="px-3 sm:px-4 pt-1 pb-4">
       <div className="mx-auto max-w-[calc(100%-16px)] sm:max-w-md">
@@ -155,61 +173,73 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
           
           {/* Price Scale */}
           <div className="relative mb-4">
-            {/* People numbers (top) - using CSS Grid for perfect alignment */}
-            <div className="grid grid-cols-5 mb-2">
-              {priceData.map((item, index) => {
-                const isNearSelected = Math.abs(selectedPeople - item.people) <= 
-                  (index < priceData.length - 1 ? (priceData[index + 1].people - item.people) * 0.1 : 5);
-                const isFirst = index === 0;
-                const isLast = index === priceData.length - 1;
-                return (
-                  <span 
-                    key={index} 
-                    className={`text-sm font-medium transition-colors ${
-                      isNearSelected ? 'text-primary' : 'text-muted-foreground'
-                    } ${isFirst ? 'text-left' : isLast ? 'text-right' : 'text-center'}`}
-                  >
-                    {item.people}
-                  </span>
-                );
-              })}
-            </div>
-            
-            {/* Slider - full width, edge to edge */}
-            <div className="mb-2 -mx-1">
-              <Slider
-                value={[sliderPosition]}
-                onValueChange={handleSliderChange}
-                max={priceData.length - 1}
-                min={0}
-                step={0.01}
-                className="w-full"
-              />
-            </div>
-            
-            {/* Price numbers (bottom) - using CSS Grid for perfect alignment */}
-            <div className="grid grid-cols-5">
-              {priceData.map((item, index) => {
-                const isNearSelected = Math.abs(selectedPeople - item.people) <= 
-                  (index < priceData.length - 1 ? (priceData[index + 1].people - item.people) * 0.1 : 5);
-                const isFirstPrice = index === 0;
-                const isFirst = index === 0;
-                const isLast = index === priceData.length - 1;
-                return (
-                  <span 
-                    key={index} 
-                    className={`transition-colors whitespace-nowrap text-xs ${
-                      isFirstPrice 
-                        ? 'text-muted-foreground line-through opacity-60'
-                        : isNearSelected 
-                          ? 'text-primary font-medium' 
-                          : 'text-muted-foreground'
-                    } ${isFirst ? 'text-left' : isLast ? 'text-right' : 'text-center'}`}
-                  >
-                    {formatPrice(item.price)}
-                  </span>
-                );
-              })}
+            {/* Absolute-positioned ticks so text width never affects alignment */}
+            <div className="-mx-1">
+              {/* People numbers (top) */}
+              <div className="relative mb-2 h-5">
+                {priceData.map((item, index) => {
+                  const isNearSelected =
+                    Math.abs(selectedPeople - item.people) <=
+                    (index < priceData.length - 1
+                      ? (priceData[index + 1].people - item.people) * 0.1
+                      : 5);
+
+                  const pos = getTickPosition(index);
+
+                  return (
+                    <span
+                      key={index}
+                      style={pos.style}
+                      className={`absolute top-0 whitespace-nowrap text-sm font-medium transition-colors ${
+                        isNearSelected ? "text-primary" : "text-muted-foreground"
+                      } ${pos.className}`}
+                    >
+                      {item.people}
+                    </span>
+                  );
+                })}
+              </div>
+
+              {/* Slider - full width, edge to edge */}
+              <div className="mb-2">
+                <Slider
+                  value={[sliderPosition]}
+                  onValueChange={handleSliderChange}
+                  max={priceData.length - 1}
+                  min={0}
+                  step={0.01}
+                  className="w-full"
+                />
+              </div>
+
+              {/* Price numbers (bottom) */}
+              <div className="relative h-5">
+                {priceData.map((item, index) => {
+                  const isNearSelected =
+                    Math.abs(selectedPeople - item.people) <=
+                    (index < priceData.length - 1
+                      ? (priceData[index + 1].people - item.people) * 0.1
+                      : 5);
+                  const isFirstPrice = index === 0;
+                  const pos = getTickPosition(index);
+
+                  return (
+                    <span
+                      key={index}
+                      style={pos.style}
+                      className={`absolute top-0 whitespace-nowrap text-xs transition-colors ${
+                        isFirstPrice
+                          ? "text-muted-foreground line-through opacity-60"
+                          : isNearSelected
+                            ? "text-primary font-medium"
+                            : "text-muted-foreground"
+                      } ${pos.className}`}
+                    >
+                      {formatPrice(item.price)}
+                    </span>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
