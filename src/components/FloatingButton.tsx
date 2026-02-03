@@ -102,9 +102,9 @@ export const FloatingButton = ({
 
   return (
     <>
-      <div className="fixed bottom-0 left-0 right-0 z-50 p-3 sm:p-4">
-        <div className="container mx-auto max-w-2xl">
-          <div className="bg-gradient-primary rounded-2xl p-3 sm:p-4 shadow-floating text-white">
+      <div className="fixed bottom-0 left-0 right-0 z-50 px-2 py-3 sm:px-4 sm:py-4">
+        <div className="mx-auto max-w-md">
+          <div className="bg-gradient-primary rounded-2xl px-3 py-3 sm:p-4 shadow-floating text-white">
             {/* Timer */}
             <div className="flex items-center gap-2 justify-center mb-3">
               <Clock className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />

@@ -121,9 +121,9 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
   };
 
   return (
-    <section className="px-4 pt-1 pb-4">
-      <div className="container mx-auto max-w-md">
-        <div className="relative bg-gradient-card rounded-2xl p-9 sm:p-8 shadow-floating animate-glow-pulse animate-float hover:scale-105 transition-all duration-500 border-[3px] animate-border-pulse backdrop-blur-sm">
+    <section className="px-2 sm:px-4 pt-1 pb-4">
+      <div className="mx-auto max-w-md">
+        <div className="relative bg-gradient-card rounded-2xl px-3 py-5 sm:p-6 shadow-floating animate-glow-pulse animate-float hover:scale-105 transition-all duration-500 border-[3px] animate-border-pulse backdrop-blur-sm">
           
           <h3 className="text-lg font-bold text-center mb-3 text-primary animate-scale-in">
             Precio por unidad en compra grupal
@@ -154,37 +154,29 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
           </div>
           
           {/* Price Scale */}
-          <div className="relative mb-4">
-            {/* People numbers (top) */}
-            <div className="relative mb-2">
-              <div className="absolute inset-0 flex items-center">
-                {priceData.map((item, index) => {
-                  const position = index === 0 ? '0%' : 
-                                  index === 1 ? '25%' :
-                                  index === 2 ? '50%' :
-                                  index === 3 ? '75%' : '100%';
-                  const isNearSelected = Math.abs(selectedPeople - item.people) <= 
-                    (index < priceData.length - 1 ? (priceData[index + 1].people - item.people) * 0.1 : 5);
-                  return (
-                    <div 
-                      key={index} 
-                      className="absolute transform -translate-x-1/2 flex items-center gap-1"
-                      style={{ left: position }}
-                    >
-                      <span className={`text-sm font-medium transition-colors ${
-                        isNearSelected ? 'text-primary' : 'text-muted-foreground'
-                      }`}>
-                        {item.people}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="h-6"></div>
+          <div className="relative mb-4 px-1">
+            {/* People numbers (top) - using flexbox for precise positioning */}
+            <div className="flex justify-between items-center mb-2">
+              {priceData.map((item, index) => {
+                const isNearSelected = Math.abs(selectedPeople - item.people) <= 
+                  (index < priceData.length - 1 ? (priceData[index + 1].people - item.people) * 0.1 : 5);
+                const isFirst = index === 0;
+                const isLast = index === priceData.length - 1;
+                return (
+                  <span 
+                    key={index} 
+                    className={`text-sm font-medium transition-colors ${
+                      isNearSelected ? 'text-primary' : 'text-muted-foreground'
+                    } ${isFirst ? 'text-left' : isLast ? 'text-right' : 'text-center'}`}
+                  >
+                    {item.people}
+                  </span>
+                );
+              })}
             </div>
             
-            {/* Slider */}
-            <div className="mb-2 -mx-3">
+            {/* Slider - full width */}
+            <div className="mb-2">
               <Slider
                 value={[sliderPosition]}
                 onValueChange={handleSliderChange}
@@ -195,37 +187,29 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
               />
             </div>
             
-            {/* Price numbers (bottom) */}
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                {priceData.map((item, index) => {
-                  const position = index === 0 ? '0%' : 
-                                  index === 1 ? '25%' :
-                                  index === 2 ? '50%' :
-                                  index === 3 ? '75%' : '100%';
-                  const isNearSelected = Math.abs(selectedPeople - item.people) <= 
-                    (index < priceData.length - 1 ? (priceData[index + 1].people - item.people) * 0.1 : 5);
-                  const isFirstPrice = index === 0;
-                  return (
-                    <div 
-                      key={index} 
-                      className="absolute transform -translate-x-1/2"
-                      style={{ left: position }}
-                    >
-                      <span className={`transition-colors whitespace-nowrap ${
-                        isFirstPrice 
-                          ? 'text-xs text-muted-foreground line-through opacity-60'
-                          : isNearSelected 
-                            ? 'text-xs text-primary font-medium' 
-                            : 'text-xs text-muted-foreground'
-                      }`}>
-                        {formatPrice(item.price)}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="h-4"></div>
+            {/* Price numbers (bottom) - using flexbox for precise positioning */}
+            <div className="flex justify-between items-center">
+              {priceData.map((item, index) => {
+                const isNearSelected = Math.abs(selectedPeople - item.people) <= 
+                  (index < priceData.length - 1 ? (priceData[index + 1].people - item.people) * 0.1 : 5);
+                const isFirstPrice = index === 0;
+                const isFirst = index === 0;
+                const isLast = index === priceData.length - 1;
+                return (
+                  <span 
+                    key={index} 
+                    className={`transition-colors whitespace-nowrap ${
+                      isFirstPrice 
+                        ? 'text-xs text-muted-foreground line-through opacity-60'
+                        : isNearSelected 
+                          ? 'text-xs text-primary font-medium' 
+                          : 'text-xs text-muted-foreground'
+                    } ${isFirst ? 'text-left' : isLast ? 'text-right' : 'text-center'}`}
+                  >
+                    {formatPrice(item.price)}
+                  </span>
+                );
+              })}
             </div>
           </div>
 
