@@ -155,8 +155,8 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
           
           {/* Price Scale */}
           <div className="relative mb-4">
-            {/* People numbers (top) - using flexbox for precise positioning */}
-            <div className="flex justify-between items-center mb-2">
+            {/* People numbers (top) - using CSS Grid for perfect alignment */}
+            <div className="grid grid-cols-5 mb-2">
               {priceData.map((item, index) => {
                 const isNearSelected = Math.abs(selectedPeople - item.people) <= 
                   (index < priceData.length - 1 ? (priceData[index + 1].people - item.people) * 0.1 : 5);
@@ -168,7 +168,6 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
                     className={`text-sm font-medium transition-colors ${
                       isNearSelected ? 'text-primary' : 'text-muted-foreground'
                     } ${isFirst ? 'text-left' : isLast ? 'text-right' : 'text-center'}`}
-                    style={{ flex: isFirst || isLast ? '0 0 auto' : '1 1 0', textAlign: isFirst ? 'left' : isLast ? 'right' : 'center' }}
                   >
                     {item.people}
                   </span>
@@ -188,8 +187,8 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
               />
             </div>
             
-            {/* Price numbers (bottom) - using flexbox for precise positioning */}
-            <div className="flex justify-between items-center">
+            {/* Price numbers (bottom) - using CSS Grid for perfect alignment */}
+            <div className="grid grid-cols-5">
               {priceData.map((item, index) => {
                 const isNearSelected = Math.abs(selectedPeople - item.people) <= 
                   (index < priceData.length - 1 ? (priceData[index + 1].people - item.people) * 0.1 : 5);
@@ -199,14 +198,13 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
                 return (
                   <span 
                     key={index} 
-                    className={`transition-colors whitespace-nowrap ${
+                    className={`transition-colors whitespace-nowrap text-xs ${
                       isFirstPrice 
-                        ? 'text-xs text-muted-foreground line-through opacity-60'
+                        ? 'text-muted-foreground line-through opacity-60'
                         : isNearSelected 
-                          ? 'text-xs text-primary font-medium' 
-                          : 'text-xs text-muted-foreground'
-                    }`}
-                    style={{ flex: isFirst || isLast ? '0 0 auto' : '1 1 0', textAlign: isFirst ? 'left' : isLast ? 'right' : 'center' }}
+                          ? 'text-primary font-medium' 
+                          : 'text-muted-foreground'
+                    } ${isFirst ? 'text-left' : isLast ? 'text-right' : 'text-center'}`}
                   >
                     {formatPrice(item.price)}
                   </span>
