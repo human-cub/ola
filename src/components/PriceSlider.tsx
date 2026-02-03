@@ -154,7 +154,7 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
           </div>
           
           {/* Price Scale */}
-          <div className="relative mb-4 px-1">
+          <div className="relative mb-4">
             {/* People numbers (top) - using flexbox for precise positioning */}
             <div className="flex justify-between items-center mb-2">
               {priceData.map((item, index) => {
@@ -168,6 +168,7 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
                     className={`text-sm font-medium transition-colors ${
                       isNearSelected ? 'text-primary' : 'text-muted-foreground'
                     } ${isFirst ? 'text-left' : isLast ? 'text-right' : 'text-center'}`}
+                    style={{ flex: isFirst || isLast ? '0 0 auto' : '1 1 0', textAlign: isFirst ? 'left' : isLast ? 'right' : 'center' }}
                   >
                     {item.people}
                   </span>
@@ -175,8 +176,8 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
               })}
             </div>
             
-            {/* Slider - full width */}
-            <div className="mb-2">
+            {/* Slider - full width, edge to edge */}
+            <div className="mb-2 -mx-1">
               <Slider
                 value={[sliderPosition]}
                 onValueChange={handleSliderChange}
@@ -204,7 +205,8 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
                         : isNearSelected 
                           ? 'text-xs text-primary font-medium' 
                           : 'text-xs text-muted-foreground'
-                    } ${isFirst ? 'text-left' : isLast ? 'text-right' : 'text-center'}`}
+                    }`}
+                    style={{ flex: isFirst || isLast ? '0 0 auto' : '1 1 0', textAlign: isFirst ? 'left' : isLast ? 'right' : 'center' }}
                   >
                     {formatPrice(item.price)}
                   </span>
