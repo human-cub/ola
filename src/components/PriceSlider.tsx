@@ -121,9 +121,9 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
   };
 
   return (
-    <section className="px-2 sm:px-4 pt-1 pb-4">
-      <div className="mx-auto max-w-md">
-        <div className="relative bg-gradient-card rounded-2xl px-3 py-5 sm:p-6 shadow-floating animate-glow-pulse animate-float hover:scale-105 transition-all duration-500 border-[3px] animate-border-pulse backdrop-blur-sm">
+    <section className="px-3 sm:px-4 pt-1 pb-4">
+      <div className="mx-auto max-w-[calc(100%-16px)] sm:max-w-md">
+        <div className="relative bg-gradient-card rounded-2xl px-3 py-5 sm:p-6 shadow-floating animate-glow-pulse animate-float transition-all duration-500 border-[3px] animate-border-pulse backdrop-blur-sm">
           
           <h3 className="text-lg font-bold text-center mb-3 text-primary animate-scale-in">
             Precio por unidad en compra grupal
