@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
+import { SimpleSlider } from "@/components/ui/simple-slider";
 import { Pencil } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -21,6 +21,7 @@ interface VirtualOrdersPopoverProps {
 type VirtualMode = "active_always" | "active_24h" | "inactive";
 
 const speedMarks = [0.1, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
+const DEFAULT_SPEED = 1.0;
 
 const VirtualOrdersPopover = ({
   productId,
@@ -32,17 +33,35 @@ const VirtualOrdersPopover = ({
 }: VirtualOrdersPopoverProps) => {
   const [open, setOpen] = useState(false);
   const [virtualCount, setVirtualCount] = useState(currentVirtualCount);
-  const [speed, setSpeed] = useState(currentBaseProbability ? currentBaseProbability / 0.005 : 1.0);
   const [saving, setSaving] = useState(false);
 
-  // Determine current mode based on is_manual field
+  // Calculate speed from base_probability, default to 1.0 if not set
+  const getSpeedFromProbability = (prob: number | null): number => {
+    if (prob === null || prob === 0) return DEFAULT_SPEED;
+    const calculated = prob / 0.005;
+    // Find closest speed mark
+    const closest = speedMarks.reduce((prev, curr) =>
+      Math.abs(curr - calculated) < Math.abs(prev - calculated) ? curr : prev
+    );
+    return closest;
+  };
+
+  const [speed, setSpeed] = useState(getSpeedFromProbability(currentBaseProbability));
+
+  // Determine current mode - default is active (is_manual = false or null)
   const getCurrentMode = (): VirtualMode => {
     if (isManual === true) return "inactive";
-    // For now, we don't have a separate 24h tracking, so default to active_always
     return "active_always";
   };
 
   const [mode, setMode] = useState<VirtualMode>(getCurrentMode());
+
+  // Update local state when props change (e.g., after weekly reset)
+  useEffect(() => {
+    setVirtualCount(currentVirtualCount);
+    setSpeed(getSpeedFromProbability(currentBaseProbability));
+    setMode(getCurrentMode());
+  }, [currentVirtualCount, currentBaseProbability, isManual]);
 
   const handleApplyVirtualCount = async () => {
     const { error } = await supabase
@@ -152,8 +171,8 @@ const VirtualOrdersPopover = ({
           {/* Speed Slider */}
           <div className="space-y-3">
             <Label className="text-sm text-gray-700">Velocidad:</Label>
-            <div className="px-1">
-              <Slider
+            <div className="px-2">
+              <SimpleSlider
                 value={[getSpeedIndex(speed)]}
                 onValueChange={handleSliderChange}
                 min={0}
@@ -161,19 +180,26 @@ const VirtualOrdersPopover = ({
                 step={1}
                 className="w-full"
               />
-              <div className="flex justify-between mt-1">
-                {speedMarks.map((mark, index) => (
-                  <span
-                    key={mark}
-                    className={`text-[10px] ${
-                      speedMarks[getSpeedIndex(speed)] === mark
-                        ? "text-[#00AEEF] font-medium"
-                        : "text-gray-400"
-                    }`}
-                  >
-                    {mark}
-                  </span>
-                ))}
+              <div className="relative h-5 mt-2">
+                {speedMarks.map((mark, index) => {
+                  const isSelected = speedMarks[getSpeedIndex(speed)] === mark;
+                  const percent = (index / (speedMarks.length - 1)) * 100;
+                  
+                  return (
+                    <span
+                      key={mark}
+                      className={`absolute text-[10px] ${
+                        isSelected ? "text-[#00AEEF] font-medium" : "text-gray-400"
+                      }`}
+                      style={{
+                        left: `${percent}%`,
+                        transform: index === 0 ? 'none' : index === speedMarks.length - 1 ? 'translateX(-100%)' : 'translateX(-50%)'
+                      }}
+                    >
+                      {mark}
+                    </span>
+                  );
+                })}
               </div>
             </div>
           </div>

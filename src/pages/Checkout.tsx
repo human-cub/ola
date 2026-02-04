@@ -329,7 +329,7 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
   };
 
   const getShareText = () => {
-    return `Che! Mirá esto - descuentos increíbles de suplementos 🎉 Podés comprar al precio actual o esperar y pagar menos 🤑 https://ola.lovable.app/`;
+    return `Mirá - descuentos increíbles de suplementos 🎉 Podés comprar ahora con 20% de descuento o esperar y pagar aún menos 🤑 https://ola.lovable.app/`;
   };
 
   const handleNativeShare = async () => {
