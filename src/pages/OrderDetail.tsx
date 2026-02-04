@@ -51,7 +51,7 @@ const statusConfig = {
 
 const timelineSteps = ['pending', 'confirmed', 'processing', 'shipped', 'delivered'];
 
-const SHARE_TEXT = 'Che! Mirá esto - descuentos increíbles de suplementos 🎉 Podés comprar al precio actual o esperar y pagar menos 🤑 https://ola.lovable.app/';
+const SHARE_TEXT = 'Mirá - descuentos increíbles de suplementos 🎉 Podés comprar ahora con 20% de descuento o esperar y pagar aún menos 🤑 https://ola.lovable.app/';
 const WHATSAPP_NUMBER = '5491166650878';
 
 const OrderDetail = () => {

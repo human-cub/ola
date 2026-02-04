@@ -866,7 +866,7 @@ const WaitingList = () => {
                       <div className="flex flex-col gap-2">
                         <button
                           onClick={() => {
-                            const text = 'Che! Mirá esto - descuentos increíbles de suplementos 🎉 Podés comprar al precio actual o esperar y pagar menos 🤑 https://ola.lovable.app/';
+                            const text = 'Mirá - descuentos increíbles de suplementos 🎉 Podés comprar ahora con 20% de descuento o esperar y pagar aún menos 🤑 https://ola.lovable.app/';
                             if (navigator.share) {
                               navigator.share({ text }).catch(() => {});
                             } else {
@@ -882,7 +882,7 @@ const WaitingList = () => {
                         
                         <button
                           onClick={() => {
-                            const text = encodeURIComponent('Che! Mirá esto - descuentos increíbles de suplementos 🎉 Podés comprar al precio actual o esperar y pagar menos 🤑 https://ola.lovable.app/');
+                            const text = encodeURIComponent('Mirá - descuentos increíbles de suplementos 🎉 Podés comprar ahora con 20% de descuento o esperar y pagar aún menos 🤑 https://ola.lovable.app/');
                             window.open(`https://wa.me/?text=${text}`, '_blank');
                           }}
                           className="w-full border border-border hover:bg-accent rounded-md py-2.5 px-4 flex items-center justify-center gap-2 transition-colors text-sm"
@@ -895,7 +895,7 @@ const WaitingList = () => {
                         
                         <button
                           onClick={() => {
-                            navigator.clipboard.writeText('Che! Mirá esto - descuentos increíbles de suplementos 🎉 Podés comprar al precio actual o esperar y pagar menos 🤑 https://ola.lovable.app/');
+                            navigator.clipboard.writeText('Mirá - descuentos increíbles de suplementos 🎉 Podés comprar ahora con 20% de descuento o esperar y pagar aún menos 🤑 https://ola.lovable.app/');
                             toast.success("¡Invitación copiada!");
                           }}
                           className="w-full border border-border hover:bg-accent rounded-md py-2.5 px-4 flex items-center justify-center gap-2 transition-colors text-sm"
