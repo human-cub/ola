@@ -174,14 +174,17 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get all products
+    // Get all products (exclude those with is_manual = true as they are "inactive")
     const { data: products, error: fetchError } = await supabase
       .from('products')
-      .select('id, name, virtual_orders_count, max_weekly_participants, base_probability, last_increment_at, cooldown_minutes, week_start_date');
+      .select('id, name, virtual_orders_count, max_weekly_participants, base_probability, last_increment_at, cooldown_minutes, week_start_date, is_manual');
 
     if (fetchError) {
       throw fetchError;
     }
+
+    // Filter out products that are manually controlled (inactive)
+    const activeProducts = (products || []).filter(p => p.is_manual !== true);
 
     const now = new Date();
     const currentHour = now.getHours();
@@ -190,9 +193,9 @@ Deno.serve(async (req) => {
     const updates: Promise<any>[] = [];
     const results: { id: string; name: string; action: string; newCount?: number; phase?: string; details?: string }[] = [];
 
-    console.log(`[increment-virtual-participants] Processing ${products?.length || 0} products at hour ${currentHour}, timeFactor=${timeFactor.toFixed(2)}`);
+    console.log(`[increment-virtual-participants] Processing ${activeProducts.length} active products (${(products?.length || 0) - activeProducts.length} inactive) at hour ${currentHour}, timeFactor=${timeFactor.toFixed(2)}`);
 
-    for (const product of products || []) {
+    for (const product of activeProducts) {
       const productName = product.name || product.id;
       
       // Check if weekly reset is needed (7+ days passed)
@@ -274,9 +277,11 @@ Deno.serve(async (req) => {
         maxCooldown = 90;
         
         // Base probability with saturation
-        const baseProbability = product.base_probability || 0.12;
+        // Note: base_probability is already adjusted by speed multiplier from admin UI
+        // Default 0.005 * 1.0 = 0.005, with speed 2.0 it becomes 0.01, etc.
+        const baseProbability = product.base_probability || 0.005;
         const saturationFactor = getSaturationFactor(currentCount, maxCount);
-        incrementProbability = baseProbability * timeFactor * saturationFactor;
+        incrementProbability = baseProbability * 20 * timeFactor * saturationFactor; // Scale up base probability
         
         // Random skip for natural feel
         if (Math.random() < 0.1) {
@@ -363,13 +368,15 @@ Deno.serve(async (req) => {
     const incrementedCount = results.filter(r => r.action === 'incremented').length;
     const resetCount = results.filter(r => r.action === 'reset_week').length;
     const firstDayProducts = results.filter(r => r.phase === 'first_day').length;
+    const inactiveCount = (products?.length || 0) - activeProducts.length;
 
-    console.log(`[increment-virtual-participants] Summary: ${products?.length || 0} products, ${incrementedCount} incremented, ${resetCount} reset, ${firstDayProducts} in first-day phase`);
+    console.log(`[increment-virtual-participants] Summary: ${activeProducts.length} active products, ${inactiveCount} inactive, ${incrementedCount} incremented, ${resetCount} reset, ${firstDayProducts} in first-day phase`);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        processed: products?.length || 0,
+        processed: activeProducts.length,
+        inactive: inactiveCount,
         incremented: incrementedCount,
         reset: resetCount,
         firstDayProducts,

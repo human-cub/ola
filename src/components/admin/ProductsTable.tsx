@@ -1,14 +1,12 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Pencil } from "lucide-react";
 import AddProductDialog from "./AddProductDialog";
 import EditProductDialog from "./EditProductDialog";
+import VirtualOrdersPopover from "./VirtualOrdersPopover";
 
 interface ProductPrices {
   people: number;
@@ -26,6 +24,7 @@ interface Product {
   prices: ProductPrices[];
   link: string | null;
   is_manual: boolean | null;
+  base_probability: number | null;
   real_orders_count: number;
   buynow_count: number;
   virtual_orders_count: number;
@@ -36,8 +35,6 @@ interface Product {
 const ProductsTable = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editingVirtualId, setEditingVirtualId] = useState<string | null>(null);
-  const [virtualCount, setVirtualCount] = useState<number>(0);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
@@ -77,30 +74,7 @@ const ProductsTable = () => {
     ? products 
     : products.filter(p => p.category === categoryFilter);
 
-  const handleUpdateVirtualCount = async (id: string) => {
-    const { error } = await supabase
-      .from("products")
-      .update({ virtual_orders_count: virtualCount })
-      .eq("id", id);
-
-    if (error) {
-      toast.error("Error al actualizar");
-      return;
-    }
-
-    toast.success("Contador virtual actualizado");
-    setEditingVirtualId(null);
-    fetchProducts();
-  };
-
-  const startEditingVirtual = (e: React.MouseEvent, product: Product) => {
-    e.stopPropagation();
-    setEditingVirtualId(product.id);
-    setVirtualCount(product.virtual_orders_count);
-  };
-
   const handleRowClick = (product: Product) => {
-    if (editingVirtualId) return;
     setSelectedProduct(product);
     setEditDialogOpen(true);
   };
@@ -140,9 +114,8 @@ const ProductsTable = () => {
                   <TableHead>Producto</TableHead>
                   <TableHead>Categoría</TableHead>
                   <TableHead>Peso</TableHead>
-                  <TableHead>Comprar Ahora</TableHead>
-                  <TableHead>Esperando Descuento</TableHead>
-                  <TableHead>Órdenes Virtuales</TableHead>
+                  <TableHead>Esperando</TableHead>
+                  <TableHead>Offline</TableHead>
                   <TableHead>Total</TableHead>
                   <TableHead>Acciones</TableHead>
                 </TableRow>
@@ -157,49 +130,20 @@ const ProductsTable = () => {
                     <TableCell className="font-medium">{product.name}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{product.category || '-'}</TableCell>
                     <TableCell>{product.weight}</TableCell>
-                    <TableCell>{product.buynow_count}</TableCell>
                     <TableCell className="font-semibold text-primary">{product.waiting_for_discount_count}</TableCell>
-                    <TableCell onClick={(e) => e.stopPropagation()}>
-                      {editingVirtualId === product.id ? (
-                        <Input
-                          type="number"
-                          value={virtualCount}
-                          onChange={(e) => setVirtualCount(parseInt(e.target.value) || 0)}
-                          className="w-20"
-                        />
-                      ) : (
-                        product.virtual_orders_count
-                      )}
-                    </TableCell>
+                    <TableCell>{product.virtual_orders_count}</TableCell>
                     <TableCell className="font-bold">
                       {product.waiting_for_discount_count + product.virtual_orders_count}
                     </TableCell>
                     <TableCell onClick={(e) => e.stopPropagation()}>
-                      {editingVirtualId === product.id ? (
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            onClick={() => handleUpdateVirtualCount(product.id)}
-                          >
-                            Guardar
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setEditingVirtualId(null)}
-                          >
-                            Cancelar
-                          </Button>
-                        </div>
-                      ) : (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={(e) => startEditingVirtual(e, product)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                      )}
+                      <VirtualOrdersPopover
+                        productId={product.id}
+                        productName={product.name}
+                        currentVirtualCount={product.virtual_orders_count}
+                        currentBaseProbability={product.base_probability}
+                        isManual={product.is_manual}
+                        onUpdate={fetchProducts}
+                      />
                     </TableCell>
                   </TableRow>
                 ))}
