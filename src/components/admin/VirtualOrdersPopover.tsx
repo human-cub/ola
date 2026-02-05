@@ -4,7 +4,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { SimpleSlider } from "@/components/ui/simple-slider";
 import { Pencil } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -22,6 +21,7 @@ type VirtualMode = "active_always" | "active_24h" | "inactive";
 
 const speedMarks = [0.1, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
 const DEFAULT_SPEED = 1.0;
+const DEFAULT_BASE_PROBABILITY = 0.005; // speed 1.0 = 0.005
 
 const VirtualOrdersPopover = ({
   productId,
@@ -35,10 +35,14 @@ const VirtualOrdersPopover = ({
   const [virtualCount, setVirtualCount] = useState(currentVirtualCount);
   const [saving, setSaving] = useState(false);
 
-  // Calculate speed from base_probability, default to 1.0 if not set
+  // Calculate speed from base_probability
   const getSpeedFromProbability = (prob: number | null): number => {
-    if (prob === null || prob === 0) return DEFAULT_SPEED;
-    const calculated = prob / 0.005;
+    // If probability is null or in the "reset" range (0.12-0.25), return default
+    if (prob === null || prob >= 0.1) return DEFAULT_SPEED;
+    
+    // Calculate speed: prob = 0.005 * speed, so speed = prob / 0.005
+    const calculated = prob / DEFAULT_BASE_PROBABILITY;
+    
     // Find closest speed mark
     const closest = speedMarks.reduce((prev, curr) =>
       Math.abs(curr - calculated) < Math.abs(prev - calculated) ? curr : prev
@@ -46,15 +50,16 @@ const VirtualOrdersPopover = ({
     return closest;
   };
 
-  const [speed, setSpeed] = useState(getSpeedFromProbability(currentBaseProbability));
+  const [speed, setSpeed] = useState(() => getSpeedFromProbability(currentBaseProbability));
 
   // Determine current mode - default is active (is_manual = false or null)
   const getCurrentMode = (): VirtualMode => {
+    // Default: active_always (is_manual = null or false)
     if (isManual === true) return "inactive";
     return "active_always";
   };
 
-  const [mode, setMode] = useState<VirtualMode>(getCurrentMode());
+  const [mode, setMode] = useState<VirtualMode>(() => getCurrentMode());
 
   // Update local state when props change (e.g., after weekly reset)
   useEffect(() => {
@@ -82,7 +87,7 @@ const VirtualOrdersPopover = ({
     setSaving(true);
 
     // Calculate base_probability from speed multiplier
-    const baseProbability = 0.005 * speed;
+    const baseProbability = DEFAULT_BASE_PROBABILITY * speed;
     
     // Determine is_manual based on mode
     const isManualValue = mode === "inactive";
@@ -118,16 +123,28 @@ const VirtualOrdersPopover = ({
     onUpdate();
   };
 
-  const getSpeedIndex = (value: number): number => {
-    const closest = speedMarks.reduce((prev, curr) =>
-      Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev
-    );
-    return speedMarks.indexOf(closest);
+  // Get slider position (0-100) from speed
+  const getSliderPosition = (spd: number): number => {
+    const index = speedMarks.indexOf(spd);
+    if (index === -1) {
+      // Find closest
+      const closest = speedMarks.reduce((prev, curr) =>
+        Math.abs(curr - spd) < Math.abs(prev - spd) ? curr : prev
+      );
+      return (speedMarks.indexOf(closest) / (speedMarks.length - 1)) * 100;
+    }
+    return (index / (speedMarks.length - 1)) * 100;
   };
 
-  const handleSliderChange = (values: number[]) => {
-    const index = values[0];
-    setSpeed(speedMarks[index]);
+  // Get speed from slider position
+  const getSpeedFromPosition = (position: number): number => {
+    const index = Math.round((position / 100) * (speedMarks.length - 1));
+    return speedMarks[Math.max(0, Math.min(index, speedMarks.length - 1))];
+  };
+
+  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const position = parseFloat(e.target.value);
+    setSpeed(getSpeedFromPosition(position));
   };
 
   return (
@@ -142,7 +159,7 @@ const VirtualOrdersPopover = ({
         </Button>
       </PopoverTrigger>
       <PopoverContent 
-        className="w-80 bg-white p-4 shadow-lg" 
+        className="w-80 bg-white p-4 shadow-lg z-50" 
         align="end"
         onClick={(e) => e.stopPropagation()}
       >
@@ -155,10 +172,10 @@ const VirtualOrdersPopover = ({
           <div className="space-y-2">
             <Label className="text-sm text-gray-700">Modo:</Label>
             <Select value={mode} onValueChange={(value: VirtualMode) => setMode(value)}>
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="w-full bg-white">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white z-50">
                 <SelectItem value="active_always">Activa Siempre</SelectItem>
                 <SelectItem value="active_24h" className="text-[#00AEEF]">
                   Activa 24h
@@ -168,38 +185,51 @@ const VirtualOrdersPopover = ({
             </Select>
           </div>
 
-          {/* Speed Slider */}
-          <div className="space-y-3">
+          {/* Speed Slider with tick marks */}
+          <div className="space-y-2">
             <Label className="text-sm text-gray-700">Velocidad:</Label>
-            <div className="px-2">
-              <SimpleSlider
-                value={[getSpeedIndex(speed)]}
-                onValueChange={handleSliderChange}
-                min={0}
-                max={speedMarks.length - 1}
-                step={1}
-                className="w-full"
+            <div className="pt-2 pb-6 relative">
+              {/* Custom range slider */}
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step={100 / (speedMarks.length - 1)}
+                value={getSliderPosition(speed)}
+                onChange={handleSliderChange}
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb"
+                style={{
+                  background: `linear-gradient(to right, #00AEEF 0%, #00AEEF ${getSliderPosition(speed)}%, #e5e7eb ${getSliderPosition(speed)}%, #e5e7eb 100%)`
+                }}
               />
-              <div className="relative h-5 mt-2">
-                {speedMarks.map((mark, index) => {
-                  const isSelected = speedMarks[getSpeedIndex(speed)] === mark;
-                  const percent = (index / (speedMarks.length - 1)) * 100;
-                  
-                  return (
-                    <span
-                      key={mark}
-                      className={`absolute text-[10px] ${
-                        isSelected ? "text-[#00AEEF] font-medium" : "text-gray-400"
-                      }`}
-                      style={{
-                        left: `${percent}%`,
-                        transform: index === 0 ? 'none' : index === speedMarks.length - 1 ? 'translateX(-100%)' : 'translateX(-50%)'
-                      }}
-                    >
-                      {mark}
-                    </span>
-                  );
-                })}
+              
+              {/* Tick marks */}
+              <div className="absolute top-0 left-0 right-0 flex justify-between pointer-events-none" style={{ paddingTop: '2px' }}>
+                {speedMarks.map((_, index) => (
+                  <div 
+                    key={index} 
+                    className="w-0.5 h-2 bg-gray-400"
+                  />
+                ))}
+              </div>
+              
+              {/* Labels */}
+              <div className="absolute top-6 left-0 right-0 flex justify-between">
+                {speedMarks.map((mark, index) => (
+                  <span
+                    key={mark}
+                    className={`text-[10px] ${
+                      speed === mark ? "text-[#00AEEF] font-semibold" : "text-gray-400"
+                    }`}
+                    style={{
+                      width: index === 0 || index === speedMarks.length - 1 ? 'auto' : '0',
+                      textAlign: index === 0 ? 'left' : index === speedMarks.length - 1 ? 'right' : 'center',
+                      transform: index === 0 || index === speedMarks.length - 1 ? 'none' : 'translateX(-50%)',
+                    }}
+                  >
+                    {mark}
+                  </span>
+                ))}
               </div>
             </div>
           </div>

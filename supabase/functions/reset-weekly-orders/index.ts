@@ -216,7 +216,9 @@ Deno.serve(async (req) => {
           max_weekly_participants: weekMax,
           week_start_date: new Date().toISOString().split('T')[0],
           last_increment_at: null,
-          base_probability: 0.12 + Math.random() * 0.13, // 0.12-0.25
+          // Reset to default: speed 1.0 (0.005), mode active (is_manual = false)
+          base_probability: 0.005, // Default speed = 1.0
+          is_manual: false, // Default mode = Activa Siempre
           cooldown_minutes: 5 + Math.floor(Math.random() * 11) // 5-15 min
         })
         .eq('id', product.id);
