@@ -87,25 +87,30 @@ function generateNewWeekParams() {
   
   return {
     max_weekly_participants: weekMax,
-    base_probability: 0.08 + Math.random() * 0.07, // 0.08-0.15 for slow phase
+    // IMPORTANT: base_probability is the admin-controlled speed knob (0.005 * speed)
+    // It must reset to default every new cycle.
+    base_probability: 0.005,
     cooldown_minutes: 20 + Math.floor(Math.random() * 40), // 20-60 min
     virtual_orders_count: 0,
     week_start_date: getThisMonday(),
     last_increment_at: null,
+    // Reset admin overrides every cycle
+    is_manual: false,
   };
 }
 
 // Generate params for a newly added product (apply first-day logic)
 function generateNewProductParams() {
   const weekMax = WEEK_MIN + Math.floor(Math.random() * (WEEK_MAX - WEEK_MIN + 1));
-  
+
   return {
     max_weekly_participants: weekMax,
-    base_probability: 0.08 + Math.random() * 0.07,
+    base_probability: 0.005,
     cooldown_minutes: 5 + Math.floor(Math.random() * 6), // 5-10 min for first day
     virtual_orders_count: Math.floor(Math.random() * 3), // 0-2 start
     week_start_date: new Date().toISOString().split('T')[0], // Today as start
     last_increment_at: null,
+    is_manual: false,
   };
 }
 
@@ -174,7 +179,7 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get all products (exclude those with is_manual = true as they are "inactive")
+    // Get all products (inactive ones must still be eligible for weekly reset)
     const { data: products, error: fetchError } = await supabase
       .from('products')
       .select('id, name, virtual_orders_count, max_weekly_participants, base_probability, last_increment_at, cooldown_minutes, week_start_date, is_manual');
@@ -183,19 +188,21 @@ Deno.serve(async (req) => {
       throw fetchError;
     }
 
-    // Filter out products that are manually controlled (inactive)
-    const activeProducts = (products || []).filter(p => p.is_manual !== true);
+    const allProducts = products || [];
 
     const now = new Date();
     const currentHour = now.getHours();
     const timeFactor = getTimeFactor(currentHour);
-    
+
+    const inactiveCount = allProducts.filter(p => p.is_manual === true).length;
+    const activeCount = allProducts.length - inactiveCount;
+
     const updates: Promise<any>[] = [];
     const results: { id: string; name: string; action: string; newCount?: number; phase?: string; details?: string }[] = [];
 
-    console.log(`[increment-virtual-participants] Processing ${activeProducts.length} active products (${(products?.length || 0) - activeProducts.length} inactive) at hour ${currentHour}, timeFactor=${timeFactor.toFixed(2)}`);
+    console.log(`[increment-virtual-participants] Processing ${activeCount} active products (${inactiveCount} inactive) at hour ${currentHour}, timeFactor=${timeFactor.toFixed(2)}`);
 
-    for (const product of activeProducts) {
+    for (const product of allProducts) {
       const productName = product.name || product.id;
       
       // Check if weekly reset is needed (7+ days passed)
@@ -217,6 +224,17 @@ Deno.serve(async (req) => {
           details: `Reset to 0, new max: ${newParams.max_weekly_participants}`
         });
         console.log(`[${productName}] Weekly reset - new max: ${newParams.max_weekly_participants}`);
+        continue;
+      }
+
+      // Skip inactive products (but they were still eligible for reset/initialization above)
+      if (product.is_manual === true) {
+        results.push({
+          id: product.id,
+          name: productName,
+          action: 'inactive',
+          details: 'is_manual=true',
+        });
         continue;
       }
 
@@ -368,14 +386,13 @@ Deno.serve(async (req) => {
     const incrementedCount = results.filter(r => r.action === 'incremented').length;
     const resetCount = results.filter(r => r.action === 'reset_week').length;
     const firstDayProducts = results.filter(r => r.phase === 'first_day').length;
-    const inactiveCount = (products?.length || 0) - activeProducts.length;
 
-    console.log(`[increment-virtual-participants] Summary: ${activeProducts.length} active products, ${inactiveCount} inactive, ${incrementedCount} incremented, ${resetCount} reset, ${firstDayProducts} in first-day phase`);
+    console.log(`[increment-virtual-participants] Summary: ${activeCount} active products, ${inactiveCount} inactive, ${incrementedCount} incremented, ${resetCount} reset, ${firstDayProducts} in first-day phase`);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        processed: activeProducts.length,
+        processed: activeCount,
         inactive: inactiveCount,
         incremented: incrementedCount,
         reset: resetCount,
