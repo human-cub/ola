@@ -132,7 +132,17 @@ const VirtualOrdersPopover = ({
 
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (next) {
+          setVirtualCount(currentVirtualCount);
+          setSpeed(getSpeedFromProbability(currentBaseProbability));
+          setMode(getCurrentMode());
+        }
+      }}
+    >
       <PopoverTrigger asChild>
         <Button
           size="sm"
