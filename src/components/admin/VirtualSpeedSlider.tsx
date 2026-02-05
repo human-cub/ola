@@ -10,6 +10,9 @@ interface VirtualSpeedSliderProps {
   disabled?: boolean;
 }
 
+const THUMB_PX = 22;
+const THUMB_RADIUS_PX = THUMB_PX / 2;
+
 const clampIndex = (idx: number, max: number) => Math.max(0, Math.min(idx, max));
 
 const nearestMarkIndex = (marks: VirtualSpeedMark[], value: VirtualSpeedMark) => {
@@ -61,16 +64,15 @@ const VirtualSpeedSlider = ({
           aria-label="Velocidad"
         />
 
-        {/* tick marks */}
-        <div className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2">
+        {/* tick marks: inset by thumb radius so the first/last align with thumb center on mobile */}
+        <div
+          className="pointer-events-none absolute top-1/2 -translate-y-1/2"
+          style={{ left: THUMB_RADIUS_PX, right: THUMB_RADIUS_PX }}
+        >
           {marks.map((_, idx) => {
             const left = maxIndex === 0 ? 0 : (idx / maxIndex) * 100;
             return (
-              <div
-                key={idx}
-                className="absolute -translate-x-1/2"
-                style={{ left: `${left}%` }}
-              >
+              <div key={idx} className="absolute -translate-x-1/2" style={{ left: `${left}%` }}>
                 <div className="h-3 w-px bg-muted-foreground/60" />
               </div>
             );
@@ -78,10 +80,13 @@ const VirtualSpeedSlider = ({
         </div>
 
         {/* labels */}
-        <div className="pointer-events-none absolute inset-x-0 top-[calc(50%+12px)] text-[10px] leading-none text-muted-foreground">
+        <div
+          className="pointer-events-none absolute top-[calc(50%+12px)] text-[10px] leading-none text-muted-foreground"
+          style={{ left: THUMB_RADIUS_PX, right: THUMB_RADIUS_PX }}
+        >
           {marks.map((mark, idx) => {
             const left = maxIndex === 0 ? 0 : (idx / maxIndex) * 100;
-            const transform = idx === 0 ? "none" : idx === maxIndex ? "translateX(-100%)" : "translateX(-50%)";
+            const transform = idx === 0 ? "translateX(-50%)" : idx === maxIndex ? "translateX(-50%)" : "translateX(-50%)";
 
             return (
               <span
