@@ -15,7 +15,7 @@ const benefits = [
   {
     icon: Truck,
     title: "Envío gratis en CABA",
-    description: "GBA $3.000\n• Resto del país $5.000\n• Gratis todo $100.000+"
+    description: "• GBA $3.000\n• Resto del país $5.000\n• Gratis todo $100.000+"
   },
   {
     icon: CreditCard,
