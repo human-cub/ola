@@ -1,78 +1,70 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.76.1';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-cron-secret',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-cron-secret, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
 // ============================================================
-// CONFIGURATION - Agreed upon targets:
-// First 24 hours: Rapid growth to 27-34 units
-// After: Slow growth to 53-77 units per week
+// CONFIGURATION
+// First 24 hours: Rapid growth to 15-35 units
+// After: Slow growth to 45-75 units per week
 // Reset: Every Monday at 00:00
+// Key: Each product gets a unique random "personality" 
+//      derived from its ID to ensure diversity
 // ============================================================
-const FIRST_DAY_MIN = 27;
-const FIRST_DAY_MAX = 34;
-const WEEK_MIN = 53;
-const WEEK_MAX = 77;
+const FIRST_DAY_MIN = 15;
+const FIRST_DAY_MAX = 35;
+const WEEK_MIN = 45;
+const WEEK_MAX = 75;
+
+// Simple hash from product ID to get a stable per-product random factor [0..1)
+function productHash(id: string): number {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = ((hash << 5) - hash + id.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash % 10000) / 10000;
+}
 
 // Get time factor based on hour (simulates user activity patterns)
 function getTimeFactor(hour: number): number {
-  // Night hours (0-8): low activity
-  if (hour >= 0 && hour < 8) {
-    return 0.2 + Math.random() * 0.3; // 0.2-0.5
-  }
-  // Morning (8-12): medium activity
-  if (hour >= 8 && hour < 12) {
-    return 0.6 + Math.random() * 0.3; // 0.6-0.9
-  }
-  // Afternoon/evening (12-22): peak activity
-  if (hour >= 12 && hour < 22) {
-    return 0.9 + Math.random() * 0.3; // 0.9-1.2
-  }
-  // Late night (22-24): low activity
-  return 0.3 + Math.random() * 0.3; // 0.3-0.6
+  if (hour >= 0 && hour < 8) return 0.2 + Math.random() * 0.3;
+  if (hour >= 8 && hour < 12) return 0.6 + Math.random() * 0.3;
+  if (hour >= 12 && hour < 22) return 0.9 + Math.random() * 0.3;
+  return 0.3 + Math.random() * 0.3;
 }
 
-// Get hours since week start (or product creation)
 function getHoursSinceStart(startDate: string): number {
   const start = new Date(startDate);
   const now = new Date();
   return (now.getTime() - start.getTime()) / (1000 * 60 * 60);
 }
 
-// Check if still in first 24 hours
 function isFirstDay(startDate: string): boolean {
   return getHoursSinceStart(startDate) < 24;
 }
 
-// Get saturation factor based on how close to max (for slow phase after first day)
 function getSaturationFactor(current: number, max: number): number {
   const ratio = current / max;
-  
-  if (ratio < 0.5) return 1.0;
-  if (ratio < 0.7) return 0.7;
-  if (ratio < 0.85) return 0.4;
-  if (ratio < 0.95) return 0.15;
-  return 0.03;
+  if (ratio < 0.4) return 1.0;
+  if (ratio < 0.6) return 0.7;
+  if (ratio < 0.75) return 0.45;
+  if (ratio < 0.85) return 0.2;
+  if (ratio < 0.95) return 0.08;
+  return 0.02;
 }
 
-// Check if week_start_date is from previous week (needs reset)
 function needsWeeklyReset(weekStartDate: string): boolean {
   const start = new Date(weekStartDate);
   const now = new Date();
-  
-  // Calculate days since start
   const daysSinceStart = Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-  
-  // Reset if 7+ days have passed
   return daysSinceStart >= 7;
 }
 
-// Get this Monday's date
 function getThisMonday(): string {
   const now = new Date();
-  const dayOfWeek = now.getDay(); // 0=Sunday, 1=Monday, etc.
+  const dayOfWeek = now.getDay();
   const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
   const monday = new Date(now);
   monday.setDate(now.getDate() - daysFromMonday);
@@ -80,43 +72,46 @@ function getThisMonday(): string {
   return monday.toISOString().split('T')[0];
 }
 
-// Generate new random parameters for a new week
-function generateNewWeekParams() {
-  // Week target: 53-77
-  const weekMax = WEEK_MIN + Math.floor(Math.random() * (WEEK_MAX - WEEK_MIN + 1));
-  
+// Generate unique per-product targets using product hash for diversity
+function getFirstDayTarget(productId: string): number {
+  const h = productHash(productId);
+  // Map hash across the full range, then add small jitter each run
+  const base = FIRST_DAY_MIN + Math.floor(h * (FIRST_DAY_MAX - FIRST_DAY_MIN + 1));
+  const jitter = Math.floor(Math.random() * 5) - 2; // -2 to +2
+  return Math.max(FIRST_DAY_MIN, Math.min(FIRST_DAY_MAX, base + jitter));
+}
+
+function getWeekTarget(productId: string): number {
+  const h = productHash(productId);
+  const base = WEEK_MIN + Math.floor(h * (WEEK_MAX - WEEK_MIN + 1));
+  const jitter = Math.floor(Math.random() * 7) - 3; // -3 to +3
+  return Math.max(WEEK_MIN, Math.min(WEEK_MAX, base + jitter));
+}
+
+function generateNewWeekParams(productId: string) {
+  const weekMax = getWeekTarget(productId);
   return {
     max_weekly_participants: weekMax,
-    // IMPORTANT: base_probability is the admin-controlled speed knob (0.005 * speed)
-    // It must reset to default every new cycle.
     base_probability: 0.005,
-    cooldown_minutes: 20 + Math.floor(Math.random() * 40), // 20-60 min
+    cooldown_minutes: 15 + Math.floor(Math.random() * 50), // 15-64 min
     virtual_orders_count: 0,
     week_start_date: getThisMonday(),
     last_increment_at: null,
-    // Reset admin overrides every cycle
     is_manual: false,
   };
 }
 
-// Generate params for a newly added product (apply first-day logic)
-function generateNewProductParams() {
-  const weekMax = WEEK_MIN + Math.floor(Math.random() * (WEEK_MAX - WEEK_MIN + 1));
-
+function generateNewProductParams(productId: string) {
+  const weekMax = getWeekTarget(productId);
   return {
     max_weekly_participants: weekMax,
     base_probability: 0.005,
-    cooldown_minutes: 5 + Math.floor(Math.random() * 6), // 5-10 min for first day
+    cooldown_minutes: 3 + Math.floor(Math.random() * 8), // 3-10 min for first day
     virtual_orders_count: Math.floor(Math.random() * 3), // 0-2 start
-    week_start_date: new Date().toISOString().split('T')[0], // Today as start
+    week_start_date: new Date().toISOString().split('T')[0],
     last_increment_at: null,
     is_manual: false,
   };
-}
-
-// Calculate first day target for this product
-function getFirstDayTarget(): number {
-  return FIRST_DAY_MIN + Math.floor(Math.random() * (FIRST_DAY_MAX - FIRST_DAY_MIN + 1));
 }
 
 Deno.serve(async (req) => {
@@ -125,7 +120,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Authenticate: either valid cron secret OR admin user token
+    // Authenticate: cron secret, service role, or admin JWT
     const cronSecret = req.headers.get('x-cron-secret');
     const authHeader = req.headers.get('Authorization');
     const expectedCronSecret = Deno.env.get('CRON_SECRET');
@@ -133,27 +128,19 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-    
-    // Option 1: Cron job authentication via secret header
+
     const isCronAuth = cronSecret && expectedCronSecret && cronSecret === expectedCronSecret;
-    
-    // Option 2: Service role key in Authorization header (for cron via pg_net)
     const isServiceRoleAuth = authHeader === `Bearer ${supabaseServiceKey}`;
-    
-    // Option 3: Admin user authentication via JWT
+
     let isAdminAuth = false;
     if (!isCronAuth && !isServiceRoleAuth && authHeader && authHeader.startsWith('Bearer ')) {
       const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
         global: { headers: { Authorization: authHeader } }
       });
-
       const token = authHeader.replace('Bearer ', '');
       const { data: claimsData, error: claimsError } = await supabaseClient.auth.getClaims(token);
-      
       if (!claimsError && claimsData?.claims?.sub) {
         const userId = claimsData.claims.sub;
-        
-        // Check if user is admin
         const supabase = createClient(supabaseUrl, supabaseServiceKey);
         const { data: roleData } = await supabase
           .from('user_roles')
@@ -161,7 +148,6 @@ Deno.serve(async (req) => {
           .eq('user_id', userId)
           .eq('role', 'admin')
           .maybeSingle();
-
         isAdminAuth = !!roleData;
       }
     }
@@ -169,259 +155,188 @@ Deno.serve(async (req) => {
     if (!isCronAuth && !isServiceRoleAuth && !isAdminAuth) {
       console.error('Unauthorized access attempt to increment-virtual-participants');
       return new Response(
-        JSON.stringify({ error: 'Unauthorized - admin, service role, or cron access required' }),
+        JSON.stringify({ error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const authMethod = isCronAuth ? 'cron secret' : (isServiceRoleAuth ? 'service role' : 'admin user');
-    console.log(`[increment-virtual-participants] Authenticated via: ${authMethod}`);
+    const authMethod = isCronAuth ? 'cron' : (isServiceRoleAuth ? 'service_role' : 'admin');
+    console.log(`[increment] Auth: ${authMethod}`);
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get all products (inactive ones must still be eligible for weekly reset)
     const { data: products, error: fetchError } = await supabase
       .from('products')
       .select('id, name, virtual_orders_count, max_weekly_participants, base_probability, last_increment_at, cooldown_minutes, week_start_date, is_manual');
 
-    if (fetchError) {
-      throw fetchError;
-    }
+    if (fetchError) throw fetchError;
 
     const allProducts = products || [];
-
     const now = new Date();
     const currentHour = now.getHours();
     const timeFactor = getTimeFactor(currentHour);
 
-    const inactiveCount = allProducts.filter(p => p.is_manual === true).length;
-    const activeCount = allProducts.length - inactiveCount;
-
-    const updates: Promise<any>[] = [];
+    const updates: Promise<unknown>[] = [];
     const results: { id: string; name: string; action: string; newCount?: number; phase?: string; details?: string }[] = [];
 
-    console.log(`[increment-virtual-participants] Processing ${activeCount} active products (${inactiveCount} inactive) at hour ${currentHour}, timeFactor=${timeFactor.toFixed(2)}`);
+    console.log(`[increment] ${allProducts.length} products, hour=${currentHour}, timeFactor=${timeFactor.toFixed(2)}`);
 
     for (const product of allProducts) {
       const productName = product.name || product.id;
-      
-      // Check if weekly reset is needed (7+ days passed)
+
+      // Weekly reset check
       if (product.week_start_date && needsWeeklyReset(product.week_start_date)) {
-        const newParams = generateNewWeekParams();
+        const newParams = generateNewWeekParams(product.id);
         updates.push(
-          (async () => {
-            await supabase
-              .from('products')
-              .update(newParams)
-              .eq('id', product.id);
-          })()
+          supabase.from('products').update(newParams).eq('id', product.id)
         );
-        results.push({ 
-          id: product.id, 
-          name: productName, 
-          action: 'reset_week', 
-          newCount: 0,
-          details: `Reset to 0, new max: ${newParams.max_weekly_participants}`
-        });
-        console.log(`[${productName}] Weekly reset - new max: ${newParams.max_weekly_participants}`);
+        results.push({ id: product.id, name: productName, action: 'reset_week', newCount: 0, details: `max:${newParams.max_weekly_participants}` });
+        console.log(`[${productName}] Weekly reset -> max:${newParams.max_weekly_participants}`);
         continue;
       }
 
-      // Skip inactive products (but they were still eligible for reset/initialization above)
+      // Skip inactive
       if (product.is_manual === true) {
-        results.push({
-          id: product.id,
-          name: productName,
-          action: 'inactive',
-          details: 'is_manual=true',
-        });
+        results.push({ id: product.id, name: productName, action: 'inactive' });
         continue;
       }
 
-      // Initialize if no week_start_date (new product)
+      // Initialize new product
       if (!product.week_start_date) {
-        const newParams = generateNewProductParams();
+        const newParams = generateNewProductParams(product.id);
         updates.push(
-          (async () => {
-            await supabase
-              .from('products')
-              .update(newParams)
-              .eq('id', product.id);
-          })()
+          supabase.from('products').update(newParams).eq('id', product.id)
         );
-        results.push({ 
-          id: product.id, 
-          name: productName, 
-          action: 'initialized', 
-          newCount: newParams.virtual_orders_count,
-          details: `New product, max: ${newParams.max_weekly_participants}`
-        });
-        console.log(`[${productName}] Initialized - start: ${newParams.virtual_orders_count}, max: ${newParams.max_weekly_participants}`);
+        results.push({ id: product.id, name: productName, action: 'initialized', newCount: newParams.virtual_orders_count });
+        console.log(`[${productName}] Initialized, max:${newParams.max_weekly_participants}`);
         continue;
       }
 
       const currentCount = product.virtual_orders_count || 0;
-      const maxCount = product.max_weekly_participants || Math.floor((WEEK_MIN + WEEK_MAX) / 2);
       const hoursSinceStart = getHoursSinceStart(product.week_start_date);
       const inFirstDay = isFirstDay(product.week_start_date);
-      
-      // Determine targets and parameters based on phase
+
+      // Per-product targets for diversity
+      const firstDayTarget = getFirstDayTarget(product.id);
+      const weekTarget = getWeekTarget(product.id);
+      const maxCount = inFirstDay ? firstDayTarget : Math.max(weekTarget, product.max_weekly_participants || weekTarget);
+
+      // Per-product random personality factors
+      const ph = productHash(product.id);
+      const productActivityBias = 0.6 + ph * 0.8; // 0.6..1.4 — some products are "hotter"
+      const productCooldownBias = 0.7 + (1 - ph) * 0.6; // 0.7..1.3 — inverse of activity
+
       let targetForPhase: number;
       let minCooldown: number;
       let maxCooldown: number;
       let incrementProbability: number;
-      
+
       if (inFirstDay) {
-        // FIRST 24 HOURS: Aggressive growth to 27-34
-        targetForPhase = getFirstDayTarget();
-        minCooldown = 3;  // 3-8 min cooldown (very fast)
-        maxCooldown = 8;
-        
-        // Calculate how many we need and how fast
+        // FIRST 24H: aggressive growth to 15-35
+        targetForPhase = firstDayTarget;
+        minCooldown = Math.round((3 + Math.floor(Math.random() * 5)) * productCooldownBias);
+        maxCooldown = Math.round((8 + Math.floor(Math.random() * 5)) * productCooldownBias);
+
         const remainingHours = Math.max(1, 24 - hoursSinceStart);
         const needed = Math.max(0, targetForPhase - currentCount);
         const neededPerHour = needed / remainingHours;
-        
-        // With ~4 runs per hour, we need high probability
-        // If behind schedule, increase probability
-        const urgency = neededPerHour > 2 ? 1.2 : (neededPerHour > 1 ? 1.0 : 0.8);
-        incrementProbability = Math.min(0.9, 0.5 * urgency + Math.random() * 0.2);
-        
-        console.log(`[${productName}] First day: ${currentCount}/${targetForPhase}, hours left: ${remainingHours.toFixed(1)}, need/hour: ${neededPerHour.toFixed(1)}, prob: ${incrementProbability.toFixed(2)}`);
+
+        const urgency = neededPerHour > 2 ? 1.3 : (neededPerHour > 1 ? 1.0 : 0.7);
+        incrementProbability = Math.min(0.85, 0.45 * urgency * productActivityBias + Math.random() * 0.15);
+
+        // Random skip for natural feel (10-25% chance depending on product)
+        if (Math.random() < 0.1 + ph * 0.15) {
+          incrementProbability *= 0.1;
+        }
+
+        console.log(`[${productName}] 1stDay: ${currentCount}/${targetForPhase}, hrs_left:${remainingHours.toFixed(1)}, prob:${incrementProbability.toFixed(3)}, bias:${productActivityBias.toFixed(2)}`);
       } else {
-        // AFTER FIRST DAY: Slow growth to 53-77
-        targetForPhase = maxCount;
-        minCooldown = 30;  // 30-90 min cooldown
-        maxCooldown = 90;
-        
-        // Base probability with saturation
-        // Note: base_probability is already adjusted by speed multiplier from admin UI
-        // Default 0.005 * 1.0 = 0.005, with speed 2.0 it becomes 0.01, etc.
+        // SLOW PHASE: growth to 45-75
+        targetForPhase = weekTarget;
+        minCooldown = Math.round((25 + Math.floor(Math.random() * 30)) * productCooldownBias);
+        maxCooldown = Math.round((60 + Math.floor(Math.random() * 40)) * productCooldownBias);
+
         const baseProbability = product.base_probability || 0.005;
-        const saturationFactor = getSaturationFactor(currentCount, maxCount);
-        incrementProbability = baseProbability * 20 * timeFactor * saturationFactor; // Scale up base probability
-        
-        // Random skip for natural feel
-        if (Math.random() < 0.1) {
+        const saturationFactor = getSaturationFactor(currentCount, targetForPhase);
+        incrementProbability = baseProbability * 18 * timeFactor * saturationFactor * productActivityBias;
+
+        // Random skip 10-30% of runs for some products
+        if (Math.random() < 0.1 + (1 - ph) * 0.2) {
           incrementProbability = 0;
         }
       }
-      
-      // Check if at target
+
+      // At target?
       if (currentCount >= targetForPhase) {
-        results.push({ 
-          id: product.id, 
-          name: productName, 
-          action: inFirstDay ? 'at_first_day_target' : 'at_max', 
-          phase: inFirstDay ? 'first_day' : 'slow',
-          details: `${currentCount}/${targetForPhase}`
-        });
+        results.push({ id: product.id, name: productName, action: 'at_target', phase: inFirstDay ? '1d' : 'slow', details: `${currentCount}/${targetForPhase}` });
         continue;
       }
 
-      // Check cooldown
+      // Cooldown check
       if (product.last_increment_at) {
         const lastIncrement = new Date(product.last_increment_at);
-        const minutesSinceLastIncrement = (now.getTime() - lastIncrement.getTime()) / (1000 * 60);
-        
-        const requiredCooldown = inFirstDay 
-          ? Math.min(product.cooldown_minutes || 5, maxCooldown) 
+        const minutesSinceLast = (now.getTime() - lastIncrement.getTime()) / (1000 * 60);
+        const requiredCooldown = inFirstDay
+          ? Math.min(product.cooldown_minutes || 5, maxCooldown)
           : (product.cooldown_minutes || 30);
-        
-        if (minutesSinceLastIncrement < requiredCooldown) {
-          results.push({ 
-            id: product.id, 
-            name: productName, 
-            action: 'cooldown', 
-            phase: inFirstDay ? 'first_day' : 'slow',
-            details: `${minutesSinceLastIncrement.toFixed(0)}/${requiredCooldown}min`
-          });
+
+        if (minutesSinceLast < requiredCooldown) {
+          results.push({ id: product.id, name: productName, action: 'cooldown', phase: inFirstDay ? '1d' : 'slow', details: `${minutesSinceLast.toFixed(0)}/${requiredCooldown}min` });
           continue;
         }
       }
 
-      // Roll the dice
+      // Roll dice — sometimes increment by 2 for faster products in first day
       const roll = Math.random();
       if (roll < incrementProbability) {
-        const newCount = currentCount + 1;
+        let incrementBy = 1;
+        // In first day, hot products can sometimes jump by 2
+        if (inFirstDay && productActivityBias > 1.0 && Math.random() < 0.25) {
+          incrementBy = 2;
+        }
+        const newCount = Math.min(currentCount + incrementBy, targetForPhase);
         const newCooldown = minCooldown + Math.floor(Math.random() * (maxCooldown - minCooldown + 1));
-        
+
         updates.push(
-          (async () => {
-            await supabase
-              .from('products')
-              .update({ 
-                virtual_orders_count: newCount,
-                last_increment_at: now.toISOString(),
-                cooldown_minutes: newCooldown
-              })
-              .eq('id', product.id);
-          })()
+          supabase.from('products').update({
+            virtual_orders_count: newCount,
+            last_increment_at: now.toISOString(),
+            cooldown_minutes: newCooldown
+          }).eq('id', product.id)
         );
-        results.push({ 
-          id: product.id, 
-          name: productName, 
-          action: 'incremented', 
-          newCount, 
-          phase: inFirstDay ? 'first_day' : 'slow',
-          details: `${currentCount} -> ${newCount} (target: ${targetForPhase})`
-        });
-        console.log(`[${productName}] Incremented: ${currentCount} -> ${newCount} (target: ${targetForPhase})`);
+        results.push({ id: product.id, name: productName, action: 'incremented', newCount, phase: inFirstDay ? '1d' : 'slow', details: `${currentCount}->${newCount} (target:${targetForPhase})` });
+        console.log(`[${productName}] +${incrementBy}: ${currentCount}->${newCount} (target:${targetForPhase})`);
       } else {
-        results.push({ 
-          id: product.id, 
-          name: productName, 
-          action: 'no_increment', 
-          phase: inFirstDay ? 'first_day' : 'slow',
-          details: `roll ${roll.toFixed(2)} > prob ${incrementProbability.toFixed(2)}`
-        });
+        results.push({ id: product.id, name: productName, action: 'skip', phase: inFirstDay ? '1d' : 'slow', details: `roll:${roll.toFixed(2)} > prob:${incrementProbability.toFixed(3)}` });
       }
     }
 
-    // Execute all updates
     if (updates.length > 0) {
       await Promise.all(updates);
     }
 
     const incrementedCount = results.filter(r => r.action === 'incremented').length;
     const resetCount = results.filter(r => r.action === 'reset_week').length;
-    const firstDayProducts = results.filter(r => r.phase === 'first_day').length;
 
-    console.log(`[increment-virtual-participants] Summary: ${activeCount} active products, ${inactiveCount} inactive, ${incrementedCount} incremented, ${resetCount} reset, ${firstDayProducts} in first-day phase`);
+    console.log(`[increment] Done: ${incrementedCount} incremented, ${resetCount} reset`);
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        processed: activeCount,
-        inactive: inactiveCount,
+      JSON.stringify({
+        success: true,
+        processed: allProducts.length,
         incremented: incrementedCount,
         reset: resetCount,
-        firstDayProducts,
-        hour: currentHour,
-        timeFactor: timeFactor.toFixed(2),
-        config: {
-          firstDayTarget: `${FIRST_DAY_MIN}-${FIRST_DAY_MAX}`,
-          weeklyTarget: `${WEEK_MIN}-${WEEK_MAX}`
-        },
+        config: { firstDay: `${FIRST_DAY_MIN}-${FIRST_DAY_MAX}`, week: `${WEEK_MIN}-${WEEK_MAX}` },
         details: results,
         timestamp: now.toISOString()
       }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200 
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     );
   } catch (error) {
-    console.error('[increment-virtual-participants] Error:', error);
+    console.error('[increment] Error:', error);
     return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error'
-      }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500 
-      }
+      JSON.stringify({ success: false, error: error instanceof Error ? error.message : 'Unknown error' }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
 });
