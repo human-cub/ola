@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 const benefits = [
   {
     icon: Percent,
-    title: "Hasta 3 veces más barato",
+    title: "Hasta 2 veces más barato",
     description: "Conseguí mejores precios con compras colectivas"
   },
   {
@@ -15,7 +15,7 @@ const benefits = [
   {
     icon: Truck,
     title: "Envío gratis en CABA",
-    description: "GBA $3.000 • Resto del país $5.000 • Gratis todo país $100.000+"
+    description: "GBA $3.000\n• Resto del país $5.000\n• Gratis todo $100.000+"
   },
   {
     icon: CreditCard,
@@ -66,10 +66,10 @@ export const Benefits = () => {
                 <benefit.icon className={`w-6 h-6 text-white ${index === 3 && isScrollPulsing ? "animate-pulse" : ""}`} />
               </div>
               <div className="flex-1">
-                <h4 className={`font-semibold mb-1 ${index === 3 ? "text-foreground" : "text-foreground"}`}>
+                <h4 className={`font-semibold mb-1 text-foreground`}>
                   {benefit.title}
                 </h4>
-                <p className={`text-sm ${index === 3 ? "text-muted-foreground" : "text-muted-foreground"}`}>
+                <p className="text-sm text-muted-foreground whitespace-pre-line">
                   {benefit.description}
                 </p>
               </div>

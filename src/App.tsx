@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import DynamicProduct from "./pages/DynamicProduct";
 import Category from "./pages/Category";
+import Catalog from "./pages/Catalog";
 import AuthPage from "./pages/AuthPage";
 import Profile from "./pages/Profile";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -31,6 +32,7 @@ const App = () => (
         <ScrollToTop />
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/catalogo" element={<Catalog />} />
           <Route path="/categoria/:category" element={<Category />} />
           <Route path="/producto/:slug" element={<DynamicProduct />} />
           <Route path="/:slug" element={<DynamicProduct />} />

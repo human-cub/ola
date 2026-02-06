@@ -2,12 +2,14 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 import useEmblaCarousel from 'embla-carousel-react';
 import { useProducts } from "@/hooks/useProducts";
 
 export const MainProductCarousel = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const navigate = useNavigate();
   const { data: allProducts = [], isLoading, isError, refetch } = useProducts();
   
   // Shuffle and limit to 10 random products
@@ -136,7 +138,7 @@ export const MainProductCarousel = () => {
                 <div key={product.id} className="flex-[0_0_100%] min-w-0 pl-4">
                   <div className="flex justify-center">
                     <Card 
-                      className="p-6 shadow-elegant border-2 border-primary/20 bg-gradient-card w-80 cursor-pointer hover:shadow-glow transition-all duration-700 ease-out"
+                      className="p-6 shadow-soft border-0 bg-gradient-card w-80 cursor-pointer hover:shadow-elegant transition-all duration-700 ease-out"
                       onClick={() => handleProductClick(product.link)}
                     >
                       <div className="text-center">
@@ -161,7 +163,7 @@ export const MainProductCarousel = () => {
                           Peso neto: {product.weight}
                         </p>
 
-                        <div className="mb-6 space-y-2">
+                        <div className="space-y-2">
                           <div className="flex items-center justify-center gap-3">
                             <span className="text-lg text-muted-foreground line-through">
                               {product.originalPrice}
@@ -174,12 +176,6 @@ export const MainProductCarousel = () => {
                             Precio mínimo
                           </p>
                         </div>
-
-                        <Button 
-                          className="bg-gradient-primary hover:opacity-90 text-white font-semibold px-8 py-3 rounded-full shadow-elegant transition-all duration-300 hover:shadow-glow w-full"
-                        >
-                          Ver Producto
-                        </Button>
                       </div>
                     </Card>
                   </div>
@@ -219,6 +215,15 @@ export const MainProductCarousel = () => {
               }`}
             />
           ))}
+        </div>
+
+        <div className="flex justify-center mt-6">
+          <Button
+            onClick={() => navigate('/catalogo')}
+            className="bg-gradient-primary hover:opacity-90 text-white font-semibold px-8 py-3 rounded-full shadow-elegant transition-all duration-300 hover:shadow-glow"
+          >
+            Ver catálogo
+          </Button>
         </div>
       </div>
     </section>
