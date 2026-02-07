@@ -8,6 +8,7 @@ interface FooterProps {
 
 const navItems = [
   { to: "/", label: "Inicio" },
+  { to: "/catalogo", label: "Catálogo" },
   { to: "/categoria/proteinas", label: "Proteínas" },
   { to: "/categoria/creatinas", label: "Creatinas" },
   { to: "/categoria/aminoacidos", label: "Aminoácidos" },

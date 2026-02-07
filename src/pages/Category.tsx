@@ -4,7 +4,7 @@ import { Header } from "@/components/Header";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { Footer } from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
-import { HeroSection } from "@/components/HeroSection";
+
 
 interface Product {
   id: string;
@@ -92,8 +92,7 @@ const Category = () => {
       <Header isVisible={headerVisible} />
       
       <main className="pb-24 pt-[120px] sm:pt-[104px]">
-        <Breadcrumb items={[{ label: categoryName }]} />
-        <HeroSection />
+        <Breadcrumb items={[{ label: "Catálogo", href: "/catalogo" }, { label: categoryName }]} />
         
         <div className="container mx-auto px-4 py-8">
           <h1 className="text-2xl font-bold text-center mb-8 bg-gradient-primary bg-clip-text text-transparent">
