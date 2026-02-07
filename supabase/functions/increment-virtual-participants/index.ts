@@ -253,15 +253,18 @@ Deno.serve(async (req) => {
       } else {
         // SLOW PHASE: growth to 45-75
         targetForPhase = weekTarget;
-        minCooldown = Math.round((25 + Math.floor(Math.random() * 30)) * productCooldownBias);
-        maxCooldown = Math.round((60 + Math.floor(Math.random() * 40)) * productCooldownBias);
+        minCooldown = Math.round((15 + Math.floor(Math.random() * 20)) * productCooldownBias);
+        maxCooldown = Math.round((30 + Math.floor(Math.random() * 30)) * productCooldownBias);
 
         const baseProbability = product.base_probability || 0.005;
         const saturationFactor = getSaturationFactor(currentCount, targetForPhase);
-        incrementProbability = baseProbability * 18 * timeFactor * saturationFactor * productActivityBias;
+        // Increased multiplier from 18 to 55 for more visible growth
+        incrementProbability = baseProbability * 55 * timeFactor * saturationFactor * productActivityBias;
+        // Clamp to reasonable max
+        incrementProbability = Math.min(incrementProbability, 0.6);
 
-        // Random skip 10-30% of runs for some products
-        if (Math.random() < 0.1 + (1 - ph) * 0.2) {
+        // Random skip only 5-15% of runs (reduced from 10-30%)
+        if (Math.random() < 0.05 + (1 - ph) * 0.1) {
           incrementProbability = 0;
         }
       }
