@@ -6,17 +6,17 @@ const corsHeaders = {
 };
 
 // ============================================================
-// CONFIGURATION
-// First 24 hours: Rapid growth to 15-35 units
-// After: Slow growth to 45-75 units per week
+// CONFIGURATION — 3 phases:
+// Phase 1 (first 24h): Rapid growth to 15-35
+// Phase 2 (Tue-Fri):   Medium growth to 45-65
+// Phase 3 (Sat-Sun):   Slow growth to 72
 // Reset: Every Monday at 00:00
-// Key: Each product gets a unique random "personality" 
-//      derived from its ID to ensure diversity
 // ============================================================
-const FIRST_DAY_MIN = 15;
-const FIRST_DAY_MAX = 35;
-const WEEK_MIN = 45;
-const WEEK_MAX = 75;
+const PHASE1_MIN = 15;
+const PHASE1_MAX = 35;
+const PHASE2_MIN = 45;
+const PHASE2_MAX = 65;
+const PHASE3_TARGET = 72;
 
 // Simple hash from product ID to get a stable per-product random factor [0..1)
 function productHash(id: string): number {
@@ -43,6 +43,17 @@ function getHoursSinceStart(startDate: string): number {
 
 function isFirstDay(startDate: string): boolean {
   return getHoursSinceStart(startDate) < 24;
+}
+
+// Determine which phase we're in based on day of week
+// Phase 1: first 24h (any day, but typically Monday)
+// Phase 2: Tuesday-Friday (days 2-5 of the week, i.e. hours 24-120 since Monday)
+// Phase 3: Saturday-Sunday (days 6-7, i.e. hours 120+ since Monday)
+function getPhase(startDate: string): 'phase1' | 'phase2' | 'phase3' {
+  const hoursSinceStart = getHoursSinceStart(startDate);
+  if (hoursSinceStart < 24) return 'phase1';
+  if (hoursSinceStart < 120) return 'phase2'; // 24h to 120h = Tue-Fri
+  return 'phase3'; // 120h+ = Sat-Sun
 }
 
 function getSaturationFactor(current: number, max: number): number {
@@ -73,27 +84,32 @@ function getThisMonday(): string {
 }
 
 // Generate unique per-product targets using product hash for diversity
-function getFirstDayTarget(productId: string): number {
+function getPhase1Target(productId: string): number {
   const h = productHash(productId);
-  // Map hash across the full range, then add small jitter each run
-  const base = FIRST_DAY_MIN + Math.floor(h * (FIRST_DAY_MAX - FIRST_DAY_MIN + 1));
-  const jitter = Math.floor(Math.random() * 5) - 2; // -2 to +2
-  return Math.max(FIRST_DAY_MIN, Math.min(FIRST_DAY_MAX, base + jitter));
+  const base = PHASE1_MIN + Math.floor(h * (PHASE1_MAX - PHASE1_MIN + 1));
+  const jitter = Math.floor(Math.random() * 5) - 2;
+  return Math.max(PHASE1_MIN, Math.min(PHASE1_MAX, base + jitter));
 }
 
-function getWeekTarget(productId: string): number {
+function getPhase2Target(productId: string): number {
   const h = productHash(productId);
-  const base = WEEK_MIN + Math.floor(h * (WEEK_MAX - WEEK_MIN + 1));
-  const jitter = Math.floor(Math.random() * 7) - 3; // -3 to +3
-  return Math.max(WEEK_MIN, Math.min(WEEK_MAX, base + jitter));
+  const base = PHASE2_MIN + Math.floor(h * (PHASE2_MAX - PHASE2_MIN + 1));
+  const jitter = Math.floor(Math.random() * 5) - 2;
+  return Math.max(PHASE2_MIN, Math.min(PHASE2_MAX, base + jitter));
+}
+
+function getPhase3Target(_productId: string): number {
+  // All products converge to 72 with small jitter
+  const jitter = Math.floor(Math.random() * 3) - 1; // -1 to +1
+  return PHASE3_TARGET + jitter; // 71-73
 }
 
 function generateNewWeekParams(productId: string) {
-  const weekMax = getWeekTarget(productId);
+  const weekMax = getPhase2Target(productId);
   return {
     max_weekly_participants: weekMax,
     base_probability: 0.005,
-    cooldown_minutes: 15 + Math.floor(Math.random() * 50), // 15-64 min
+    cooldown_minutes: 15 + Math.floor(Math.random() * 50),
     virtual_orders_count: 0,
     week_start_date: getThisMonday(),
     last_increment_at: null,
@@ -102,12 +118,12 @@ function generateNewWeekParams(productId: string) {
 }
 
 function generateNewProductParams(productId: string) {
-  const weekMax = getWeekTarget(productId);
+  const weekMax = getPhase2Target(productId);
   return {
     max_weekly_participants: weekMax,
     base_probability: 0.005,
-    cooldown_minutes: 3 + Math.floor(Math.random() * 8), // 3-10 min for first day
-    virtual_orders_count: Math.floor(Math.random() * 3), // 0-2 start
+    cooldown_minutes: 3 + Math.floor(Math.random() * 8),
+    virtual_orders_count: Math.floor(Math.random() * 3),
     week_start_date: new Date().toISOString().split('T')[0],
     last_increment_at: null,
     is_manual: false,
@@ -214,26 +230,28 @@ Deno.serve(async (req) => {
 
       const currentCount = product.virtual_orders_count || 0;
       const hoursSinceStart = getHoursSinceStart(product.week_start_date);
-      const inFirstDay = isFirstDay(product.week_start_date);
+      const phase = getPhase(product.week_start_date);
 
-      // Per-product targets for diversity
-      const firstDayTarget = getFirstDayTarget(product.id);
-      const weekTarget = getWeekTarget(product.id);
-      const maxCount = inFirstDay ? firstDayTarget : Math.max(weekTarget, product.max_weekly_participants || weekTarget);
+      // Per-product targets for each phase
+      const phase1Target = getPhase1Target(product.id);
+      const phase2Target = getPhase2Target(product.id);
+      const phase3Target = getPhase3Target(product.id);
 
       // Per-product random personality factors
       const ph = productHash(product.id);
-      const productActivityBias = 0.6 + ph * 0.8; // 0.6..1.4 — some products are "hotter"
-      const productCooldownBias = 0.7 + (1 - ph) * 0.6; // 0.7..1.3 — inverse of activity
+      const productActivityBias = 0.6 + ph * 0.8; // 0.6..1.4
+      const productCooldownBias = 0.7 + (1 - ph) * 0.6; // 0.7..1.3
 
       let targetForPhase: number;
       let minCooldown: number;
       let maxCooldown: number;
       let incrementProbability: number;
+      let phaseLabel: string;
 
-      if (inFirstDay) {
-        // FIRST 24H: aggressive growth to 15-35
-        targetForPhase = firstDayTarget;
+      if (phase === 'phase1') {
+        // PHASE 1 (first 24h): aggressive growth to 15-35
+        phaseLabel = '1d';
+        targetForPhase = phase1Target;
         minCooldown = Math.round((3 + Math.floor(Math.random() * 5)) * productCooldownBias);
         maxCooldown = Math.round((8 + Math.floor(Math.random() * 5)) * productCooldownBias);
 
@@ -244,34 +262,52 @@ Deno.serve(async (req) => {
         const urgency = neededPerHour > 2 ? 1.3 : (neededPerHour > 1 ? 1.0 : 0.7);
         incrementProbability = Math.min(0.85, 0.45 * urgency * productActivityBias + Math.random() * 0.15);
 
-        // Random skip for natural feel (10-25% chance depending on product)
+        // Random skip for natural feel
         if (Math.random() < 0.1 + ph * 0.15) {
           incrementProbability *= 0.1;
         }
 
-        console.log(`[${productName}] 1stDay: ${currentCount}/${targetForPhase}, hrs_left:${remainingHours.toFixed(1)}, prob:${incrementProbability.toFixed(3)}, bias:${productActivityBias.toFixed(2)}`);
-      } else {
-        // SLOW PHASE: growth to 45-75
-        targetForPhase = weekTarget;
-        minCooldown = Math.round((15 + Math.floor(Math.random() * 20)) * productCooldownBias);
-        maxCooldown = Math.round((30 + Math.floor(Math.random() * 30)) * productCooldownBias);
+        console.log(`[${productName}] Phase1: ${currentCount}/${targetForPhase}, hrs_left:${remainingHours.toFixed(1)}, prob:${incrementProbability.toFixed(3)}`);
+
+      } else if (phase === 'phase2') {
+        // PHASE 2 (Tue-Fri): medium growth to 45-65
+        phaseLabel = 'p2';
+        targetForPhase = phase2Target;
+        minCooldown = Math.round((10 + Math.floor(Math.random() * 15)) * productCooldownBias);
+        maxCooldown = Math.round((25 + Math.floor(Math.random() * 25)) * productCooldownBias);
 
         const baseProbability = product.base_probability || 0.005;
         const saturationFactor = getSaturationFactor(currentCount, targetForPhase);
-        // Increased multiplier from 18 to 55 for more visible growth
         incrementProbability = baseProbability * 55 * timeFactor * saturationFactor * productActivityBias;
-        // Clamp to reasonable max
         incrementProbability = Math.min(incrementProbability, 0.6);
 
-        // Random skip only 5-15% of runs (reduced from 10-30%)
+        // Random skip 5-15%
         if (Math.random() < 0.05 + (1 - ph) * 0.1) {
+          incrementProbability = 0;
+        }
+
+      } else {
+        // PHASE 3 (Sat-Sun): slow growth to 72
+        phaseLabel = 'p3';
+        targetForPhase = phase3Target;
+        minCooldown = Math.round((30 + Math.floor(Math.random() * 30)) * productCooldownBias);
+        maxCooldown = Math.round((60 + Math.floor(Math.random() * 40)) * productCooldownBias);
+
+        const baseProbability = product.base_probability || 0.005;
+        const saturationFactor = getSaturationFactor(currentCount, targetForPhase);
+        // Lower multiplier for slower growth
+        incrementProbability = baseProbability * 25 * timeFactor * saturationFactor * productActivityBias;
+        incrementProbability = Math.min(incrementProbability, 0.35);
+
+        // Random skip 10-20%
+        if (Math.random() < 0.1 + (1 - ph) * 0.1) {
           incrementProbability = 0;
         }
       }
 
       // At target?
       if (currentCount >= targetForPhase) {
-        results.push({ id: product.id, name: productName, action: 'at_target', phase: inFirstDay ? '1d' : 'slow', details: `${currentCount}/${targetForPhase}` });
+        results.push({ id: product.id, name: productName, action: 'at_target', phase: phaseLabel, details: `${currentCount}/${targetForPhase}` });
         continue;
       }
 
@@ -279,22 +315,22 @@ Deno.serve(async (req) => {
       if (product.last_increment_at) {
         const lastIncrement = new Date(product.last_increment_at);
         const minutesSinceLast = (now.getTime() - lastIncrement.getTime()) / (1000 * 60);
-        const requiredCooldown = inFirstDay
+        const requiredCooldown = phase === 'phase1'
           ? Math.min(product.cooldown_minutes || 5, maxCooldown)
           : (product.cooldown_minutes || 30);
 
         if (minutesSinceLast < requiredCooldown) {
-          results.push({ id: product.id, name: productName, action: 'cooldown', phase: inFirstDay ? '1d' : 'slow', details: `${minutesSinceLast.toFixed(0)}/${requiredCooldown}min` });
+          results.push({ id: product.id, name: productName, action: 'cooldown', phase: phaseLabel, details: `${minutesSinceLast.toFixed(0)}/${requiredCooldown}min` });
           continue;
         }
       }
 
-      // Roll dice — sometimes increment by 2 for faster products in first day
+      // Roll dice
       const roll = Math.random();
       if (roll < incrementProbability) {
         let incrementBy = 1;
-        // In first day, hot products can sometimes jump by 2
-        if (inFirstDay && productActivityBias > 1.0 && Math.random() < 0.25) {
+        // In phase 1, hot products can sometimes jump by 2
+        if (phase === 'phase1' && productActivityBias > 1.0 && Math.random() < 0.25) {
           incrementBy = 2;
         }
         const newCount = Math.min(currentCount + incrementBy, targetForPhase);
@@ -307,10 +343,10 @@ Deno.serve(async (req) => {
             cooldown_minutes: newCooldown
           }).eq('id', product.id)
         );
-        results.push({ id: product.id, name: productName, action: 'incremented', newCount, phase: inFirstDay ? '1d' : 'slow', details: `${currentCount}->${newCount} (target:${targetForPhase})` });
-        console.log(`[${productName}] +${incrementBy}: ${currentCount}->${newCount} (target:${targetForPhase})`);
+        results.push({ id: product.id, name: productName, action: 'incremented', newCount, phase: phaseLabel, details: `${currentCount}->${newCount} (target:${targetForPhase})` });
+        console.log(`[${productName}] +${incrementBy}: ${currentCount}->${newCount} (target:${targetForPhase}) [${phaseLabel}]`);
       } else {
-        results.push({ id: product.id, name: productName, action: 'skip', phase: inFirstDay ? '1d' : 'slow', details: `roll:${roll.toFixed(2)} > prob:${incrementProbability.toFixed(3)}` });
+        results.push({ id: product.id, name: productName, action: 'skip', phase: phaseLabel, details: `roll:${roll.toFixed(2)} > prob:${incrementProbability.toFixed(3)}` });
       }
     }
 
@@ -329,7 +365,11 @@ Deno.serve(async (req) => {
         processed: allProducts.length,
         incremented: incrementedCount,
         reset: resetCount,
-        config: { firstDay: `${FIRST_DAY_MIN}-${FIRST_DAY_MAX}`, week: `${WEEK_MIN}-${WEEK_MAX}` },
+        config: {
+          phase1: `${PHASE1_MIN}-${PHASE1_MAX}`,
+          phase2: `${PHASE2_MIN}-${PHASE2_MAX}`,
+          phase3: `${PHASE3_TARGET}`,
+        },
         details: results,
         timestamp: now.toISOString()
       }),

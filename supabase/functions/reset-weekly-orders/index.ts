@@ -207,7 +207,7 @@ Deno.serve(async (req) => {
     // ==========================================
     
     const updates = products?.map(async (product) => {
-      const weekMax = 63 + Math.floor(Math.random() * 21); // 63-83
+      const weekMax = 45 + Math.floor(Math.random() * 21); // 45-65 (phase 2 target)
       
       return supabase
         .from('products')
