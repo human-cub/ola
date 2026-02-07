@@ -58,6 +58,20 @@ export const BurgerMenu = () => {
         
         <nav className="p-4">
           <ul className="space-y-1">
+            <li>
+              <button
+                onClick={() => { setIsOpen(false); navigate("/catalogo"); }}
+                className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-primary/10 transition-colors text-left group font-semibold"
+              >
+                <span className="text-foreground group-hover:text-primary transition-colors">
+                  Ver todo el catálogo
+                </span>
+                <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+              </button>
+            </li>
+            <li className="px-3 py-1">
+              <div className="border-b border-border/50" />
+            </li>
             {catalogCategories.map((category) => (
               <li key={category.slug}>
                 <button

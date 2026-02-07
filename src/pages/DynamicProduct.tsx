@@ -156,10 +156,14 @@ const DynamicProduct = () => {
   
   const breadcrumbItems = categoryLabel 
     ? [
+        { label: "Catálogo", href: "/catalogo" },
         { label: categoryLabel, href: `/categoria/${product.category}` },
         { label: product.name }
       ]
-    : [{ label: product.name }];
+    : [
+        { label: "Catálogo", href: "/catalogo" },
+        { label: product.name }
+      ];
 
   return (
     <div className="min-h-screen bg-background">
