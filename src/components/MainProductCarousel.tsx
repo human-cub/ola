@@ -24,7 +24,6 @@ export const MainProductCarousel = () => {
     align: 'center',
     skipSnaps: false,
     dragFree: false,
-    containScroll: 'trimSnaps',
     duration: 30
   });
 
@@ -131,11 +130,11 @@ export const MainProductCarousel = () => {
           <div className="w-20 h-1 bg-gradient-primary mx-auto rounded-full mt-4"></div>
         </div>
 
-        <div className="relative">
+        <div className="relative px-10 sm:px-12 md:px-0">
           <div className="overflow-hidden" ref={emblaRef}>
             <div className="flex">
               {products.map((product) => (
-                <div key={product.id} className="flex-[0_0_100%] min-w-0 pl-4">
+                <div key={product.id} className="flex-[0_0_100%] min-w-0">
                   <div className="flex justify-center">
                     <Card 
                       className="p-6 shadow-soft border-0 bg-gradient-card w-80 cursor-pointer hover:shadow-elegant transition-all duration-700 ease-out"
@@ -188,7 +187,7 @@ export const MainProductCarousel = () => {
             variant="outline"
             size="icon"
             onClick={scrollPrev}
-            className="absolute -left-6 sm:-left-8 md:-left-12 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white border-border/50 shadow-elegant z-20"
+            className="absolute left-0 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white border-border/50 shadow-elegant z-20"
           >
             <ChevronLeft className="w-6 h-6 text-blue-500" />
           </Button>
@@ -197,7 +196,7 @@ export const MainProductCarousel = () => {
             variant="outline"
             size="icon"
             onClick={scrollNext}
-            className="absolute -right-6 sm:-right-8 md:-right-12 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white border-border/50 shadow-elegant z-20"
+            className="absolute right-0 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white border-border/50 shadow-elegant z-20"
           >
             <ChevronRight className="w-6 h-6 text-blue-500" />
           </Button>
