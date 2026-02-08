@@ -15,7 +15,7 @@ const categoryLabels: Record<string, string> = {
   proteinas: "Proteínas",
   creatinas: "Creatinas",
   aminoacidos: "Aminoácidos",
-  aumentadores: "Aumentadores de masa",
+  aumentadores: "Ganadores de masa",
   barras: "Barras y snacks",
   "pre-entrenos": "Pre-entrenos",
   colageno: "Colágeno",

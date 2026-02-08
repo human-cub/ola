@@ -12,7 +12,7 @@ const navItems = [
   { to: "/categoria/proteinas", label: "Proteínas" },
   { to: "/categoria/creatinas", label: "Creatinas" },
   { to: "/categoria/aminoacidos", label: "Aminoácidos" },
-  { to: "/categoria/aumentadores", label: "Aumentadores de masa" },
+  { to: "/categoria/aumentadores", label: "Ganadores de masa" },
   { to: "/categoria/barras", label: "Barras y snacks" },
   { to: "/categoria/pre-entrenos", label: "Pre-entrenos" },
   { to: "/categoria/colageno", label: "Colágeno" },

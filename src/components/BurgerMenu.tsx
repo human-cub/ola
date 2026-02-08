@@ -14,7 +14,7 @@ const catalogCategories = [
   { name: "Proteínas", slug: "proteinas" },
   { name: "Creatinas", slug: "creatinas" },
   { name: "Aminoácidos", slug: "aminoacidos" },
-  { name: "Aumentadores de masa", slug: "aumentadores" },
+  { name: "Ganadores de masa", slug: "aumentadores" },
   { name: "Barras y snacks", slug: "barras" },
   { name: "Pre-entrenos", slug: "pre-entrenos" },
   { name: "Colágeno", slug: "colageno" },

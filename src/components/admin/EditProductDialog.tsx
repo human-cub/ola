@@ -13,7 +13,7 @@ const categories = [
   { value: "proteinas", label: "Proteínas" },
   { value: "creatinas", label: "Creatinas" },
   { value: "aminoacidos", label: "Aminoácidos" },
-  { value: "aumentadores", label: "Aumentadores de masa" },
+  { value: "aumentadores", label: "Ganadores de masa" },
   { value: "barras", label: "Barras y snacks" },
   { value: "pre-entrenos", label: "Pre-entrenos" },
   { value: "colageno", label: "Colágeno" },
