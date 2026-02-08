@@ -130,14 +130,14 @@ export const MainProductCarousel = () => {
           <div className="w-20 h-1 bg-gradient-primary mx-auto rounded-full mt-4"></div>
         </div>
 
-        <div className="relative px-10 sm:px-12 md:px-0">
+        <div className="relative">
           <div className="overflow-hidden" ref={emblaRef}>
             <div className="flex">
               {products.map((product) => (
                 <div key={product.id} className="flex-[0_0_100%] min-w-0">
-                  <div className="flex justify-center">
+                  <div className="flex justify-center px-3">
                     <Card 
-                      className="p-6 shadow-soft border-0 bg-gradient-card w-80 cursor-pointer hover:shadow-elegant transition-all duration-700 ease-out"
+                      className="p-6 shadow-soft border-0 bg-gradient-card w-full max-w-sm cursor-pointer hover:shadow-elegant transition-all duration-700 ease-out"
                       onClick={() => handleProductClick(product.link)}
                     >
                       <div className="text-center">
@@ -187,18 +187,18 @@ export const MainProductCarousel = () => {
             variant="outline"
             size="icon"
             onClick={scrollPrev}
-            className="absolute left-0 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white border-border/50 shadow-elegant z-20"
+            className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white border-0 shadow-md z-20 h-9 w-9 rounded-full"
           >
-            <ChevronLeft className="w-6 h-6 text-blue-500" />
+            <ChevronLeft className="w-5 h-5 text-primary" />
           </Button>
 
           <Button
             variant="outline"
             size="icon"
             onClick={scrollNext}
-            className="absolute right-0 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white border-border/50 shadow-elegant z-20"
+            className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white border-0 shadow-md z-20 h-9 w-9 rounded-full"
           >
-            <ChevronRight className="w-6 h-6 text-blue-500" />
+            <ChevronRight className="w-5 h-5 text-primary" />
           </Button>
         </div>
 
