@@ -3,12 +3,13 @@ import { Link } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { ChevronRight } from "lucide-react";
+import { Breadcrumb } from "@/components/Breadcrumb";
 
 const catalogCategories = [
   { name: "Proteínas", slug: "proteinas", emoji: "💪" },
   { name: "Creatinas", slug: "creatinas", emoji: "⚡" },
   { name: "Aminoácidos", slug: "aminoacidos", emoji: "🧬" },
-  { name: "Aumentadores de masa", slug: "aumentadores", emoji: "🏋️" },
+  { name: "Ganadores de masa", slug: "aumentadores", emoji: "🚀" },
   { name: "Barras y snacks", slug: "barras", emoji: "🍫" },
   { name: "Pre-entrenos", slug: "pre-entrenos", emoji: "🔥" },
   { name: "Colágeno", slug: "colageno", emoji: "✨" },
@@ -38,7 +39,11 @@ const Catalog = () => {
     <div className="min-h-screen bg-background">
       <Header isVisible={headerVisible} />
 
-      <main className="pb-24 pt-[120px] sm:pt-[104px]">
+      <div className="pt-[120px] sm:pt-[104px]">
+        <Breadcrumb items={[{ label: "Catálogo" }]} />
+      </div>
+
+      <main className="pb-24">
         <div className="container mx-auto px-4 py-8">
           <h1 className="text-2xl md:text-3xl font-bold text-center mb-2 bg-gradient-primary bg-clip-text text-transparent">
             Catálogo
