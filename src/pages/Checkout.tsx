@@ -332,13 +332,6 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
         await clearWaitingList();
       } else {
         await clearCart();
-        await clearWaitingList();
-        await supabase
-          .from("user_orders")
-          .delete()
-          .eq("user_id", session.user.id)
-          .eq("order_type", "collective")
-          .eq("status", "pending");
       }
 
       setOrderNumber(order.order_number);
