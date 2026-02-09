@@ -239,24 +239,33 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
       let order: { id: string; order_number: string } | null = null;
 
       if (isCollective) {
+        // First fetch the existing order's subtotal to calculate correct total
+        const { data: pendingOrder, error: fetchError } = await supabase
+          .from("user_orders")
+          .select("id, order_number, subtotal")
+          .eq("user_id", session.user.id)
+          .eq("order_type", "collective")
+          .eq("status", "pending")
+          .single();
+
+        if (fetchError || !pendingOrder) throw fetchError || new Error("No pending collective order found");
+
+        const collectiveTotal = Number(pendingOrder.subtotal) + (deliveryCost || 0);
+
         // UPDATE existing pending collective order to confirmed
-        const { data: updatedOrder, error: updateError } = await supabase
+        const { error: updateError } = await supabase
           .from("user_orders")
           .update({
             status: "confirmed" as const,
             delivery_address: addressData as any,
             delivery_cost: deliveryCost || 0,
-            total_amount: total,
+            total_amount: collectiveTotal,
             payment_method: paymentMethod,
           })
-          .eq("user_id", session.user.id)
-          .eq("order_type", "collective")
-          .eq("status", "pending")
-          .select('id, order_number')
-          .single();
+          .eq("id", pendingOrder.id);
 
         if (updateError) throw updateError;
-        order = updatedOrder;
+        order = { id: pendingOrder.id, order_number: pendingOrder.order_number };
 
         // Verify the order is readable
         const { data: verifiedOrder } = await supabase
