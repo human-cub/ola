@@ -45,6 +45,7 @@ const App = () => (
           <Route path="/carrito" element={<Cart />} />
           <Route path="/lista-espera" element={<WaitingList />} />
           <Route path="/checkout" element={<Checkout />} />
+          <Route path="/checkout-colectivo" element={<Checkout isCollective />} />
           <Route path="/completar-datos-colectiva" element={<CompletarDatosColectiva />} />
           <Route path="/pedido/:orderId" element={<OrderDetail />} />
           <Route path="/mi-cuenta/pedidos/:orderId" element={<OrderDetail />} />

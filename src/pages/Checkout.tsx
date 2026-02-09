@@ -49,7 +49,8 @@ const contactSchema = z.object({
   phone: z.string().regex(/^[\+]?[0-9\s\-()]{7,20}$/, "Formato de teléfono inválido"),
 });
 
-interface CheckoutProps {
+// Export with props for route usage
+export interface CheckoutProps {
   isCollective?: boolean;
 }
 
@@ -235,35 +236,67 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
         product_image: item.product_image,
       }));
 
-      const generatedOrderNumber = `OLA-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+      let order: { id: string; order_number: string } | null = null;
 
-      const { data: order, error: orderError } = await supabase
-        .from("user_orders")
-        .insert([{
-          user_id: session.user.id,
-          order_number: generatedOrderNumber,
-          order_type: isCollective ? 'collective' as const : 'immediate' as const,
-          items: orderItems as any,
-          subtotal: originalPrice,
-          discount_amount: discount,
-          total_amount: total,
-          delivery_cost: deliveryCost || 0,
-          delivery_address: addressData as any,
-          payment_method: paymentMethod,
-          status: 'pending' as const,
-        }])
-        .select('id, order_number')
-        .single();
+      if (isCollective) {
+        // UPDATE existing pending collective order to confirmed
+        const { data: updatedOrder, error: updateError } = await supabase
+          .from("user_orders")
+          .update({
+            status: "confirmed" as const,
+            delivery_address: addressData as any,
+            delivery_cost: deliveryCost || 0,
+            total_amount: total,
+            payment_method: paymentMethod,
+          })
+          .eq("user_id", session.user.id)
+          .eq("order_type", "collective")
+          .eq("status", "pending")
+          .select('id, order_number')
+          .single();
 
-      if (orderError) throw orderError;
+        if (updateError) throw updateError;
+        order = updatedOrder;
 
-      // Get user profile for name
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("first_name, last_name")
-        .eq("user_id", session.user.id)
-        .maybeSingle();
+        // Verify the order is readable
+        const { data: verifiedOrder } = await supabase
+          .from("user_orders")
+          .select("id")
+          .eq("id", order.id)
+          .single();
 
+        if (!verifiedOrder) {
+          throw new Error("Order updated but not readable");
+        }
+      } else {
+        // CREATE new immediate order
+        const generatedOrderNumber = `OLA-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+
+        const { data: newOrder, error: orderError } = await supabase
+          .from("user_orders")
+          .insert([{
+            user_id: session.user.id,
+            order_number: generatedOrderNumber,
+            order_type: 'immediate' as const,
+            items: orderItems as any,
+            subtotal: originalPrice,
+            discount_amount: discount,
+            total_amount: total,
+            delivery_cost: deliveryCost || 0,
+            delivery_address: addressData as any,
+            payment_method: paymentMethod,
+            status: 'pending' as const,
+          }])
+          .select('id, order_number')
+          .single();
+
+        if (orderError) throw orderError;
+        order = newOrder;
+      }
+
+      if (!order) throw new Error("No order created or updated");
+
+      // Update profile
       await supabase
         .from("profiles")
         .update({
@@ -283,7 +316,7 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
           body: {
             order_id: order.id,
             order_number: order.order_number,
-            order_type: isCollective ? 'Compra Colectiva' : 'Compra Inmediata',
+            order_type: isCollective ? 'Compra Colectiva Confirmada' : 'Compra Inmediata',
             customer_name: customerName,
             phone,
             total: formatPrice(total),
@@ -297,17 +330,8 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
 
       if (isCollective) {
         await clearWaitingList();
-        // Delete any pending collective order since we're finalizing
-        await supabase
-          .from("user_orders")
-          .delete()
-          .eq("user_id", session.user.id)
-          .eq("order_type", "collective")
-          .eq("status", "pending");
       } else {
         await clearCart();
-        // Also clear waiting list and pending collective order if user is buying from cart
-        // (items may have been moved from waiting list)
         await clearWaitingList();
         await supabase
           .from("user_orders")
