@@ -49,6 +49,7 @@ interface OrderItem {
   quantity: number;
   price_per_unit: number;
   product_image: string | null;
+  participants_count?: number; // per-product frozen count from cycle close
 }
 
 interface DeliveryAddress {
@@ -677,13 +678,16 @@ const UserOrdersTable = () => {
                 <h4 className="font-semibold mb-2">Productos</h4>
                 <div className="space-y-2">
                   {selectedOrder.items.map((item, idx) => {
-                    // For collective orders, always prefer frozen participants_count from the order
-                    // (set by reset-weekly-orders at cycle close). Use live counter only for immediate orders.
+                    // Prefer per-item participants_count (new format), fall back to order-level, then live counter
                     const isCollective = selectedOrder.order_type === "collective";
-                    const frozenCount = selectedOrder.participants_count;
-                    const hasFrozenCount = isCollective && frozenCount !== null && frozenCount !== undefined && frozenCount > 0;
+                    const perItemCount = item.participants_count;
+                    const orderLevelCount = selectedOrder.participants_count;
+                    const hasFrozenCount = isCollective && (
+                      (perItemCount != null && perItemCount > 0) ||
+                      (orderLevelCount != null && orderLevelCount > 0)
+                    );
                     const counter = hasFrozenCount
-                      ? frozenCount
+                      ? (perItemCount != null && perItemCount > 0 ? perItemCount : orderLevelCount)
                       : productCounters[item.product_id];
 
                     return (
