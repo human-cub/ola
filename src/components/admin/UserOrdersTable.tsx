@@ -680,9 +680,10 @@ const UserOrdersTable = () => {
                     // For collective orders, always prefer frozen participants_count from the order
                     // (set by reset-weekly-orders at cycle close). Use live counter only for immediate orders.
                     const isCollective = selectedOrder.order_type === "collective";
-                    const hasFrozenCount = isCollective && selectedOrder.participants_count != null && selectedOrder.participants_count > 0;
+                    const frozenCount = selectedOrder.participants_count;
+                    const hasFrozenCount = isCollective && frozenCount !== null && frozenCount !== undefined && frozenCount > 0;
                     const counter = hasFrozenCount
-                      ? selectedOrder.participants_count
+                      ? frozenCount
                       : productCounters[item.product_id];
 
                     return (
