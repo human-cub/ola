@@ -65,9 +65,10 @@ const WaitingList = () => {
       price_per_unit: number;
       flavor: string | null;
       product_image: string | null;
+      participants_count?: number; // per-product frozen count
     }>;
     subtotal: number;
-    participants_count: number; // Frozen participant count from order
+    participants_count: number; // Frozen participant count from order (legacy/max)
   } | null>(null);
 
   // Check if user has pending collective order and get its creation date + profile status
@@ -340,8 +341,12 @@ const WaitingList = () => {
   };
 
   const getParticipantsCount = (productId: string, userQty: number): number => {
-    // If collection ended, use frozen participant count from the order snapshot
+    // If collection ended, use per-product frozen count from order items, fallback to order-level
     if (isCollectionEnded && frozenOrderData) {
+      const frozenItem = frozenOrderData.items.find(i => i.product_id === productId);
+      if (frozenItem?.participants_count != null && frozenItem.participants_count > 0) {
+        return frozenItem.participants_count;
+      }
       return frozenOrderData.participants_count;
     }
     const prod = productData[productId];
