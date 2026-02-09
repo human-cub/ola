@@ -677,10 +677,11 @@ const UserOrdersTable = () => {
                 <h4 className="font-semibold mb-2">Productos</h4>
                 <div className="space-y-2">
                   {selectedOrder.items.map((item, idx) => {
-                    // For confirmed/delivered/etc collective orders, use frozen participants_count
-                    // For pending or products in general, use live counter
-                    const isClosedCollective = selectedOrder.order_type === "collective" && selectedOrder.status !== "pending";
-                    const counter = isClosedCollective
+                    // For collective orders, always prefer frozen participants_count from the order
+                    // (set by reset-weekly-orders at cycle close). Use live counter only for immediate orders.
+                    const isCollective = selectedOrder.order_type === "collective";
+                    const hasFrozenCount = isCollective && selectedOrder.participants_count != null && selectedOrder.participants_count > 0;
+                    const counter = hasFrozenCount
                       ? selectedOrder.participants_count
                       : productCounters[item.product_id];
 
@@ -705,7 +706,7 @@ const UserOrdersTable = () => {
                           )}
                           {counter !== undefined && counter !== null && (
                             <p className="text-xs text-muted-foreground">
-                              👥 {isClosedCollective ? `${counter} (al cierre)` : `${counter} en contador`}
+                              👥 {hasFrozenCount ? `${counter} (al cierre)` : `${counter} en contador`}
                             </p>
                           )}
                         </div>
