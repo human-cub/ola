@@ -153,6 +153,7 @@ Deno.serve(async (req) => {
         return {
           ...item,
           price_per_unit: finalPrice,
+          participants_count: productInfo.total_orders_count, // per-product frozen count
         };
       });
 
@@ -161,7 +162,6 @@ Deno.serve(async (req) => {
       updatedItems.forEach((item) => {
         const productInfo = productMap.get(item.product_id);
         if (productInfo && productInfo.prices.length > 0) {
-          // First tier = highest price (people: 1)
           const sortedPrices = [...productInfo.prices].sort((a, b) => a.people - b.people);
           fullPrice += sortedPrices[0].price * item.quantity;
         }
@@ -170,7 +170,7 @@ Deno.serve(async (req) => {
       // Calculate discount from full price
       const discountAmount = fullPrice - newSubtotal;
 
-      // Get total participants count (sum across all items' products)
+      // Keep order-level participants_count as max for backward compat
       const productIds = [...new Set(updatedItems.map((i) => i.product_id))];
       let maxParticipants = 0;
       productIds.forEach((pid) => {
