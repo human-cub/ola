@@ -124,6 +124,7 @@ const UserOrdersTable = () => {
   const [editingNotes, setEditingNotes] = useState<string | null>(null);
   const [tempNotes, setTempNotes] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<UserOrder | null>(null);
+  const [productCounters, setProductCounters] = useState<Record<string, number>>({});
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -335,6 +336,25 @@ const UserOrdersTable = () => {
       toast.error("Error al aplicar promoción");
     }
   };
+
+  // Fetch product counters when an order is selected
+  useEffect(() => {
+    if (!selectedOrder) return;
+    const fetchCounters = async () => {
+      const productIds = [...new Set(selectedOrder.items.map(i => i.product_id))];
+      if (productIds.length === 0) return;
+      const { data } = await supabase
+        .from("products")
+        .select("id, total_orders_count")
+        .in("id", productIds);
+      if (data) {
+        const map: Record<string, number> = {};
+        data.forEach((p: any) => { map[p.id] = p.total_orders_count || 0; });
+        setProductCounters(map);
+      }
+    };
+    fetchCounters();
+  }, [selectedOrder?.id]);
 
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString("es-AR", {
@@ -656,36 +676,50 @@ const UserOrdersTable = () => {
               <div>
                 <h4 className="font-semibold mb-2">Productos</h4>
                 <div className="space-y-2">
-                  {selectedOrder.items.map((item, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-center gap-4 bg-muted/50 rounded-lg p-3"
-                    >
-                      {item.product_image && (
-                        <img
-                          src={item.product_image}
-                          alt={item.product_name}
-                          className="w-12 h-12 object-cover rounded"
-                        />
-                      )}
-                      <div className="flex-1">
-                        <p className="font-medium">{item.product_name}</p>
-                        {item.flavor && (
-                          <p className="text-sm text-muted-foreground">
-                            Sabor: {item.flavor}
-                          </p>
+                  {selectedOrder.items.map((item, idx) => {
+                    // For confirmed/delivered/etc collective orders, use frozen participants_count
+                    // For pending or products in general, use live counter
+                    const isClosedCollective = selectedOrder.order_type === "collective" && selectedOrder.status !== "pending";
+                    const counter = isClosedCollective
+                      ? selectedOrder.participants_count
+                      : productCounters[item.product_id];
+
+                    return (
+                      <div
+                        key={idx}
+                        className="flex items-center gap-4 bg-muted/50 rounded-lg p-3"
+                      >
+                        {item.product_image && (
+                          <img
+                            src={item.product_image}
+                            alt={item.product_name}
+                            className="w-12 h-12 object-cover rounded"
+                          />
                         )}
+                        <div className="flex-1">
+                          <p className="font-medium">{item.product_name}</p>
+                          {item.flavor && (
+                            <p className="text-sm text-muted-foreground">
+                              Sabor: {item.flavor}
+                            </p>
+                          )}
+                          {counter !== undefined && counter !== null && (
+                            <p className="text-xs text-muted-foreground">
+                              👥 {isClosedCollective ? `${counter} (al cierre)` : `${counter} en contador`}
+                            </p>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          <p className="font-medium">
+                            {item.quantity} x {formatPrice(item.price_per_unit)}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {formatPrice(item.quantity * item.price_per_unit)}
+                          </p>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <p className="font-medium">
-                          {item.quantity} x {formatPrice(item.price_per_unit)}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {formatPrice(item.quantity * item.price_per_unit)}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 
