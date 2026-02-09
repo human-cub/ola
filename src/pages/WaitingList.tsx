@@ -527,7 +527,7 @@ const WaitingList = () => {
 
   // Handle continue to checkout (when collection has ended)
   const handleContinueToCheckout = () => {
-    navigate("/checkout?from=waiting-list");
+    navigate("/checkout-colectivo?from=waiting-list");
   };
 
   // Handle "Comprar ahora" - copy items to cart (keep in waiting list) and navigate
