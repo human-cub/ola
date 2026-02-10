@@ -713,17 +713,18 @@ const UserOrdersTable = () => {
                 <h4 className="font-semibold mb-2">Productos</h4>
                 <div className="space-y-2">
                   {selectedOrder.items.map((item, idx) => {
-                    // Prefer per-item participants_count (new format), fall back to order-level, then live counter
                     const isCollective = selectedOrder.order_type === "collective";
+                    // Only treat as frozen after cycle close (collective_close_date set by reset function)
+                    const cycleFinalized = isCollective && !!selectedOrder.collective_close_date;
                     const perItemCount = item.participants_count;
                     const orderLevelCount = selectedOrder.participants_count;
-                    const hasFrozenCount = isCollective && (
+                    const hasFrozenCount = cycleFinalized && (
                       (perItemCount != null && perItemCount > 0) ||
                       (orderLevelCount != null && orderLevelCount > 0)
                     );
                     const counter = hasFrozenCount
                       ? (perItemCount != null && perItemCount > 0 ? perItemCount : orderLevelCount)
-                      : productCounters[item.product_id];
+                      : (isCollective ? productCounters[item.product_id] : undefined);
 
                     return (
                       <div
