@@ -714,11 +714,11 @@ const UserOrdersTable = () => {
                 <div className="space-y-2">
                   {selectedOrder.items.map((item, idx) => {
                     const isCollective = selectedOrder.order_type === "collective";
-                    // Only treat as frozen after cycle close (collective_close_date set by reset function)
-                    const cycleFinalized = isCollective && !!selectedOrder.collective_close_date;
+                    // Frozen counts only after order leaves 'pending' status (cycle was finalized)
+                    const isFinalizedOrder = isCollective && selectedOrder.status !== 'pending';
                     const perItemCount = item.participants_count;
                     const orderLevelCount = selectedOrder.participants_count;
-                    const hasFrozenCount = cycleFinalized && (
+                    const hasFrozenCount = isFinalizedOrder && (
                       (perItemCount != null && perItemCount > 0) ||
                       (orderLevelCount != null && orderLevelCount > 0)
                     );
