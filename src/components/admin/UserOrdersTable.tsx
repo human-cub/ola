@@ -20,7 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Loader2, Search, Save, Trash2, Eye, Package, ShoppingCart, Clock, Tag } from "lucide-react";
+import { Loader2, Search, Save, Trash2, Eye, Package, ShoppingCart, Clock, Tag, Archive } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -119,6 +119,7 @@ const orderTypeLabels: Record<OrderType, string> = {
 const UserOrdersTable = () => {
   const [orders, setOrders] = useState<UserOrder[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showArchive, setShowArchive] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -135,6 +136,14 @@ const UserOrdersTable = () => {
       .from("user_orders")
       .select("*")
       .order("created_at", { ascending: false });
+
+    // Archive filter: delivered/cancelled go to archive
+    const archivedStatuses: OrderStatus[] = ['delivered', 'cancelled'];
+    if (showArchive) {
+      query = query.in("status", archivedStatuses);
+    } else {
+      query = query.not("status", "in", `(delivered,cancelled)`);
+    }
 
     if (statusFilter !== "all") {
       query = query.eq("status", statusFilter as OrderStatus);
@@ -209,7 +218,7 @@ const UserOrdersTable = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [statusFilter, typeFilter, searchQuery]);
+  }, [statusFilter, typeFilter, searchQuery, showArchive]);
 
   const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
     const { error } = await supabase
@@ -381,6 +390,25 @@ const UserOrdersTable = () => {
 
   return (
     <div className="space-y-4">
+      {/* Archive Toggle */}
+      <div className="flex items-center gap-3">
+        <Button
+          variant={showArchive ? "default" : "outline"}
+          size="sm"
+          onClick={() => {
+            setShowArchive(!showArchive);
+            setStatusFilter("all");
+          }}
+          className="gap-2"
+        >
+          <Archive className="w-4 h-4" />
+          {showArchive ? "Volver a activos" : "Ver archivo"}
+        </Button>
+        {showArchive && (
+          <span className="text-sm text-muted-foreground">Mostrando pedidos entregados y cancelados</span>
+        )}
+      </div>
+
       {/* Filters */}
       <div className="flex flex-wrap gap-4">
         <div className="relative flex-1 min-w-[200px]">
@@ -408,12 +436,19 @@ const UserOrdersTable = () => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos los estados</SelectItem>
-            <SelectItem value="pending">Pendiente</SelectItem>
-            <SelectItem value="confirmed">Confirmado</SelectItem>
-            <SelectItem value="processing">Procesando</SelectItem>
-            <SelectItem value="shipped">Enviado</SelectItem>
-            <SelectItem value="delivered">Entregado</SelectItem>
-            <SelectItem value="cancelled">Cancelado</SelectItem>
+            {showArchive ? (
+              <>
+                <SelectItem value="delivered">Entregado</SelectItem>
+                <SelectItem value="cancelled">Cancelado</SelectItem>
+              </>
+            ) : (
+              <>
+                <SelectItem value="pending">Pendiente</SelectItem>
+                <SelectItem value="confirmed">Confirmado</SelectItem>
+                <SelectItem value="processing">Procesando</SelectItem>
+                <SelectItem value="shipped">Enviado</SelectItem>
+              </>
+            )}
           </SelectContent>
         </Select>
       </div>
