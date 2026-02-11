@@ -318,7 +318,7 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
         .eq("user_id", session.user.id);
 
       const customerName = [firstName, lastName].filter(Boolean).join(' ') || 'Sin nombre';
-      const orderUrl = `https://ola.lovable.app/mi-cuenta/pedidos/${order.id}`;
+      const orderUrl = `https://alaola.com.ar/mi-cuenta/pedidos/${order.id}`;
 
       try {
         await supabase.functions.invoke("notify-telegram", {
@@ -355,7 +355,7 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
   };
 
   const getShareText = () => {
-    return `Mirá - descuentos increíbles de suplementos 🎉 Podés comprar ahora con 20% de descuento o esperar y pagar aún menos 🤑 https://ola.lovable.app/`;
+    return `Mirá - descuentos increíbles de suplementos 🎉 Podés comprar ahora con 20% de descuento o esperar y pagar aún menos 🤑 https://alaola.com.ar/`;
   };
 
   const handleNativeShare = async () => {

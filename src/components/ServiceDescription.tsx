@@ -57,7 +57,7 @@ export const ServiceDescription = () => {
               <div className="flex flex-col gap-2">
                 <button
                   onClick={() => {
-                    const text = 'Mirá - descuentos increíbles de suplementos 🎉 Podés comprar ahora con 20% de descuento o esperar y pagar aún menos 🤑 https://ola.lovable.app/';
+                    const text = 'Mirá - descuentos increíbles de suplementos 🎉 Podés comprar ahora con 20% de descuento o esperar y pagar aún menos 🤑 https://alaola.com.ar/';
                     if (navigator.share) {
                       navigator.share({ text }).catch(() => {});
                     } else {
@@ -74,7 +74,7 @@ export const ServiceDescription = () => {
                 
                 <button
                   onClick={() => {
-                    const text = encodeURIComponent('Mirá - descuentos increíbles de suplementos 🎉 Podés comprar ahora con 20% de descuento o esperar y pagar aún menos 🤑 https://ola.lovable.app/');
+                    const text = encodeURIComponent('Mirá - descuentos increíbles de suplementos 🎉 Podés comprar ahora con 20% de descuento o esperar y pagar aún menos 🤑 https://alaola.com.ar/');
                     window.open(`https://wa.me/?text=${text}`, '_blank');
                   }}
                   className="w-full border border-border hover:bg-accent rounded-md py-2.5 px-4 flex items-center justify-center gap-2 transition-colors text-sm"
@@ -87,7 +87,7 @@ export const ServiceDescription = () => {
                 
                 <button
                   onClick={() => {
-                    const text = 'Mirá - descuentos increíbles de suplementos 🎉 Podés comprar ahora con 20% de descuento o esperar y pagar aún menos 🤑 https://ola.lovable.app/';
+                    const text = 'Mirá - descuentos increíbles de suplementos 🎉 Podés comprar ahora con 20% de descuento o esperar y pagar aún menos 🤑 https://alaola.com.ar/';
                     navigator.clipboard.writeText(text);
                   }}
                   className="w-full border border-border hover:bg-accent rounded-md py-2.5 px-4 flex items-center justify-center gap-2 transition-colors text-sm"
@@ -100,7 +100,7 @@ export const ServiceDescription = () => {
                 
                 <button
                   onClick={() => {
-                    navigator.clipboard.writeText('https://ola.lovable.app/');
+                    navigator.clipboard.writeText('https://alaola.com.ar/');
                   }}
                   className="w-full border border-border hover:bg-accent rounded-md py-2.5 px-4 flex items-center justify-center gap-2 transition-colors text-sm"
                 >
