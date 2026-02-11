@@ -15,7 +15,7 @@ export const HeroSection = () => {
           <span className="block">Comprá minorista</span>
           <span className="block">al precio mayorista</span>
         </h1>
-        <p className="text-lg md:text-xl text-muted-foreground font-medium mb-6 mt-2 animate-fade-in max-w-[75%] sm:max-w-sm md:max-w-none mx-auto">
+        <p className="text-lg md:text-xl text-muted-foreground font-medium mb-6 mt-2 animate-fade-in max-w-[85%] sm:max-w-sm md:max-w-none mx-auto">
           Accedé a precios de mayorista - hasta 50% menos
         </p>
       </div>
