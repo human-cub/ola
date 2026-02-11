@@ -174,7 +174,7 @@ const OrderDialog = ({
       const currentUrl = window.location.href;
       return `Che! Mirá esto - compra colectiva de ${productName} 🎉 Seamos más, pagamos menos. Elegí 'Esperar y pagar menos', sumate e invitá amigos!! ${currentUrl}`;
     } else {
-      return `Mirá - descuentos increíbles de suplementos 🎉 Podés comprar ahora con 20% de descuento o esperar y pagar aún menos 🤑 https://ola.lovable.app/`;
+      return `Mirá - descuentos increíbles de suplementos 🎉 Podés comprar ahora con 20% de descuento o esperar y pagar aún menos 🤑 https://alaola.com.ar/`;
     }
   };
 
@@ -204,7 +204,7 @@ const OrderDialog = ({
   };
 
   const handleTelegramShare = () => {
-    const url = waitForDiscount ? window.location.href : 'https://ola.lovable.app/';
+    const url = waitForDiscount ? window.location.href : 'https://alaola.com.ar/';
     const text = waitForDiscount 
       ? `Che! Mirá esto - compra colectiva de ${productName} 🎉 Seamos más, pagamos menos. Elegí 'Esperar y pagar menos', sumate e invitá amigos!!`
       : `Mirá - descuentos increíbles de suplementos 🎉 Podés comprar ahora con 20% de descuento o esperar y pagar aún menos 🤑`;

@@ -51,7 +51,7 @@ const statusConfig = {
 
 const timelineSteps = ['pending', 'confirmed', 'processing', 'shipped', 'delivered'];
 
-const SHARE_TEXT = 'Mirá - descuentos increíbles de suplementos 🎉 Podés comprar ahora con 20% de descuento o esperar y pagar aún menos 🤑 https://ola.lovable.app/';
+const SHARE_TEXT = 'Mirá - descuentos increíbles de suplementos 🎉 Podés comprar ahora con 20% de descuento o esperar y pagar aún menos 🤑 https://alaola.com.ar/';
 const WHATSAPP_NUMBER = '5491166650878';
 
 const OrderDetail = () => {
@@ -422,7 +422,7 @@ const OrderDetail = () => {
               
               <button
                 onClick={() => {
-                  navigator.clipboard.writeText('https://ola.lovable.app/');
+                  navigator.clipboard.writeText('https://alaola.com.ar/');
                   toast.success("¡Enlace copiado!");
                 }}
                 className="w-full border border-border hover:bg-accent rounded-md py-2.5 px-4 flex items-center justify-center gap-2 transition-colors text-sm"
