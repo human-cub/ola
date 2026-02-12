@@ -1,9 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version, x-cron-secret',
 };
+
+const SENDER = 'Ola! Marketplace <hola@alaola.com.ar>';
 
 interface EmailRequest {
   type: 'welcome' | 'order_confirmation' | 'collective_cycle_closed' | 'collective_order_confirmed' | 'password_reset';
@@ -13,7 +16,7 @@ interface EmailRequest {
 
 function getWelcomeEmail(to: string) {
   return {
-    from: 'Ola <hola@alaola.com.ar>',
+    from: SENDER,
     to,
     subject: '¡Bienvenido/a a Ola! 🌊',
     html: `
@@ -52,7 +55,7 @@ function getOrderConfirmationEmail(to: string, data: Record<string, any>) {
   ).join('');
 
   return {
-    from: 'Ola <hola@alaola.com.ar>',
+    from: SENDER,
     to,
     subject: `Pedido confirmado #${data.order_number} ✅`,
     html: `
@@ -110,7 +113,7 @@ function getCollectiveCycleClosedEmail(to: string, data: Record<string, any>) {
   ).join('');
 
   return {
-    from: 'Ola <hola@alaola.com.ar>',
+    from: SENDER,
     to,
     subject: '¡Tu compra colectiva se cerró! Finalizá tu pedido 🎉',
     html: `
@@ -134,6 +137,40 @@ function getCollectiveCycleClosedEmail(to: string, data: Record<string, any>) {
     </a>
     <p style="color:#e53e3e;font-size:13px;margin-top:16px;">
       ⏰ Tenés hasta el próximo domingo para confirmar tu pedido. Si no confirmás, se cancelará automáticamente.
+    </p>
+  </div>
+</div>
+</body>
+</html>`,
+  };
+}
+
+function getPasswordResetEmail(to: string, resetLink: string) {
+  return {
+    from: SENDER,
+    to,
+    subject: 'Restablecé tu contraseña 🔑',
+    html: `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f8f9fa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<div style="max-width:600px;margin:0 auto;padding:32px 16px;">
+  <div style="background:white;border-radius:16px;padding:40px 32px;text-align:center;">
+    <img src="https://alaola.com.ar/lovable-uploads/f61342f0-4c86-4d5f-8e4a-6f6380460a50.png" alt="Ola" width="48" height="48" style="margin-bottom:16px;" />
+    <h1 style="font-size:22px;color:#1a1a1a;margin:0 0 8px;">Restablecé tu contraseña</h1>
+    <p style="color:#666;font-size:15px;line-height:1.5;margin:0 0 24px;">
+      Recibimos tu solicitud para restablecer la contraseña de tu cuenta.<br/>
+      Hacé clic en el botón de abajo para elegir una nueva.
+    </p>
+    <a href="${resetLink}" style="display:inline-block;background:#1a1a1a;color:white;text-decoration:none;padding:14px 40px;border-radius:8px;font-weight:600;font-size:16px;">
+      Restablecer contraseña
+    </a>
+    <p style="color:#999;font-size:13px;margin-top:24px;">
+      Si no solicitaste este cambio, podés ignorar este email tranquilamente.
+    </p>
+    <p style="color:#ccc;font-size:12px;margin-top:16px;">
+      Este enlace es válido por 1 hora.
     </p>
   </div>
 </div>
@@ -187,6 +224,33 @@ serve(async (req) => {
         case 'collective_cycle_closed':
           emailPayload = getCollectiveCycleClosedEmail(emailReq.to, emailReq.data || {});
           break;
+        case 'password_reset': {
+          // Generate reset link using admin API
+          const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+          const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+          const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
+
+          const redirectTo = emailReq.data?.redirectTo || 'https://alaola.com.ar/restablecer-clave';
+
+          const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+            type: 'recovery',
+            email: emailReq.to,
+            options: { redirectTo },
+          });
+
+          if (linkError) {
+            console.error('Failed to generate reset link:', linkError);
+            results.push({ to: emailReq.to, success: false, error: linkError.message });
+            continue;
+          }
+
+          // Build the redirect URL with the token hash
+          const tokenHash = linkData.properties?.hashed_token;
+          const resetLink = `${supabaseUrl}/auth/v1/verify?token=${tokenHash}&type=recovery&redirect_to=${encodeURIComponent(redirectTo)}`;
+
+          emailPayload = getPasswordResetEmail(emailReq.to, resetLink);
+          break;
+        }
         default:
           results.push({ to: emailReq.to, success: false, error: 'Unknown email type' });
           continue;

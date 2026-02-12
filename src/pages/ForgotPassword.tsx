@@ -29,11 +29,16 @@ const ForgotPassword = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/restablecer-clave`,
+      // Use custom send-email edge function to send via Resend
+      await supabase.functions.invoke("send-email", {
+        body: {
+          type: "password_reset",
+          to: email,
+          data: {
+            redirectTo: `${window.location.origin}/restablecer-clave`,
+          },
+        },
       });
-
-      if (error) throw error;
 
       setEmailSent(true);
     } catch (error: any) {
