@@ -71,6 +71,15 @@ export const RegisterForm = () => {
       }
 
       setEmailSent(true);
+
+      // Send welcome email (fire and forget)
+      try {
+        await supabase.functions.invoke("send-email", {
+          body: { type: "welcome", to: email },
+        });
+      } catch {
+        // Welcome email failed but registration succeeded
+      }
     } catch (error: any) {
       toast.error("Error al registrarte");
     } finally {

@@ -11,3 +11,9 @@ verify_jwt = false
 
 [functions.increment-virtual-participants]
 verify_jwt = false
+
+[functions.send-email]
+verify_jwt = false
+
+[functions.delete-user]
+verify_jwt = false

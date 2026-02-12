@@ -337,6 +337,31 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
         // Notification failed but order was saved
       }
 
+      // Send order confirmation email (fire and forget)
+      try {
+        const userEmail = session.user.email;
+        if (userEmail) {
+          const addressStr = [street, streetNumber, city].filter(Boolean).join(', ');
+          await supabase.functions.invoke("send-email", {
+            body: {
+              type: isCollective ? "collective_order_confirmed" : "order_confirmation",
+              to: userEmail,
+              data: {
+                order_id: order.id,
+                order_number: order.order_number,
+                items: orderItems,
+                total,
+                delivery_cost: deliveryCost,
+                payment_method: paymentMethod,
+                address: addressStr,
+              },
+            },
+          });
+        }
+      } catch {
+        // Email failed but order was saved
+      }
+
       if (isCollective) {
         await clearWaitingList();
       } else {
