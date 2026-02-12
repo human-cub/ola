@@ -40,6 +40,40 @@ function calculatePrice(prices: PriceTier[], totalParticipants: number): number 
   return applicablePrice;
 }
 
+function getCollectiveCycleClosedEmailHtml(data: Record<string, any>): string {
+  const items = data.items || [];
+  const itemsHtml = items.map((item: any) =>
+    `<li style="padding:4px 0;">${item.quantity}x ${item.product_name}${item.flavor ? ` (${item.flavor})` : ''} — $${Math.round(item.price_per_unit * item.quantity).toLocaleString('es-AR')}</li>`
+  ).join('');
+
+  return `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f8f9fa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<div style="max-width:600px;margin:0 auto;padding:32px 16px;">
+  <div style="background:white;border-radius:16px;padding:40px 32px;text-align:center;">
+    <img src="https://alaola.com.ar/lovable-uploads/f61342f0-4c86-4d5f-8e4a-6f6380460a50.png" alt="Ola" width="48" height="48" style="margin-bottom:16px;" />
+    <h1 style="font-size:22px;color:#1a1a1a;margin:0 0 8px;">¡Compra colectiva cerrada! 🎉</h1>
+    <p style="color:#666;font-size:15px;line-height:1.5;margin:0 0 8px;">
+      El ciclo de esta semana terminó. Tu pedido está listo para ser finalizado.
+    </p>
+    <p style="color:#1a1a1a;font-size:20px;font-weight:700;margin:16px 0;">
+      Total: $${Math.round(data.subtotal).toLocaleString('es-AR')}
+    </p>
+    <ul style="text-align:left;list-style:none;padding:0;margin:0 0 24px;">${itemsHtml}</ul>
+    <a href="https://alaola.com.ar/lista-espera" style="display:inline-block;background:#1a1a1a;color:white;text-decoration:none;padding:14px 40px;border-radius:8px;font-weight:600;font-size:16px;">
+      Finalizar pedido
+    </a>
+    <p style="color:#e53e3e;font-size:13px;margin-top:16px;">
+      ⏰ Tenés hasta el próximo domingo para confirmar tu pedido. Si no confirmás, se cancelará automáticamente.
+    </p>
+  </div>
+</div>
+</body>
+</html>`;
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -101,10 +135,10 @@ Deno.serve(async (req) => {
     // STEP 1: Snapshot prices in pending collective orders
     // ==========================================
     
-    // Get all pending collective orders
+    // Get all pending collective orders (with user_id for email)
     const { data: pendingOrders, error: ordersError } = await supabase
       .from('user_orders')
-      .select('id, items, subtotal')
+      .select('id, items, subtotal, user_id')
       .eq('order_type', 'collective')
       .eq('status', 'pending');
 
@@ -133,6 +167,9 @@ Deno.serve(async (req) => {
         prices: (p.prices as PriceTier[]) || [],
       });
     });
+
+    // Collect user IDs for email notification
+    const userIdsForEmail: string[] = [];
 
     // Update each pending order with snapshot prices
     let snapshotCount = 0;
@@ -196,11 +233,80 @@ Deno.serve(async (req) => {
         console.error(`[reset-weekly-orders] Error updating order ${order.id}:`, updateError);
       } else {
         snapshotCount++;
+        userIdsForEmail.push(order.user_id);
         console.log(`[reset-weekly-orders] Snapshot order ${order.id}: participants=${maxParticipants}, subtotal=${newSubtotal}, discount=${discountAmount}`);
       }
     }
 
     console.log(`[reset-weekly-orders] Successfully snapshot ${snapshotCount} pending orders`);
+
+    // ==========================================
+    // STEP 1.5: Send email notifications to users with pending orders
+    // ==========================================
+    if (userIdsForEmail.length > 0) {
+      try {
+        // Fetch user emails from profiles
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('user_id, email')
+          .in('user_id', userIdsForEmail);
+
+        const emailMap = new Map<string, string>();
+        profiles?.forEach(p => {
+          if (p.email) emailMap.set(p.user_id, p.email);
+        });
+
+        // Prepare email batch
+        const emailRequests = (pendingOrders || [])
+          .filter(o => emailMap.has(o.user_id))
+          .map(order => ({
+            type: 'collective_cycle_closed' as const,
+            to: emailMap.get(order.user_id)!,
+            data: {
+              items: order.items,
+              subtotal: order.subtotal,
+            },
+          }));
+
+        if (emailRequests.length > 0) {
+          const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
+          if (RESEND_API_KEY) {
+            for (const emailReq of emailRequests) {
+              try {
+                // Call the send-email function internally via Resend directly
+                const emailHtml = getCollectiveCycleClosedEmailHtml(emailReq.data);
+                const res = await fetch('https://api.resend.com/emails', {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${RESEND_API_KEY}`,
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    from: 'Ola <hola@alaola.com.ar>',
+                    to: emailReq.to,
+                    subject: '¡Tu compra colectiva se cerró! Finalizá tu pedido 🎉',
+                    html: emailHtml,
+                  }),
+                });
+                const resData = await res.json();
+                if (res.ok) {
+                  console.log(`[reset-weekly-orders] Email sent to ${emailReq.to}`);
+                } else {
+                  console.error(`[reset-weekly-orders] Email failed for ${emailReq.to}:`, resData);
+                }
+              } catch (emailErr) {
+                console.error(`[reset-weekly-orders] Email error for ${emailReq.to}:`, emailErr);
+              }
+            }
+          } else {
+            console.log('[reset-weekly-orders] RESEND_API_KEY not set, skipping emails');
+          }
+        }
+      } catch (emailError) {
+        console.error('[reset-weekly-orders] Error sending email notifications:', emailError);
+        // Don't throw - emails are non-critical
+      }
+    }
 
     // ==========================================
     // STEP 2: Reset product counters for new week
