@@ -273,7 +273,7 @@ const UserOrdersTable = () => {
       const productIds = [...new Set(order.items.map(item => item.product_id))];
       const { data: productsData } = await supabase
         .from("products")
-        .select("id, prices")
+        .select("id, prices, total_orders_count")
         .in("id", productIds);
 
       if (!productsData) {
@@ -282,8 +282,10 @@ const UserOrdersTable = () => {
       }
 
       const productPricesMap: Record<string, any[]> = {};
+      const productCountersMap: Record<string, number> = {};
       productsData.forEach((p: any) => {
         productPricesMap[p.id] = p.prices || [];
+        productCountersMap[p.id] = p.total_orders_count || 0;
       });
 
       if (tier === null) {
@@ -297,7 +299,7 @@ const UserOrdersTable = () => {
             restoredPrice = prices[1]?.price || prices[0]?.price || item.price_per_unit;
           } else {
             // Collective orders: use participants_count from the item to find correct tier
-            const participantsCount = (item as any).participants_count || order.participants_count || 1;
+            const participantsCount = (item as any).participants_count || order.participants_count || productCountersMap[item.product_id] || 1;
             // Find the tier whose 'people' threshold is met
             let matchedPrice = prices[0]?.price || item.price_per_unit;
             for (let i = prices.length - 1; i >= 0; i--) {
