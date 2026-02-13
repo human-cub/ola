@@ -287,13 +287,37 @@ const UserOrdersTable = () => {
       });
 
       if (tier === null) {
-        // Cancel promo: restore items to first-tier (full retail) prices
+        // Cancel promo: restore to original prices based on order type
         const restoredItems = order.items.map(item => {
           const prices = productPricesMap[item.product_id] || [];
-          const firstPrice = prices[0]?.price || item.price_per_unit;
-          return { ...item, price_per_unit: firstPrice };
+          let restoredPrice = item.price_per_unit;
+
+          if (order.order_type === 'immediate') {
+            // Immediate orders use tier 2 (prices[1]) - "Comprar ahora" price
+            restoredPrice = prices[1]?.price || prices[0]?.price || item.price_per_unit;
+          } else {
+            // Collective orders: use participants_count from the item to find correct tier
+            const participantsCount = (item as any).participants_count || order.participants_count || 1;
+            // Find the tier whose 'people' threshold is met
+            let matchedPrice = prices[0]?.price || item.price_per_unit;
+            for (let i = prices.length - 1; i >= 0; i--) {
+              if (participantsCount >= (prices[i]?.people || 0)) {
+                matchedPrice = prices[i]?.price;
+                break;
+              }
+            }
+            restoredPrice = matchedPrice;
+          }
+
+          return { ...item, price_per_unit: restoredPrice };
         });
+
         const restoredSubtotal = restoredItems.reduce((sum, item) => sum + item.price_per_unit * item.quantity, 0);
+        const firstTierTotal = restoredItems.reduce((sum, item) => {
+          const prices = productPricesMap[item.product_id] || [];
+          return sum + (prices[0]?.price || item.price_per_unit) * item.quantity;
+        }, 0);
+        const restoredDiscount = firstTierTotal - restoredSubtotal;
         const restoredTotal = restoredSubtotal + order.delivery_cost;
 
         const { error } = await supabase
@@ -301,7 +325,7 @@ const UserOrdersTable = () => {
           .update({
             items: restoredItems,
             subtotal: restoredSubtotal,
-            discount_amount: 0,
+            discount_amount: restoredDiscount,
             total_amount: restoredTotal,
             is_promo: false,
             promo_tier: null,
@@ -311,7 +335,7 @@ const UserOrdersTable = () => {
         if (error) {
           toast.error("Error al cancelar promoción");
         } else {
-          toast.success("Promoción cancelada - precios restaurados a tier 1");
+          toast.success("Promoción cancelada - precios restaurados");
           fetchOrders();
         }
         return;
