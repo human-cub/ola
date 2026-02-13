@@ -40,6 +40,7 @@ const Cart = () => {
   const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
   const [productFlavors, setProductFlavors] = useState<Record<string, string[]>>({});
   const [productLinks, setProductLinks] = useState<Record<string, string>>({});
+  const [productFirstPrices, setProductFirstPrices] = useState<Record<string, number>>({});
 
   useEffect(() => {
     const handleScroll = () => {
@@ -63,18 +64,22 @@ const Cart = () => {
 
       const { data } = await supabase
         .from("products")
-        .select("id, flavors, link")
+        .select("id, flavors, link, prices")
         .in("id", productIds);
 
       if (data) {
         const flavorsMap: Record<string, string[]> = {};
         const linksMap: Record<string, string> = {};
+        const firstPricesMap: Record<string, number> = {};
         data.forEach((p) => {
           flavorsMap[p.id] = (p.flavors as string[]) || [];
           linksMap[p.id] = p.link || "";
+          const prices = (p.prices as any[]) || [];
+          firstPricesMap[p.id] = prices.length > 0 ? prices[0].price : 0;
         });
         setProductFlavors(flavorsMap);
         setProductLinks(linksMap);
+        setProductFirstPrices(firstPricesMap);
       }
     };
 
@@ -86,8 +91,13 @@ const Cart = () => {
     0
   );
 
-  const originalPrice = subtotal * 1.2;
-  const discount = originalPrice - subtotal;
+  const fullPrice = cartItems.reduce(
+    (sum, item) => sum + (productFirstPrices[item.product_id] || item.price_per_unit) * item.quantity,
+    0
+  );
+  const discount = fullPrice - subtotal;
+  const deliveryCost = subtotal >= 100000 ? 0 : 0; // Cart doesn't show shipping yet
+  
 
   const formatPrice = (price: number) => {
     return `$${Math.round(price).toLocaleString('es-AR')}`;
@@ -192,23 +202,31 @@ const Cart = () => {
               {/* Summary - No Card wrapper */}
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Subtotal:</span>
+                  <span className="text-muted-foreground">Precio sin descuento:</span>
                   <span className="line-through text-muted-foreground">
-                    {formatPrice(originalPrice)}
+                    {formatPrice(fullPrice)}
                   </span>
                 </div>
-                <div className="flex justify-between text-sm text-green-600">
-                  <span>Descuento:</span>
-                  <span>-{formatPrice(discount)}</span>
+                {discount > 0 && (
+                  <div className="flex justify-between text-sm text-green-600">
+                    <span>Descuento:</span>
+                    <span>-{formatPrice(discount)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Subtotal:</span>
+                  <span>{formatPrice(subtotal)}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between text-lg font-bold pt-2">
                   <span>Total:</span>
                   <span>{formatPrice(subtotal)}</span>
                 </div>
-                <p className="text-sm text-green-600 text-center font-medium">
-                  ¡Ahorraste {formatPrice(discount)} pesos!
-                </p>
+                {discount > 0 && (
+                  <p className="text-sm text-green-600 text-center font-medium">
+                    ¡Ahorraste {formatPrice(discount)} pesos!
+                  </p>
+                )}
               </div>
 
               <Button
