@@ -287,8 +287,8 @@ const OrderDetail = () => {
 
               <div className="border-t pt-4 space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span>Subtotal:</span>
-                  <span>{formatPrice(order.subtotal)}</span>
+                  <span className="text-muted-foreground">Precio sin descuento:</span>
+                  <span className="line-through text-muted-foreground">{formatPrice(order.subtotal)}</span>
                 </div>
                 {order.discount_amount > 0 && (
                   <div className="flex justify-between text-sm text-green-600">
@@ -297,7 +297,11 @@ const OrderDetail = () => {
                   </div>
                 )}
                 <div className="flex justify-between text-sm">
-                  <span>Envío:</span>
+                  <span className="text-muted-foreground">Subtotal:</span>
+                  <span>{formatPrice(order.subtotal - order.discount_amount)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Envío:</span>
                   <span>{order.delivery_cost === 0 ? 'Gratis' : formatPrice(order.delivery_cost)}</span>
                 </div>
                 <div className="flex justify-between text-lg font-bold border-t pt-2">

@@ -763,8 +763,8 @@ const WaitingList = () => {
                 // Collection ended - show cart-like summary
                 <div className="space-y-3 mb-6">
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Subtotal:</span>
-                    <span>{formatPrice(subtotal)}</span>
+                    <span className="text-muted-foreground">Precio sin descuento:</span>
+                    <span className="line-through text-muted-foreground">{formatPrice(fullPrice)}</span>
                   </div>
                   {currentDiscount > 0 && (
                     <div className="flex justify-between text-sm text-green-600">
@@ -772,6 +772,10 @@ const WaitingList = () => {
                       <span>-{formatPrice(currentDiscount)}</span>
                     </div>
                   )}
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Subtotal:</span>
+                    <span>{formatPrice(subtotal)}</span>
+                  </div>
                   <Separator />
                   <div className="flex justify-between text-lg font-bold pt-2">
                     <span>Total:</span>
