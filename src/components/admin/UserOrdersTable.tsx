@@ -269,27 +269,7 @@ const UserOrdersTable = () => {
     if (!order) return;
 
     try {
-      // If tier is null, cancel the promo (restore original prices would need to be stored)
-      if (tier === null) {
-        const { error } = await supabase
-          .from("user_orders")
-          .update({
-            is_promo: false,
-            promo_tier: null,
-            discount_amount: 0,
-          })
-          .eq("id", orderId);
-
-        if (error) {
-          toast.error("Error al cancelar promoción");
-        } else {
-          toast.success("Promoción cancelada");
-          fetchOrders();
-        }
-        return;
-      }
-
-      // Fetch product prices for all items in the order
+      // Always fetch product first-tier prices for correct discount calculation
       const productIds = [...new Set(order.items.map(item => item.product_id))];
       const { data: productsData } = await supabase
         .from("products")
@@ -301,27 +281,58 @@ const UserOrdersTable = () => {
         return;
       }
 
-      // Create a map of product prices
       const productPricesMap: Record<string, any[]> = {};
       productsData.forEach((p: any) => {
         productPricesMap[p.id] = p.prices || [];
       });
 
+      if (tier === null) {
+        // Cancel promo: restore items to first-tier (full retail) prices
+        const restoredItems = order.items.map(item => {
+          const prices = productPricesMap[item.product_id] || [];
+          const firstPrice = prices[0]?.price || item.price_per_unit;
+          return { ...item, price_per_unit: firstPrice };
+        });
+        const restoredSubtotal = restoredItems.reduce((sum, item) => sum + item.price_per_unit * item.quantity, 0);
+        const restoredTotal = restoredSubtotal + order.delivery_cost;
+
+        const { error } = await supabase
+          .from("user_orders")
+          .update({
+            items: restoredItems,
+            subtotal: restoredSubtotal,
+            discount_amount: 0,
+            total_amount: restoredTotal,
+            is_promo: false,
+            promo_tier: null,
+          })
+          .eq("id", orderId);
+
+        if (error) {
+          toast.error("Error al cancelar promoción");
+        } else {
+          toast.success("Promoción cancelada - precios restaurados a tier 1");
+          fetchOrders();
+        }
+        return;
+      }
+
       // Recalculate items with new prices based on tier (1-5 maps to prices[0]-prices[4])
       const updatedItems = order.items.map(item => {
         const prices = productPricesMap[item.product_id] || [];
-        const priceIndex = tier - 1; // tier 1 = prices[0], tier 5 = prices[4]
+        const priceIndex = tier - 1;
         const newPrice = prices[priceIndex]?.price || item.price_per_unit;
-        return {
-          ...item,
-          price_per_unit: newPrice,
-        };
+        return { ...item, price_per_unit: newPrice };
       });
 
-      // Calculate new totals
+      // Discount is ALWAYS relative to first-tier (full retail) prices
       const newSubtotal = updatedItems.reduce((sum, item) => sum + item.price_per_unit * item.quantity, 0);
-      const originalSubtotal = order.items.reduce((sum, item) => sum + item.price_per_unit * item.quantity, 0);
-      const discountAmount = originalSubtotal - newSubtotal;
+      const firstTierTotal = order.items.reduce((sum, item) => {
+        const prices = productPricesMap[item.product_id] || [];
+        const firstPrice = prices[0]?.price || item.price_per_unit;
+        return sum + firstPrice * item.quantity;
+      }, 0);
+      const discountAmount = firstTierTotal - newSubtotal;
       const newTotal = newSubtotal + order.delivery_cost;
 
       const { error } = await supabase
