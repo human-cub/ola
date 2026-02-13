@@ -312,7 +312,7 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
             order_number: generatedOrderNumber,
             order_type: 'immediate' as const,
             items: orderItems as any,
-            subtotal: fullPrice,
+            subtotal: subtotal,
             discount_amount: discount,
             total_amount: total,
             delivery_cost: deliveryCost || 0,
