@@ -26,7 +26,7 @@ export const DynamicProductCarousel = ({ images, productName }: DynamicProductCa
     <>
       <section className="px-0 py-6">
         <div className="container mx-auto max-w-md px-4">
-          <Carousel className="w-full">
+          <Carousel opts={{ loop: true }} className="w-full">
             <CarouselContent>
               {displayImages.map((image, index) => (
                 <CarouselItem key={index}>
