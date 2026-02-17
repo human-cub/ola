@@ -5,27 +5,27 @@ const waitingListSteps = [
   {
     icon: Users,
     title: "Te sumás a la compra de los productos",
-    description: "Sumáte en la lista de espera de lunes a domingo (sin compromiso)."
+    description: "Sumáte en la lista de espera de lunes a domingo (sin compromiso)"
   },
   {
     icon: Calculator,
     title: "Al final de la semana vemos cuántos se sumaron",
-    description: "Calculamos el descuento según cuántas personas se sumaron a cada compra."
+    description: "Calculamos el descuento según cuántas personas se sumaron a cada producto"
   },
   {
     icon: FileCheck,
     title: "El lunes confirmás tu pedido",
-    description: "Chequeás los precios finales y confirmás tu pedido en la lista de espera."
+    description: "Chequeás los precios finales y confirmás tu pedido en la lista de espera"
   },
   {
     icon: Truck,
     title: "Envío el mismo día después de confirmar o retirás vos cuando quieras",
-    description: "Envío gratis en CABA (GBA $3.000 • Interior $5.000 • Gratis en todo el país desde $100.000)."
+    description: "Envío gratis en CABA (GBA $3.000 • Interior $5.000 • Gratis en todo el país desde $100.000)"
   },
   {
     icon: CreditCard,
     title: "Revisás y pagás al recibirlo",
-    description: "Sin riesgos: revisás los productos y pagás en el momento en efectivo o transferencia."
+    description: "Sin riesgos: revisás los productos y pagás en el momento en efectivo o transferencia"
   }
 ];
 
