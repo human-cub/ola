@@ -81,7 +81,6 @@ export const WaitingListProductItem = ({
             >
               <Share2 className="w-4 h-4" />
             </Button>
-            {!isCollectionEnded && (
             <Button
               variant="ghost"
               size="icon"
@@ -90,7 +89,6 @@ export const WaitingListProductItem = ({
             >
               <Trash2 className="w-4 h-4" />
             </Button>
-            )}
           </div>
         </div>
 
@@ -133,7 +131,7 @@ export const WaitingListProductItem = ({
               size="icon"
               className="h-7 w-7"
               onClick={() => onQuantityChange(id, -1, quantity)}
-              disabled={quantity <= 1 || isCollectionEnded}
+              disabled={quantity <= 1}
             >
               <Minus className="w-3 h-3" />
             </Button>
@@ -145,7 +143,7 @@ export const WaitingListProductItem = ({
               size="icon"
               className="h-7 w-7"
               onClick={() => onQuantityChange(id, 1, quantity)}
-              disabled={quantity >= 99 || isCollectionEnded}
+              disabled={quantity >= 99}
             >
               <Plus className="w-3 h-3" />
             </Button>
