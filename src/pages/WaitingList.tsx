@@ -412,7 +412,7 @@ const WaitingList = () => {
     if (isCollectionEnded && frozenOrderData) {
       const frozenItem = frozenOrderData.items.find(i => i.product_id === item.product_id && i.flavor === item.flavor);
       if (frozenItem) {
-        return sum + frozenItem.price_per_unit * frozenItem.quantity;
+        return sum + frozenItem.price_per_unit * item.quantity;
       }
     }
     const userQty = getUserQtyForProduct(item.product_id);
@@ -429,9 +429,9 @@ const WaitingList = () => {
         // Full price = first tier price
         const prod = productData[item.product_id];
         if (prod && prod.prices.length > 0) {
-          return sum + prod.prices[0].price * frozenItem.quantity;
+          return sum + prod.prices[0].price * item.quantity;
         }
-        return sum + frozenItem.price_per_unit * frozenItem.quantity * 1.2;
+        return sum + frozenItem.price_per_unit * item.quantity * 1.2;
       }
     }
     const price = getFullPrice(item.product_id);
