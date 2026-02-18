@@ -1,7 +1,16 @@
 import { useState, useEffect } from "react";
-import { Clock, ShoppingCart, Timer } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Clock, ShoppingCart, Timer, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { AddToCartDialog } from "./AddToCartDialog";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PriceData {
   people: number;
@@ -30,8 +39,10 @@ export const FloatingButton = ({
     hours: 0,
     minutes: 0
   });
+  const navigate = useNavigate();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isWaitingList, setIsWaitingList] = useState(false);
+  const [conflictDialogOpen, setConflictDialogOpen] = useState(false);
 
   useEffect(() => {
     const getNextSunday = () => {
@@ -95,7 +106,29 @@ export const FloatingButton = ({
     setDialogOpen(true);
   };
 
-  const handleWaitForDiscount = () => {
+  const handleWaitForDiscount = async () => {
+    // Check if user has a pending collective order from a previous week
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      const weekStart = new Date();
+      weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1); // Monday
+      weekStart.setHours(0, 0, 0, 0);
+
+      const { data: pendingOrders } = await supabase
+        .from('user_orders')
+        .select('id')
+        .eq('user_id', session.user.id)
+        .eq('order_type', 'collective')
+        .eq('status', 'pending')
+        .lt('created_at', weekStart.toISOString())
+        .limit(1);
+
+      if (pendingOrders && pendingOrders.length > 0) {
+        setConflictDialogOpen(true);
+        return;
+      }
+    }
+
     setIsWaitingList(true);
     setDialogOpen(true);
   };
@@ -161,6 +194,39 @@ export const FloatingButton = ({
         isWaitingList={isWaitingList}
         currentParticipants={waitingCount}
       />
+
+      {/* Conflict dialog: pending order from previous week */}
+      <Dialog open={conflictDialogOpen} onOpenChange={setConflictDialogOpen}>
+        <DialogContent className="sm:max-w-md rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-amber-500" />
+              Pedido pendiente
+            </DialogTitle>
+            <DialogDescription className="text-left pt-2">
+              Tenés un pedido de la semana pasada en tu Lista de Espera que aún no fue confirmado ni cancelado. Para agregar nuevos productos, primero necesitás resolver ese pedido.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2 pt-2">
+            <Button
+              onClick={() => {
+                setConflictDialogOpen(false);
+                navigate('/lista-espera');
+              }}
+              className="w-full"
+            >
+              Ir a mi Lista de Espera
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setConflictDialogOpen(false)}
+              className="w-full"
+            >
+              Cerrar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
