@@ -11,6 +11,7 @@ const corsHeaders = {
 // Phase 2 (Tue-Fri):   Medium growth to 45-65
 // Phase 3 (Sat-Sun):   Slow growth to 72
 // Reset: Every Monday at 00:00
+// Virtual increments START at Monday 06:00 ART (09:00 UTC)
 // ============================================================
 const PHASE1_MIN = 15;
 const PHASE1_MAX = 35;
@@ -41,19 +42,27 @@ function getHoursSinceStart(startDate: string): number {
   return (now.getTime() - start.getTime()) / (1000 * 60 * 60);
 }
 
-function isFirstDay(startDate: string): boolean {
-  return getHoursSinceStart(startDate) < 24;
+// Hours since virtual increments actually started (Monday 6:00 ART = 09:00 UTC)
+function getHoursSinceVirtualStart(startDate: string): number {
+  const start = new Date(startDate + 'T00:00:00Z');
+  const virtualStart = new Date(start.getTime() + 9 * 60 * 60 * 1000); // 06:00 ART
+  const now = new Date();
+  return Math.max(0, (now.getTime() - virtualStart.getTime()) / (1000 * 60 * 60));
 }
 
-// Determine which phase we're in based on day of week
-// Phase 1: first 24h (any day, but typically Monday)
-// Phase 2: Tuesday-Friday (days 2-5 of the week, i.e. hours 24-120 since Monday)
-// Phase 3: Saturday-Sunday (days 6-7, i.e. hours 120+ since Monday)
+function isFirstDay(startDate: string): boolean {
+  return getHoursSinceVirtualStart(startDate) < 24;
+}
+
+// Phases based on hours since virtual start (6 AM ART Monday)
+// Phase 1: first 24h of active growth (Mon 6AM - Tue 6AM)
+// Phase 2: next ~96h (Tue 6AM - Sat 6AM)
+// Phase 3: remainder (Sat 6AM - Sun end)
 function getPhase(startDate: string): 'phase1' | 'phase2' | 'phase3' {
-  const hoursSinceStart = getHoursSinceStart(startDate);
-  if (hoursSinceStart < 24) return 'phase1';
-  if (hoursSinceStart < 120) return 'phase2'; // 24h to 120h = Tue-Fri
-  return 'phase3'; // 120h+ = Sat-Sun
+  const hours = getHoursSinceVirtualStart(startDate);
+  if (hours < 24) return 'phase1';
+  if (hours < 120) return 'phase2';
+  return 'phase3';
 }
 
 function getSaturationFactor(current: number, max: number): number {
@@ -217,6 +226,17 @@ Deno.serve(async (req) => {
         continue;
       }
 
+      // Don't start incrementing until Monday 6:00 ART (09:00 UTC)
+      // This makes growth look more natural — no orders appear at midnight
+      if (product.week_start_date) {
+        const weekStart = new Date(product.week_start_date + 'T00:00:00Z');
+        const virtualStartTime = new Date(weekStart.getTime() + 9 * 60 * 60 * 1000); // +9h = 06:00 ART
+        if (now < virtualStartTime) {
+          results.push({ id: product.id, name: productName, action: 'waiting_for_6am', details: `starts at ${virtualStartTime.toISOString()}` });
+          continue;
+        }
+      }
+
       // Initialize new product
       if (!product.week_start_date) {
         const newParams = generateNewProductParams(product.id);
@@ -229,7 +249,7 @@ Deno.serve(async (req) => {
       }
 
       const currentCount = product.virtual_orders_count || 0;
-      const hoursSinceStart = getHoursSinceStart(product.week_start_date);
+      const hoursSinceStart = getHoursSinceVirtualStart(product.week_start_date);
       const phase = getPhase(product.week_start_date);
 
       // Per-product targets for each phase
