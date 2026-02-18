@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
+  type CarouselApi,
 } from "@/components/ui/carousel";
 import {
   Dialog,
@@ -17,10 +18,29 @@ interface DynamicProductCarouselProps {
 }
 
 export const DynamicProductCarousel = ({ images, productName }: DynamicProductCarouselProps) => {
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  
-  // If no images, show placeholder
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [modalApi, setModalApi] = useState<CarouselApi>();
+  const [modalCurrent, setModalCurrent] = useState(0);
+
   const displayImages = images.length > 0 ? images : ["/placeholder.svg"];
+
+  const onModalSelect = useCallback(() => {
+    if (!modalApi) return;
+    setModalCurrent(modalApi.selectedScrollSnap());
+  }, [modalApi]);
+
+  useEffect(() => {
+    if (!modalApi) return;
+    onModalSelect();
+    modalApi.on("select", onModalSelect);
+    return () => { modalApi.off("select", onModalSelect); };
+  }, [modalApi, onModalSelect]);
+
+  useEffect(() => {
+    if (selectedIndex !== null && modalApi) {
+      modalApi.scrollTo(selectedIndex, true);
+    }
+  }, [selectedIndex, modalApi]);
 
   return (
     <>
@@ -35,7 +55,7 @@ export const DynamicProductCarousel = ({ images, productName }: DynamicProductCa
                       src={image}
                       alt={`${productName} - Imagen ${index + 1}`}
                       className="w-full max-w-[280px] h-auto object-contain rounded-xl cursor-pointer hover:opacity-90 transition-opacity"
-                      onClick={() => setSelectedImage(image)}
+                      onClick={() => setSelectedIndex(index)}
                     />
                   </div>
                 </CarouselItem>
@@ -51,13 +71,51 @@ export const DynamicProductCarousel = ({ images, productName }: DynamicProductCa
         </div>
       </section>
 
-      <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
-        <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 bg-transparent border-none shadow-none [&>button]:text-white [&>button]:bg-black/50 [&>button]:rounded-full [&>button]:p-1">
-          <img
-            src={selectedImage || ""}
-            alt={productName}
-            className="w-full h-full max-h-[90vh] object-contain"
-          />
+      <Dialog open={selectedIndex !== null} onOpenChange={() => setSelectedIndex(null)}>
+        <DialogContent className="max-w-[95vw] max-h-[95vh] p-2 sm:p-4 bg-black/95 border-none shadow-none [&>button]:text-white [&>button]:bg-white/20 [&>button]:hover:bg-white/40 [&>button]:rounded-full [&>button]:p-1 [&>button]:z-50">
+          <div className="flex flex-col items-center justify-center w-full h-full">
+            <Carousel
+              opts={{ loop: true, startIndex: selectedIndex ?? 0 }}
+              setApi={setModalApi}
+              className="w-full max-w-[90vw]"
+            >
+              <CarouselContent>
+                {displayImages.map((image, index) => (
+                  <CarouselItem key={index}>
+                    <div className="flex items-center justify-center">
+                      <img
+                        src={image}
+                        alt={`${productName} - Imagen ${index + 1}`}
+                        className="max-w-full max-h-[80vh] object-contain"
+                      />
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              {displayImages.length > 1 && (
+                <>
+                  <CarouselPrevious className="left-1 sm:left-2 bg-white/20 hover:bg-white/40 border-0 text-white h-10 w-10" />
+                  <CarouselNext className="right-1 sm:right-2 bg-white/20 hover:bg-white/40 border-0 text-white h-10 w-10" />
+                </>
+              )}
+            </Carousel>
+
+            {displayImages.length > 1 && (
+              <div className="flex justify-center gap-2 mt-4">
+                {displayImages.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => modalApi?.scrollTo(index)}
+                    className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                      index === modalCurrent
+                        ? "bg-white w-6"
+                        : "bg-white/40 hover:bg-white/60"
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </>

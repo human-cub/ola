@@ -47,7 +47,7 @@ const DynamicProduct = () => {
   useEffect(() => {
     const fetchProduct = async () => {
       if (!slug) return;
-      
+
       // Try to find by short link first (e.g., /sn-creatina-300)
       let { data, error } = await supabase
         .from("products")
@@ -122,13 +122,13 @@ const DynamicProduct = () => {
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      
+
       if (currentScrollY > lastScrollY && currentScrollY > 100) {
         setHeaderVisible(false);
       } else {
         setHeaderVisible(true);
       }
-      
+
       setLastScrollY(currentScrollY);
     };
 
@@ -153,29 +153,29 @@ const DynamicProduct = () => {
   }
 
   const categoryLabel = product.category ? categoryLabels[product.category] || product.category : null;
-  
-  const breadcrumbItems = categoryLabel 
+
+  const breadcrumbItems = categoryLabel
     ? [
-        { label: "Catálogo", href: "/catalogo" },
-        { label: categoryLabel, href: `/categoria/${product.category}` },
-        { label: product.name }
-      ]
+      { label: "Catálogo", href: "/catalogo" },
+      { label: categoryLabel, href: `/categoria/${product.category}` },
+      { label: product.name }
+    ]
     : [
-        { label: "Catálogo", href: "/catalogo" },
-        { label: product.name }
-      ];
+      { label: "Catálogo", href: "/catalogo" },
+      { label: product.name }
+    ];
 
   return (
     <div className="min-h-screen bg-background">
       <Header isVisible={headerVisible} />
-      
+
       <main className="pb-24 pt-[120px] sm:pt-[104px]">
         <Breadcrumb items={breadcrumbItems} />
         <DynamicProductCarousel images={product.images} productName={product.name} />
-        <DynamicProductInfo 
-          name={product.name} 
-          weight={product.weight} 
-          flavors={product.flavors} 
+        <DynamicProductInfo
+          name={product.name}
+          weight={product.weight}
+          flavors={product.flavors}
           variants={product.variants}
         />
         <PriceSlider priceData={product.prices} waitingCount={waitingCount} />
@@ -185,8 +185,8 @@ const DynamicProduct = () => {
 
       <Footer />
 
-      <FloatingButton 
-        productName={product.name} 
+      <FloatingButton
+        productName={product.name}
         productId={product.id}
         productImage={product.images.length > 0 ? product.images[0] : null}
         flavors={product.flavors}
