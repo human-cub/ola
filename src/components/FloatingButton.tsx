@@ -102,7 +102,7 @@ export const FloatingButton = ({
 
   return (
     <>
-      <div className="fixed bottom-0 left-0 right-0 z-50 px-3 py-3 sm:px-4 sm:py-4">
+      <div className="fixed bottom-0 left-0 right-0 z-50 px-3 py-3 sm:px-4 sm:py-4 md:left-auto md:top-[110px] md:bottom-auto">
         <div className="mx-auto max-w-[calc(100%-16px)] sm:max-w-md">
           <div className="bg-gradient-primary rounded-2xl px-3 py-3 sm:p-4 shadow-floating text-white">
             {/* Timer */}
@@ -123,7 +123,7 @@ export const FloatingButton = ({
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex flex-col gap-2">
               <Button
                 variant="secondary"
                 size="sm"
