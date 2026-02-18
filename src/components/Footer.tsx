@@ -103,10 +103,10 @@ export const Footer = ({ isHomePage = false }: FooterProps) => {
                 <div>
                   <h4 className="font-semibold text-foreground mb-1">Contacto</h4>
                   <a 
-                    href="mailto:bewithola@gmail.com"
+                    href="mailto:hola@alaola.com.ar"
                     className="text-sm text-muted-foreground hover:text-primary transition-colors block mb-2"
                   >
-                    bewithola@gmail.com
+                    hola@alaola.com.ar
                   </a>
                   <a 
                     href="https://www.instagram.com/ola.unity/"
