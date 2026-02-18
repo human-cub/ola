@@ -27,6 +27,7 @@ export default {
 				'soft': 'var(--shadow-soft)',
 				'floating': 'var(--shadow-floating)',
 				'strong': 'var(--shadow-strong)',
+				'glow': 'var(--shadow-glow)',
 			},
 			colors: {
 				border: 'hsl(var(--border))',
