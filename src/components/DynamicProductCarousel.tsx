@@ -17,6 +17,8 @@ interface DynamicProductCarouselProps {
   productName: string;
 }
 
+const modalNavButtonClass = "bg-white border-2 border-cyan-600 text-cyan-600 h-10 w-10";
+
 export const DynamicProductCarousel = ({ images, productName }: DynamicProductCarouselProps) => {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [modalApi, setModalApi] = useState<CarouselApi>();
@@ -42,6 +44,16 @@ export const DynamicProductCarousel = ({ images, productName }: DynamicProductCa
     }
   }, [selectedIndex, modalApi]);
 
+  useEffect(() => {
+    if (selectedIndex === null) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") modalApi?.scrollPrev();
+      if (e.key === "ArrowRight") modalApi?.scrollNext();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedIndex, modalApi]);
+
   return (
     <>
       <section className="px-0 py-6">
@@ -63,8 +75,8 @@ export const DynamicProductCarousel = ({ images, productName }: DynamicProductCa
             </CarouselContent>
             {displayImages.length > 1 && (
               <>
-                <CarouselPrevious className="-left-2 sm:-left-4 bg-white/80 hover:bg-white border-0 shadow-md" />
-                <CarouselNext className="-right-2 sm:-right-4 bg-white/80 hover:bg-white border-0 shadow-md" />
+                <CarouselPrevious className="-left-2 sm:-left-4 bg-white/80 shadow-md" />
+                <CarouselNext className="-right-2 sm:-right-4 bg-white/80 shadow-md" />
               </>
             )}
           </Carousel>
@@ -72,7 +84,7 @@ export const DynamicProductCarousel = ({ images, productName }: DynamicProductCa
       </section>
 
       <Dialog open={selectedIndex !== null} onOpenChange={() => setSelectedIndex(null)}>
-        <DialogContent className="max-w-[95vw] max-h-[95vh] p-2 sm:p-4 bg-black/95 border-none shadow-none [&>button]:text-white [&>button]:bg-white/20 [&>button]:hover:bg-white/40 [&>button]:rounded-full [&>button]:p-1 [&>button]:z-50">
+        <DialogContent className="max-w-[95vw] max-h-[95vh] p-2 sm:p-4 bg-white border-none shadow-none [&>button]:rounded-full [&>button]:p-1 [&>button]:z-50">
           <div className="flex flex-col items-center justify-center w-full h-full">
             <Carousel
               opts={{ loop: true, startIndex: selectedIndex ?? 0 }}
@@ -94,8 +106,8 @@ export const DynamicProductCarousel = ({ images, productName }: DynamicProductCa
               </CarouselContent>
               {displayImages.length > 1 && (
                 <>
-                  <CarouselPrevious className="left-1 sm:left-2 bg-white/20 hover:bg-white/40 border-0 text-white h-10 w-10" />
-                  <CarouselNext className="right-1 sm:right-2 bg-white/20 hover:bg-white/40 border-0 text-white h-10 w-10" />
+                  <CarouselPrevious className={`left-1 sm:left-2 ${modalNavButtonClass}`} />
+                  <CarouselNext className={`right-1 sm:right-2 ${modalNavButtonClass}`} />
                 </>
               )}
             </Carousel>
