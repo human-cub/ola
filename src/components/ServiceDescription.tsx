@@ -1,4 +1,5 @@
 import instagramIcon from '../assets/instagram-icon-new.png';
+import { GradientBorderButton } from './ui/gradient-border-button';
 
 export const ServiceDescription = () => {
   return (
@@ -113,12 +114,16 @@ export const ServiceDescription = () => {
                 
                 <div className="border-t border-border/50 pt-2 mt-2" />
                 
-                <div className="relative w-full p-[2px] rounded-md bg-gradient-to-r from-[#f09433] via-[#dc2743] to-[#bc1888]">
+                <GradientBorderButton
+                  asChild
+                  gradient="linear-gradient(to right, #f09433, #dc2743, #bc1888)"
+                  glowColor="rgba(189, 23, 136, 0.5)"
+                  className="w-full"
+                >
                   <a
                     href="https://www.instagram.com/ola.unity/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 w-full bg-background hover:bg-accent rounded-md py-2.5 px-4 transition-colors text-sm"
                   >
                     <img 
                       src={instagramIcon}
@@ -127,7 +132,7 @@ export const ServiceDescription = () => {
                     />
                     <span className="whitespace-nowrap">Seguinos en Instagram</span>
                   </a>
-                </div>
+                </GradientBorderButton>
                 
                 <p className="text-xs text-center text-muted-foreground mb-2">
                   para ofertas, descuentos y novedades
