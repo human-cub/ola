@@ -1,7 +1,8 @@
 import instagramIcon from '../assets/instagram-icon-new.png';
 
 export const ServiceDescription = () => {
-  return <section id="service-description" className="px-4 py-2">
+  return (
+    <section id="service-description" className="py-2">
       <div className="container mx-auto max-w-md">
         <div className="py-6">
           <div className="text-center mb-6">
@@ -11,7 +12,7 @@ export const ServiceDescription = () => {
             <h3 className="text-2xl font-bold text-foreground mb-3">
               ¡Basta de pagar de más!
             </h3>
-            <p className="text-lg font-semibold text-primary mb-4">
+            <p className="text-lg font-semibold text-primary mb-4 leading-[1.2]">
               Comprando de forma colectiva ya no tenés que salir a buscar descuentos: los creamos entre todos
             </p>
           </div>
@@ -180,5 +181,6 @@ export const ServiceDescription = () => {
           </div>
         </div>
       </div>
-    </section>;
+    </section>
+  );
 };

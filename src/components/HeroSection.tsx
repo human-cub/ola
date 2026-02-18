@@ -9,7 +9,7 @@ export const HeroSection = () => {
   };
 
   return (
-    <section className="pt-8 md:pt-24 pb-4 px-3 md:px-4">
+    <section className="pt-8 md:pt-24 pb-4 px-3">
       <div className="mx-auto text-center max-w-[94%] sm:max-w-md md:max-w-2xl">
         <h1 className="text-[clamp(2rem,8.8vw,3rem)] md:text-5xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-4 animate-fade-in leading-[1.15] pb-2 overflow-visible whitespace-nowrap">
           <span className="block">Comprá minorista</span>

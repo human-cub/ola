@@ -21,7 +21,7 @@ const navItems = [
 
 export const Footer = ({ isHomePage = false }: FooterProps) => {
   return (
-    <footer className="bg-muted/50 border-t py-8 px-4">
+    <footer className="bg-muted/50 border-t py-8">
       <div className="container mx-auto">
         {/* Navigation - always shown */}
         <nav className="mb-6">

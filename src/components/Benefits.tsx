@@ -47,7 +47,7 @@ export const Benefits = () => {
   }, []);
 
   return (
-    <section id="benefits" className="px-4 py-4">
+    <section id="benefits" className="py-4">
       <div className="container mx-auto max-w-md">
         <h3 className="text-xl font-semibold text-center mb-6 text-foreground">
           Nuestras Ventajas

@@ -112,12 +112,12 @@ export const ProcessSteps = () => {
                    
                    {/* Icon */}
                    <div className="mb-3 flex justify-center">
-                     <div className="w-14 h-14 bg-gradient-primary/10 rounded-full flex items-center justify-center">
-                       <IconComponent className="w-7 h-7 text-primary" />
+                     <div className="bg-gradient-primary/10 rounded-full flex items-center justify-center">
+                       <IconComponent className="size-14 my-4 text-primary" />
                      </div>
                    </div>
                    
-                     <h3 className="text-lg font-semibold text-foreground mb-2 text-center">
+                     <h3 className="text-lg font-semibold text-foreground mb-2 text-center leading-[1.2]">
                        {step.title}
                        {'subtitle' in step && step.subtitle && (
                          <span className="block text-sm font-normal text-muted-foreground mt-1">
