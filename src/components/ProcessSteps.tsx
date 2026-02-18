@@ -53,13 +53,33 @@ const buyNowSteps = [
   }
 ];
 
+type SegmentedToggleButtonProps = {
+  isActive: boolean;
+  onClick: () => void;
+  label: string;
+};
+
+const SegmentedToggleButton = ({ isActive, onClick, label }: SegmentedToggleButtonProps) => (
+  <button
+    onClick={onClick}
+    style={{ fontSize: 'clamp(12px, 3vw, 14px)' }}
+    className={`w-1/2 py-2.5 px-4 sm:px-6 rounded-full sm:text-sm font-medium transition-all duration-300 flex items-center justify-center whitespace-nowrap ${
+      isActive
+        ? 'bg-primary text-primary-foreground shadow-md'
+        : 'text-muted-foreground hover:text-foreground'
+    }`}
+  >
+    {label}
+  </button>
+);
+
 export const ProcessSteps = () => {
   const [isWaitingList, setIsWaitingList] = useState(true);
   
   const steps = isWaitingList ? waitingListSteps : buyNowSteps;
 
   return (
-    <section className="py-8 px-4 bg-muted/30">
+    <section className="py-8 bg-muted/30" id="how-it-works">
       <div className="container mx-auto">
         <div className="text-center mb-8">
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
@@ -68,29 +88,17 @@ export const ProcessSteps = () => {
           <div className="w-20 h-1 bg-gradient-primary mx-auto rounded-full mb-6"></div>
           
           {/* Segmented Toggle - centered in viewport, ignoring parent padding */}
-          <div className="w-[85vw] max-w-md mx-auto -ml-[calc((85vw-100%)/2)] sm:w-auto sm:max-w-none sm:ml-0 flex bg-muted rounded-full p-1 gap-1">
-            <button
+          <div className="max-w-[640px] mx-auto sm:w-auto flex bg-muted rounded-full p-1 gap-1">
+            <SegmentedToggleButton
+              isActive={isWaitingList}
               onClick={() => setIsWaitingList(true)}
-              style={{ fontSize: 'clamp(12px, 3vw, 14px)' }}
-              className={`w-1/2 py-2.5 px-2 sm:px-6 rounded-full sm:text-sm font-medium transition-all duration-300 flex items-center justify-center whitespace-nowrap ${
-                isWaitingList 
-                  ? 'bg-primary text-primary-foreground shadow-md' 
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Esperar y pagar menos
-            </button>
-            <button
+              label="Esperar y pagar menos"
+            />
+            <SegmentedToggleButton
+              isActive={!isWaitingList}
               onClick={() => setIsWaitingList(false)}
-              style={{ fontSize: 'clamp(12px, 3vw, 14px)' }}
-              className={`w-1/2 py-2.5 px-2 sm:px-6 rounded-full sm:text-sm font-medium transition-all duration-300 flex items-center justify-center whitespace-nowrap ${
-                !isWaitingList 
-                  ? 'bg-primary text-primary-foreground shadow-md' 
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Comprar ahora
-            </button>
+              label="Comprar ahora"
+            />
           </div>
         </div>
         
