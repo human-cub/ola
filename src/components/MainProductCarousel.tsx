@@ -80,150 +80,135 @@ export const MainProductCarousel = () => {
     window.location.href = productLink;
   };
 
-  if (isLoading) {
-    return (
-      <section className="px-4 py-8">
-        <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-2">
-              Nuestros Productos
-            </h2>
+  if (!isLoading && !isError && products.length === 0) {
+    return null;
+  }
+
+  const headerClassName = isError ? "text-center mb-6" : "text-center mb-8";
+  const titleClassName = isError
+    ? "text-2xl md:text-3xl font-bold mb-2"
+    : "text-2xl md:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-2";
+
+  return (
+    <section className="py-8" id="products">
+      <div className="mx-auto max-w-6xl">
+        <div className={headerClassName}>
+          <h2 className={titleClassName}>Nuestros Productos</h2>
+          {isError ? (
+            <p className="text-muted-foreground">No pudimos cargar los productos.</p>
+          ) : (
             <div className="w-20 h-1 bg-gradient-primary mx-auto rounded-full mt-4"></div>
-          </div>
+          )}
+        </div>
+
+        {isLoading ? (
           <div className="flex justify-center">
             <div className="w-80 h-80 bg-muted/50 rounded-xl animate-pulse"></div>
           </div>
-        </div>
-      </section>
-    );
-  }
-
-  if (isError) {
-    return (
-      <section className="px-4 py-8">
-        <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-6">
-            <h2 className="text-2xl md:text-3xl font-bold mb-2">Nuestros Productos</h2>
-            <p className="text-muted-foreground">No pudimos cargar los productos.</p>
-          </div>
+        ) : isError ? (
           <div className="flex justify-center">
             <Button variant="outline" onClick={() => refetch()}>
               Reintentar
             </Button>
           </div>
-        </div>
-      </section>
-    );
-  }
+        ) : (
+          <>
+            <div className="relative">
+              <div className="overflow-hidden" ref={emblaRef}>
+                <div className="flex">
+                  {products.map((product) => (
+                    <div key={product.id} className="flex-[0_0_100%] min-w-0">
+                      <div className="flex justify-center px-3">
+                        <Card
+                          className="p-6 shadow-soft border-0 bg-gradient-card w-full max-w-sm cursor-pointer hover:shadow-elegant transition-all duration-700 ease-out"
+                          onClick={() => handleProductClick(product.link)}
+                        >
+                          <div className="text-center">
+                            <div className="w-48 h-48 mx-auto mb-4 rounded-xl bg-white/5 flex items-center justify-center overflow-hidden">
+                              <img
+                                src={product.image}
+                                alt={product.name}
+                                className="w-full h-full object-contain rounded-xl"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.style.display = 'none';
+                                  target.parentElement!.innerHTML = '<div class="w-32 h-32 bg-primary/20 rounded-xl"></div>';
+                                }}
+                              />
+                            </div>
 
-  if (products.length === 0) {
-    return null;
-  }
+                            <h3 className="text-xl font-bold text-foreground mb-2">
+                              {product.name}
+                            </h3>
 
-  return (
-    <section className="px-4 py-8">
-      <div className="container mx-auto max-w-6xl">
-        <div className="text-center mb-8">
-          <h2 className="text-2xl md:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-2">
-            Nuestros Productos
-          </h2>
-          <div className="w-20 h-1 bg-gradient-primary mx-auto rounded-full mt-4"></div>
-        </div>
+                            <p className="text-primary font-semibold mb-4">
+                              Peso neto: {product.weight}
+                            </p>
 
-        <div className="relative">
-          <div className="overflow-hidden" ref={emblaRef}>
-            <div className="flex">
-              {products.map((product) => (
-                <div key={product.id} className="flex-[0_0_100%] min-w-0">
-                  <div className="flex justify-center px-3">
-                    <Card 
-                      className="p-6 shadow-soft border-0 bg-gradient-card w-full max-w-sm cursor-pointer hover:shadow-elegant transition-all duration-700 ease-out"
-                      onClick={() => handleProductClick(product.link)}
-                    >
-                      <div className="text-center">
-                        <div className="w-48 h-48 mx-auto mb-4 rounded-xl bg-white/5 flex items-center justify-center overflow-hidden">
-                          <img 
-                            src={product.image} 
-                            alt={product.name}
-                            className="w-full h-full object-contain rounded-xl"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.style.display = 'none';
-                              target.parentElement!.innerHTML = '<div class="w-32 h-32 bg-primary/20 rounded-xl"></div>';
-                            }}
-                          />
-                        </div>
-
-                        <h3 className="text-xl font-bold text-foreground mb-2">
-                          {product.name}
-                        </h3>
-                        
-                        <p className="text-primary font-semibold mb-4">
-                          Peso neto: {product.weight}
-                        </p>
-
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-center gap-3">
-                            <span className="text-lg text-muted-foreground line-through">
-                              {product.originalPrice}
-                            </span>
-                            <span className="text-2xl font-bold text-primary">
-                              {product.discountPrice}
-                            </span>
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-center gap-3">
+                                <span className="text-lg text-muted-foreground line-through">
+                                  {product.originalPrice}
+                                </span>
+                                <span className="text-2xl font-bold text-primary">
+                                  {product.discountPrice}
+                                </span>
+                              </div>
+                              <p className="text-sm text-muted-foreground italic">
+                                Precio mínimo
+                              </p>
+                            </div>
                           </div>
-                          <p className="text-sm text-muted-foreground italic">
-                            Precio mínimo
-                          </p>
-                        </div>
+                        </Card>
                       </div>
-                    </Card>
-                  </div>
+                    </div>
+                  ))}
                 </div>
+              </div>
+
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={scrollPrev}
+                className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white border-0 shadow-md z-20 h-9 w-9 rounded-full"
+              >
+                <ChevronLeft className="w-5 h-5 text-primary" />
+              </Button>
+
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={scrollNext}
+                className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white border-0 shadow-md z-20 h-9 w-9 rounded-full"
+              >
+                <ChevronRight className="w-5 h-5 text-primary" />
+              </Button>
+            </div>
+
+            <div className="flex justify-center gap-2 mt-6">
+              {products.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => scrollTo(index)}
+                  className={`w-2 h-2 rounded-full transition-all duration-500 ${
+                    index === currentIndex
+                      ? 'bg-primary w-8'
+                      : 'bg-primary/30 hover:bg-primary/50'
+                  }`}
+                />
               ))}
             </div>
-          </div>
 
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={scrollPrev}
-            className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white border-0 shadow-md z-20 h-9 w-9 rounded-full"
-          >
-            <ChevronLeft className="w-5 h-5 text-primary" />
-          </Button>
-
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={scrollNext}
-            className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white border-0 shadow-md z-20 h-9 w-9 rounded-full"
-          >
-            <ChevronRight className="w-5 h-5 text-primary" />
-          </Button>
-        </div>
-
-        <div className="flex justify-center gap-2 mt-6">
-          {products.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => scrollTo(index)}
-              className={`w-2 h-2 rounded-full transition-all duration-500 ${
-                index === currentIndex 
-                  ? 'bg-primary w-8' 
-                  : 'bg-primary/30 hover:bg-primary/50'
-              }`}
-            />
-          ))}
-        </div>
-
-        <div className="flex justify-center mt-6">
-          <Button
-            onClick={() => navigate('/catalogo')}
-            className="bg-gradient-primary hover:opacity-90 text-white font-semibold px-8 py-3 rounded-full shadow-elegant transition-all duration-300 hover:shadow-glow"
-          >
-            Ver catálogo
-          </Button>
-        </div>
+            <div className="flex justify-center mt-6">
+              <Button
+                onClick={() => navigate('/catalogo')}
+                className="bg-gradient-primary hover:opacity-90 text-white font-semibold px-8 py-3 rounded-full shadow-elegant transition-all duration-300 hover:shadow-glow"
+              >
+                Ver catálogo
+              </Button>
+            </div>
+          </>
+        )}
       </div>
     </section>
   );
