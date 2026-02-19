@@ -421,7 +421,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Sync waiting list with pending collective order
+   // Sync waiting list with pending collective order
   const syncWaitingListOrder = async (userId: string) => {
     try {
       // Fetch current waiting list items
@@ -430,10 +430,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .select("*")
         .eq("user_id", userId);
 
-      // Check if pending collective order exists
+      // Check if pending collective order exists (include items for frozen prices)
       const { data: existingOrder } = await supabase
         .from("user_orders")
-        .select("id")
+        .select("id, items, created_at")
         .eq("user_id", userId)
         .eq("order_type", "collective")
         .eq("status", "pending")
@@ -453,7 +453,38 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
-      // Get product prices for full price calculation
+      // Check if this order is from a previous cycle (collection ended)
+      // If so, use frozen prices from the order instead of current waiting list prices
+      const orderCreatedAt = new Date(existingOrder.created_at);
+      const now = new Date();
+      const lastSunday = new Date(now);
+      const daysSinceSunday = now.getDay();
+      if (daysSinceSunday === 0) {
+        if (now.getHours() < 23 || (now.getHours() === 23 && now.getMinutes() < 59)) {
+          lastSunday.setDate(now.getDate() - 7);
+        }
+      } else {
+        lastSunday.setDate(now.getDate() - daysSinceSunday);
+      }
+      lastSunday.setHours(23, 59, 59, 999);
+
+      const isFrozenCycle = orderCreatedAt < lastSunday && now > lastSunday;
+
+      // Build frozen price map from existing order items
+      const frozenPriceMap = new Map<string, number>();
+      if (isFrozenCycle && existingOrder.items) {
+        (existingOrder.items as any[]).forEach((item: any) => {
+          // Key by product_id + flavor for uniqueness
+          const key = `${item.product_id}||${item.flavor || ''}`;
+          frozenPriceMap.set(key, item.price_per_unit);
+          // Also set product-only fallback
+          if (!frozenPriceMap.has(item.product_id)) {
+            frozenPriceMap.set(item.product_id, item.price_per_unit);
+          }
+        });
+      }
+
+      // Get product prices for full price (tier 1) calculation
       const productIds = [...new Set(waitingListData.map(i => i.product_id))];
       const { data: productsData } = await supabase
         .from("products")
@@ -465,33 +496,39 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         productPricesMap.set(p.id, (p.prices as any[]) || []);
       });
 
-      // Prepare order items
-      const orderItems = waitingListData.map(item => ({
-        product_id: item.product_id,
-        product_name: item.product_name,
-        flavor: item.flavor,
-        quantity: item.quantity,
-        price_per_unit: item.current_price_per_unit,
-        product_image: item.product_image,
-      }));
+      // Prepare order items - use frozen prices if cycle is closed
+      const orderItems = waitingListData.map(item => {
+        let unitPrice = item.current_price_per_unit;
+        if (isFrozenCycle) {
+          const key = `${item.product_id}||${item.flavor || ''}`;
+          unitPrice = frozenPriceMap.get(key) ?? frozenPriceMap.get(item.product_id) ?? item.current_price_per_unit;
+        }
+        return {
+          product_id: item.product_id,
+          product_name: item.product_name,
+          flavor: item.flavor,
+          quantity: item.quantity,
+          price_per_unit: unitPrice,
+          product_image: item.product_image,
+        };
+      });
 
-      // Calculate subtotal (current tiered prices)
-      const subtotal = waitingListData.reduce(
-        (sum, item) => sum + Number(item.current_price_per_unit) * item.quantity,
+      // Calculate subtotal using the correct prices
+      const subtotal = orderItems.reduce(
+        (sum, item) => sum + Number(item.price_per_unit) * item.quantity,
         0
       );
 
       // Calculate full price (first tier = highest price) for discount
       let fullPrice = 0;
-      waitingListData.forEach(item => {
+      orderItems.forEach(item => {
         const prices = productPricesMap.get(item.product_id);
         if (prices && prices.length > 0) {
-          // Sort by people ascending, first tier is the highest price
           const sortedPrices = [...prices].sort((a, b) => (a.people || 0) - (b.people || 0));
-          const firstTierPrice = sortedPrices[0]?.price || item.current_price_per_unit;
+          const firstTierPrice = sortedPrices[0]?.price || item.price_per_unit;
           fullPrice += firstTierPrice * item.quantity;
         } else {
-          fullPrice += Number(item.current_price_per_unit) * item.quantity;
+          fullPrice += Number(item.price_per_unit) * item.quantity;
         }
       });
 
