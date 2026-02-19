@@ -62,7 +62,7 @@ type SegmentedToggleButtonProps = {
 const SegmentedToggleButton = ({ isActive, onClick, label }: SegmentedToggleButtonProps) => (
   <button
     onClick={onClick}
-    style={{ fontSize: 'clamp(12px, 3vw, 14px)' }}
+    style={{ fontSize: 'clamp(14px, 3vw, 16px)' }}
     className={`w-1/2 py-2.5 px-4 sm:px-6 rounded-full sm:text-sm font-medium transition-all duration-300 flex items-center justify-center whitespace-nowrap ${
       isActive
         ? 'bg-primary text-primary-foreground shadow-md'
@@ -88,7 +88,7 @@ export const ProcessSteps = () => {
           <div className="w-20 h-1 bg-gradient-primary mx-auto rounded-full mb-6"></div>
           
           {/* Segmented Toggle - centered in viewport, ignoring parent padding */}
-          <div className="max-w-[640px] mx-auto sm:w-auto flex bg-muted rounded-full p-1 gap-1">
+          <div className="max-w-[640px] lg:mx-auto -mx-2 sm:w-auto flex bg-muted rounded-full p-1 gap-1">
             <SegmentedToggleButton
               isActive={isWaitingList}
               onClick={() => setIsWaitingList(true)}
