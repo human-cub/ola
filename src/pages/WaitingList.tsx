@@ -406,11 +406,18 @@ const WaitingList = () => {
       .reduce((sum, i) => sum + i.quantity, 0);
   };
 
+  // Helper to find frozen item with fallback (product_id + flavor, then product_id only)
+  const findFrozenItem = (item: typeof waitingListItems[0]) => {
+    if (!frozenOrderData) return null;
+    return frozenOrderData.items.find(i => i.product_id === item.product_id && i.flavor === item.flavor)
+      || frozenOrderData.items.find(i => i.product_id === item.product_id);
+  };
+
   // Current subtotal with dynamically calculated prices
   const subtotal = waitingListItems.reduce((sum, item) => {
     // If collection ended, use frozen prices
     if (isCollectionEnded && frozenOrderData) {
-      const frozenItem = frozenOrderData.items.find(i => i.product_id === item.product_id && i.flavor === item.flavor);
+      const frozenItem = findFrozenItem(item);
       if (frozenItem) {
         return sum + frozenItem.price_per_unit * item.quantity;
       }
@@ -420,20 +427,8 @@ const WaitingList = () => {
     return sum + dynamicPrice * item.quantity;
   }, 0);
 
-  // Full price (without any discount)
+  // Full price (without any discount) - always tier 1
   const fullPrice = waitingListItems.reduce((sum, item) => {
-    // If collection ended, calculate from frozen prices
-    if (isCollectionEnded && frozenOrderData) {
-      const frozenItem = frozenOrderData.items.find(i => i.product_id === item.product_id && i.flavor === item.flavor);
-      if (frozenItem) {
-        // Full price = first tier price
-        const prod = productData[item.product_id];
-        if (prod && prod.prices.length > 0) {
-          return sum + prod.prices[0].price * item.quantity;
-        }
-        return sum + frozenItem.price_per_unit * item.quantity * 1.2;
-      }
-    }
     const price = getFullPrice(item.product_id);
     return sum + price * item.quantity;
   }, 0);

@@ -262,7 +262,7 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
             {/* Mensaje de precio mayorista */}
             <div>
               <p className="text-sm text-muted-foreground mb-1 font-medium text-center">
-                Esperá y podés obtener el precio mayorista
+                Esperá y podés obtener el Super-Precio
               </p>
               <div className="flex items-center justify-center gap-3">
                 {/* Precio tachado */}

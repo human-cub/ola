@@ -162,10 +162,9 @@ Deno.serve(async (req) => {
       const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
         global: { headers: { Authorization: authHeader } }
       });
-      const token = authHeader.replace('Bearer ', '');
-      const { data: claimsData, error: claimsError } = await supabaseClient.auth.getClaims(token);
-      if (!claimsError && claimsData?.claims?.sub) {
-        const userId = claimsData.claims.sub;
+      const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+      if (!userError && user?.id) {
+        const userId = user.id;
         const supabase = createClient(supabaseUrl, supabaseServiceKey);
         const { data: roleData } = await supabase
           .from('user_roles')
@@ -213,7 +212,7 @@ Deno.serve(async (req) => {
       if (product.week_start_date && needsWeeklyReset(product.week_start_date)) {
         const newParams = generateNewWeekParams(product.id);
         updates.push(
-          supabase.from('products').update(newParams).eq('id', product.id)
+          supabase.from('products').update(newParams).eq('id', product.id).then()
         );
         results.push({ id: product.id, name: productName, action: 'reset_week', newCount: 0, details: `max:${newParams.max_weekly_participants}` });
         console.log(`[${productName}] Weekly reset -> max:${newParams.max_weekly_participants}`);
@@ -241,7 +240,7 @@ Deno.serve(async (req) => {
       if (!product.week_start_date) {
         const newParams = generateNewProductParams(product.id);
         updates.push(
-          supabase.from('products').update(newParams).eq('id', product.id)
+          supabase.from('products').update(newParams).eq('id', product.id).then()
         );
         results.push({ id: product.id, name: productName, action: 'initialized', newCount: newParams.virtual_orders_count });
         console.log(`[${productName}] Initialized, max:${newParams.max_weekly_participants}`);
@@ -361,7 +360,7 @@ Deno.serve(async (req) => {
             virtual_orders_count: newCount,
             last_increment_at: now.toISOString(),
             cooldown_minutes: newCooldown
-          }).eq('id', product.id)
+          }).eq('id', product.id).then()
         );
         results.push({ id: product.id, name: productName, action: 'incremented', newCount, phase: phaseLabel, details: `${currentCount}->${newCount} (target:${targetForPhase})` });
         console.log(`[${productName}] +${incrementBy}: ${currentCount}->${newCount} (target:${targetForPhase}) [${phaseLabel}]`);
