@@ -129,9 +129,6 @@ export const RelatedProducts = ({ currentProduct = "" }: RelatedProductsProps) =
                       <h4 className="font-bold text-foreground text-base leading-tight mb-1 group-hover:text-primary transition-colors">
                         {product.name}
                       </h4>
-                      <p className="text-xs text-muted-foreground line-clamp-2 mb-1">
-                        {product.description}
-                      </p>
                       <p className="text-xs font-medium text-primary">
                         {product.weight}
                       </p>
@@ -145,8 +142,8 @@ export const RelatedProducts = ({ currentProduct = "" }: RelatedProductsProps) =
                       <span className="text-sm font-bold text-primary">
                         {product.discountPrice}
                       </span>
-                      <span className="text-xs text-muted-foreground">
-                        (mín.)
+                      <span className="text-[10px] text-primary font-medium">
+                        Super-Precio
                       </span>
                     </div>
                   </div>
