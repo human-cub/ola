@@ -217,8 +217,7 @@ All colors MUST be HSL.
     --_gb-gradient: linear-gradient(to right, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
     --_gb-glow: rgba(189, 23, 136, 0.5);
 
-    border: 1px solid transparent;
-    border-radius: 0.75rem;
+    border: 2px solid transparent;
     background:
       linear-gradient(var(--_gb-bg), var(--_gb-bg)) padding-box,
       var(--_gb-gradient) border-box;
