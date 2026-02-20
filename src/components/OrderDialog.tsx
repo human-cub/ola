@@ -19,7 +19,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { Copy, Instagram, Share2, MessageCircle, Send } from "lucide-react";
+import { Copy, Share2, MessageCircle, Send } from "lucide-react";
+import instagramIcon from "@/assets/instagram-icon-new.png";
 import { z } from "zod";
 
 const orderSchema = z.object({
@@ -377,40 +378,15 @@ const OrderDialog = ({
             
             <div className="border-t pt-2 mt-1" />
             
-            <div className="relative w-full p-[2px] rounded-md bg-gradient-to-r from-[#f09433] via-[#dc2743] to-[#bc1888]">
-              <Button
-                asChild
-                variant="outline"
-                className="w-full gap-2 bg-background border-0 hover:bg-accent"
-              >
-                <a 
-                  href="https://www.instagram.com/ola.unity/" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2"
-                >
-                  <Instagram 
-                    className="h-4 w-4" 
-                    style={{
-                      stroke: 'url(#instagram-gradient)',
-                      fill: 'none'
-                    }}
-                  />
-                  <svg width="0" height="0">
-                    <defs>
-                      <linearGradient id="instagram-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#f09433" />
-                        <stop offset="25%" stopColor="#e6683c" />
-                        <stop offset="50%" stopColor="#dc2743" />
-                        <stop offset="75%" stopColor="#cc2366" />
-                        <stop offset="100%" stopColor="#bc1888" />
-                      </linearGradient>
-                    </defs>
-                  </svg>
-                  Seguinos en Instagram
-                </a>
-              </Button>
-            </div>
+            <a
+              href="https://www.instagram.com/ola.unity/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="gradient-border flex items-center justify-center gap-2 w-full rounded-md py-2.5 px-4 text-sm font-medium"
+            >
+              <img src={instagramIcon} alt="Instagram" className="h-5 w-5 flex-shrink-0" />
+              <span>Seguinos en Instagram</span>
+            </a>
             
             <div className="text-xs text-center text-muted-foreground -mt-1">
               para ofertas, descuentos y novedades
