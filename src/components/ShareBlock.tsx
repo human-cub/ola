@@ -102,14 +102,17 @@ export const ShareBlock = ({ showQR = false }: ShareBlockProps) => {
                 className="w-full h-full object-contain hover:opacity-90 transition-opacity rounded-lg border-2 border-primary/30 hover:border-primary/50"
               />
             </div>
-            <a
-              href="https://alaola.com.ar/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm font-semibold text-primary hover:underline transition-colors"
-            >
-              Sumáte alaola.com.ar
-            </a>
+            <p className="text-sm font-semibold text-primary">
+              Sumáte{" "}
+              <a
+                href="https://alaola.com.ar/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:underline transition-colors"
+              >
+                alaola.com.ar
+              </a>
+            </p>
           </div>
         )}
       </div>
