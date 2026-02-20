@@ -126,7 +126,7 @@ export const RelatedProducts = ({ currentProduct = "" }: RelatedProductsProps) =
                   {/* Content - stacked vertically */}
                   <div className="flex-1 min-w-0 flex flex-col justify-between py-1">
                     <div>
-                      <h4 className="font-bold text-foreground text-base leading-tight mb-1 group-hover:text-primary transition-colors">
+                      <h4 className="font-bold text-foreground text-sm leading-tight mb-1 group-hover:text-primary transition-colors">
                         {product.name}
                       </h4>
                       <p className="text-xs font-medium text-primary">
@@ -134,14 +134,16 @@ export const RelatedProducts = ({ currentProduct = "" }: RelatedProductsProps) =
                       </p>
                     </div>
                     
-                    {/* Pricing - horizontal */}
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs text-muted-foreground line-through">
-                        {product.originalPrice}
-                      </span>
-                      <span className="text-sm font-bold text-primary">
-                        {product.discountPrice}
-                      </span>
+                    {/* Pricing */}
+                    <div className="flex flex-col mt-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground line-through">
+                          {product.originalPrice}
+                        </span>
+                        <span className="text-sm font-bold text-primary">
+                          {product.discountPrice}
+                        </span>
+                      </div>
                       <span className="text-[10px] text-primary font-medium">
                         Super-Precio
                       </span>
