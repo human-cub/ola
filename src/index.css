@@ -214,7 +214,7 @@ All colors MUST be HSL.
   /* Gradient border button — uses transparent border + dual background (padding-box / border-box) in the gradient-border-button.tsx */
   .gradient-border {
     --_gb-bg: hsl(var(--background));
-    --_gb-gradient: linear-gradient(to right, #bd1788, #db2843);
+    --_gb-gradient: linear-gradient(to right, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
     --_gb-glow: rgba(189, 23, 136, 0.5);
 
     border: 2px solid transparent;
