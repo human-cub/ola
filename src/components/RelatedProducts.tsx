@@ -140,13 +140,15 @@ export const RelatedProducts = ({ currentProduct = "" }: RelatedProductsProps) =
                         <span className="text-xs text-muted-foreground line-through">
                           {product.originalPrice}
                         </span>
-                        <span className="text-sm font-bold text-primary">
-                          {product.discountPrice}
-                        </span>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-bold text-primary">
+                            {product.discountPrice}
+                          </span>
+                          <span className="text-[10px] text-primary font-medium leading-tight">
+                            Super-Precio
+                          </span>
+                        </div>
                       </div>
-                      <span className="text-[10px] text-primary font-medium">
-                        Super-Precio
-                      </span>
                     </div>
                   </div>
                   
