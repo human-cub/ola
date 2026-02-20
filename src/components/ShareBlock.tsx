@@ -97,7 +97,7 @@ export const ShareBlock = ({ showQR = false }: ShareBlockProps) => {
           <div className="flex flex-col items-center gap-2">
             <div className="w-[180px] h-[180px] aspect-square flex items-center justify-center">
               <img
-                src="/qr-code.svg"
+                src="/qr-code.png"
                 alt="QR Code"
                 className="w-full h-full object-contain hover:opacity-90 transition-opacity rounded-lg border-2 border-primary/30 hover:border-primary/50"
               />
