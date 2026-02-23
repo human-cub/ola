@@ -208,14 +208,11 @@ Deno.serve(async (req) => {
     for (const product of allProducts) {
       const productName = product.name || product.id;
 
-      // Weekly reset check
+      // Weekly reset check — just skip, let reset-weekly-orders handle the actual reset
+      // to avoid race condition where increment resets virtual_orders_count before
+      // reset-weekly-orders can snapshot the total_orders_count
       if (product.week_start_date && needsWeeklyReset(product.week_start_date)) {
-        const newParams = generateNewWeekParams(product.id);
-        updates.push(
-          supabase.from('products').update(newParams).eq('id', product.id).then()
-        );
-        results.push({ id: product.id, name: productName, action: 'reset_week', newCount: 0, details: `max:${newParams.max_weekly_participants}` });
-        console.log(`[${productName}] Weekly reset -> max:${newParams.max_weekly_participants}`);
+        results.push({ id: product.id, name: productName, action: 'awaiting_weekly_reset', details: 'skipped, waiting for reset-weekly-orders' });
         continue;
       }
 
