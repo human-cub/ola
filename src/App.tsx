@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useParams, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useParams } from "react-router-dom";
 import Index from "./pages/Index";
 import DynamicProduct from "./pages/DynamicProduct";
 import Category from "./pages/Category";
@@ -21,16 +21,24 @@ import NotFound from "./pages/NotFound";
 import { FloatingWhatsApp } from "./components/FloatingWhatsApp";
 import { ScrollToTop } from "./components/ScrollToTop";
 
-// Short-link prefixes that should NOT be handled by the SPA router
-const SHORT_LINK_SLUGS = new Set(["s1", "s2", "s3", "s4", "s5", "s6"]);
+const SHORT_LINK_REDIRECTS: Record<string, string> = {
+  s1: "https://alaola.com.ar/?utm_source=offline&utm_medium=sticker&utm_campaign=gym&utm_term=12-4&utm_content=v1",
+  s2: "https://alaola.com.ar/?utm_source=offline&utm_medium=sticker&utm_campaign=gym&utm_term=12-4&utm_content=v2",
+  s3: "https://alaola.com.ar/?utm_source=offline&utm_medium=sticker&utm_campaign=gym&utm_term=12-4&utm_content=v3",
+  s4: "https://alaola.com.ar/?utm_source=offline&utm_medium=sticker&utm_campaign=out&utm_term=12-4&utm_content=v1",
+  s5: "https://alaola.com.ar/?utm_source=offline&utm_medium=sticker&utm_campaign=out&utm_term=12-4&utm_content=v2",
+  s6: "https://alaola.com.ar/?utm_source=offline&utm_medium=sticker&utm_campaign=out&utm_term=12-4&utm_content=v3",
+};
 
 const DynamicProductGuard = () => {
   const { slug } = useParams<{ slug: string }>();
-  if (slug && SHORT_LINK_SLUGS.has(slug)) {
-    // Let the server handle the redirect — force a full page navigation
-    window.location.href = `/${slug}`;
+  const redirectUrl = slug ? SHORT_LINK_REDIRECTS[slug] : undefined;
+
+  if (redirectUrl) {
+    window.location.replace(redirectUrl);
     return null;
   }
+
   return <DynamicProduct />;
 };
 
