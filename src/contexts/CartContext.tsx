@@ -470,16 +470,23 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const isFrozenCycle = orderCreatedAt < lastSunday && now > lastSunday;
 
-      // Build frozen price map from existing order items
+      // Build frozen price and participants map from existing order items
       const frozenPriceMap = new Map<string, number>();
+      const frozenParticipantsMap = new Map<string, number>();
       if (isFrozenCycle && existingOrder.items) {
         (existingOrder.items as any[]).forEach((item: any) => {
           // Key by product_id + flavor for uniqueness
           const key = `${item.product_id}||${item.flavor || ''}`;
           frozenPriceMap.set(key, item.price_per_unit);
+          if (item.participants_count != null) {
+            frozenParticipantsMap.set(key, item.participants_count);
+          }
           // Also set product-only fallback
           if (!frozenPriceMap.has(item.product_id)) {
             frozenPriceMap.set(item.product_id, item.price_per_unit);
+          }
+          if (item.participants_count != null && !frozenParticipantsMap.has(item.product_id)) {
+            frozenParticipantsMap.set(item.product_id, item.participants_count);
           }
         });
       }
@@ -496,14 +503,16 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         productPricesMap.set(p.id, (p.prices as any[]) || []);
       });
 
-      // Prepare order items - use frozen prices if cycle is closed
+      // Prepare order items - use frozen prices and participants if cycle is closed
       const orderItems = waitingListData.map(item => {
         let unitPrice = item.current_price_per_unit;
+        let participantsCount: number | undefined;
         if (isFrozenCycle) {
           const key = `${item.product_id}||${item.flavor || ''}`;
           unitPrice = frozenPriceMap.get(key) ?? frozenPriceMap.get(item.product_id) ?? item.current_price_per_unit;
+          participantsCount = frozenParticipantsMap.get(key) ?? frozenParticipantsMap.get(item.product_id);
         }
-        return {
+        const result: any = {
           product_id: item.product_id,
           product_name: item.product_name,
           flavor: item.flavor,
@@ -511,6 +520,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           price_per_unit: unitPrice,
           product_image: item.product_image,
         };
+        if (participantsCount != null) {
+          result.participants_count = participantsCount;
+        }
+        return result;
       });
 
       // Calculate subtotal using the correct prices
