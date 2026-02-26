@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { CarouselArrowButton } from "@/components/ui/carousel-arrow-button";
 import { useNavigate } from "react-router-dom";
 import useEmblaCarousel from 'embla-carousel-react';
 import { useProducts } from "@/hooks/useProducts";
+import { cn } from "@/lib/utils";
 
 export const MainProductCarousel = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -24,7 +25,7 @@ export const MainProductCarousel = () => {
     align: 'center',
     skipSnaps: false,
     dragFree: false,
-    duration: 30
+    duration: 30,
   });
 
   // Auto-scroll functionality
@@ -90,14 +91,17 @@ export const MainProductCarousel = () => {
     : "text-2xl md:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-2";
 
   return (
-    <section className="py-8" id="products">
+    <section className="py-8 md:pt-0" id="products">
       <div className="mx-auto max-w-6xl">
         <div className={headerClassName}>
-          <h2 className={titleClassName}>Nuestros Productos</h2>
-          {isError ? (
-            <p className="text-muted-foreground">No pudimos cargar los productos.</p>
-          ) : (
+          
+          <div className="lg:hidden">
+            <h2 className={cn(titleClassName, "lg:hidden")}>Nuestros Productos</h2>
             <div className="w-20 h-1 bg-gradient-primary mx-auto rounded-full mt-4"></div>
+          </div>
+
+          {isError && (
+            <p className="text-muted-foreground">No pudimos cargar los productos.</p>
           )}
         </div>
 
@@ -114,75 +118,68 @@ export const MainProductCarousel = () => {
         ) : (
           <>
             <div className="relative">
-              <div className="overflow-hidden" ref={emblaRef}>
-                <div className="flex">
+              <div className="overflow-hidden  md:py-10" ref={emblaRef}>
+                <div className="flex [--slides:1] md:[--slides:3] lg:[--slides:4] min-[1920px]:[--slides:5]">
                   {products.map((product) => (
-                    <div key={product.id} className="flex-[0_0_100%] min-w-0">
+                    <div key={product.id} className="grow-0 shrink-0 basis-[calc(100%/var(--slides))] min-w-[280px]">
                       <div className="flex justify-center px-3">
-                        <Card
-                          className="p-6 shadow-soft border-0 bg-gradient-card w-full max-w-sm cursor-pointer hover:shadow-elegant transition-all duration-700 ease-out"
-                          onClick={() => handleProductClick(product.link)}
-                        >
-                          <div className="text-center">
-                            <div className="w-48 h-48 mx-auto mb-4 rounded-xl bg-white/5 flex items-center justify-center overflow-hidden">
-                              <img
-                                src={product.image}
-                                alt={product.name}
-                                className="w-full h-full object-contain rounded-xl"
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  target.style.display = 'none';
-                                  target.parentElement!.innerHTML = '<div class="w-32 h-32 bg-primary/20 rounded-xl"></div>';
-                                }}
-                              />
-                            </div>
+                        <a href={product.link}>
+                          <Card
+                            className={cn(
+                              "p-6 shadow-soft border border-1 border-transparent bg-gradient-card w-full max-w-sm cursor-pointer transition-all duration-300 ease-out",
 
-                            <h3 className="text-xl font-bold text-foreground mb-2">
-                              {product.name}
-                            </h3>
-
-                            <p className="text-primary font-semibold mb-4">
-                              Peso neto: {product.weight}
-                            </p>
-
-                            <div className="space-y-2">
-                              <div className="flex items-center justify-center gap-3">
-                                <span className="text-lg text-muted-foreground line-through">
-                                  {product.originalPrice}
-                                </span>
-                                <span className="text-2xl font-bold text-primary">
-                                  {product.discountPrice}
-                                </span>
+                              "hover:shadow-elegant hover:border-primary/20 hover:animate-glow-pulse"
+                            )}
+                          >
+                            <div className="text-center">
+                              <div className="w-48 h-48 mx-auto mb-4 rounded-xl bg-white/5 flex items-center justify-center overflow-hidden">
+                                <img
+                                  src={product.image}
+                                  alt={product.name}
+                                  className="w-full h-full object-contain rounded-xl"
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    target.style.display = 'none';
+                                    target.parentElement!.innerHTML = '<div class="w-32 h-32 bg-primary/20 rounded-xl"></div>';
+                                  }}
+                                />
                               </div>
-                              <p className="text-sm text-muted-foreground italic">
-                                Precio mínimo
+
+                              <h3 className="text-xl font-bold text-foreground mb-2">
+                                {product.name}
+                              </h3>
+
+                              <p className="text-primary font-semibold mb-4">
+                                Peso neto: {product.weight}
                               </p>
+
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-center gap-3">
+                                  <span className="text-lg text-muted-foreground line-through">
+                                    {product.originalPrice}
+                                  </span>
+                                  <span className="text-2xl font-bold text-primary">
+                                    {product.discountPrice}
+                                  </span>
+                                </div>
+                                <p className="text-sm text-muted-foreground italic">
+                                  Precio mínimo
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                        </Card>
+                          </Card>
+                        </a>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={scrollPrev}
-                className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white border-0 shadow-md z-20 h-9 w-9 rounded-full"
-              >
-                <ChevronLeft className="w-5 h-5 text-primary" />
-              </Button>
+              <div className="pointer-events-none absolute inset-y-0 left-0 w-12 md:w-16 bg-gradient-to-r from-background to-transparent z-10 temp-1939" />
+              <div className="pointer-events-none absolute inset-y-0 right-0 w-12 md:w-16 bg-gradient-to-l from-background to-transparent z-10 temp-1939" />
 
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={scrollNext}
-                className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white border-0 shadow-md z-20 h-9 w-9 rounded-full"
-              >
-                <ChevronRight className="w-5 h-5 text-primary" />
-              </Button>
+              <CarouselArrowButton direction="prev" onClick={scrollPrev} />
+              <CarouselArrowButton direction="next" onClick={scrollNext} />
             </div>
 
             <div className="flex justify-center gap-2 mt-6">

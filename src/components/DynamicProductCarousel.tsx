@@ -3,10 +3,9 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
   type CarouselApi,
 } from "@/components/ui/carousel";
+import { CarouselArrowButton } from "@/components/ui/carousel-arrow-button";
 import {
   Dialog,
   DialogContent,
@@ -17,10 +16,9 @@ interface DynamicProductCarouselProps {
   productName: string;
 }
 
-const modalNavButtonClass = "bg-white border-2 border-cyan-600 text-cyan-600 h-10 w-10";
-
 export const DynamicProductCarousel = ({ images, productName }: DynamicProductCarouselProps) => {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [inlineApi, setInlineApi] = useState<CarouselApi>();
   const [modalApi, setModalApi] = useState<CarouselApi>();
   const [modalCurrent, setModalCurrent] = useState(0);
 
@@ -58,7 +56,7 @@ export const DynamicProductCarousel = ({ images, productName }: DynamicProductCa
     <>
       <section className="px-0 py-6">
         <div className="container mx-auto max-w-md px-4">
-          <Carousel opts={{ loop: true }} className="w-full">
+          <Carousel opts={{ loop: true }} setApi={setInlineApi} className="w-full">
             <CarouselContent>
               {displayImages.map((image, index) => (
                 <CarouselItem key={index}>
@@ -75,8 +73,8 @@ export const DynamicProductCarousel = ({ images, productName }: DynamicProductCa
             </CarouselContent>
             {displayImages.length > 1 && (
               <>
-                <CarouselPrevious className="-left-2 sm:-left-4 bg-white/80 shadow-md" />
-                <CarouselNext className="-right-2 sm:-right-4 bg-white/80 shadow-md" />
+                <CarouselArrowButton direction="prev" onClick={() => inlineApi?.scrollPrev()} className="-left-2 sm:-left-4" />
+                <CarouselArrowButton direction="next" onClick={() => inlineApi?.scrollNext()} className="-right-2 sm:-right-4" />
               </>
             )}
           </Carousel>
@@ -106,8 +104,8 @@ export const DynamicProductCarousel = ({ images, productName }: DynamicProductCa
               </CarouselContent>
               {displayImages.length > 1 && (
                 <>
-                  <CarouselPrevious className={`left-1 sm:left-2 ${modalNavButtonClass}`} />
-                  <CarouselNext className={`right-1 sm:right-2 ${modalNavButtonClass}`} />
+                  <CarouselArrowButton direction="prev" onClick={() => modalApi?.scrollPrev()} className="left-1 sm:left-2 h-10 w-10" />
+                  <CarouselArrowButton direction="next" onClick={() => modalApi?.scrollNext()} className="right-1 sm:right-2 h-10 w-10" />
                 </>
               )}
             </Carousel>

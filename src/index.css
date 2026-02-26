@@ -119,7 +119,13 @@ All colors MUST be HSL.
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 195 100% 60%;
   }
-}
+
+  .container-lg {
+    max-width: 1152px;
+    margin-inline: auto;
+  }
+
+} /* base end */
 
 @layer base {
   * {
