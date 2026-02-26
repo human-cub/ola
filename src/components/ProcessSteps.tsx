@@ -9,7 +9,7 @@ const waitingListSteps = [
   },
   {
     icon: Calculator,
-    title: "Al final de la semana vemos cuántos se sumaron",
+    title: "Al final de la semana vemos cuántos se sumaron",
     description: "Calculamos el descuento según cuántas personas se sumaron a cada producto"
   },
   {
@@ -19,7 +19,7 @@ const waitingListSteps = [
   },
   {
     icon: Truck,
-    title: "Envío el mismo día después de confirmar o retirás vos cuando quieras",
+    title: "Envío el mismo día después de confirmar o retirás vos cuando quieras",
     description: "Envío gratis en CABA (GBA $3.000 • Interior $5.000 • Gratis en todo el país desde $100.000)"
   },
   {
@@ -110,7 +110,7 @@ export const ProcessSteps = () => {
               <div key={`${isWaitingList ? 'wait' : 'buy'}-${index}`} className="relative">
                 {/* Step Block */}
                  <div
-                   className="relative bg-background rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 border border-border/50 animate-fade-in mx-6"
+                   className="relative bg-background rounded-xl p-4 shadow-sm transition-all duration-300 border border-border/50 animate-fade-in mx-6"
                    style={{ animationDelay: `${index * 0.1}s`, animationFillMode: 'both' }}
                  >
                    {/* Step Number */}
@@ -125,7 +125,7 @@ export const ProcessSteps = () => {
                      </div>
                    </div>
                    
-                     <h3 className="text-lg font-semibold text-foreground mb-2 text-center leading-[1.2]">
+                     <h3 className="text-lg font-semibold text-foreground mb-2 text-center leading-[1.15] text-balance">
                        {step.title}
                        {'subtitle' in step && step.subtitle && (
                          <span className="block text-sm font-normal text-muted-foreground mt-1">

@@ -48,21 +48,21 @@ export const Benefits = () => {
 
   return (
     <section id="benefits" className="py-4">
-      <div className="container mx-auto max-w-md">
+      <div className="container mx-auto max-w-md lg:max-w-4xl">
         <h3 className="text-xl font-semibold text-center mb-6 text-foreground">
           Nuestras Ventajas
         </h3>
         
-        <div className="space-y-4">
+        <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-4 lg:gap-4">
           {benefits.map((benefit, index) => (
             <div 
               key={index} 
               className={`${index === 3 
                 ? "shadow-elegant border border-primary/20 animate-glow-pulse" 
                 : "bg-gradient-card shadow-soft hover:shadow-elegant transition-all duration-300"
-              } rounded-xl p-4 flex items-center gap-4`}
+              } rounded-xl p-4 flex items-center gap-4 lg:flex-col lg:items-start`}
             >
-              <div className="w-12 h-12 bg-gradient-primary shadow-soft rounded-full flex items-center justify-center">
+              <div className="w-12 h-12 bg-gradient-primary shadow-soft rounded-full flex items-center justify-center flex-shrink-0">
                 <benefit.icon className={`w-6 h-6 text-white ${index === 3 && isScrollPulsing ? "animate-pulse" : ""}`} />
               </div>
               <div className="flex-1">

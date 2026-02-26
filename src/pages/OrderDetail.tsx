@@ -217,7 +217,7 @@ const OrderDetail = () => {
 
             {/* Product title */}
             <div className="">
-              <h1 className="mt-4 text-2xl font-bold leading-[1.1]">Pedido {order.order_number}</h1>
+              <h1 className="mt-4 text-2xl font-bold leading-[1.15]">Pedido {order.order_number}</h1>
               <p className="text-muted-foreground mt-3">{formatDate(order.created_at)}</p>
             </div>
           </div>
