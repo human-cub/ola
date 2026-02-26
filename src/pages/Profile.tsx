@@ -1,5 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +10,14 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Loader2, ArrowLeft, User, Shield, LogOut, Eye, EyeOff, Package } from "lucide-react";
@@ -17,10 +28,18 @@ import { isCABAProvince } from "@/data/argentinaLocations";
 
 const profileSchema = z.object({
   firstName: z.string().min(1, "El nombre es requerido").max(50),
-  lastName: z.string().max(50).optional(),
+  lastName: z.string().max(50),
   phone: z.string().min(8, "El teléfono es requerido").max(20),
-  address: z.string().max(200).optional(),
+  street: z.string(),
+  streetNumber: z.string(),
+  floor: z.string(),
+  postalCode: z.string(),
+  city: z.string(),
+  province: z.string(),
+  references: z.string(),
 });
+
+type ProfileFormValues = z.infer<typeof profileSchema>;
 
 const passwordSchema = z.object({
   currentPassword: z.string().min(1, "Ingresá tu contraseña actual"),
@@ -35,12 +54,7 @@ const passwordSchema = z.object({
   path: ["confirmPassword"],
 });
 
-interface ProfileData {
-  first_name: string | null;
-  last_name: string | null;
-  phone: string | null;
-  address: string | null;
-}
+type PasswordFormValues = z.infer<typeof passwordSchema>;
 
 interface AddressData {
   street: string;
@@ -52,26 +66,44 @@ interface AddressData {
   references: string;
 }
 
-// Format address for display - remove labels and brackets
-const formatAddressForDisplay = (address: string): string => {
-  if (!address) return "";
-  
-  try {
-    const addr = JSON.parse(address) as AddressData;
-    const parts = [
-      addr.street,
-      addr.number,
-      addr.floor,
-      addr.postalCode,
-      addr.city,
-      addr.province,
-      addr.references,
-    ].filter(Boolean);
-    return parts.join(", ");
-  } catch {
-    return address;
+const fetchProfile = async () => {
+  const { data: {session} } = await supabase.auth.getSession();
+  if (!session) {
+    // todo
+    // navigate("/ingresar");
+    return null;
   }
-};
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("user_id", session.user.id)
+    .maybeSingle();
+
+  return { session, profile };
+}
+
+
+// Format address for display - remove labels and brackets
+// const formatAddressForDisplay = (address: string): string => {
+//   if (!address) return "";
+  
+//   try {
+//     const addr = JSON.parse(address) as AddressData;
+//     const parts = [
+//       addr.street,
+//       addr.number,
+//       addr.floor,
+//       addr.postalCode,
+//       addr.city,
+//       addr.province,
+//       addr.references,
+//     ].filter(Boolean);
+//     return parts.join(", ");
+//   } catch {
+//     return address;
+//   }
+// };
 
 // Parse stored address JSON to individual fields
 const parseStoredAddress = (address: string): AddressData => {
@@ -99,200 +131,155 @@ const parseStoredAddress = (address: string): AddressData => {
   }
 };
 
+const profileDefaults: ProfileFormValues = {
+  firstName: "",
+  lastName: "",
+  phone: "",
+  street: "",
+  streetNumber: "",
+  floor: "",
+  postalCode: "",
+  city: "",
+  province: "",
+  references: "",
+};
+
 const Profile = () => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [changingPassword, setChangingPassword] = useState(false);
-  const [email, setEmail] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  // Address fields
-  const [street, setStreet] = useState("");
-  const [streetNumber, setStreetNumber] = useState("");
-  const [floor, setFloor] = useState("");
-  const [postalCode, setPostalCode] = useState("");
-  const [city, setCity] = useState("");
-  const [province, setProvince] = useState("");
-  const [references, setReferences] = useState("");
-
-  // Password change
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const queryClient = useQueryClient();
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
-  const [passwordErrors, setPasswordErrors] = useState<Record<string, string>>({});
+
+  const profileForm = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: profileDefaults,
+  });
+
+  const passwordForm = useForm<PasswordFormValues>({
+    resolver: zodResolver(passwordSchema),
+    defaultValues: {
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
+  });
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['profile'],
+    queryFn: fetchProfile
+  })
+
+  const email = data?.session?.user?.email || "";
+
+  const [street, streetNumber, floor, postalCode, city, province, references] =
+    profileForm.watch(["street", "streetNumber", "floor", "postalCode", "city", "province", "references"]);
 
   useEffect(() => {
-    const loadProfile = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        navigate("/ingresar");
-        return;
-      }
+    if (!isLoading && !data) navigate("/ingresar");
+  }, [isLoading, data, navigate]);
 
-      setEmail(session.user.email || "");
+  useEffect(() => {
+    if (!data?.profile) return;
+    const profile = data.profile;
+    const addr = profile.address ? parseStoredAddress(profile.address) : null;
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("user_id", session.user.id)
-        .maybeSingle();
-
-      if (profile) {
-        setFirstName(profile.first_name || "");
-        setLastName(profile.last_name || "");
-        setPhone(profile.phone || "");
-        
-        // Parse stored address
-        if (profile.address) {
-          const addr = parseStoredAddress(profile.address);
-          setStreet(addr.street);
-          setStreetNumber(addr.number);
-          setFloor(addr.floor);
-          setPostalCode(addr.postalCode);
-          setCity(addr.city);
-          setProvince(addr.province);
-          setReferences(addr.references);
-        }
-      }
-
-      setLoading(false);
-    };
-
-    loadProfile();
-  }, [navigate]);
-
-  const handleSaveProfile = async () => {
-    setErrors({});
-
-    const validation = profileSchema.safeParse({
-      firstName,
-      lastName,
-      phone,
-      address: street ? JSON.stringify({
-        street,
-        number: streetNumber,
-        floor,
-        postalCode,
-        city: isCABAProvince(province) ? province : city,
-        province,
-        references,
-      }) : undefined,
+    profileForm.reset({
+      firstName: profile.first_name || "",
+      lastName: profile.last_name || "",
+      phone: profile.phone || "",
+      street: addr?.street || "",
+      streetNumber: addr?.number || "",
+      floor: addr?.floor || "",
+      postalCode: addr?.postalCode || "",
+      city: addr?.city || "",
+      province: addr?.province || "",
+      references: addr?.references || "",
     });
+  }, [data, profileForm]);
 
-    if (!validation.success) {
-      const fieldErrors: Record<string, string> = {};
-      validation.error.errors.forEach((err) => {
-        fieldErrors[err.path[0] as string] = err.message;
-      });
-      setErrors(fieldErrors);
-      return;
-    }
-
-    setSaving(true);
-
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-
-      // Build address JSON
-      const addressJson = street ? JSON.stringify({
-        street,
-        number: streetNumber,
-        floor,
-        postalCode,
-        city: isCABAProvince(province) ? province : city,
-        province,
-        references,
-      }) : null;
-
-      const { error } = await supabase
-        .from("profiles")
-        .update({
-          first_name: firstName.trim(),
-          last_name: lastName.trim(),
-          phone: phone.trim(),
-          address: addressJson,
-          profile_completed: true,
-        })
-        .eq("user_id", session.user.id);
-
-      if (error) throw error;
-
-      toast.success("Perfil actualizado");
-    } catch (error: any) {
-      toast.error("Error al guardar");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleChangePassword = async () => {
-    setPasswordErrors({});
-
-    const validation = passwordSchema.safeParse({
-      currentPassword,
-      newPassword,
-      confirmPassword,
-    });
-
-    if (!validation.success) {
-      const fieldErrors: Record<string, string> = {};
-      validation.error.errors.forEach((err) => {
-        fieldErrors[err.path[0] as string] = err.message;
-      });
-      setPasswordErrors(fieldErrors);
-      return;
-    }
-
-    setChangingPassword(true);
-
-    try {
-      // Verify current password by re-authenticating
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password: currentPassword,
-      });
-
-      if (signInError) {
-        setPasswordErrors({ currentPassword: "Contraseña actual incorrecta" });
-        return;
-      }
-
-      // Update password
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
-
-      if (error) throw error;
-
-      toast.success("Contraseña actualizada");
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-    } catch (error: any) {
-      toast.error("Error al cambiar la contraseña");
-    } finally {
-      setChangingPassword(false);
-    }
-  };
+  const tempName = data?.profile
+    ? [data.profile.first_name, data.profile.last_name].filter(Boolean).join(" ")
+    : "";
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/");
   };
 
-  if (loading) {
+  const saveProfileMutation = useMutation({
+    mutationFn: async (data: ProfileFormValues) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("No session");
+
+      const addressJson = data.street ? JSON.stringify({
+        street: data.street,
+        number: data.streetNumber,
+        floor: data.floor,
+        postalCode: data.postalCode,
+        city: isCABAProvince(data.province) ? data.province : data.city,
+        province: data.province,
+        references: data.references,
+      }) : null;
+
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          first_name: data.firstName.trim(),
+          last_name: data.lastName.trim(),
+          phone: data.phone.trim(),
+          address: addressJson,
+          profile_completed: true,
+        })
+        .eq("user_id", session.user.id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Perfil actualizado");
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+    },
+    onError: () => {
+      toast.error("Error al guardar");
+    },
+  });
+
+  const changePasswordMutation = useMutation({
+    mutationFn: async (formData: PasswordFormValues) => {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password: formData.currentPassword,
+      });
+
+      if (signInError) throw new Error("WRONG_PASSWORD");
+
+      const { error } = await supabase.auth.updateUser({ password: formData.newPassword });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Contraseña actualizada");
+      passwordForm.reset();
+    },
+    onError: (err) => {
+      if (err.message === "WRONG_PASSWORD") {
+        passwordForm.setError("currentPassword", {
+          message: "Contraseña actual incorrecta",
+        });
+      } else {
+        toast.error("Error al cambiar la contraseña");
+      }
+    },
+  });
+
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
+
+
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-accent/20 p-4">
@@ -337,190 +324,209 @@ const Profile = () => {
           </TabsContent>
 
           <TabsContent value="profile">
-            <Card>
-              <CardHeader>
-                <CardTitle>Información personal</CardTitle>
-                <CardDescription>
-                  Actualizá tus datos de contacto
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    disabled
-                    className="bg-muted"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    El email no se puede cambiar
-                  </p>
-                </div>
+            <Form {...profileForm}>
+              <form onSubmit={profileForm.handleSubmit((data) => saveProfileMutation.mutate(data))}>
+                <Card>
+                  <CardHeader>
+                    <h2>Hola {tempName}!</h2>
+                    <CardTitle>Información personal</CardTitle>
+                    <CardDescription>
+                      Actualizá tus datos de contacto
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={email}
+                        disabled
+                        className="bg-muted"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        El email no se puede cambiar
+                      </p>
+                    </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">Nombre <span className="text-destructive">*</span></Label>
-                  <Input
-                    id="firstName"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    className={errors.firstName ? "border-destructive" : ""}
-                  />
-                  {errors.firstName && (
-                    <p className="text-sm text-destructive">{errors.firstName}</p>
-                  )}
-                </div>
+                    <FormField
+                      control={profileForm.control}
+                      name="firstName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nombre <span className="text-destructive">*</span></FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">Apellido</Label>
-                  <Input
-                    id="lastName"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    className={errors.lastName ? "border-destructive" : ""}
-                  />
-                  {errors.lastName && (
-                    <p className="text-sm text-destructive">{errors.lastName}</p>
-                  )}
-                </div>
+                    <FormField
+                      control={profileForm.control}
+                      name="lastName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Apellido</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Teléfono <span className="text-destructive">*</span></Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className={errors.phone ? "border-destructive" : ""}
-                  />
-                  {errors.phone && (
-                    <p className="text-sm text-destructive">{errors.phone}</p>
-                  )}
-                </div>
+                    <FormField
+                      control={profileForm.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Teléfono <span className="text-destructive">*</span></FormLabel>
+                          <FormControl>
+                            <Input type="tel" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                <Separator className="my-4" />
+                    <Separator className="my-4" />
 
-                <AddressForm
-                  street={street}
-                  setStreet={setStreet}
-                  streetNumber={streetNumber}
-                  setStreetNumber={setStreetNumber}
-                  floor={floor}
-                  setFloor={setFloor}
-                  postalCode={postalCode}
-                  setPostalCode={setPostalCode}
-                  city={city}
-                  setCity={setCity}
-                  province={province}
-                  setProvince={setProvince}
-                  references={references}
-                  setReferences={setReferences}
-                  errors={errors}
-                  hideReferences={true}
-                  title="Dirección"
-                />
+                    <AddressForm
+                      street={street}
+                      setStreet={(v) => profileForm.setValue("street", v)}
+                      streetNumber={streetNumber}
+                      setStreetNumber={(v) => profileForm.setValue("streetNumber", v)}
+                      floor={floor}
+                      setFloor={(v) => profileForm.setValue("floor", v)}
+                      postalCode={postalCode}
+                      setPostalCode={(v) => profileForm.setValue("postalCode", v)}
+                      city={city}
+                      setCity={(v) => profileForm.setValue("city", v)}
+                      province={province}
+                      setProvince={(v) => profileForm.setValue("province", v)}
+                      references={references}
+                      setReferences={(v) => profileForm.setValue("references", v)}
+                      errors={{}}
+                      hideReferences={true}
+                      title="Dirección"
+                    />
 
-                <Button onClick={handleSaveProfile} disabled={saving}>
-                  {saving ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Guardando...
-                    </>
-                  ) : (
-                    "Guardar cambios"
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
+                    <Button type="submit" disabled={saveProfileMutation.isPending}>
+                      {saveProfileMutation.isPending ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Guardando...
+                        </>
+                      ) : (
+                        "Guardar cambios"
+                      )}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </form>
+            </Form>
           </TabsContent>
 
           <TabsContent value="security">
-            <Card>
-              <CardHeader>
-                <CardTitle>Cambiar contraseña</CardTitle>
-                <CardDescription>
-                  Actualizá tu contraseña de acceso
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="currentPassword">Contraseña actual</Label>
-                  <div className="relative">
-                    <Input
-                      id="currentPassword"
-                      type={showCurrentPassword ? "text" : "password"}
-                      value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
-                      className={passwordErrors.currentPassword ? "border-destructive pr-10" : "pr-10"}
+            <Form {...passwordForm}>
+              <form onSubmit={passwordForm.handleSubmit((data) => changePasswordMutation.mutate(data))}>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Cambiar contraseña</CardTitle>
+                    <CardDescription>
+                      Actualizá tu contraseña de acceso
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <FormField
+                      control={passwordForm.control}
+                      name="currentPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Contraseña actual</FormLabel>
+                          <div className="relative">
+                            <FormControl>
+                              <Input
+                                type={showCurrentPassword ? "text" : "password"}
+                                className="pr-10"
+                                {...field}
+                              />
+                            </FormControl>
+                            <button
+                              type="button"
+                              onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                            >
+                              {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    >
-                      {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                  {passwordErrors.currentPassword && (
-                    <p className="text-sm text-destructive">{passwordErrors.currentPassword}</p>
-                  )}
-                </div>
 
-                <Separator />
+                    <Separator />
 
-                <div className="space-y-2">
-                  <Label htmlFor="newPassword">Nueva contraseña</Label>
-                  <div className="relative">
-                    <Input
-                      id="newPassword"
-                      type={showNewPassword ? "text" : "password"}
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      className={passwordErrors.newPassword ? "border-destructive pr-10" : "pr-10"}
+                    <FormField
+                      control={passwordForm.control}
+                      name="newPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nueva contraseña</FormLabel>
+                          <div className="relative">
+                            <FormControl>
+                              <Input
+                                type={showNewPassword ? "text" : "password"}
+                                className="pr-10"
+                                {...field}
+                              />
+                            </FormControl>
+                            <button
+                              type="button"
+                              onClick={() => setShowNewPassword(!showNewPassword)}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                            >
+                              {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                          </div>
+                          <FormMessage />
+                          <p className="text-xs text-muted-foreground">
+                            Mínimo 8 caracteres, con letras y números
+                          </p>
+                        </FormItem>
+                      )}
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowNewPassword(!showNewPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    >
-                      {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                  {passwordErrors.newPassword && (
-                    <p className="text-sm text-destructive">{passwordErrors.newPassword}</p>
-                  )}
-                  <p className="text-xs text-muted-foreground">
-                    Mínimo 8 caracteres, con letras y números
-                  </p>
-                </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="confirmNewPassword">Confirmar nueva contraseña</Label>
-                  <Input
-                    id="confirmNewPassword"
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className={passwordErrors.confirmPassword ? "border-destructive" : ""}
-                  />
-                  {passwordErrors.confirmPassword && (
-                    <p className="text-sm text-destructive">{passwordErrors.confirmPassword}</p>
-                  )}
-                </div>
+                    <FormField
+                      control={passwordForm.control}
+                      name="confirmPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Confirmar nueva contraseña</FormLabel>
+                          <FormControl>
+                            <Input type="password" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                <Button onClick={handleChangePassword} disabled={changingPassword}>
-                  {changingPassword ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Cambiando...
-                    </>
-                  ) : (
-                    "Cambiar contraseña"
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
+                    <Button type="submit" disabled={changePasswordMutation.isPending}>
+                      {changePasswordMutation.isPending ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Cambiando...
+                        </>
+                      ) : (
+                        "Cambiar contraseña"
+                      )}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </form>
+            </Form>
           </TabsContent>
         </Tabs>
       </div>
