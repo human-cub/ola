@@ -20,7 +20,7 @@ const benefits = [
   {
     icon: CreditCard,
     title: "Pagá al recibir",
-    description: "Sin riesgos: pagás cuando tenés tu producto"
+    description: "Sin riesgos: pagás cuando tenés tu producto"
   }
 ];
 
@@ -48,7 +48,7 @@ export const Benefits = () => {
 
   return (
     <section id="benefits" className="py-4">
-      <div className="container mx-auto max-w-md lg:max-w-4xl">
+      <div className="container mx-auto md:container-lg">
         <h3 className="text-xl font-semibold text-center mb-6 text-foreground">
           Nuestras Ventajas
         </h3>
@@ -58,7 +58,7 @@ export const Benefits = () => {
             <div 
               key={index} 
               className={`${index === 3 
-                ? "shadow-elegant border border-primary/20 animate-glow-pulse" 
+                ? "" 
                 : "bg-gradient-card shadow-soft hover:shadow-elegant transition-all duration-300"
               } rounded-xl p-4 flex items-center gap-4 lg:flex-col lg:items-start`}
             >
@@ -66,10 +66,10 @@ export const Benefits = () => {
                 <benefit.icon className={`w-6 h-6 text-white ${index === 3 && isScrollPulsing ? "animate-pulse" : ""}`} />
               </div>
               <div className="flex-1">
-                <h4 className={`font-semibold mb-1 text-foreground`}>
+                <h4 className={`font-semibold mb-1 text-foreground md:text-[18px]`}>
                   {benefit.title}
                 </h4>
-                <p className="text-sm text-muted-foreground whitespace-pre-line">
+                <p className="text-sm text-muted-foreground whitespace-pre-line md:text-[16px]">
                   {benefit.description}
                 </p>
               </div>

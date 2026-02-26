@@ -145,7 +145,7 @@ export const MainProductCarousel = () => {
                                 />
                               </div>
 
-                              <h3 className="text-xl font-bold text-foreground mb-2">
+                              <h3 className="text-xl font-bold text-foreground mb-2 leading-[1.15]">
                                 {product.name}
                               </h3>
 

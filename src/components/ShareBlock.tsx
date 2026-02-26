@@ -48,22 +48,22 @@ export const ShareBlock = ({ showQR = false }: ShareBlockProps) => {
 
       <div className="flex flex-col gap-2">
         <Button onClick={handleShare} className="w-full py-2.5">
-          <ShareIcon className="h-4 w-4" />
+          <ShareIcon className="size-5" />
           <span>Compartir con amigos</span>
         </Button>
 
         <Button variant="outline" onClick={handleWhatsApp} className="w-full py-2.5">
-          <WhatsAppIcon className="h-4 w-4" />
+          <WhatsAppIcon className="size-5" />
           <span>Compartir por WhatsApp</span>
         </Button>
 
         <Button variant="outline" onClick={handleCopyInvitation} className="w-full py-2.5">
-          <Copy className="h-4 w-4" />
+          <Copy className="size-5" />
           <span>Copiar invitación</span>
         </Button>
 
         <Button variant="outline" onClick={handleCopyLink} className="w-full py-2.5">
-          <Copy className="h-4 w-4" />
+          <Copy className="size-5" />
           <span>Copiar enlace</span>
         </Button>
 
@@ -73,7 +73,7 @@ export const ShareBlock = ({ showQR = false }: ShareBlockProps) => {
           asChild
           gradient="linear-gradient(to right, #f09433, #dc2743, #bc1888)"
           glowColor="rgba(189, 23, 136, 0.5)"
-          className="w-full"
+          className="h-10 w-full max-w-[400px] mx-auto"
         >
           <a
             href="https://www.instagram.com/ola.unity/"

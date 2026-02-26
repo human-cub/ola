@@ -1,6 +1,7 @@
 import { MapPin, Clock, Phone, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
 import instagramIcon from "@/assets/instagram-icon-new.png";
+import olaLogo from "@/assets/ola-logo-new.png";
 
 interface FooterProps {
   isHomePage?: boolean;
@@ -22,10 +23,18 @@ const navItems = [
 export const Footer = ({ isHomePage = false }: FooterProps) => {
   return (
     <footer className="bg-muted/50 border-t py-8">
-      <div className="container mx-auto">
+      <div className="container-lg mx-auto">
         {/* Navigation - always shown */}
         <nav className="mb-6">
-          <div className="flex flex-wrap justify-center gap-x-4 gap-y-2">
+          <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-2">
+            <Link to="/" className="flex items-center gap-1 hover:opacity-80 transition-opacity">
+              <img src={olaLogo} alt="Ola Wave Logo" className="w-6 h-6 object-contain" />
+              <span className="text-lg font-bold bg-gradient-primary bg-clip-text text-transparent">
+                Ola!
+              </span>
+            </Link>
+            <span className="text-muted-foreground/40">|</span>
+
             {navItems.map((item) => (
               <Link
                 key={item.to}
@@ -42,7 +51,7 @@ export const Footer = ({ isHomePage = false }: FooterProps) => {
         {isHomePage && (
           <>
             <div className="border-t pt-6 mb-6" />
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 container-lg">
               {/* Address */}
               <div className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />

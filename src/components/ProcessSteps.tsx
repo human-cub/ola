@@ -19,7 +19,7 @@ const waitingListSteps = [
   },
   {
     icon: Truck,
-    title: "Envío el mismo día después de confirmar o retirás vos cuando quieras",
+    title: "Envío el mismo día después de confirmar o retirás vos cuando quieras",
     description: "Envío gratis en CABA (GBA $3.000 • Interior $5.000 • Gratis en todo el país desde $100.000)"
   },
   {
@@ -81,7 +81,7 @@ export const ProcessSteps = () => {
   return (
     <section className="py-8 bg-muted/30" id="how-it-works">
       <div className="container mx-auto">
-        <div className="text-center mb-8">
+        <div className="text-center mb-8 md:mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             ¿Cómo Funciona?
           </h2>
@@ -102,12 +102,12 @@ export const ProcessSteps = () => {
           </div>
         </div>
         
-        <div className="relative max-w-md mx-auto space-y-6">
+        <div className="relative max-w-md mx-auto flex flex-col gap-6">
           {steps.map((step, index) => {
             const IconComponent = step.icon;
             
             return (
-              <div key={`${isWaitingList ? 'wait' : 'buy'}-${index}`} className="relative">
+              <div key={`${isWaitingList ? 'wait' : 'buy'}-${index}`} className="relative min-w-[280px] max-w-[560px]">
                 {/* Step Block */}
                  <div
                    className="relative bg-background rounded-xl p-4 shadow-sm transition-all duration-300 border border-border/50 animate-fade-in mx-6"
