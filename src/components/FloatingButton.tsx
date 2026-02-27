@@ -164,7 +164,9 @@ export const FloatingButton = ({
                 className="bg-white/20 hover:bg-white/30 text-white border-0 gap-2 flex-1 h-auto py-3 sm:py-2"
               >
                 <Timer className="w-4 h-4 flex-shrink-0" />
-                <span className="text-sm font-medium">Esperar y pagar menos</span>
+                <span className="text-sm font-medium">
+                  Esperar y comprar desde {prices.length >= 5 ? <span className="font-bold">${prices[4].price.toLocaleString()}</span> : prices.length > 0 ? <span className="font-bold">${prices[prices.length - 1].price.toLocaleString()}</span> : ''}
+                </span>
               </Button>
               
               <Button
