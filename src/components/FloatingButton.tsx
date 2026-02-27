@@ -171,7 +171,7 @@ export const FloatingButton = ({
                 variant="secondary"
                 size="sm"
                 onClick={handleBuyNow}
-                className="bg-white hover:bg-white/90 text-primary border-0 gap-2 flex-1 h-auto py-3 sm:py-2 font-semibold"
+                className="bg-white/20 hover:bg-white/30 text-white border-0 gap-2 flex-1 h-auto py-3 sm:py-2 font-semibold"
               >
                 <ShoppingCart className="w-4 h-4 flex-shrink-0" />
                 <span className="text-sm font-medium">
