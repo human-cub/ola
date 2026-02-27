@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -16,6 +17,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus, Minus, ShoppingCart, Timer, Check } from "lucide-react";
+import { ShareIcon } from "./icons/ShareIcon";
+import { WhatsAppIcon } from "./icons/WhatsAppIcon";
+import { toast } from "sonner";
 import { useCart } from "@/contexts/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 import { setPendingAddAction } from "@/lib/postAuthAction";
@@ -50,6 +54,7 @@ export const AddToCartDialog = ({
 }: AddToCartDialogProps) => {
   const { addToCart, addToWaitingList } = useCart();
   const navigate = useNavigate();
+  const location = useLocation();
   const [selectedFlavor, setSelectedFlavor] = useState<string>("");
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -175,15 +180,20 @@ export const AddToCartDialog = ({
       }
 
       setSuccess(true);
-      setTimeout(() => {
-        onOpenChange(false);
-      }, 1500);
+      if (!isWaitingList) {
+        setTimeout(() => {
+          onOpenChange(false);
+        }, 1500);
+      }
     } catch (err) {
       setError("Error al agregar el producto");
     } finally {
       setLoading(false);
     }
   };
+
+  const productUrl = `https://alaola.com.ar${location.pathname}`;
+  const shareText = `Mirá este producto con descuento en Ola 🎉 ${productName} — comprá ahora o esperá y pagá menos 🤑 ${productUrl}`;
 
   const formatPrice = (price: number) => {
     return `$${price.toLocaleString('es-AR')}`;
@@ -209,11 +219,65 @@ export const AddToCartDialog = ({
         </DialogHeader>
 
         {success ? (
-          <div className="flex flex-col items-center justify-center py-8 gap-4">
+          <div className="flex flex-col items-center justify-center py-6 gap-4">
             <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
               <Check className="w-8 h-8 text-green-600" />
             </div>
             <p className="text-lg font-medium text-center">¡Producto agregado!</p>
+
+            {isWaitingList && (
+              <div className="w-full flex flex-col gap-2 mt-2">
+                <Button
+                  onClick={() => {
+                    if (navigator.share) {
+                      navigator.share({ text: shareText }).catch(() => {});
+                    } else {
+                      navigator.clipboard.writeText(shareText);
+                      toast.success("¡Texto copiado!");
+                    }
+                  }}
+                  className="w-full py-2.5"
+                >
+                  <ShareIcon className="h-4 w-4" />
+                  <span>Compartir con amigos</span>
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
+                  }}
+                  className="w-full py-2.5"
+                >
+                  <WhatsAppIcon className="h-4 w-4" />
+                  <span>Compartir por WhatsApp</span>
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    navigator.clipboard.writeText(shareText);
+                    toast.success("¡Invitación copiada!");
+                  }}
+                  className="w-full py-2.5"
+                >
+                  <Copy className="h-4 w-4" />
+                  <span>Copiar invitación</span>
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    navigator.clipboard.writeText(productUrl);
+                    toast.success("¡Enlace copiado!");
+                  }}
+                  className="w-full py-2.5"
+                >
+                  <Copy className="h-4 w-4" />
+                  <span>Copiar enlace</span>
+                </Button>
+              </div>
+            )}
           </div>
         ) : (
           <div className="space-y-4">
