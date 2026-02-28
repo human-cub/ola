@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import AddProductDialog from "./AddProductDialog";
 import EditProductDialog from "./EditProductDialog";
 import VirtualOrdersPopover from "./VirtualOrdersPopover";
+import { Spinner } from "../ui/spinner";
 
 interface ProductPrices {
   people: number;
@@ -80,7 +81,11 @@ const ProductsTable = () => {
   };
 
   if (loading) {
-    return <p>Cargando productos...</p>;
+    return (
+      <div className="flex justify-center py-12">
+        <Spinner />
+      </div>
+    );
   }
 
   return (

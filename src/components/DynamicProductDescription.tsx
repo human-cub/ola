@@ -41,9 +41,9 @@ export const DynamicProductDescription = ({ description }: DynamicProductDescrip
   return (
     <section className="sm:px-4 py-4">
       <div className="container mx-auto max-w-md">
-        <div className="bg-gradient-card rounded-2xl p-6 shadow-soft">
+        <div className="sm:bg-gradient-card sm:rounded-2xl p-2 sm:p-6 sm:shadow-soft">
           <h3 className="text-xl font-semibold text-foreground mb-4">Descripción del Producto</h3>
-          <div className="space-y-4">
+          <div className="space-y-4 font-normal">
             {paragraphs.map((paragraph, index) => (
               <Paragraph key={index} text={paragraph} />
             ))}

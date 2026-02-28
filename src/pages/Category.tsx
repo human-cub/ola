@@ -4,7 +4,7 @@ import { Header } from "@/components/Header";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { Footer } from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
-import olaLogo from "@/assets/ola-logo-new.webp";
+import { Spinner } from "@/components/ui/spinner";
 
 
 interface Product {
@@ -92,7 +92,7 @@ const Category = () => {
     <div className="min-h-screen bg-background">
       <Header isVisible={headerVisible} />
       
-      <main className="pb-24 pt-[120px] sm:pt-[104px]">
+      <main className="pb-[24px] pt-[120px] sm:pt-[104px]">
         <Breadcrumb items={[{ label: "Catálogo", href: "/catalogo" }, { label: categoryName }]} />
         
         <div className="container mx-auto px-4 py-8">
@@ -102,11 +102,7 @@ const Category = () => {
 
           {loading ? (
             <div className="flex justify-center py-12">
-              <img
-                src={olaLogo}
-                alt="Cargando..."
-                className="size-5 animate-spin"
-              />
+              <Spinner />
             </div>
           ) : products.length === 0 ? (
             <div className="flex justify-center py-12">

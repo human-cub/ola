@@ -89,7 +89,7 @@ export const RelatedProducts = ({ currentProduct = "" }: RelatedProductsProps) =
   };
 
   return (
-    <section className="px-4 py-6">
+    <section className="sm:px-4 py-6">
       <div className="container mx-auto max-w-lg">
         <div className="text-center mb-6">
           <h3 className="text-2xl font-bold text-foreground mb-2">
@@ -136,15 +136,15 @@ export const RelatedProducts = ({ currentProduct = "" }: RelatedProductsProps) =
                     
                     {/* Pricing */}
                     <div className="flex flex-col mt-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground line-through">
+                      <div className="flex gap-2 items-baseline">
+                        <span className="text-sm text-muted-foreground line-through">
                           {product.originalPrice}
                         </span>
                         <div className="flex flex-col">
                           <span className="text-sm font-bold text-primary">
                             {product.discountPrice}
                           </span>
-                          <span className="text-[10px] text-primary font-medium leading-tight">
+                          <span className="text-[10px] text-primary font-medium leading-tight text-nowrap">
                             Super-Precio
                           </span>
                         </div>

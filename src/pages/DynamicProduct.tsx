@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { DynamicProductCarousel } from "@/components/DynamicProductCarousel";
 import { DynamicProductInfo } from "@/components/DynamicProductInfo";
 import { DynamicProductDescription } from "@/components/DynamicProductDescription";
+import { Spinner } from "@/components/ui/spinner";
 
 const categoryLabels: Record<string, string> = {
   proteinas: "Proteínas",
@@ -139,9 +140,9 @@ const DynamicProduct = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground">Cargando producto...</p>
+        <Spinner />
       </div>
-    );
+    );  
   }
 
   if (!product) {
@@ -169,7 +170,7 @@ const DynamicProduct = () => {
     <div className="min-h-screen bg-background">
       <Header isVisible={headerVisible} />
 
-      <main className="pb-24 pt-[120px] sm:pt-[104px]">
+      <main className="pb-[24px] pt-[120px] sm:pt-[104px]">
         <Breadcrumb items={breadcrumbItems} />
         <DynamicProductCarousel images={product.images} productName={product.name} />
         <DynamicProductInfo
