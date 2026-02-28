@@ -938,12 +938,18 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Public function to sync pending order prices (called on page load / realtime updates)
   const syncPendingOrderPrices = useCallback(async () => {
-    if (currentUserId) {
-      await syncWaitingListOrder(currentUserId);
-      // Also refresh waiting list items to get updated prices
-      const waiting = await fetchWaitingListItemsInternal(currentUserId);
-      setWaitingListItems(waiting);
+    let userId = currentUserId;
+
+    if (!userId) {
+      const { data: { session } } = await supabase.auth.getSession();
+      userId = session?.user?.id ?? null;
     }
+
+    if (!userId) return;
+
+    await syncWaitingListOrder(userId);
+    const waiting = await fetchWaitingListItemsInternal(userId);
+    setWaitingListItems(waiting);
   }, [currentUserId]);
 
   return (
