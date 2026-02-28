@@ -41,6 +41,7 @@ interface CartContextType {
   moveWaitingListToCart: () => Promise<void>;
   refreshCart: () => Promise<void>;
   getSessionId: () => string;
+  syncPendingOrderPrices: () => Promise<void>;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -491,19 +492,40 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
       }
 
-      // Get product prices for full price (tier 1) calculation
+      // Get product prices and current participant counts for recalculation
       const productIds = [...new Set(waitingListData.map(i => i.product_id))];
       const { data: productsData } = await supabase
         .from("products")
-        .select("id, prices")
+        .select("id, prices, total_orders_count")
         .in("id", productIds);
 
       const productPricesMap = new Map<string, any[]>();
+      const productCountsMap = new Map<string, number>();
       productsData?.forEach(p => {
         productPricesMap.set(p.id, (p.prices as any[]) || []);
+        productCountsMap.set(p.id, p.total_orders_count || 0);
       });
 
-      // Prepare order items - use frozen prices and participants if cycle is closed
+      // Helper to calculate tier price from participants count
+      const calcTierPrice = (productId: string, participants: number): number | null => {
+        const prices = productPricesMap.get(productId);
+        if (!prices || prices.length === 0) return null;
+        const normalized = prices
+          .map((p: any) => ({ people: Number(p.people), price: Number(p.price) }))
+          .filter((p: any) => Number.isFinite(p.people) && Number.isFinite(p.price))
+          .sort((a: any, b: any) => a.people - b.people);
+        if (normalized.length === 0) return null;
+        let price = normalized[0].price;
+        for (let i = normalized.length - 1; i >= 0; i--) {
+          if (participants >= normalized[i].people) {
+            price = normalized[i].price;
+            break;
+          }
+        }
+        return price;
+      };
+
+      // Prepare order items - use frozen prices if cycle closed, else recalculate dynamically
       const orderItems = waitingListData.map(item => {
         let unitPrice = item.current_price_per_unit;
         let participantsCount: number | undefined;
@@ -511,6 +533,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const key = `${item.product_id}||${item.flavor || ''}`;
           unitPrice = frozenPriceMap.get(key) ?? frozenPriceMap.get(item.product_id) ?? item.current_price_per_unit;
           participantsCount = frozenParticipantsMap.get(key) ?? frozenParticipantsMap.get(item.product_id);
+        } else {
+          // Recalculate price based on current total_orders_count
+          const totalCount = productCountsMap.get(item.product_id) || 0;
+          const recalcPrice = calcTierPrice(item.product_id, totalCount);
+          if (recalcPrice !== null) {
+            unitPrice = recalcPrice;
+          }
         }
         const result: any = {
           product_id: item.product_id,
@@ -525,6 +554,20 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         return result;
       });
+
+      // Also update waiting_list_items prices (for non-frozen cycles)
+      if (!isFrozenCycle) {
+        for (const item of waitingListData) {
+          const totalCount = productCountsMap.get(item.product_id) || 0;
+          const newPrice = calcTierPrice(item.product_id, totalCount);
+          if (newPrice !== null && newPrice !== item.current_price_per_unit) {
+            await supabase
+              .from("waiting_list_items")
+              .update({ current_price_per_unit: newPrice })
+              .eq("id", item.id);
+          }
+        }
+      }
 
       // Calculate subtotal using the correct prices
       const subtotal = orderItems.reduce(
@@ -893,6 +936,16 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const cartCount = cartItems.length;
   const waitingListCount = waitingListItems.length;
 
+  // Public function to sync pending order prices (called on page load / realtime updates)
+  const syncPendingOrderPrices = useCallback(async () => {
+    if (currentUserId) {
+      await syncWaitingListOrder(currentUserId);
+      // Also refresh waiting list items to get updated prices
+      const waiting = await fetchWaitingListItemsInternal(currentUserId);
+      setWaitingListItems(waiting);
+    }
+  }, [currentUserId]);
+
   return (
     <CartContext.Provider
       value={{
@@ -914,6 +967,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         moveWaitingListToCart,
         refreshCart,
         getSessionId,
+        syncPendingOrderPrices,
       }}
     >
       {children}

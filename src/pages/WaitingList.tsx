@@ -44,6 +44,7 @@ const WaitingList = () => {
     removeFromWaitingList,
     clearWaitingList,
     moveWaitingListToCart,
+    syncPendingOrderPrices,
   } = useCart();
   const [headerVisible, setHeaderVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -277,6 +278,9 @@ const WaitingList = () => {
 
     void fetchData();
 
+    // Sync pending order prices on page load
+    void syncPendingOrderPrices();
+
     // Subscribe to realtime updates on products table
     const channel = supabase
       .channel("products-price-updates")
@@ -289,6 +293,8 @@ const WaitingList = () => {
         },
         () => {
           void fetchData();
+          // Recalculate pending order prices when product counters change
+          void syncPendingOrderPrices();
         }
       )
       .subscribe();
