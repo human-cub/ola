@@ -12,6 +12,8 @@ import {
 import { AddToCartDialog } from "./AddToCartDialog";
 import { supabase } from "@/integrations/supabase/client";
 
+// ─── Types ────────────────────────────────────────────────────────────────────
+
 interface PriceData {
   people: number;
   price: number;
@@ -26,80 +28,77 @@ interface FloatingButtonProps {
   waitingCount?: number;
 }
 
-export const FloatingButton = ({ 
-  productName, 
-  productId, 
-  productImage = null,
-  flavors = [],
-  prices = [], 
-  waitingCount = 0 
-}: FloatingButtonProps) => {
-  const [timeLeft, setTimeLeft] = useState({
-    days: 0,
-    hours: 0,
-    minutes: 0
-  });
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function getNextSunday(): Date {
+  const now = new Date();
+  const next = new Date(now);
+  const daysUntilSunday = (7 - now.getDay()) % 7;
+
+  if (daysUntilSunday === 0 && now.getHours() < 23) {
+    next.setHours(23, 59, 59, 999);
+  } else {
+    next.setDate(now.getDate() + (daysUntilSunday || 7));
+    next.setHours(23, 59, 59, 999);
+  }
+
+  return next;
+}
+
+function getDiscountPrice(prices: PriceData[]): number | null {
+  if (prices.length === 0) return null;
+  return prices.length >= 5 ? prices[4].price : prices[prices.length - 1].price;
+}
+
+function getBuyNowPrice(prices: PriceData[]): number | null {
+  if (prices.length === 0) return null;
+  return prices.length > 1 ? prices[1].price : prices[0].price;
+}
+
+async function hasPendingConflict(userId: string): Promise<boolean> {
+  const weekStart = new Date();
+  weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
+  weekStart.setHours(0, 0, 0, 0);
+
+  const { data } = await supabase
+    .from("user_orders")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("order_type", "collective")
+    .eq("status", "pending")
+    .lt("created_at", weekStart.toISOString())
+    .limit(1);
+
+  return !!(data && data.length > 0);
+}
+
+// ─── Hook ─────────────────────────────────────────────────────────────────────
+
+function useFloatingButton(prices: PriceData[]) {
   const navigate = useNavigate();
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0 });
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isWaitingList, setIsWaitingList] = useState(false);
   const [conflictDialogOpen, setConflictDialogOpen] = useState(false);
 
   useEffect(() => {
-    const getNextSunday = () => {
-      const now = new Date();
-      const nextSunday = new Date(now);
-      
-      // Calculate days until next Sunday (0 = Sunday, 6 = Saturday)
-      const daysUntilSunday = (7 - now.getDay()) % 7;
-      
-      // If today is Sunday and it's before 23:59, target is today
-      // Otherwise target next Sunday
-      if (daysUntilSunday === 0 && now.getHours() < 23) {
-        nextSunday.setHours(23, 59, 59, 999);
-      } else {
-        nextSunday.setDate(now.getDate() + (daysUntilSunday || 7));
-        nextSunday.setHours(23, 59, 59, 999);
-      }
-      
-      return nextSunday;
-    };
-
-    const calculateTimeLeft = () => {
-      const targetDate = getNextSunday();
-      const now = new Date();
-      const difference = targetDate.getTime() - now.getTime();
-
-      if (difference > 0) {
-        const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-        
-        setTimeLeft({ days, hours, minutes });
+    const calculate = () => {
+      const diff = getNextSunday().getTime() - Date.now();
+      if (diff > 0) {
+        setTimeLeft({
+          days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+          minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+        });
       } else {
         setTimeLeft({ days: 0, hours: 0, minutes: 0 });
       }
     };
 
-    // Calculate immediately
-    calculateTimeLeft();
-    
-    // Update every minute
-    const timer = setInterval(calculateTimeLeft, 60000);
-
+    calculate();
+    const timer = setInterval(calculate, 60000);
     return () => clearInterval(timer);
   }, []);
-
-  // Buy Now price = second tier price (index 1) - fixed price regardless of participants
-  const getBuyNowPrice = () => {
-    if (prices.length === 0) return null;
-    // prices[0] = highest price (1 person), prices[1] = second tier, etc.
-    if (prices.length > 1) {
-      return prices[1].price; // Second tier price (index 1)
-    }
-    return prices[0].price; // Fallback to first tier if only one exists
-  };
-
-  const buyNowPrice = getBuyNowPrice();
 
   const handleBuyNow = () => {
     setIsWaitingList(false);
@@ -107,79 +106,171 @@ export const FloatingButton = ({
   };
 
   const handleWaitForDiscount = async () => {
-    // Check if user has a pending collective order from a previous week
     const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user) {
-      const weekStart = new Date();
-      weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1); // Monday
-      weekStart.setHours(0, 0, 0, 0);
-
-      const { data: pendingOrders } = await supabase
-        .from('user_orders')
-        .select('id')
-        .eq('user_id', session.user.id)
-        .eq('order_type', 'collective')
-        .eq('status', 'pending')
-        .lt('created_at', weekStart.toISOString())
-        .limit(1);
-
-      if (pendingOrders && pendingOrders.length > 0) {
-        setConflictDialogOpen(true);
-        return;
-      }
+    if (session?.user && await hasPendingConflict(session.user.id)) {
+      setConflictDialogOpen(true);
+      return;
     }
-
     setIsWaitingList(true);
     setDialogOpen(true);
   };
+
+  const goToWaitingList = () => {
+    setConflictDialogOpen(false);
+    navigate("/lista-espera");
+  };
+
+  return {
+    timeLeft,
+    discountPrice: getDiscountPrice(prices),
+    buyNowPrice: getBuyNowPrice(prices),
+    dialogOpen,
+    setDialogOpen,
+    isWaitingList,
+    conflictDialogOpen,
+    setConflictDialogOpen,
+    handleBuyNow,
+    handleWaitForDiscount,
+    goToWaitingList,
+  };
+}
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+function CountdownTimer({ days, hours, minutes }: { days: number; hours: number; minutes: number }) {
+  return (
+    <div className="flex items-center gap-2 justify-center mb-3">
+      <Clock className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+      <div className="text-sm">
+        <div className="flex gap-1 items-center justify-center">
+          <span className="font-bold">{days}d</span>
+          <span>:</span>
+          <span className="font-bold">{hours}h</span>
+          <span>:</span>
+          <span className="font-bold">{minutes}m</span>
+        </div>
+        <div className="text-xs opacity-90 text-center whitespace-nowrap">
+          Tiempo de recolección
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function WaitForDiscountButton({
+  discountPrice,
+  onClick,
+}: {
+  discountPrice: number | null;
+  onClick: () => void;
+}) {
+  return (
+    <Button
+      variant="secondary"
+      size="sm"
+      onClick={onClick}
+      className="bg-white/20 hover:bg-white/30 text-white border-0 gap-2 flex-1 h-auto py-3 sm:py-2 w-full"
+    >
+      <Timer className="size-5 flex-shrink-0" />
+      <span className="text-sm font-normal">
+        Esperar y comprar desde{" "}
+        {discountPrice && <span className="font-bold">${discountPrice.toLocaleString()}</span>}
+      </span>
+    </Button>
+  );
+}
+
+function BuyNowButton({
+  buyNowPrice,
+  onClick,
+}: {
+  buyNowPrice: number | null;
+  onClick: () => void;
+}) {
+  return (
+    <Button
+      variant="secondary"
+      size="sm"
+      onClick={onClick}
+      className="bg-white/20 hover:bg-white/30 text-white border-0 gap-2 flex-1 h-auto py-3 sm:py-2 w-full"
+    >
+      <ShoppingCart className="size-5 flex-shrink-0" />
+      <span className="text-sm font-normal">
+        Comprar ahora{" "}
+        {buyNowPrice && <span className="font-bold">${buyNowPrice.toLocaleString()}</span>}
+      </span>
+    </Button>
+  );
+}
+
+function ConflictDialog({
+  open,
+  onClose,
+  onGoToWaitingList,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onGoToWaitingList: () => void;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md rounded-2xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-amber-500" />
+            Pedido pendiente
+          </DialogTitle>
+          <DialogDescription className="text-left pt-2">
+            Tenés un pedido de la semana pasada en tu Lista de Espera que aún no fue confirmado ni
+            cancelado. Para agregar nuevos productos, primero necesitás resolver ese pedido.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex flex-col gap-2 pt-2">
+          <Button onClick={onGoToWaitingList} className="w-full">
+            Ir a mi Lista de Espera
+          </Button>
+          <Button variant="outline" onClick={onClose} className="w-full">
+            Cerrar
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
+export const FloatingButton = ({
+  productName,
+  productId,
+  productImage = null,
+  flavors = [],
+  prices = [],
+  waitingCount = 0,
+}: FloatingButtonProps) => {
+  const {
+    timeLeft,
+    discountPrice,
+    buyNowPrice,
+    dialogOpen,
+    setDialogOpen,
+    isWaitingList,
+    conflictDialogOpen,
+    setConflictDialogOpen,
+    handleBuyNow,
+    handleWaitForDiscount,
+    goToWaitingList,
+  } = useFloatingButton(prices);
 
   return (
     <>
       <div className="fixed bottom-0 left-0 right-0 z-50 px-3 py-3 sm:px-4 sm:py-4 md:left-auto md:top-[110px] md:bottom-auto">
         <div className="mx-auto max-w-[calc(100%-16px)] sm:max-w-md">
           <div className="bg-gradient-primary rounded-2xl px-3 py-3 sm:p-4 shadow-floating text-white">
-            {/* Timer */}
-            <div className="flex items-center gap-2 justify-center mb-3">
-              <Clock className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-              <div className="text-sm">
-                <div className="flex gap-1 items-center justify-center">
-                  <span className="font-bold">{timeLeft.days}d</span>
-                  <span>:</span>
-                  <span className="font-bold">{timeLeft.hours}h</span>
-                  <span>:</span>
-                  <span className="font-bold">{timeLeft.minutes}m</span>
-                </div>
-                <div className="text-xs opacity-90 text-center whitespace-nowrap">
-                  Tiempo de recolección
-                </div>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
+            <CountdownTimer {...timeLeft} />
             <div className="flex flex-col gap-2">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={handleWaitForDiscount}
-                className="bg-white/20 hover:bg-white/30 text-white border-0 gap-2 flex-1 h-auto py-3 sm:py-2"
-              >
-                <Timer className="w-4 h-4 flex-shrink-0" />
-                <span className="text-sm font-medium">
-                  Esperar y comprar desde {prices.length >= 5 ? <span className="font-bold">${prices[4].price.toLocaleString()}</span> : prices.length > 0 ? <span className="font-bold">${prices[prices.length - 1].price.toLocaleString()}</span> : ''}
-                </span>
-              </Button>
-              
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={handleBuyNow}
-                className="bg-white/20 hover:bg-white/30 text-white border-0 gap-2 flex-1 h-auto py-3 sm:py-2 font-semibold"
-              >
-                <ShoppingCart className="w-4 h-4 flex-shrink-0" />
-                <span className="text-sm font-medium">
-                  Comprar ahora {buyNowPrice && <span className="font-bold">${buyNowPrice.toLocaleString()}</span>}
-                </span>
-              </Button>
+              <WaitForDiscountButton discountPrice={discountPrice} onClick={handleWaitForDiscount} />
+              <BuyNowButton buyNowPrice={buyNowPrice} onClick={handleBuyNow} />
             </div>
           </div>
         </div>
@@ -197,38 +288,11 @@ export const FloatingButton = ({
         currentParticipants={waitingCount}
       />
 
-      {/* Conflict dialog: pending order from previous week */}
-      <Dialog open={conflictDialogOpen} onOpenChange={setConflictDialogOpen}>
-        <DialogContent className="sm:max-w-md rounded-2xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-amber-500" />
-              Pedido pendiente
-            </DialogTitle>
-            <DialogDescription className="text-left pt-2">
-              Tenés un pedido de la semana pasada en tu Lista de Espera que aún no fue confirmado ni cancelado. Para agregar nuevos productos, primero necesitás resolver ese pedido.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex flex-col gap-2 pt-2">
-            <Button
-              onClick={() => {
-                setConflictDialogOpen(false);
-                navigate('/lista-espera');
-              }}
-              className="w-full"
-            >
-              Ir a mi Lista de Espera
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => setConflictDialogOpen(false)}
-              className="w-full"
-            >
-              Cerrar
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ConflictDialog
+        open={conflictDialogOpen}
+        onClose={() => setConflictDialogOpen(false)}
+        onGoToWaitingList={goToWaitingList}
+      />
     </>
   );
 };
