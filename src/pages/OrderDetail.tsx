@@ -9,6 +9,11 @@ import { toast } from "sonner";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import { Separator } from "@/components/ui/separator";
 import { ShareBlock } from "@/components/ShareBlock";
+import {
+  getCollectiveTierPrice,
+  getFirstTierPrice,
+  shouldUseDynamicCollectivePricing,
+} from "@/lib/collectivePricing";
 
 interface OrderItem {
   product_id: string;
@@ -17,6 +22,7 @@ interface OrderItem {
   quantity: number;
   price_per_unit: number;
   product_image: string | null;
+  participants_count?: number | null;
 }
 
 interface Order {
@@ -119,7 +125,93 @@ const OrderDetail = () => {
         }
       }
 
-      setOrder(data as unknown as Order);
+      let resolvedOrder = data as unknown as Order;
+
+      if (
+        shouldUseDynamicCollectivePricing({
+          orderType: resolvedOrder.order_type,
+          status: resolvedOrder.status,
+          createdAt: resolvedOrder.created_at,
+          isPromo: resolvedOrder.is_promo,
+          items: resolvedOrder.items,
+        })
+      ) {
+        const productIds = [...new Set(resolvedOrder.items.map((item) => item.product_id))];
+
+        if (productIds.length > 0) {
+          const { data: productsData } = await supabase
+            .from("products")
+            .select("id, prices, total_orders_count")
+            .in("id", productIds);
+
+          if (productsData) {
+            const productMap = new Map<string, { prices: unknown; totalOrdersCount: number }>();
+            productsData.forEach((product: any) => {
+              productMap.set(product.id, {
+                prices: product.prices,
+                totalOrdersCount: Number(product.total_orders_count || 0),
+              });
+            });
+
+            let hasChanges = false;
+            const recalculatedItems = resolvedOrder.items.map((item) => {
+              const productData = productMap.get(item.product_id);
+              if (!productData) return item;
+
+              const recalculatedPrice = getCollectiveTierPrice(
+                productData.prices,
+                productData.totalOrdersCount
+              );
+
+              if (recalculatedPrice === null || recalculatedPrice === item.price_per_unit) {
+                return item;
+              }
+
+              hasChanges = true;
+              return { ...item, price_per_unit: recalculatedPrice };
+            });
+
+            if (hasChanges) {
+              const subtotal = recalculatedItems.reduce(
+                (sum, item) => sum + Number(item.price_per_unit) * item.quantity,
+                0
+              );
+
+              const fullPrice = recalculatedItems.reduce((sum, item) => {
+                const productData = productMap.get(item.product_id);
+                const firstTierPrice = getFirstTierPrice(
+                  productData?.prices,
+                  Number(item.price_per_unit)
+                );
+                return sum + firstTierPrice * item.quantity;
+              }, 0);
+
+              const discountAmount = Math.max(0, fullPrice - subtotal);
+              const totalAmount = subtotal + Number(resolvedOrder.delivery_cost || 0);
+
+              await supabase
+                .from("user_orders")
+                .update({
+                  items: recalculatedItems as any,
+                  subtotal,
+                  discount_amount: discountAmount,
+                  total_amount: totalAmount,
+                })
+                .eq("id", resolvedOrder.id);
+
+              resolvedOrder = {
+                ...resolvedOrder,
+                items: recalculatedItems,
+                subtotal,
+                discount_amount: discountAmount,
+                total_amount: totalAmount,
+              };
+            }
+          }
+        }
+      }
+
+      setOrder(resolvedOrder);
       setLoading(false);
     };
 

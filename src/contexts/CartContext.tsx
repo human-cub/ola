@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
+import { getCollectiveTierPrice, getFirstTierPrice } from "@/lib/collectivePricing";
 export interface CartItem {
   id: string;
   product_id: string;
@@ -509,20 +509,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Helper to calculate tier price from participants count
       const calcTierPrice = (productId: string, participants: number): number | null => {
         const prices = productPricesMap.get(productId);
-        if (!prices || prices.length === 0) return null;
-        const normalized = prices
-          .map((p: any) => ({ people: Number(p.people), price: Number(p.price) }))
-          .filter((p: any) => Number.isFinite(p.people) && Number.isFinite(p.price))
-          .sort((a: any, b: any) => a.people - b.people);
-        if (normalized.length === 0) return null;
-        let price = normalized[0].price;
-        for (let i = normalized.length - 1; i >= 0; i--) {
-          if (participants >= normalized[i].people) {
-            price = normalized[i].price;
-            break;
-          }
-        }
-        return price;
+        return getCollectiveTierPrice(prices, participants);
       };
 
       // Prepare order items - use frozen prices if cycle closed, else recalculate dynamically
@@ -579,13 +566,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       let fullPrice = 0;
       orderItems.forEach(item => {
         const prices = productPricesMap.get(item.product_id);
-        if (prices && prices.length > 0) {
-          const sortedPrices = [...prices].sort((a, b) => (a.people || 0) - (b.people || 0));
-          const firstTierPrice = sortedPrices[0]?.price || item.price_per_unit;
-          fullPrice += firstTierPrice * item.quantity;
-        } else {
-          fullPrice += Number(item.price_per_unit) * item.quantity;
-        }
+        const firstTierPrice = getFirstTierPrice(prices, Number(item.price_per_unit));
+        fullPrice += firstTierPrice * item.quantity;
       });
 
       // Discount = full price - current subtotal
@@ -753,24 +735,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // Calculate new price from tiers
       let newPrice: number | null = null;
-      if (product?.prices && Array.isArray(product.prices)) {
-        const normalized = (product.prices as any[])
-          .map((p) => ({
-            people: Number((p as any)?.people),
-            price: Number((p as any)?.price),
-          }))
-          .filter((p) => Number.isFinite(p.people) && Number.isFinite(p.price))
-          .sort((a, b) => a.people - b.people);
-
-        if (normalized.length > 0) {
-          newPrice = normalized[0].price;
-          for (let i = normalized.length - 1; i >= 0; i--) {
-            if (effectiveParticipants >= normalized[i].people) {
-              newPrice = normalized[i].price;
-              break;
-            }
-          }
-        }
+      if (product?.prices) {
+        newPrice = getCollectiveTierPrice(product.prices, effectiveParticipants);
       }
 
       // Update price + sync order (if needed)

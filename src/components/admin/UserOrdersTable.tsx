@@ -38,6 +38,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  getCollectiveTierPrice,
+  getFirstTierPrice,
+  shouldUseDynamicCollectivePricing,
+} from "@/lib/collectivePricing";
 
 type OrderStatus = "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled";
 type OrderType = "immediate" | "collective";
@@ -187,17 +192,110 @@ const UserOrdersTable = () => {
       delivery_address: order.delivery_address as DeliveryAddress | null,
       profiles: profilesMap[order.user_id] || null,
     })) as UserOrder[];
-    
+
+    const shouldSyncOrder = (order: UserOrder) =>
+      shouldUseDynamicCollectivePricing({
+        orderType: order.order_type,
+        status: order.status,
+        createdAt: order.created_at,
+        isPromo: order.is_promo,
+        items: order.items,
+      });
+
+    const dynamicOrders = parsedOrders.filter(shouldSyncOrder);
+    const dynamicProductIds = [
+      ...new Set(dynamicOrders.flatMap((order) => order.items.map((item) => item.product_id))),
+    ];
+
+    const productPricingMap = new Map<string, { prices: unknown; totalOrdersCount: number }>();
+
+    if (dynamicProductIds.length > 0) {
+      const { data: productsData } = await supabase
+        .from("products")
+        .select("id, prices, total_orders_count")
+        .in("id", dynamicProductIds);
+
+      productsData?.forEach((product: any) => {
+        productPricingMap.set(product.id, {
+          prices: product.prices,
+          totalOrdersCount: Number(product.total_orders_count || 0),
+        });
+      });
+    }
+
+    const syncUpdates: PromiseLike<unknown>[] = [];
+
+    const normalizedOrders = parsedOrders.map((order) => {
+      if (!shouldSyncOrder(order)) {
+        return order;
+      }
+
+      let hasChanges = false;
+
+      const recalculatedItems = order.items.map((item) => {
+        const productData = productPricingMap.get(item.product_id);
+        if (!productData) return item;
+
+        const newPrice = getCollectiveTierPrice(productData.prices, productData.totalOrdersCount);
+        if (newPrice === null || newPrice === item.price_per_unit) return item;
+
+        hasChanges = true;
+        return { ...item, price_per_unit: newPrice };
+      });
+
+      if (!hasChanges) {
+        return order;
+      }
+
+      const subtotal = recalculatedItems.reduce(
+        (sum, item) => sum + Number(item.price_per_unit) * item.quantity,
+        0
+      );
+
+      const fullPrice = recalculatedItems.reduce((sum, item) => {
+        const productData = productPricingMap.get(item.product_id);
+        const firstTierPrice = getFirstTierPrice(productData?.prices, Number(item.price_per_unit));
+        return sum + firstTierPrice * item.quantity;
+      }, 0);
+
+      const discountAmount = Math.max(0, fullPrice - subtotal);
+      const totalAmount = subtotal + Number(order.delivery_cost || 0);
+
+      syncUpdates.push(
+        supabase
+          .from("user_orders")
+          .update({
+            items: recalculatedItems as any,
+            subtotal,
+            discount_amount: discountAmount,
+            total_amount: totalAmount,
+          })
+          .eq("id", order.id)
+      );
+
+      return {
+        ...order,
+        items: recalculatedItems,
+        subtotal,
+        discount_amount: discountAmount,
+        total_amount: totalAmount,
+      };
+    });
+
+    if (syncUpdates.length > 0) {
+      await Promise.all(syncUpdates);
+    }
+
     // Apply search filter
     const filtered = searchQuery
-      ? parsedOrders.filter(
+      ? normalizedOrders.filter(
           (o) =>
             o.order_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
             o.profiles?.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             o.profiles?.phone?.includes(searchQuery)
         )
-      : parsedOrders;
-    
+      : normalizedOrders;
+
     setOrders(filtered);
     setLoading(false);
   };
@@ -298,17 +396,14 @@ const UserOrdersTable = () => {
             // Immediate orders use tier 2 (prices[1]) - "Comprar ahora" price
             restoredPrice = prices[1]?.price || prices[0]?.price || item.price_per_unit;
           } else {
-            // Collective orders: use participants_count from the item to find correct tier
-            const participantsCount = (item as any).participants_count || order.participants_count || productCountersMap[item.product_id] || 1;
-            // Find the tier whose 'people' threshold is met
-            let matchedPrice = prices[0]?.price || item.price_per_unit;
-            for (let i = prices.length - 1; i >= 0; i--) {
-              if (participantsCount >= (prices[i]?.people || 0)) {
-                matchedPrice = prices[i]?.price;
-                break;
-              }
-            }
-            restoredPrice = matchedPrice;
+            const participantsCount =
+              (item as any).participants_count ||
+              order.participants_count ||
+              productCountersMap[item.product_id] ||
+              1;
+
+            const matchedPrice = getCollectiveTierPrice(prices, participantsCount);
+            restoredPrice = matchedPrice ?? item.price_per_unit;
           }
 
           return { ...item, price_per_unit: restoredPrice };
@@ -325,7 +420,7 @@ const UserOrdersTable = () => {
         const { error } = await supabase
           .from("user_orders")
           .update({
-            items: restoredItems,
+            items: restoredItems as any,
             subtotal: restoredSubtotal,
             discount_amount: restoredDiscount,
             total_amount: restoredTotal,
@@ -364,7 +459,7 @@ const UserOrdersTable = () => {
       const { error } = await supabase
         .from("user_orders")
         .update({
-          items: updatedItems,
+          items: updatedItems as any,
           subtotal: newSubtotal,
           discount_amount: discountAmount,
           total_amount: newTotal,
