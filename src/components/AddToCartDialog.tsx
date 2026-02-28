@@ -291,7 +291,7 @@ export const AddToCartDialog = ({
                 />
               )}
               <div className="flex-1">
-                <h3 className="font-semibold text-lg">{productName}</h3>
+                <h3 className="font-semibold text-lg leading-[1.15]">{productName}</h3>
                 <p className="text-muted-foreground text-sm">
                   {formatPrice(pricePerUnit)} c/u
                 </p>

@@ -11,13 +11,13 @@ All colors MUST be HSL.
   :root {
     /* Cyan and blue palette inspired by the new logo */
     --background: 0 0% 100%;
-    --foreground: 200 30% 12%;
+    --foreground: 200 30% 16%;
 
     --card: 0 0% 100%;
-    --card-foreground: 200 30% 12%;
+    --card-foreground: var(--foreground);
 
     --popover: 0 0% 100%;
-    --popover-foreground: 200 30% 12%;
+    --popover-foreground: var(--foreground);
 
     /* Primary: Cyan blue from logo */
     --primary: 195 100% 50%;
@@ -144,6 +144,7 @@ All colors MUST be HSL.
     h5,
     h6 {
       line-height: 1.15;
+      letter-spacing: 0.0125em;
     }
 }
 
