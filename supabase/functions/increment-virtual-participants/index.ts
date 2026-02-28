@@ -237,7 +237,7 @@ Deno.serve(async (req) => {
       if (!product.week_start_date) {
         const newParams = generateNewProductParams(product.id);
         updates.push(
-          supabase.from('products').update(newParams).eq('id', product.id).then()
+          supabase.from('products').update(newParams).eq('id', product.id)
         );
         results.push({ id: product.id, name: productName, action: 'initialized', newCount: newParams.virtual_orders_count });
         console.log(`[${productName}] Initialized, max:${newParams.max_weekly_participants}`);
@@ -357,7 +357,7 @@ Deno.serve(async (req) => {
             virtual_orders_count: newCount,
             last_increment_at: now.toISOString(),
             cooldown_minutes: newCooldown
-          }).eq('id', product.id).then()
+          }).eq('id', product.id)
         );
         results.push({ id: product.id, name: productName, action: 'incremented', newCount, phase: phaseLabel, details: `${currentCount}->${newCount} (target:${targetForPhase})` });
         console.log(`[${productName}] +${incrementBy}: ${currentCount}->${newCount} (target:${targetForPhase}) [${phaseLabel}]`);

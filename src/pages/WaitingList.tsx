@@ -303,6 +303,7 @@ const WaitingList = () => {
       supabase.removeChannel(channel);
     };
   }, [
+    syncPendingOrderPrices,
     // Re-fetch if items/quantities change (covers cases where realtime isn't available)
     waitingListItems.map((i) => `${i.id}:${i.quantity}`).join(","),
   ]);
