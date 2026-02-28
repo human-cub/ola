@@ -4,6 +4,7 @@ import { Header } from "@/components/Header";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { Footer } from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
+import olaLogo from "@/assets/ola-logo-new.webp";
 
 
 interface Product {
@@ -101,7 +102,11 @@ const Category = () => {
 
           {loading ? (
             <div className="flex justify-center py-12">
-              <p className="text-muted-foreground">Cargando productos...</p>
+              <img
+                src={olaLogo}
+                alt="Cargando..."
+                className="size-5 animate-spin"
+              />
             </div>
           ) : products.length === 0 ? (
             <div className="flex justify-center py-12">

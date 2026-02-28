@@ -1,7 +1,7 @@
 import { MapPin, Clock, Phone, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
 import instagramIcon from "@/assets/instagram-icon-new.png";
-import olaLogo from "@/assets/ola-logo-new.png";
+import olaLogo from "@/assets/ola-logo-new.webp";
 
 interface FooterProps {
   isHomePage?: boolean;
@@ -22,7 +22,7 @@ const navItems = [
 
 export const Footer = ({ isHomePage = false }: FooterProps) => {
   return (
-    <footer className="bg-muted/50 border-t py-8">
+    <footer className="bg-muted/50 border-t py-8 px-4">
       <div className="container-lg mx-auto">
         {/* Navigation - always shown */}
         <nav className="mb-6">

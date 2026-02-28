@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { User, LogIn, ShoppingCart, Clock } from "lucide-react";
-import olaLogo from "@/assets/ola-logo-new.png";
+import olaLogo from "@/assets/ola-logo-new.webp";
 import { TopHeader } from "@/components/TopHeader";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
