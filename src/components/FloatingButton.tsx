@@ -56,20 +56,36 @@ function getBuyNowPrice(prices: PriceData[]): number | null {
 }
 
 async function hasPendingConflict(userId: string): Promise<boolean> {
-  const weekStart = new Date();
+  const now = new Date();
+
+  // Fallback for legacy rows without collective_close_date
+  const weekStart = new Date(now);
   weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
   weekStart.setHours(0, 0, 0, 0);
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("user_orders")
-    .select("id")
+    .select("id, collective_close_date, created_at")
     .eq("user_id", userId)
     .eq("order_type", "collective")
-    .eq("status", "pending")
-    .lt("created_at", weekStart.toISOString())
-    .limit(1);
+    .eq("status", "pending");
 
-  return !!(data && data.length > 0);
+  if (error || !data?.length) return false;
+
+  const nowMs = now.getTime();
+  const weekStartMs = weekStart.getTime();
+
+  return data.some((order) => {
+    if (order.collective_close_date) {
+      const closeAt = new Date(order.collective_close_date).getTime();
+      if (!Number.isNaN(closeAt)) {
+        return closeAt <= nowMs;
+      }
+    }
+
+    const createdAt = new Date(order.created_at).getTime();
+    return !Number.isNaN(createdAt) && createdAt < weekStartMs;
+  });
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
