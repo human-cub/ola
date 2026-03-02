@@ -65,8 +65,17 @@ function getPhase(startDate: string): 'phase1' | 'phase2' | 'phase3' {
   return 'phase3';
 }
 
-function getSaturationFactor(current: number, max: number): number {
+function getSaturationFactor(current: number, max: number, aggressive = false): number {
   const ratio = current / max;
+  if (aggressive) {
+    // Gentler curve for Phase 2 — keeps pushing harder toward target
+    if (ratio < 0.5) return 1.0;
+    if (ratio < 0.7) return 0.85;
+    if (ratio < 0.85) return 0.6;
+    if (ratio < 0.95) return 0.35;
+    return 0.12;
+  }
+  // Original curve for Phase 3
   if (ratio < 0.4) return 1.0;
   if (ratio < 0.6) return 0.7;
   if (ratio < 0.75) return 0.45;
@@ -289,18 +298,30 @@ Deno.serve(async (req) => {
         // PHASE 2 (Tue-Fri): medium growth to 45-65
         phaseLabel = 'p2';
         targetForPhase = phase2Target;
-        minCooldown = Math.round((10 + Math.floor(Math.random() * 15)) * productCooldownBias);
-        maxCooldown = Math.round((25 + Math.floor(Math.random() * 25)) * productCooldownBias);
+        minCooldown = Math.round((5 + Math.floor(Math.random() * 8)) * productCooldownBias);
+        maxCooldown = Math.round((12 + Math.floor(Math.random() * 10)) * productCooldownBias);
 
-        const baseProbability = product.base_probability || 0.005;
-        const saturationFactor = getSaturationFactor(currentCount, targetForPhase);
-        incrementProbability = baseProbability * 55 * timeFactor * saturationFactor * productActivityBias;
-        incrementProbability = Math.min(incrementProbability, 0.6);
+        // Urgency-based approach like Phase 1
+        const remainingHoursP2 = Math.max(1, 120 - hoursSinceStart);
+        const neededP2 = Math.max(0, targetForPhase - currentCount);
+        const neededPerHourP2 = neededP2 / remainingHoursP2;
 
-        // Random skip 5-15%
-        if (Math.random() < 0.05 + (1 - ph) * 0.1) {
-          incrementProbability = 0;
+        const saturationFactor = getSaturationFactor(currentCount, targetForPhase, true);
+
+        let urgencyP2 = 1.0;
+        if (neededPerHourP2 > 1.5) urgencyP2 = 1.4;
+        else if (neededPerHourP2 > 0.8) urgencyP2 = 1.1;
+        else if (neededPerHourP2 > 0.3) urgencyP2 = 0.8;
+        else urgencyP2 = 0.5;
+
+        incrementProbability = Math.min(0.7, 0.30 * urgencyP2 * saturationFactor * timeFactor * productActivityBias + Math.random() * 0.08);
+
+        // Random skip only 3-8%
+        if (Math.random() < 0.03 + (1 - ph) * 0.05) {
+          incrementProbability *= 0.05;
         }
+
+        console.log(`[${productName}] Phase2: ${currentCount}/${targetForPhase}, hrs_left:${remainingHoursP2.toFixed(1)}, prob:${incrementProbability.toFixed(3)}`);
 
       } else {
         // PHASE 3 (Sat-Sun): slow growth to 72
@@ -331,7 +352,7 @@ Deno.serve(async (req) => {
       if (product.last_increment_at) {
         const lastIncrement = new Date(product.last_increment_at);
         const minutesSinceLast = (now.getTime() - lastIncrement.getTime()) / (1000 * 60);
-        const requiredCooldown = phase === 'phase1'
+        const requiredCooldown = (phase === 'phase1' || phase === 'phase2')
           ? Math.min(product.cooldown_minutes || 5, maxCooldown)
           : (product.cooldown_minutes || 30);
 
@@ -345,8 +366,8 @@ Deno.serve(async (req) => {
       const roll = Math.random();
       if (roll < incrementProbability) {
         let incrementBy = 1;
-        // In phase 1, hot products can sometimes jump by 2
-        if (phase === 'phase1' && productActivityBias > 1.0 && Math.random() < 0.25) {
+        // In phase 1 & 2, hot products can sometimes jump by 2
+        if ((phase === 'phase1' || phase === 'phase2') && productActivityBias > 0.9 && Math.random() < 0.2) {
           incrementBy = 2;
         }
         const newCount = Math.min(currentCount + incrementBy, targetForPhase);
