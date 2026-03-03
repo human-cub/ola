@@ -10,6 +10,7 @@ import { DynamicProductCarousel } from "@/components/DynamicProductCarousel";
 import { DynamicProductInfo } from "@/components/DynamicProductInfo";
 import { DynamicProductDescription } from "@/components/DynamicProductDescription";
 import { Spinner } from "@/components/ui/spinner";
+import { useScrollHeader } from "@/hooks/useScrollHeader";
 
 const categoryLabels: Record<string, string> = {
   proteinas: "Proteínas",
@@ -38,8 +39,7 @@ interface ProductData {
 
 const DynamicProduct = () => {
   const { slug } = useParams<{ slug: string }>();
-  const [headerVisible, setHeaderVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  const headerVisible = useScrollHeader();
   const [product, setProduct] = useState<ProductData | null>(null);
   const [loading, setLoading] = useState(true);
   const [waitingCount, setWaitingCount] = useState(0);
@@ -137,23 +137,6 @@ const DynamicProduct = () => {
       if (channel) supabase.removeChannel(channel);
     };
   }, [slug]);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-
-      if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        setHeaderVisible(false);
-      } else {
-        setHeaderVisible(true);
-      }
-
-      setLastScrollY(currentScrollY);
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScrollY]);
 
   if (loading) {
     return (

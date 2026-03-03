@@ -1,10 +1,7 @@
 import { useState, useEffect } from "react";
 import { Slider } from "@/components/ui/slider";
-
-interface PriceData {
-  people: number;
-  price: number;
-}
+import { formatPrice } from "@/lib/formatting";
+import type { PriceData } from "@/lib/types";
 
 interface PriceSliderProps {
   priceData: PriceData[];
@@ -110,14 +107,6 @@ export const PriceSlider = ({ priceData, waitingCount = 0 }: PriceSliderProps) =
       setShowMaxGlow(true);
       setTimeout(() => setShowMaxGlow(false), 1000);
     }
-  };
-
-  const formatPrice = (price: number) => {
-    const formatted = new Intl.NumberFormat('es-AR', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(price);
-    return `$${formatted}`;
   };
 
   const getTickPosition = (index: number) => {

@@ -8,6 +8,8 @@ import { RegisterForm } from "@/components/auth/RegisterForm";
 import { ArrowLeft } from "lucide-react";
 import { consumePendingAddAction, PendingAddAction } from "@/lib/postAuthAction";
 import { toast } from "sonner";
+import { formatPrice } from "@/lib/formatting";
+import { getNextSundayIso } from "@/lib/collectivePricing";
 
 const AuthPage = () => {
   const navigate = useNavigate();
@@ -15,23 +17,6 @@ const AuthPage = () => {
   const [activeTab, setActiveTab] = useState("login");
   
   const redirectTo = searchParams.get("redirect") || "/";
-
-  // Helper: format price for notifications
-  const formatPrice = (price: number) => `$${Math.round(price).toLocaleString('es-AR')}`;
-
-  // Helper: calculate next Sunday 23:59 ISO
-  const computeNextSundayCloseIso = (): string => {
-    const now = new Date();
-    const nextSunday = new Date(now);
-    const daysUntilSunday = (7 - now.getDay()) % 7;
-    if (daysUntilSunday === 0 && now.getHours() < 23) {
-      nextSunday.setHours(23, 59, 59, 999);
-    } else {
-      nextSunday.setDate(now.getDate() + (daysUntilSunday || 7));
-      nextSunday.setHours(23, 59, 59, 999);
-    }
-    return nextSunday.toISOString();
-  };
 
   // Process pending add action after login
   const processPendingAction = async (userId: string, action: PendingAddAction) => {
@@ -96,7 +81,7 @@ const AuthPage = () => {
                 items: orderItems,
                 subtotal,
                 total_amount: subtotal,
-                collective_close_date: computeNextSundayCloseIso(),
+                collective_close_date: getNextSundayIso(),
               })
               .eq("id", existingOrder.id);
           }
@@ -152,7 +137,7 @@ const AuthPage = () => {
               total_amount: subtotal,
               delivery_address: deliveryAddress,
               status: "pending",
-              collective_close_date: computeNextSundayCloseIso(),
+              collective_close_date: getNextSundayIso(),
               notes: phone || null,
             })
             .select("id, order_number")

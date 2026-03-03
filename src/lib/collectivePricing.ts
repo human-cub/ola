@@ -73,6 +73,22 @@ export const isCollectiveOrderFrozen = (createdAt: string, now: Date = new Date(
   return orderCreatedAt < lastSundayClose && now > lastSundayClose;
 };
 
+export const getNextSunday = (now: Date = new Date()): Date => {
+  const next = new Date(now);
+  const daysUntilSunday = (7 - now.getDay()) % 7;
+  if (daysUntilSunday === 0 && now.getHours() < 23) {
+    next.setHours(23, 59, 59, 999);
+  } else {
+    next.setDate(now.getDate() + (daysUntilSunday || 7));
+    next.setHours(23, 59, 59, 999);
+  }
+  return next;
+};
+
+export const getNextSundayIso = (now: Date = new Date()): string => {
+  return getNextSunday(now).toISOString();
+};
+
 export const shouldUseDynamicCollectivePricing = (params: {
   orderType: string;
   status: string;

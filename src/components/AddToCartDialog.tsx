@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Copy } from "lucide-react";
+import { formatPrice } from "@/lib/formatting";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -194,10 +195,6 @@ export const AddToCartDialog = ({
 
   const productUrl = `https://alaola.com.ar${location.pathname}`;
   const shareText = `Mirá este producto con descuento en Ola 🎉 ${productName} — comprá ahora o esperá y pagá menos 🤑 ${productUrl}`;
-
-  const formatPrice = (price: number) => {
-    return `$${price.toLocaleString('es-AR')}`;
-  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

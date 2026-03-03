@@ -1,5 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -18,38 +21,43 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { ArrowLeft, ChevronDown, ChevronUp, Check, Loader2, Share2, MessageCircle, FileText } from "lucide-react";
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { ArrowLeft, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { z } from "zod";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import { Separator } from "@/components/ui/separator";
 import { AddressForm } from "@/components/AddressForm";
+import { useScrollHeader } from "@/hooks/useScrollHeader";
+import { formatPrice } from "@/lib/formatting";
+import { CheckoutSuccessDialog } from "@/components/checkout/CheckoutSuccessDialog";
 
-const addressSchema = z.object({
+const checkoutSchema = z.object({
+  // Contact
+  firstName: z.string().trim().min(1, "El nombre es requerido").max(100),
+  lastName: z.string().trim().max(100),
+  phone: z.string().regex(/^[\+]?[0-9\s\-()]{7,20}$/, "Formato de teléfono inválido"),
+  // Address
   street: z.string().min(1, "La calle es requerida").max(200),
-  number: z.string().min(1, "El número es requerido").max(20),
-  floor: z.string().max(20).optional(),
-  postalCode: z.string().max(8).optional(),
+  streetNumber: z.string().min(1, "El número es requerido").max(20),
+  floor: z.string().max(20),
+  postalCode: z.string().max(8),
   city: z.string().min(1, "La ciudad es requerida"),
   province: z.string().min(1, "La provincia es requerida"),
-  references: z.string().max(500).optional(),
+  references: z.string().max(500),
+  // Payment
+  paymentMethod: z.string().min(1, "Seleccioná un método de pago"),
 });
 
-const contactSchema = z.object({
-  firstName: z.string().trim().min(1, "El nombre es requerido").max(100),
-  lastName: z.string().trim().max(100).optional(),
-  phone: z.string().regex(/^[\+]?[0-9\s\-()]{7,20}$/, "Formato de teléfono inválido"),
-});
+type CheckoutFormValues = z.infer<typeof checkoutSchema>;
 
-// Export with props for route usage
 export interface CheckoutProps {
   isCollective?: boolean;
 }
@@ -58,41 +66,38 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { cartItems, waitingListItems, clearCart, clearWaitingList } = useCart();
-  
-  // Check if coming from waiting list (for back navigation)
+
   const fromWaitingList = searchParams.get('from') === 'waiting-list';
   const items = isCollective ? waitingListItems : cartItems;
-  
-  const [headerVisible, setHeaderVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
+
+  const headerVisible = useScrollHeader();
   const [loading, setLoading] = useState(false);
   const [orderSummaryOpen, setOrderSummaryOpen] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [orderNumber, setOrderNumber] = useState("");
   const [orderId, setOrderId] = useState("");
   const [finalTotal, setFinalTotal] = useState(0);
-  
-  // Address fields
-  const [street, setStreet] = useState("");
-  const [streetNumber, setStreetNumber] = useState("");
-  const [floor, setFloor] = useState("");
-  const [postalCode, setPostalCode] = useState("");
-  const [city, setCity] = useState("Ciudad Autónoma de Buenos Aires");
-  const [province, setProvince] = useState("Buenos Aires");
-  const [references, setReferences] = useState("");
-  
-  // Contact fields
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [phone, setPhone] = useState("");
-  
-  // Payment
-  const [paymentMethod, setPaymentMethod] = useState("");
-  
-  // Delivery zone: 'caba' | 'gba' | 'other'
   const [deliveryZone, setDeliveryZone] = useState<'caba' | 'gba' | 'other'>('caba');
-  
-  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const form = useForm<CheckoutFormValues>({
+    resolver: zodResolver(checkoutSchema),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      phone: "",
+      street: "",
+      streetNumber: "",
+      floor: "",
+      postalCode: "",
+      city: "Ciudad Autónoma de Buenos Aires",
+      province: "Buenos Aires",
+      references: "",
+      paymentMethod: "",
+    },
+  });
+
+  const [street, streetNumber, floor, postalCode, city, province, references, paymentMethod, firstName] =
+    form.watch(["street", "streetNumber", "floor", "postalCode", "city", "province", "references", "paymentMethod", "firstName"]);
 
   // Load profile data
   useEffect(() => {
@@ -110,52 +115,46 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
         .maybeSingle();
 
       if (profile) {
-        setFirstName(profile.first_name || "");
-        setLastName(profile.last_name || "");
-        setPhone(profile.phone || "");
+        form.reset({
+          firstName: profile.first_name || "",
+          lastName: profile.last_name || "",
+          phone: profile.phone || "",
+          street: "",
+          streetNumber: "",
+          floor: "",
+          postalCode: "",
+          city: "Ciudad Autónoma de Buenos Aires",
+          province: "Buenos Aires",
+          references: "",
+          paymentMethod: "",
+        });
+
         if (profile.address) {
           try {
             const addr = JSON.parse(profile.address);
-            setStreet(addr.street || "");
-            setStreetNumber(addr.number || "");
-            setFloor(addr.floor || "");
-            setPostalCode(addr.postalCode || "");
-            setCity(addr.city || "Ciudad Autónoma de Buenos Aires");
-            setProvince(addr.province || "Buenos Aires");
-            setReferences(addr.references || "");
+            form.setValue("street", addr.street || "");
+            form.setValue("streetNumber", addr.number || "");
+            form.setValue("floor", addr.floor || "");
+            form.setValue("postalCode", addr.postalCode || "");
+            form.setValue("city", addr.city || "Ciudad Autónoma de Buenos Aires");
+            form.setValue("province", addr.province || "Buenos Aires");
+            form.setValue("references", addr.references || "");
           } catch {
-            setStreet(profile.address);
+            form.setValue("street", profile.address);
           }
         }
       }
     };
 
     loadProfile();
-  }, [navigate, isCollective]);
+  }, [navigate, isCollective, form]);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        setHeaderVisible(false);
-      } else {
-        setHeaderVisible(true);
-      }
-      setLastScrollY(currentScrollY);
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScrollY]);
-
-  // Handle delivery zone change from AddressForm
   const handleDeliveryZoneChange = useCallback((zone: 'caba' | 'gba' | 'other') => {
     setDeliveryZone(zone);
   }, []);
 
   const [productFirstPrices, setProductFirstPrices] = useState<Record<string, number>>({});
 
-  // Fetch first tier prices for discount calculation
   useEffect(() => {
     const fetchPrices = async () => {
       const productIds = [...new Set(items.map(item => item.product_id))];
@@ -190,51 +189,7 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
   const deliveryCost = subtotal >= 100000 ? 0 : baseDeliveryCost;
   const total = subtotal + deliveryCost;
 
-  const formatPrice = (price: number) => {
-    return `$${Math.round(price).toLocaleString('es-AR')}`;
-  };
-
-  const handleSubmit = async () => {
-    setErrors({});
-
-    const addressValidation = addressSchema.safeParse({
-      street,
-      number: streetNumber,
-      floor: floor || undefined,
-      postalCode,
-      city,
-      province,
-      references: references || undefined,
-    });
-
-    if (!addressValidation.success) {
-      const fieldErrors: Record<string, string> = {};
-      addressValidation.error.errors.forEach((err) => {
-        fieldErrors[err.path[0] as string] = err.message;
-      });
-      setErrors(fieldErrors);
-      return;
-    }
-
-    const contactValidation = contactSchema.safeParse({ 
-      firstName,
-      lastName: lastName || undefined,
-      phone 
-    });
-    if (!contactValidation.success) {
-      const fieldErrors: Record<string, string> = {};
-      contactValidation.error.errors.forEach((err) => {
-        fieldErrors[err.path[0] as string] = err.message;
-      });
-      setErrors((prev) => ({ ...prev, ...fieldErrors }));
-      return;
-    }
-
-    if (!paymentMethod) {
-      setErrors((prev) => ({ ...prev, paymentMethod: "Seleccioná un método de pago" }));
-      return;
-    }
-
+  const handleSubmit = async (formData: CheckoutFormValues) => {
     setLoading(true);
 
     try {
@@ -242,13 +197,13 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
       if (!session) throw new Error("No session");
 
       const addressData = {
-        street,
-        number: streetNumber,
-        floor: floor || null,
-        postalCode,
-        city,
-        province,
-        references: references || null,
+        street: formData.street,
+        number: formData.streetNumber,
+        floor: formData.floor || null,
+        postalCode: formData.postalCode,
+        city: formData.city,
+        province: formData.province,
+        references: formData.references || null,
       };
 
       const orderItems = items.map(item => ({
@@ -263,7 +218,6 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
       let order: { id: string; order_number: string } | null = null;
 
       if (isCollective) {
-        // First fetch the existing order's subtotal to calculate correct total
         const { data: pendingOrder, error: fetchError } = await supabase
           .from("user_orders")
           .select("id, order_number, subtotal")
@@ -276,7 +230,6 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
 
         const collectiveTotal = Number(pendingOrder.subtotal) + (deliveryCost || 0);
 
-        // UPDATE existing pending collective order to confirmed
         const { error: updateError } = await supabase
           .from("user_orders")
           .update({
@@ -284,14 +237,13 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
             delivery_address: addressData as any,
             delivery_cost: deliveryCost || 0,
             total_amount: collectiveTotal,
-            payment_method: paymentMethod,
+            payment_method: formData.paymentMethod,
           })
           .eq("id", pendingOrder.id);
 
         if (updateError) throw updateError;
         order = { id: pendingOrder.id, order_number: pendingOrder.order_number };
 
-        // Verify the order is readable
         const { data: verifiedOrder } = await supabase
           .from("user_orders")
           .select("id")
@@ -302,7 +254,6 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
           throw new Error("Order updated but not readable");
         }
       } else {
-        // CREATE new immediate order
         const generatedOrderNumber = `OLA-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
 
         const { data: newOrder, error: orderError } = await supabase
@@ -317,7 +268,7 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
             total_amount: total,
             delivery_cost: deliveryCost || 0,
             delivery_address: addressData as any,
-            payment_method: paymentMethod,
+            payment_method: formData.paymentMethod,
             status: 'pending' as const,
           }])
           .select('id, order_number')
@@ -333,15 +284,15 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
       await supabase
         .from("profiles")
         .update({
-          first_name: firstName,
-          last_name: lastName || null,
-          phone,
+          first_name: formData.firstName,
+          last_name: formData.lastName || null,
+          phone: formData.phone,
           address: JSON.stringify(addressData),
           profile_completed: true,
         })
         .eq("user_id", session.user.id);
 
-      const customerName = [firstName, lastName].filter(Boolean).join(' ') || 'Sin nombre';
+      const customerName = [formData.firstName, formData.lastName].filter(Boolean).join(' ') || 'Sin nombre';
       const orderUrl = `https://alaola.com.ar/mi-cuenta/pedidos/${order.id}`;
 
       try {
@@ -351,7 +302,7 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
             order_number: order.order_number,
             order_type: isCollective ? 'Compra Colectiva Confirmada' : 'Compra Inmediata',
             customer_name: customerName,
-            phone,
+            phone: formData.phone,
             total: formatPrice(total),
             order_url: orderUrl,
             waiting_for_discount: isCollective,
@@ -361,11 +312,10 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
         // Notification failed but order was saved
       }
 
-      // Send order confirmation email (fire and forget)
       try {
         const userEmail = session.user.email;
         if (userEmail) {
-          const addressStr = [street, streetNumber, city].filter(Boolean).join(', ');
+          const addressStr = [formData.street, formData.streetNumber, formData.city].filter(Boolean).join(', ');
           await supabase.functions.invoke("send-email", {
             body: {
               type: isCollective ? "collective_order_confirmed" : "order_confirmation",
@@ -376,7 +326,7 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
                 items: orderItems,
                 total,
                 delivery_cost: deliveryCost,
-                payment_method: paymentMethod,
+                payment_method: formData.paymentMethod,
                 address: addressStr,
               },
             },
@@ -401,32 +351,6 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const getShareText = () => {
-    return `Mirá - descuentos increíbles de suplementos 🎉 Podés comprar ahora con 20% de descuento o esperar y pagar aún menos 🤑 https://alaola.com.ar/`;
-  };
-
-  const handleNativeShare = async () => {
-    const text = getShareText();
-    if (navigator.share) {
-      try {
-        await navigator.share({ text });
-      } catch (error) {
-        if ((error as Error).name !== 'AbortError') {
-          navigator.clipboard.writeText(text);
-          toast.success("¡Texto copiado!");
-        }
-      }
-    } else {
-      navigator.clipboard.writeText(text);
-      toast.success("¡Texto copiado!");
-    }
-  };
-
-  const handleWhatsAppShare = () => {
-    const text = encodeURIComponent(getShareText());
-    window.open(`https://wa.me/?text=${text}`, '_blank');
   };
 
   if (items.length === 0 && !showSuccess) {
@@ -491,200 +415,170 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
 
           <Separator className="mb-6" />
 
-          {/* Address Section */}
-          <div className="mb-6">
-            <AddressForm
-              street={street}
-              setStreet={setStreet}
-              streetNumber={streetNumber}
-              setStreetNumber={setStreetNumber}
-              floor={floor}
-              setFloor={setFloor}
-              postalCode={postalCode}
-              setPostalCode={setPostalCode}
-              city={city}
-              setCity={setCity}
-              province={province}
-              setProvince={setProvince}
-              references={references}
-              setReferences={setReferences}
-              errors={errors}
-              onDeliveryZoneChange={handleDeliveryZoneChange}
-            />
-          </div>
-
-          <Separator className="mb-6" />
-
-          {/* Contact Section */}
-          <div className="mb-6">
-            <h2 className="text-lg font-semibold mb-4">Datos de contacto</h2>
-            <div className="space-y-4">
-              <div className="space-y-1">
-                <Label htmlFor="firstName" className="text-sm">Nombre *</Label>
-                <Input
-                  id="firstName"
-                  type="text"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  placeholder="Tu nombre"
-                  className={errors.firstName ? "border-destructive" : ""}
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSubmit)}>
+              {/* Address Section */}
+              <div className="mb-6">
+                <AddressForm
+                  street={street}
+                  setStreet={(v) => form.setValue("street", v)}
+                  streetNumber={streetNumber}
+                  setStreetNumber={(v) => form.setValue("streetNumber", v)}
+                  floor={floor}
+                  setFloor={(v) => form.setValue("floor", v)}
+                  postalCode={postalCode}
+                  setPostalCode={(v) => form.setValue("postalCode", v)}
+                  city={city}
+                  setCity={(v) => form.setValue("city", v)}
+                  province={province}
+                  setProvince={(v) => form.setValue("province", v)}
+                  references={references}
+                  setReferences={(v) => form.setValue("references", v)}
+                  errors={Object.fromEntries(
+                    Object.entries(form.formState.errors)
+                      .filter(([k]) => ['street', 'number', 'city', 'province'].includes(k))
+                      .map(([k, v]) => [k === 'streetNumber' ? 'number' : k, v?.message || ''])
+                  )}
+                  onDeliveryZoneChange={handleDeliveryZoneChange}
                 />
-                {errors.firstName && <p className="text-xs text-destructive">{errors.firstName}</p>}
               </div>
-              <div className="space-y-1">
-                <Label htmlFor="lastName" className="text-sm">Apellido</Label>
-                <Input
-                  id="lastName"
-                  type="text"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  placeholder="Tu apellido (opcional)"
-                  className={errors.lastName ? "border-destructive" : ""}
+
+              <Separator className="mb-6" />
+
+              {/* Contact Section */}
+              <div className="mb-6">
+                <h2 className="text-lg font-semibold mb-4">Datos de contacto</h2>
+                <div className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="firstName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm">Nombre *</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Tu nombre" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="lastName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm">Apellido</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Tu apellido (opcional)" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm">Teléfono *</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="tel" placeholder="+54 9 11 1234-5678" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              <Separator className="mb-6" />
+
+              {/* Payment Section */}
+              <div className="mb-6">
+                <h2 className="text-lg font-semibold mb-4">Forma de pago</h2>
+                <FormField
+                  control={form.control}
+                  name="paymentMethod"
+                  render={({ field }) => (
+                    <FormItem>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Seleccioná forma de pago" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="efectivo">Efectivo</SelectItem>
+                          <SelectItem value="transferencia">Transferencia</SelectItem>
+                          <SelectItem value="tarjeta" disabled>Tarjeta (Próximamente)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-                {errors.lastName && <p className="text-xs text-destructive">{errors.lastName}</p>}
               </div>
-              <div className="space-y-1">
-                <Label htmlFor="phone" className="text-sm">Teléfono *</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+54 9 11 1234-5678"
-                  className={errors.phone ? "border-destructive" : ""}
-                />
-                {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
+
+              <Separator className="mb-6" />
+
+              {/* Order Total */}
+              <div className="mb-6 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Precio sin descuento:</span>
+                  <span className="line-through text-muted-foreground">{formatPrice(fullPrice)}</span>
+                </div>
+                {discount > 0 && (
+                  <div className="flex justify-between text-sm text-green-600">
+                    <span>Descuento:</span>
+                    <span>-{formatPrice(discount)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Subtotal:</span>
+                  <span>{formatPrice(subtotal)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Envío:</span>
+                  <span>{deliveryCost === 0 ? "Gratis" : formatPrice(deliveryCost)}</span>
+                </div>
+                <Separator />
+                <div className="flex justify-between text-xl font-bold pt-2">
+                  <span>TOTAL:</span>
+                  <span>{formatPrice(total)}</span>
+                </div>
               </div>
-            </div>
-          </div>
 
-          <Separator className="mb-6" />
-
-          {/* Payment Section */}
-          <div className="mb-6">
-            <h2 className="text-lg font-semibold mb-4">Forma de pago</h2>
-            <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-              <SelectTrigger className={errors.paymentMethod ? "border-destructive" : ""}>
-                <SelectValue placeholder="Seleccioná forma de pago" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="efectivo">Efectivo</SelectItem>
-                <SelectItem value="transferencia">Transferencia</SelectItem>
-                <SelectItem value="tarjeta" disabled>Tarjeta (Próximamente)</SelectItem>
-              </SelectContent>
-            </Select>
-            {errors.paymentMethod && <p className="text-xs text-destructive mt-1">{errors.paymentMethod}</p>}
-          </div>
-
-          <Separator className="mb-6" />
-
-          {/* Order Total */}
-          <div className="mb-6 space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Precio sin descuento:</span>
-              <span className="line-through text-muted-foreground">{formatPrice(fullPrice)}</span>
-            </div>
-            {discount > 0 && (
-              <div className="flex justify-between text-sm text-green-600">
-                <span>Descuento:</span>
-                <span>-{formatPrice(discount)}</span>
-              </div>
-            )}
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Subtotal:</span>
-              <span>{formatPrice(subtotal)}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Envío:</span>
-              <span>{deliveryCost === 0 ? "Gratis" : formatPrice(deliveryCost)}</span>
-            </div>
-            <Separator />
-            <div className="flex justify-between text-xl font-bold pt-2">
-              <span>TOTAL:</span>
-              <span>{formatPrice(total)}</span>
-            </div>
-          </div>
-
-          <Button
-            onClick={handleSubmit}
-            disabled={loading}
-            className="w-full"
-            size="lg"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Procesando...
-              </>
-            ) : (
-              "Finalizar pedido"
-            )}
-          </Button>
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full"
+                size="lg"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Procesando...
+                  </>
+                ) : (
+                  "Finalizar pedido"
+                )}
+              </Button>
+            </form>
+          </Form>
         </div>
       </main>
 
-      {/* Success Dialog */}
-      <AlertDialog open={showSuccess} onOpenChange={setShowSuccess}>
-        <AlertDialogContent className="rounded-2xl max-w-[90vw] sm:max-w-md">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-center">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 flex items-center justify-center">
-                <Check className="w-8 h-8 text-green-600" />
-              </div>
-              ¡Pedido confirmado!
-            </AlertDialogTitle>
-            <AlertDialogDescription className="text-center space-y-4">
-              <p>Tu pedido ha sido registrado exitosamente</p>
-              <p className="text-xl font-bold text-foreground">Pedido #{orderNumber}</p>
-              <p className="text-sm">
-                Nos pondremos en contacto en las próximas horas para confirmar los detalles.
-              </p>
-              
-              <div className="bg-muted rounded-lg p-4 text-left text-sm space-y-1">
-                <div className="flex justify-between">
-                  <span>Total:</span>
-                  <span className="font-bold">{formatPrice(finalTotal)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Forma de pago:</span>
-                  <span className="capitalize">{paymentMethod}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Dirección:</span>
-                  <span className="text-right text-xs">{street} {streetNumber}, {city}</span>
-                </div>
-              </div>
-
-              <div className="pt-4 border-t">
-                <p className="font-semibold mb-3">¡Comparte con tus amigos!</p>
-                <div className="flex gap-2 justify-center">
-                  <Button variant="outline" size="sm" onClick={handleNativeShare}>
-                    <Share2 className="w-4 h-4 mr-1" />
-                    Compartir
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={handleWhatsAppShare}>
-                    <MessageCircle className="w-4 h-4 mr-1" />
-                    WhatsApp
-                  </Button>
-                </div>
-              </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-
-          <div className="flex flex-col gap-2 pt-4">
-            <Button onClick={() => navigate(`/mi-cuenta/pedidos/${orderId}`)} className="w-full">
-              <FileText className="w-4 h-4 mr-2" />
-              Ver comprobante
-            </Button>
-            <Button variant="outline" onClick={() => navigate("/mi-cuenta")} className="w-full">
-              Ir a Mis Pedidos
-            </Button>
-          </div>
-        </AlertDialogContent>
-      </AlertDialog>
+      <CheckoutSuccessDialog
+        open={showSuccess}
+        onOpenChange={setShowSuccess}
+        orderNumber={orderNumber}
+        orderId={orderId}
+        total={finalTotal}
+        paymentMethod={paymentMethod}
+        addressSummary={`${street} ${streetNumber}, ${city}`}
+      />
 
       <Footer />
-
       <FloatingWhatsApp />
     </div>
   );

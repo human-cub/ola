@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { ChevronRight } from "lucide-react";
 import { Breadcrumb } from "@/components/Breadcrumb";
+import { useScrollHeader } from "@/hooks/useScrollHeader";
 
 const catalogCategories = [
   { name: "Proteínas", slug: "proteinas", emoji: "💪" },
@@ -17,23 +17,7 @@ const catalogCategories = [
 ];
 
 const Catalog = () => {
-  const [headerVisible, setHeaderVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        setHeaderVisible(false);
-      } else {
-        setHeaderVisible(true);
-      }
-      setLastScrollY(currentScrollY);
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScrollY]);
+  const headerVisible = useScrollHeader();
 
   return (
     <div className="min-h-screen bg-background">

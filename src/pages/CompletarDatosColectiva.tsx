@@ -12,6 +12,9 @@ import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import { Separator } from "@/components/ui/separator";
 import { AddressForm } from "@/components/AddressForm";
 import { isCABAProvince } from "@/data/argentinaLocations";
+import { useScrollHeader } from "@/hooks/useScrollHeader";
+import { formatPrice } from "@/lib/formatting";
+import { getNextSunday } from "@/lib/collectivePricing";
 
 const addressSchema = z.object({
   street: z.string().min(1, "La calle es requerida").max(200),
@@ -36,8 +39,7 @@ const contactSchema = z.object({
 const CompletarDatosColectiva = () => {
   const navigate = useNavigate();
   
-  const [headerVisible, setHeaderVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  const headerVisible = useScrollHeader();
   const [loading, setLoading] = useState(false);
   const [dataLoading, setDataLoading] = useState(true);
   const [hasExistingOrder, setHasExistingOrder] = useState(false);
@@ -127,25 +129,6 @@ const CompletarDatosColectiva = () => {
     loadProfile();
   }, [navigate]);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        setHeaderVisible(false);
-      } else {
-        setHeaderVisible(true);
-      }
-      setLastScrollY(currentScrollY);
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScrollY]);
-
-  const formatPrice = (price: number) => {
-    return `$${Math.round(price).toLocaleString('es-AR')}`;
-  };
-
   const handleSubmit = async () => {
     setErrors({});
     const loadingToastId = toast.loading("Guardando...");
@@ -230,15 +213,7 @@ const CompletarDatosColectiva = () => {
 
       if (waitingListItems && waitingListItems.length > 0) {
         // Calculate next Sunday 23:59
-        const now = new Date();
-        const nextSunday = new Date(now);
-        const daysUntilSunday = (7 - now.getDay()) % 7;
-        if (daysUntilSunday === 0 && now.getHours() < 23) {
-          nextSunday.setHours(23, 59, 59, 999);
-        } else {
-          nextSunday.setDate(now.getDate() + (daysUntilSunday || 7));
-          nextSunday.setHours(23, 59, 59, 999);
-        }
+        const nextSunday = getNextSunday();
 
         // Prepare order items
         const orderItems = waitingListItems.map(item => ({

@@ -8,6 +8,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus, Minus, Trash2, Share2 } from "lucide-react";
+import { formatPrice } from "@/lib/formatting";
 
 interface WaitingListProductItemProps {
   id: string;
@@ -26,7 +27,6 @@ interface WaitingListProductItemProps {
   onFlavorChange: (id: string, flavor: string) => void;
   onDelete: (id: string) => void;
   onShare: () => void;
-  formatPrice: (price: number) => string;
 }
 
 export const WaitingListProductItem = ({
@@ -46,7 +46,6 @@ export const WaitingListProductItem = ({
   onFlavorChange,
   onDelete,
   onShare,
-  formatPrice,
 }: WaitingListProductItemProps) => {
   return (
     <div className="flex gap-3 py-4">

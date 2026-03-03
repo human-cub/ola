@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Package, Clock, Truck, CheckCircle, XCircle, ChevronRight, FileText } from "lucide-react";
+import { formatPrice } from "@/lib/formatting";
 
 interface OrderItem {
   product_id: string;
@@ -83,10 +84,6 @@ const OrdersTab = () => {
 
     fetchOrders();
   }, [filterType, filterStatus, sortOrder]);
-
-  const formatPrice = (price: number) => {
-    return `$${Math.round(price).toLocaleString('es-AR')}`;
-  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-AR', {

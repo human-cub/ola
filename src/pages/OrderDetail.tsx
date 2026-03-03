@@ -14,6 +14,8 @@ import {
   getFirstTierPrice,
   shouldUseDynamicCollectivePricing,
 } from "@/lib/collectivePricing";
+import { useScrollHeader } from "@/hooks/useScrollHeader";
+import { formatPrice } from "@/lib/formatting";
 
 interface OrderItem {
   product_id: string;
@@ -64,8 +66,7 @@ const OrderDetail = () => {
   const navigate = useNavigate();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
-  const [headerVisible, setHeaderVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  const headerVisible = useScrollHeader();
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -218,24 +219,6 @@ const OrderDetail = () => {
     fetchOrder();
   }, [orderId, navigate]);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        setHeaderVisible(false);
-      } else {
-        setHeaderVisible(true);
-      }
-      setLastScrollY(currentScrollY);
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScrollY]);
-
-  const formatPrice = (price: number) => {
-    return `$${Math.round(price).toLocaleString('es-AR')}`;
-  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-AR', {

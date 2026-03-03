@@ -11,13 +11,10 @@ import {
 } from "@/components/ui/dialog";
 import { AddToCartDialog } from "./AddToCartDialog";
 import { supabase } from "@/integrations/supabase/client";
+import { getNextSunday } from "@/lib/collectivePricing";
+import type { PriceData } from "@/lib/types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-
-interface PriceData {
-  people: number;
-  price: number;
-}
 
 interface FloatingButtonProps {
   productName: string;
@@ -26,23 +23,6 @@ interface FloatingButtonProps {
   flavors?: string[];
   prices?: PriceData[];
   waitingCount?: number;
-}
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function getNextSunday(): Date {
-  const now = new Date();
-  const next = new Date(now);
-  const daysUntilSunday = (7 - now.getDay()) % 7;
-
-  if (daysUntilSunday === 0 && now.getHours() < 23) {
-    next.setHours(23, 59, 59, 999);
-  } else {
-    next.setDate(now.getDate() + (daysUntilSunday || 7));
-    next.setHours(23, 59, 59, 999);
-  }
-
-  return next;
 }
 
 function getDiscountPrice(prices: PriceData[]): number | null {

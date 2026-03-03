@@ -19,6 +19,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import { Separator } from "@/components/ui/separator";
 import { CartProductItem } from "@/components/CartProductItem";
+import { useScrollHeader } from "@/hooks/useScrollHeader";
+import { formatPrice } from "@/lib/formatting";
 
 interface ProductLink {
   id: string;
@@ -35,27 +37,11 @@ const Cart = () => {
     updateCartItemFlavor,
     removeFromCart,
   } = useCart();
-  const [headerVisible, setHeaderVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  const headerVisible = useScrollHeader();
   const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
   const [productFlavors, setProductFlavors] = useState<Record<string, string[]>>({});
   const [productLinks, setProductLinks] = useState<Record<string, string>>({});
   const [productFirstPrices, setProductFirstPrices] = useState<Record<string, number>>({});
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        setHeaderVisible(false);
-      } else {
-        setHeaderVisible(true);
-      }
-      setLastScrollY(currentScrollY);
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScrollY]);
 
   useEffect(() => {
     const fetchProductData = async () => {
@@ -98,10 +84,6 @@ const Cart = () => {
   const discount = fullPrice - subtotal;
   const deliveryCost = subtotal >= 100000 ? 0 : 0; // Cart doesn't show shipping yet
   
-
-  const formatPrice = (price: number) => {
-    return `$${Math.round(price).toLocaleString('es-AR')}`;
-  };
 
   const handleQuantityChange = async (id: string, delta: number, currentQty: number) => {
     const newQty = currentQty + delta;
@@ -190,7 +172,6 @@ const Cart = () => {
                       onQuantityChange={handleQuantityChange}
                       onFlavorChange={updateCartItemFlavor}
                       onDelete={(id) => setDeleteItemId(id)}
-                      formatPrice={formatPrice}
                     />
                     {index < cartItems.length - 1 && <Separator />}
                   </div>
