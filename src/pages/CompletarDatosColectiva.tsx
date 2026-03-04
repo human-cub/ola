@@ -49,7 +49,7 @@ const CompletarDatosColectiva = () => {
   const [streetNumber, setStreetNumber] = useState("");
   const [floor, setFloor] = useState("");
   const [postalCode, setPostalCode] = useState("");
-  const [city, setCity] = useState("");
+  const [city, setCity] = useState("Capital Federal (CABA)");
   const [province, setProvince] = useState("Buenos Aires");
   const [references, setReferences] = useState("");
   

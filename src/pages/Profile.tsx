@@ -9,6 +9,7 @@ import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import OrdersTab from "@/components/profile/OrdersTab";
 import { ProfileEditForm } from "@/components/profile/ProfileEditForm";
 import { SecurityForm } from "@/components/profile/SecurityForm";
+import type { AddressData } from "@/lib/address";
 
 const fetchProfile = async () => {
   const { data: { session } } = await supabase.auth.getSession();
@@ -21,6 +22,67 @@ const fetchProfile = async () => {
     .maybeSingle();
 
   return { session, profile };
+}
+
+
+// Format address for display - remove labels and brackets
+// const formatAddressForDisplay = (address: string): string => {
+//   if (!address) return "";
+  
+//   try {
+//     const addr = JSON.parse(address) as AddressData;
+//     const parts = [
+//       addr.street,
+//       addr.number,
+//       addr.floor,
+//       addr.postalCode,
+//       addr.city,
+//       addr.province,
+//       addr.references,
+//     ].filter(Boolean);
+//     return parts.join(", ");
+//   } catch {
+//     return address;
+//   }
+// };
+
+// Parse stored address JSON to individual fields
+const parseStoredAddress = (address: string): AddressData => {
+  try {
+    const addr = JSON.parse(address);
+    return {
+      street: addr.street || "",
+      number: addr.number || "",
+      floor: addr.floor || "",
+      postalCode: addr.postalCode || "",
+      city: addr.city || "",
+      province: addr.province || "",
+      references: addr.references || "",
+    };
+  } catch {
+    return {
+      street: "",
+      number: "",
+      floor: "",
+      postalCode: "",
+      city: "Capital Federal (CABA)",
+      province: "Buenos Aires",
+      references: "",
+    };
+  }
+};
+
+const profileDefaults = {
+  firstName: "",
+  lastName: "",
+  phone: "",
+  street: "",
+  streetNumber: "",
+  floor: "",
+  postalCode: "",
+  city: "Capital Federal (CABA)",
+  province: "Buenos Aires",
+  references: "",
 };
 
 const Profile = () => {
