@@ -54,7 +54,7 @@ export const DynamicProductCarousel = ({ images, productName }: DynamicProductCa
 
   return (
     <>
-      <section className="px-0 py-6">
+      <section className="px-0 py-6" data-test-id="product-carousel">
         <div className="container mx-auto max-w-md px-4">
           <Carousel opts={{ loop: true }} setApi={setInlineApi} className="w-full">
             <CarouselContent>

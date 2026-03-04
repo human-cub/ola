@@ -90,7 +90,7 @@ export const RelatedProducts = ({ currentProduct = "" }: RelatedProductsProps) =
 
   return (
     <section className="sm:px-4 py-6">
-      <div className="container mx-auto max-w-lg">
+      <div className="container mx-auto">
         <div className="text-center mb-6">
           <h3 className="text-2xl font-bold text-foreground mb-2">
             Otros Productos
@@ -100,14 +100,14 @@ export const RelatedProducts = ({ currentProduct = "" }: RelatedProductsProps) =
           </p>
         </div>
 
-        <div className="space-y-4">
+        <div className="flex flex-col gap-4 sm:flex-row justify-center">
           {otherProducts.map((product) => (
             <button 
               key={product.id}
               onClick={() => handleProductClick(product.link)}
-              className="block group w-full text-left"
+              className="block group /*w-full*/ text-left"
             >
-              <Card className="p-4 border-0 bg-gradient-card shadow-soft hover:shadow-elegant transition-all duration-300 group-hover:scale-[1.01]">
+              <Card className="p-4 bg-gradient-card shadow-soft hover:shadow-elegant transition-all duration-300 group-hover:scale-[1.01] max-w-[360px] border border-primary">
                 <div className="flex gap-4">
                   {/* Image - larger and square */}
                   <div className="w-24 h-24 rounded-xl bg-white flex items-center justify-center overflow-hidden flex-shrink-0 shadow-sm">
@@ -126,7 +126,7 @@ export const RelatedProducts = ({ currentProduct = "" }: RelatedProductsProps) =
                   {/* Content - stacked vertically */}
                   <div className="flex-1 min-w-0 flex flex-col justify-between py-1">
                     <div>
-                      <h4 className="font-bold text-foreground text-sm leading-tight mb-1 group-hover:text-primary transition-colors">
+                      <h4 className="font-bold text-foreground text-sm leading-tight mb-1 transition-colors">
                         {product.name}
                       </h4>
                       <p className="text-xs font-medium text-primary">

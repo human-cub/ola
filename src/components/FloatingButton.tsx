@@ -136,9 +136,9 @@ function useFloatingButton(prices: PriceData[]) {
 function CountdownTimer({ days, hours, minutes }: { days: number; hours: number; minutes: number }) {
   return (
     <div className="flex items-center gap-2 justify-center mb-3">
-      <Clock className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
       <div className="text-sm">
         <div className="flex gap-1 items-center justify-center">
+          <Clock className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 mr-1" />
           <span className="font-bold">{days}d</span>
           <span>:</span>
           <span className="font-bold">{hours}h</span>
@@ -260,16 +260,16 @@ export const FloatingButton = ({
 
   return (
     <>
-      <div className="fixed bottom-0 left-0 right-0 z-50 px-3 py-3 sm:px-4 sm:py-4 md:left-auto md:top-[110px] md:bottom-auto">
-        <div className="mx-auto max-w-[calc(100%-16px)] sm:max-w-md">
-          <div className="bg-gradient-primary rounded-2xl px-3 py-3 sm:p-4 shadow-floating text-white">
-            <CountdownTimer {...timeLeft} />
-            <div className="flex flex-col gap-2">
-              <WaitForDiscountButton discountPrice={discountPrice} onClick={handleWaitForDiscount} />
-              <BuyNowButton buyNowPrice={buyNowPrice} onClick={handleBuyNow} />
-            </div>
+      <div className="/*fixed*/ bottom-0 left-0 right-0 z-50 md:left-auto md:top-[110px] md:bottom-auto">
+        <div className="bg-gradient-primary rounded-2xl px-3 py-3 sm:p-4 shadow-floating text-white max-w-md sm:max-w-md mx-auto">
+          <CountdownTimer {...timeLeft} />
+          <div className="flex flex-col gap-2">
+            <WaitForDiscountButton discountPrice={discountPrice} onClick={handleWaitForDiscount} />
+            <BuyNowButton buyNowPrice={buyNowPrice} onClick={handleBuyNow} />
           </div>
         </div>
+        {/* <div className="mx-auto max-w-[calc(100%-16px)] sm:max-w-md">
+        </div> */}
       </div>
 
       <AddToCartDialog

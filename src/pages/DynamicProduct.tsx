@@ -143,7 +143,7 @@ const DynamicProduct = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Spinner />
       </div>
-    );  
+    );
   }
 
   if (!product) {
@@ -173,22 +173,33 @@ const DynamicProduct = () => {
 
       <main className="pb-[24px] pt-[120px] sm:pt-[104px]">
         <Breadcrumb items={breadcrumbItems} />
-        <DynamicProductCarousel images={product.images} productName={product.name} />
-        <DynamicProductInfo
-          name={product.name}
-          weight={product.weight}
-          flavors={product.flavors}
-          variants={product.variants}
-        />
-        <GroupBuyPriceBlock
-          productName={product.name}
-          productId={product.id}
-          productImage={product.images.length > 0 ? product.images[0] : null}
-          flavors={product.flavors}
-          priceData={product.prices}
-          waitingCount={waitingCount}
-        />
-        <DynamicProductDescription description={product.description} />
+        <div className="container gap-4 lg:grid lg:grid-cols-2 lg:justify-center lg:pt-10">
+          <div className="contents lg:block">
+            <DynamicProductCarousel images={product.images} productName={product.name} />
+
+            <DynamicProductInfo
+              name={product.name}
+              weight={product.weight}
+              flavors={product.flavors}
+              variants={product.variants}
+            />
+
+            <DynamicProductDescription description={product.description} />
+          </div>
+
+          <div className="sticky-viewport lg:contents">
+            <div className="sm:flex sm:justify-center sm:gap-6 lg:block">
+              <GroupBuyPriceBlock
+                productName={product.name}
+                productId={product.id}
+                productImage={product.images.length > 0 ? product.images[0] : null}
+                flavors={product.flavors}
+                priceData={product.prices}
+                waitingCount={waitingCount}
+              />
+            </div>
+          </div>
+        </div>
         <RelatedProducts currentProduct={product.id} />
       </main>
 

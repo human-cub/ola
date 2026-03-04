@@ -39,9 +39,9 @@ export const DynamicProductDescription = ({ description }: DynamicProductDescrip
   const paragraphs = description.split("\n").filter((p) => p.trim());
 
   return (
-    <section className="sm:px-4 py-4">
-      <div className="container mx-auto max-w-md">
-        <div className="sm:bg-gradient-card sm:rounded-2xl p-2 sm:p-6 sm:shadow-soft">
+    <section className="" data-test-id="product-description">
+      <div className="container mx-auto">
+        <div className="sm:bg-gradient-card sm:rounded-2xl p-2 sm:p-6 sm:shadow-soft max-w-[72ch] mt-8">
           <h3 className="text-xl font-semibold text-foreground mb-4">Descripción del Producto</h3>
           <div className="space-y-4 font-normal">
             {paragraphs.map((paragraph, index) => (
