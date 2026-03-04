@@ -121,17 +121,17 @@ export const MainProductCarousel = () => {
               <div className="overflow-hidden  md:py-10" ref={emblaRef}>
                 <div className="flex [--slides:1] md:[--slides:3] lg:[--slides:4] min-[1920px]:[--slides:5]">
                   {products.map((product) => (
-                    <div key={product.id} className="grow-0 shrink-0 basis-[calc(100%/var(--slides))] min-w-[280px]">
-                      <div className="flex justify-center px-3">
+                    <div key={product.id} className="grow-0 shrink-0 basis-[calc(100%/var(--slides))]">
+                      <div className="flex justify-center px-3 h-full">
                         <a href={product.link}>
                           <Card
                             className={cn(
-                              "p-6 shadow-soft border border-1 border-transparent bg-gradient-card w-full max-w-sm cursor-pointer transition-all duration-300 ease-out",
+                              "p-6 shadow-soft border border-1 border-transparent bg-gradient-card w-full max-w-sm cursor-pointer transition-all duration-300 ease-out h-full min-w-[280px]",
 
                               "hover:shadow-elegant hover:border-primary/20 hover:animate-glow-pulse"
                             )}
                           >
-                            <div className="text-center">
+                            <div className="text-center flex flex-col h-full">
                               <div className="w-48 h-48 mx-auto mb-4 rounded-xl bg-white/5 flex items-center justify-center overflow-hidden">
                                 <img
                                   src={product.image}
@@ -153,7 +153,7 @@ export const MainProductCarousel = () => {
                                 Peso neto: {product.weight}
                               </p>
 
-                              <div className="space-y-2">
+                              <div className="space-y-2 mt-auto">
                                 <div className="flex items-center justify-center gap-3">
                                   <span className="text-lg text-muted-foreground line-through">
                                     {product.originalPrice}

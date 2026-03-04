@@ -63,7 +63,7 @@ const Profile = () => {
 
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold">Mi cuenta</h1>
-          <Button variant="outline" onClick={handleLogout}>
+          <Button variant="outline" onClick={handleLogout} className="mx-0">
             <LogOut className="w-4 h-4 mr-2" />
             Cerrar sesión
           </Button>

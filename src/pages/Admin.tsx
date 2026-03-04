@@ -105,7 +105,7 @@ const Admin = () => {
       <div className="container mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Panel de Administración</h1>
-          <Button onClick={handleLogout} variant="outline">
+          <Button onClick={handleLogout} variant="outline" className="mx-0">
             Cerrar Sesión
           </Button>
         </div>

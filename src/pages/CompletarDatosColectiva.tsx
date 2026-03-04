@@ -416,7 +416,7 @@ const CompletarDatosColectiva = () => {
           <Button
             onClick={handleSubmit}
             disabled={loading}
-            className="w-full"
+            className="w-full mx-auto"
             size="lg"
           >
             {loading ? (
