@@ -3,16 +3,6 @@ import { useNavigate, Link } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { ShoppingBag, ArrowLeft, ArrowRight } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,12 +10,8 @@ import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import { Separator } from "@/components/ui/separator";
 import { CartProductItem } from "@/components/CartProductItem";
 import { useScrollHeader } from "@/hooks/useScrollHeader";
-import { formatPrice } from "@/lib/formatting";
-
-interface ProductLink {
-  id: string;
-  link: string;
-}
+import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
+import { CartSummary } from "@/components/cart/CartSummary";
 
 const Cart = () => {
   const navigate = useNavigate();
@@ -82,8 +68,6 @@ const Cart = () => {
     0
   );
   const discount = fullPrice - subtotal;
-  const deliveryCost = subtotal >= 100000 ? 0 : 0; // Cart doesn't show shipping yet
-  
 
   const handleQuantityChange = async (id: string, delta: number, currentQty: number) => {
     const newQty = currentQty + delta;
@@ -155,7 +139,6 @@ const Cart = () => {
             </div>
           ) : (
             <>
-              {/* Cart Items - No Card wrapper */}
               <div className="space-y-0 mb-6">
                 {cartItems.map((item, index) => (
                   <div key={item.id}>
@@ -180,35 +163,11 @@ const Cart = () => {
 
               <Separator className="my-6" />
 
-              {/* Summary - No Card wrapper */}
-              <div className="space-y-3 mb-6">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Precio sin descuento:</span>
-                  <span className="line-through text-muted-foreground">
-                    {formatPrice(fullPrice)}
-                  </span>
-                </div>
-                {discount > 0 && (
-                  <div className="flex justify-between text-sm text-green-600">
-                    <span>Descuento:</span>
-                    <span>-{formatPrice(discount)}</span>
-                  </div>
-                )}
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Subtotal:</span>
-                  <span>{formatPrice(subtotal)}</span>
-                </div>
-                <Separator />
-                <div className="flex justify-between text-lg font-bold pt-2">
-                  <span>Total:</span>
-                  <span>{formatPrice(subtotal)}</span>
-                </div>
-                {discount > 0 && (
-                  <p className="text-sm text-green-600 text-center font-medium">
-                    ¡Ahorraste {formatPrice(discount)} pesos!
-                  </p>
-                )}
-              </div>
+              <CartSummary
+                fullPrice={fullPrice}
+                discount={discount}
+                subtotal={subtotal}
+              />
 
               <Button
                 onClick={handleCheckout}
@@ -223,22 +182,13 @@ const Cart = () => {
         </div>
       </main>
 
-      <AlertDialog open={!!deleteItemId} onOpenChange={() => setDeleteItemId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar producto?</AlertDialogTitle>
-            <AlertDialogDescription>
-              ¿Estás seguro de que querés eliminar este producto del carrito?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm}>
-              Eliminar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDeleteDialog
+        open={!!deleteItemId}
+        onOpenChange={() => setDeleteItemId(null)}
+        title="¿Eliminar producto?"
+        description="¿Estás seguro de que querés eliminar este producto del carrito?"
+        onConfirm={handleDeleteConfirm}
+      />
 
       <Footer />
 

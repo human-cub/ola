@@ -1,52 +1,18 @@
-import { useState, useEffect } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Package, Clock, Truck, CheckCircle, XCircle, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import { Separator } from "@/components/ui/separator";
 import { ShareBlock } from "@/components/ShareBlock";
-import {
-  getCollectiveTierPrice,
-  getFirstTierPrice,
-  shouldUseDynamicCollectivePricing,
-} from "@/lib/collectivePricing";
 import { useScrollHeader } from "@/hooks/useScrollHeader";
-import { formatPrice } from "@/lib/formatting";
-
-interface OrderItem {
-  product_id: string;
-  product_name: string;
-  flavor: string | null;
-  quantity: number;
-  price_per_unit: number;
-  product_image: string | null;
-  participants_count?: number | null;
-}
-
-interface Order {
-  id: string;
-  order_number: string;
-  order_type: 'immediate' | 'collective';
-  items: OrderItem[];
-  subtotal: number;
-  discount_amount: number;
-  discount_percentage: number;
-  participants_count: number;
-  total_amount: number;
-  delivery_cost: number;
-  delivery_address: any;
-  payment_method: string;
-  status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-  notes: string | null;
-  collective_close_date: string | null;
-  created_at: string;
-  is_promo: boolean;
-  promo_tier: number | null;
-}
+import { useOrderDetail } from "@/hooks/useOrderDetail";
+import { formatDateNatural } from "@/lib/formatting";
+import { OrderTimeline } from "@/components/order/OrderTimeline";
+import { OrderItemsCard } from "@/components/order/OrderItemsCard";
+import { OrderDeliveryCard } from "@/components/order/OrderDeliveryCard";
 
 const statusConfig = {
   pending: { label: 'Pendiente', color: 'text-amber-600', bgColor: 'bg-amber-100', icon: Clock },
@@ -57,176 +23,12 @@ const statusConfig = {
   cancelled: { label: 'Cancelado', color: 'text-red-600', bgColor: 'bg-red-100', icon: XCircle },
 };
 
-const timelineSteps = ['pending', 'confirmed', 'processing', 'shipped', 'delivered'];
-
 const WHATSAPP_NUMBER = '5491166650878';
 
 const OrderDetail = () => {
   const { orderId } = useParams<{ orderId: string }>();
-  const navigate = useNavigate();
-  const [order, setOrder] = useState<Order | null>(null);
-  const [loading, setLoading] = useState(true);
   const headerVisible = useScrollHeader();
-
-  useEffect(() => {
-    const fetchOrder = async () => {
-      if (!orderId) return;
-
-      // Get current session
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        toast.error("Debés iniciar sesión para ver este pedido");
-        navigate("/ingresar?redirect=/mi-cuenta/pedidos/" + orderId);
-        return;
-      }
-
-      // Fetch order - RLS will only return if user owns it or is admin
-      const { data, error } = await supabase
-        .from("user_orders")
-        .select("*")
-        .eq("id", orderId)
-        .maybeSingle();
-
-      if (error || !data) {
-        // Check if user is admin
-        const { data: roleData } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", session.user.id)
-          .eq("role", "admin")
-          .maybeSingle();
-        
-        if (!roleData) {
-          toast.error("No tenés permiso para ver este pedido");
-          navigate("/mi-cuenta");
-          return;
-        }
-        
-        // Admin but order not found
-        toast.error("Pedido no encontrado");
-        navigate("/admin");
-        return;
-      }
-
-      // Verify ownership (extra client-side check)
-      if (data.user_id !== session.user.id) {
-        // Check if admin
-        const { data: roleData } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", session.user.id)
-          .eq("role", "admin")
-          .maybeSingle();
-        
-        if (!roleData) {
-          toast.error("No tenés permiso para ver este pedido");
-          navigate("/mi-cuenta");
-          return;
-        }
-      }
-
-      let resolvedOrder = data as unknown as Order;
-
-      if (
-        shouldUseDynamicCollectivePricing({
-          orderType: resolvedOrder.order_type,
-          status: resolvedOrder.status,
-          createdAt: resolvedOrder.created_at,
-          isPromo: resolvedOrder.is_promo,
-          items: resolvedOrder.items,
-        })
-      ) {
-        const productIds = [...new Set(resolvedOrder.items.map((item) => item.product_id))];
-
-        if (productIds.length > 0) {
-          const { data: productsData } = await supabase
-            .from("products")
-            .select("id, prices, total_orders_count")
-            .in("id", productIds);
-
-          if (productsData) {
-            const productMap = new Map<string, { prices: unknown; totalOrdersCount: number }>();
-            productsData.forEach((product: any) => {
-              productMap.set(product.id, {
-                prices: product.prices,
-                totalOrdersCount: Number(product.total_orders_count || 0),
-              });
-            });
-
-            let hasChanges = false;
-            const recalculatedItems = resolvedOrder.items.map((item) => {
-              const productData = productMap.get(item.product_id);
-              if (!productData) return item;
-
-              const recalculatedPrice = getCollectiveTierPrice(
-                productData.prices,
-                productData.totalOrdersCount
-              );
-
-              if (recalculatedPrice === null || recalculatedPrice === item.price_per_unit) {
-                return item;
-              }
-
-              hasChanges = true;
-              return { ...item, price_per_unit: recalculatedPrice };
-            });
-
-            if (hasChanges) {
-              const subtotal = recalculatedItems.reduce(
-                (sum, item) => sum + Number(item.price_per_unit) * item.quantity,
-                0
-              );
-
-              const fullPrice = recalculatedItems.reduce((sum, item) => {
-                const productData = productMap.get(item.product_id);
-                const firstTierPrice = getFirstTierPrice(
-                  productData?.prices,
-                  Number(item.price_per_unit)
-                );
-                return sum + firstTierPrice * item.quantity;
-              }, 0);
-
-              const discountAmount = Math.max(0, fullPrice - subtotal);
-              const totalAmount = subtotal + Number(resolvedOrder.delivery_cost || 0);
-
-              await supabase
-                .from("user_orders")
-                .update({
-                  items: recalculatedItems as any,
-                  subtotal,
-                  discount_amount: discountAmount,
-                  total_amount: totalAmount,
-                })
-                .eq("id", resolvedOrder.id);
-
-              resolvedOrder = {
-                ...resolvedOrder,
-                items: recalculatedItems,
-                subtotal,
-                discount_amount: discountAmount,
-                total_amount: totalAmount,
-              };
-            }
-          }
-        }
-      }
-
-      setOrder(resolvedOrder);
-      setLoading(false);
-    };
-
-    fetchOrder();
-  }, [orderId, navigate]);
-
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-AR', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
-  };
+  const { order, setOrder, loading } = useOrderDetail(orderId);
 
   const handleCancelOrder = async () => {
     if (!order || order.status !== 'pending') return;
@@ -265,7 +67,6 @@ const OrderDetail = () => {
   if (!order) return null;
 
   const StatusIcon = statusConfig[order.status]?.icon || Package;
-  const currentStepIndex = timelineSteps.indexOf(order.status);
 
   return (
     <div className="min-h-screen bg-background">
@@ -283,140 +84,34 @@ const OrderDetail = () => {
 
           {/* Header */}
           <div className="flex flex-col items-start justify-between mb-6">
-
-            {/* Order Status chip */}
             <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${statusConfig[order.status]?.bgColor} ${statusConfig[order.status]?.color}`}>
               <StatusIcon className="w-4 h-4" />
               <span className="font-medium">{statusConfig[order.status]?.label}</span>
             </div>
-
-            {/* Product title */}
             <div className="">
               <h1 className="mt-4 text-2xl font-bold leading-[1.15]">Pedido {order.order_number}</h1>
-              <p className="text-muted-foreground mt-3">{formatDate(order.created_at)}</p>
+              <p className="text-muted-foreground mt-3">{formatDateNatural(order.created_at)}</p>
             </div>
           </div>
 
-          {/* Timeline for active orders */}
-          {order.status !== 'cancelled' && order.status !== 'delivered' && (
-            <div className="mb-6 -mx-4 overflow-auto touch-pan-x">
-              <div className="flex items-center justify-between gap-2 px-4">
-                {timelineSteps.map((step, index) => {
-                  const isCompleted = index <= currentStepIndex;
-                  const isCurrent = index === currentStepIndex;
-                  return (
-                    <div key={step} className="flex flex-col items-center flex-1">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                        isCompleted ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-                      }`}>
-                        {isCompleted ? <CheckCircle className="w-5 h-5" /> : <div className="w-2 h-2 rounded-full bg-current" />}
-                      </div>
+          <OrderTimeline status={order.status} />
 
-                      <span className={`whitespace-nowrap text-xs mt-1 ${isCurrent ? 'font-medium' : 'text-muted-foreground'}`}>
-                        {statusConfig[step as keyof typeof statusConfig]?.label}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>              
-            </div>
-          )}
+          <OrderItemsCard
+            items={order.items}
+            subtotal={order.subtotal}
+            discountAmount={order.discount_amount}
+            deliveryCost={order.delivery_cost}
+            totalAmount={order.total_amount}
+            isPromo={order.is_promo}
+          />
 
-          {/* Order Items */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="text-lg">Productos</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {order.items.map((item, index) => (
-                <div key={index} className="flex gap-4">
-                  {item.product_image && (
-                    <img
-                      src={item.product_image}
-                      alt={item.product_name}
-                      className="w-16 h-16 object-cover rounded-lg"
-                    />
-                  )}
-                  <div className="flex-1">
-                    <p className="font-medium">{item.product_name}</p>
-                    {item.flavor && <p className="text-sm text-muted-foreground">{item.flavor}</p>}
-                    <div className="flex justify-between mt-1">
-                      <span className="text-sm text-muted-foreground">x{item.quantity}</span>
-                      <span className="font-medium">{formatPrice(item.price_per_unit * item.quantity)}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-
-              <div className="border-t pt-4 space-y-2">
-                {order.discount_amount > 0 && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Precio sin descuento:</span>
-                    <span className="line-through text-muted-foreground">{formatPrice(order.subtotal + order.discount_amount)}</span>
-                  </div>
-                )}
-                {order.discount_amount > 0 && (
-                  <div className="flex justify-between text-sm text-green-600">
-                    <span>{order.is_promo ? 'Descuento (PROMO):' : 'Descuento:'}</span>
-                    <span>-{formatPrice(order.discount_amount)}</span>
-                  </div>
-                )}
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Subtotal:</span>
-                  <span>{formatPrice(order.subtotal)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Envío:</span>
-                  <span>{order.delivery_cost === 0 ? 'Gratis' : formatPrice(order.delivery_cost)}</span>
-                </div>
-                <div className="flex justify-between text-lg font-bold border-t pt-2">
-                  <span>Total:</span>
-                  <span>{formatPrice(order.total_amount)}</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Delivery Info */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="text-lg">Información de entrega</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              {order.delivery_address && (
-                <div>
-                  <span className="text-muted-foreground">Dirección: </span>
-                  <span>
-                    {[
-                      order.delivery_address.street,
-                      order.delivery_address.number,
-                      order.delivery_address.floor,
-                      order.delivery_address.postalCode,
-                      order.delivery_address.city,
-                      order.delivery_address.province !== order.delivery_address.city ? order.delivery_address.province : null,
-                      order.delivery_address.references
-                    ].filter(Boolean).join(', ')}
-                  </span>
-                </div>
-              )}
-              <div>
-                <span className="text-muted-foreground">Forma de pago: </span>
-                <span className="capitalize">{order.payment_method}</span>
-              </div>
-              {order.order_type === 'collective' && order.discount_percentage > 0 && (
-                <div>
-                  <span className="text-muted-foreground">Descuento obtenido: </span>
-                  <span className="text-green-600 font-medium">{order.discount_percentage}%</span>
-                </div>
-              )}
-              {order.collective_close_date && (
-                <div>
-                  <span className="text-muted-foreground">Fecha de cierre: </span>
-                  <span>{formatDate(order.collective_close_date)}</span>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <OrderDeliveryCard
+            deliveryAddress={order.delivery_address}
+            paymentMethod={order.payment_method}
+            orderType={order.order_type}
+            discountPercentage={order.discount_percentage}
+            collectiveCloseDate={order.collective_close_date}
+          />
 
           {/* Actions */}
           <div className="space-y-3">
@@ -432,8 +127,8 @@ const OrderDetail = () => {
             )}
 
             {order.status !== 'delivered' && order.status !== 'cancelled' && (
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="w-full"
                 onClick={handleReportProblem}
               >

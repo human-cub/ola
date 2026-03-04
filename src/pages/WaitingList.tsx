@@ -2,16 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import { Timer, ArrowLeft } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -352,22 +343,13 @@ const WaitingList = () => {
         </div>
       </main>
 
-      <AlertDialog open={!!deleteItemId} onOpenChange={() => setDeleteItemId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar producto?</AlertDialogTitle>
-            <AlertDialogDescription>
-              ¿Estás seguro de que querés eliminar este producto de la lista de espera?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm}>
-              Eliminar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDeleteDialog
+        open={!!deleteItemId}
+        onOpenChange={() => setDeleteItemId(null)}
+        title="¿Eliminar producto?"
+        description="¿Estás seguro de que querés eliminar este producto de la lista de espera?"
+        onConfirm={handleDeleteConfirm}
+      />
 
       <FloatingWhatsApp />
     </div>

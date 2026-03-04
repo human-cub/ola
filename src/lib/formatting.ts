@@ -19,3 +19,30 @@ export const formatDateShort = (dateString: string): string => {
     year: "2-digit",
   });
 };
+
+export const formatDateNatural = (dateString: string): string => {
+  return new Date(dateString).toLocaleDateString("es-AR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+};
+
+export const formatDateCompact = (dateString: string): string => {
+  return new Date(dateString).toLocaleDateString("es-AR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+export const formatFullName = (
+  firstName?: string | null,
+  lastName?: string | null,
+  fallback = "",
+): string => {
+  const name = [firstName, lastName].filter(Boolean).join(" ");
+  return name || fallback;
+};

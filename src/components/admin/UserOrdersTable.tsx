@@ -31,10 +31,9 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
-  getCollectiveTierPrice,
-  getFirstTierPrice,
   shouldUseDynamicCollectivePricing,
 } from "@/lib/collectivePricing";
+import { recalculateOrderItems, type ProductPricingData } from "@/lib/orderPricingSync";
 import {
   type OrderStatus,
   type OrderType,
@@ -162,7 +161,7 @@ const UserOrdersTable = () => {
       ...new Set(dynamicOrders.flatMap((order) => order.items.map((item) => item.product_id))),
     ];
 
-    const productPricingMap = new Map<string, { prices: unknown; totalOrdersCount: number }>();
+    const productPricingMap = new Map<string, ProductPricingData>();
 
     if (dynamicProductIds.length > 0) {
       const { data: productsData } = await supabase
@@ -185,55 +184,34 @@ const UserOrdersTable = () => {
         return order;
       }
 
-      let hasChanges = false;
-
-      const recalculatedItems = order.items.map((item) => {
-        const productData = productPricingMap.get(item.product_id);
-        if (!productData) return item;
-
-        const newPrice = getCollectiveTierPrice(productData.prices, productData.totalOrdersCount);
-        if (newPrice === null || newPrice === item.price_per_unit) return item;
-
-        hasChanges = true;
-        return { ...item, price_per_unit: newPrice };
-      });
-
-      if (!hasChanges) {
-        return order;
-      }
-
-      const subtotal = recalculatedItems.reduce(
-        (sum, item) => sum + Number(item.price_per_unit) * item.quantity,
-        0
+      const result = recalculateOrderItems(
+        order.items,
+        productPricingMap,
+        Number(order.delivery_cost || 0),
       );
 
-      const fullPrice = recalculatedItems.reduce((sum, item) => {
-        const productData = productPricingMap.get(item.product_id);
-        const firstTierPrice = getFirstTierPrice(productData?.prices, Number(item.price_per_unit));
-        return sum + firstTierPrice * item.quantity;
-      }, 0);
-
-      const discountAmount = Math.max(0, fullPrice - subtotal);
-      const totalAmount = subtotal + Number(order.delivery_cost || 0);
+      if (!result.hasChanges) {
+        return order;
+      }
 
       syncUpdates.push(
         supabase
           .from("user_orders")
           .update({
-            items: recalculatedItems as any,
-            subtotal,
-            discount_amount: discountAmount,
-            total_amount: totalAmount,
+            items: result.items as any,
+            subtotal: result.subtotal,
+            discount_amount: result.discountAmount,
+            total_amount: result.totalAmount,
           })
           .eq("id", order.id)
       );
 
       return {
         ...order,
-        items: recalculatedItems,
-        subtotal,
-        discount_amount: discountAmount,
-        total_amount: totalAmount,
+        items: result.items,
+        subtotal: result.subtotal,
+        discount_amount: result.discountAmount,
+        total_amount: result.totalAmount,
       };
     });
 

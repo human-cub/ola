@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { getCollectiveTierPrice, getFirstTierPrice, getNextSundayIso, getLastSundayClose } from "@/lib/collectivePricing";
-import { formatPrice } from "@/lib/formatting";
+import { formatPrice, formatFullName } from "@/lib/formatting";
+import { parseAddress } from "@/lib/address";
 import type { OrderItem, OrderType, OrderStatus } from "@/lib/types";
 
 /**
@@ -45,17 +46,10 @@ export const ensurePendingCollectiveOrder = async (userId: string) => {
     .eq("user_id", userId)
     .maybeSingle();
 
-  const customerName = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || "Cliente";
+  const customerName = formatFullName(profile?.first_name, profile?.last_name, "Cliente");
   const phone = profile?.phone || "";
 
-  let deliveryAddress: any = null;
-  if (profile?.address) {
-    try {
-      deliveryAddress = JSON.parse(profile.address);
-    } catch {
-      deliveryAddress = null;
-    }
-  }
+  const deliveryAddress = parseAddress(profile?.address ?? null);
 
   const orderItems = waitingListData.map((item) => ({
     product_id: item.product_id,

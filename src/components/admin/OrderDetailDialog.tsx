@@ -20,7 +20,7 @@ import {
   ORDER_STATUS_COLORS,
   ORDER_TYPE_LABELS,
 } from "@/lib/types";
-import { formatPrice } from "@/lib/formatting";
+import { formatPrice, formatDateCompact } from "@/lib/formatting";
 
 interface OrderProfile {
   email: string | null;
@@ -98,15 +98,6 @@ export const OrderDetailDialog = ({ order, onClose, onNotesUpdated }: OrderDetai
     }
   };
 
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString("es-AR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
 
   return (
     <Dialog open={!!order} onOpenChange={() => onClose()}>
@@ -137,7 +128,7 @@ export const OrderDetailDialog = ({ order, onClose, onNotesUpdated }: OrderDetai
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Fecha</p>
-                <p className="font-medium">{formatDate(order.created_at)}</p>
+                <p className="font-medium">{formatDateCompact(order.created_at)}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Método de Pago</p>

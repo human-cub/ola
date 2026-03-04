@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,21 +7,13 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { Copy, Share2, MessageCircle, Send } from "lucide-react";
-import instagramIcon from "@/assets/instagram-icon-new.png";
 import { z } from "zod";
+import { formatFullName } from "@/lib/formatting";
+import { OrderSuccessDialog } from "@/components/OrderSuccessDialog";
 
 const orderSchema = z.object({
   firstName: z.string().trim().min(1, "El nombre es requerido").max(100, "El nombre es demasiado largo"),
@@ -63,16 +55,13 @@ const OrderDialog = ({
       .single();
 
     if (product) {
-      // Номер участника = waiting_for_discount_count + virtual_orders_count
       const currentTotal = (product.waiting_for_discount_count || 0) + (product.virtual_orders_count || 0);
       setOrderNumber(currentTotal);
-      
-      // Calculate people until next discount (thresholds: 25, 50, 75, 100)
+
       const thresholds = [25, 50, 75, 100];
       const nextThreshold = thresholds.find(t => t > currentTotal) || 100;
       setPeopleUntilNextDiscount(nextThreshold - currentTotal);
-      
-      // Get max price at 100 people
+
       if (product.prices && Array.isArray(product.prices)) {
         const priceAt100 = product.prices.find((p: any) => p.people === 100) as { people: number; price: number } | undefined;
         if (priceAt100) {
@@ -87,17 +76,15 @@ const OrderDialog = ({
     setLoading(true);
 
     try {
-      // Validate input
       const validated = orderSchema.parse({
         firstName,
         lastName: lastName || undefined,
         phone,
         comment: comment || undefined,
       });
-      
-      const customerName = [validated.firstName, validated.lastName].filter(Boolean).join(' ');
-      
-      // Get product from database to get the ID
+
+      const customerName = formatFullName(validated.firstName, validated.lastName);
+
       const { data: dbProduct, error: productError } = await supabase
         .from("products")
         .select("id")
@@ -115,14 +102,12 @@ const OrderDialog = ({
         waiting_for_discount: waitForDiscount,
       };
 
-      // Insert without .select() because anon role doesn't have SELECT permission
       const { error } = await supabase
         .from("orders")
         .insert(orderData);
 
       if (error) throw error;
 
-      // Send Telegram notification
       try {
         await supabase.functions.invoke("notify-telegram", {
           body: {
@@ -134,23 +119,20 @@ const OrderDialog = ({
             created_at: new Date().toISOString(),
           },
         });
-      } catch (notifyError) {
+      } catch {
         // Notification failed but order was saved
       }
 
-      // Reset form and close order dialog
       setFirstName("");
       setLastName("");
       setPhone("");
       setComment("");
       onOpenChange(false);
-      
-      // Fetch order number if waiting for discount
+
       if (waitForDiscount) {
         await fetchOrderNumber();
       }
-      
-      // Show success dialog
+
       setShowSuccess(true);
     } catch (error: any) {
       if (error instanceof z.ZodError) {
@@ -163,244 +145,100 @@ const OrderDialog = ({
     }
   };
 
-
-  const copyProductLink = () => {
-    const currentUrl = window.location.href;
-    navigator.clipboard.writeText(currentUrl);
-    toast.success("¡Enlace copiado!");
-  };
-
-  const getShareText = () => {
-    if (waitForDiscount) {
-      const currentUrl = window.location.href;
-      return `Che! Mirá esto - compra colectiva de ${productName} 🎉 Seamos más, pagamos menos. Elegí 'Esperar y pagar menos', sumate e invitá amigos!! ${currentUrl}`;
-    } else {
-      return `Mirá - descuentos increíbles de suplementos 🎉 Podés comprar ahora con 20% de descuento o esperar y pagar aún menos 🤑 https://alaola.com.ar/`;
-    }
-  };
-
-  const handleNativeShare = async () => {
-    const text = getShareText();
-    
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          text: text,
-        });
-        toast.success("¡Compartido exitosamente!");
-      } catch (error) {
-        if ((error as Error).name !== 'AbortError') {
-          toast.error("Error al compartir");
-        }
-      }
-    } else {
-      navigator.clipboard.writeText(text);
-      toast.success("¡Texto copiado al portapapeles!");
-    }
-  };
-
-  const handleWhatsAppShare = () => {
-    const text = encodeURIComponent(getShareText());
-    window.open(`https://wa.me/?text=${text}`, '_blank');
-  };
-
-  const handleTelegramShare = () => {
-    const url = waitForDiscount ? window.location.href : 'https://alaola.com.ar/';
-    const text = waitForDiscount 
-      ? `Che! Mirá esto - compra colectiva de ${productName} 🎉 Seamos más, pagamos menos. Elegí 'Esperar y pagar menos', sumate e invitá amigos!!`
-      : `Mirá - descuentos increíbles de suplementos 🎉 Podés comprar ahora con 20% de descuento o esperar y pagar aún menos 🤑`;
-    window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`, '_blank');
-  };
-
-  const copyInvitation = () => {
-    const text = getShareText();
-    navigator.clipboard.writeText(text);
-    toast.success("¡Invitación copiada!");
-  };
-
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-md rounded-2xl">
-        <DialogHeader>
-          <DialogTitle>
-            {waitForDiscount ? "🕐 Esperar y pagar menos" : "🛒 Comprar ahora"}
-          </DialogTitle>
-        </DialogHeader>
+          <DialogHeader>
+            <DialogTitle>
+              {waitForDiscount ? "🕐 Esperar y pagar menos" : "🛒 Comprar ahora"}
+            </DialogTitle>
+          </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="firstName">Nombre *</Label>
-            <Input
-              id="firstName"
-              type="text"
-              placeholder="Tu nombre"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              required
-              className="placeholder:opacity-50"
-            />
-          </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="firstName">Nombre *</Label>
+              <Input
+                id="firstName"
+                type="text"
+                placeholder="Tu nombre"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                required
+                className="placeholder:opacity-50"
+              />
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="lastName">Apellido</Label>
-            <Input
-              id="lastName"
-              type="text"
-              placeholder="Tu apellido (opcional)"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-              className="placeholder:opacity-50"
-            />
-          </div>
+            <div className="space-y-2">
+              <Label htmlFor="lastName">Apellido</Label>
+              <Input
+                id="lastName"
+                type="text"
+                placeholder="Tu apellido (opcional)"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                className="placeholder:opacity-50"
+              />
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="phone">Teléfono *</Label>
-            <Input
-              id="phone"
-              type="tel"
-              placeholder="+54 9 11 1234-5678"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              required
-              className="placeholder:opacity-50"
-            />
-          </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone">Teléfono *</Label>
+              <Input
+                id="phone"
+                type="tel"
+                placeholder="+54 9 11 1234-5678"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                required
+                className="placeholder:opacity-50"
+              />
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="comment">Comentario</Label>
-            <Textarea
-              id="comment"
-              placeholder="Cantidad, sabor y otras preferencias"
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              rows={3}
-              className="resize-none placeholder:opacity-50"
-            />
-          </div>
+            <div className="space-y-2">
+              <Label htmlFor="comment">Comentario</Label>
+              <Textarea
+                id="comment"
+                placeholder="Cantidad, sabor y otras preferencias"
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                rows={3}
+                className="resize-none placeholder:opacity-50"
+              />
+            </div>
 
-          {waitForDiscount && (
-            <p className="text-xs text-center text-muted-foreground">
-              Tranqui, agregarte no te obliga a nada
-            </p>
-          )}
+            {waitForDiscount && (
+              <p className="text-xs text-center text-muted-foreground">
+                Tranqui, agregarte no te obliga a nada
+              </p>
+            )}
 
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              className="flex-1"
-              disabled={loading}
-            >
-              Cancelar
-            </Button>
-            <Button type="submit" className="flex-1" disabled={loading}>
-              {loading ? "Enviando..." : "Enviar"}
-            </Button>
-          </div>
-        </form>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                className="flex-1"
+                disabled={loading}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" className="flex-1" disabled={loading}>
+                {loading ? "Enviando..." : "Enviar"}
+              </Button>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={showSuccess} onOpenChange={setShowSuccess}>
-        <AlertDialogContent className="rounded-2xl">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-center text-2xl">
-              ¡Listo! 🎉
-            </AlertDialogTitle>
-            <AlertDialogDescription className="text-center text-base pt-1">
-              <div className="space-y-2">
-                <div>
-                  Tus datos fueron enviados. Te contactaremos pronto.
-                </div>
-                {waitForDiscount && (
-                  <>
-                    <div className="text-2xl font-bold text-primary">
-                      Sos participante #{orderNumber}
-                    </div>
-                    <div className="space-y-1 text-sm">
-                      <div className="font-medium">
-                        👥 Faltan {peopleUntilNextDiscount} personas para siguiente descuento
-                      </div>
-                      <div className="text-muted-foreground">
-                        Descuento máximo: {maxPrice} con 100 participantes
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          
-          <div className="flex flex-col gap-2 pt-2">
-            <div className="text-sm font-semibold text-center">
-              Invitá a tus amigos
-            </div>
-            
-            <Button
-              onClick={handleNativeShare}
-              variant="default"
-              className="w-full gap-2"
-            >
-              <Share2 className="h-4 w-4" />
-              Compartir con amigos
-            </Button>
-            
-            <div className="grid grid-cols-[0.8fr_1.4fr_0.8fr] gap-2">
-              <Button
-                onClick={handleWhatsAppShare}
-                variant="outline"
-                className="gap-1 text-[10px] px-1.5"
-              >
-                <MessageCircle className="h-3 w-3 flex-shrink-0" />
-                <span className="truncate">WhatsApp</span>
-              </Button>
-              
-              <Button
-                onClick={copyInvitation}
-                variant="outline"
-                className="gap-1 text-[11px] px-2"
-              >
-                <Copy className="h-3 w-3 flex-shrink-0" />
-                <span className="truncate">Copiar invitación</span>
-              </Button>
-              
-              <Button
-                onClick={copyProductLink}
-                variant="outline"
-                className="gap-1 text-[10px] px-1.5"
-              >
-                <Copy className="h-3 w-3 flex-shrink-0" />
-                <span className="truncate">Copiar enlace</span>
-              </Button>
-            </div>
-            
-            <div className="border-t pt-2 mt-1" />
-            
-            <a
-              href="https://www.instagram.com/ola.unity/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="gradient-border flex items-center justify-center gap-2 w-full rounded-md py-2.5 px-4 text-sm font-medium"
-            >
-              <img src={instagramIcon} alt="Instagram" className="h-5 w-5 flex-shrink-0" />
-              <span>Seguinos en Instagram</span>
-            </a>
-            
-            <div className="text-xs text-center text-muted-foreground -mt-1">
-              para ofertas, descuentos y novedades
-            </div>
-            
-            <Button
-              onClick={() => setShowSuccess(false)}
-              className="w-full mt-2"
-            >
-              Cerrar
-            </Button>
-          </div>
-        </AlertDialogContent>
-      </AlertDialog>
+      <OrderSuccessDialog
+        open={showSuccess}
+        onOpenChange={setShowSuccess}
+        productName={productName}
+        waitForDiscount={waitForDiscount}
+        orderNumber={orderNumber}
+        peopleUntilNextDiscount={peopleUntilNextDiscount}
+        maxPrice={maxPrice}
+      />
     </>
   );
 };
