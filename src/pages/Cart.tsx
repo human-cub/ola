@@ -110,7 +110,7 @@ const Cart = () => {
       <Header isVisible={headerVisible} />
 
       <main className="pt-[120px] sm:pt-[104px] pb-8 px-4">
-        <div className="container mx-auto max-w-2xl">
+        <div className="container mx-auto max-w-2xl flex flex-col">
           <Link
             to="/"
             className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
@@ -171,7 +171,7 @@ const Cart = () => {
 
               <Button
                 onClick={handleCheckout}
-                className="w-full gap-2"
+                className="w-full gap-2 mx-auto"
                 size="lg"
               >
                 Continuar con la compra

@@ -4,22 +4,8 @@ import { UseFormReturn } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
 import { parseAddress } from "@/lib/address";
 
-interface CheckoutFormValues {
-  firstName: string;
-  lastName: string;
-  phone: string;
-  street: string;
-  streetNumber: string;
-  floor: string;
-  postalCode: string;
-  city: string;
-  province: string;
-  references: string;
-  paymentMethod: string;
-}
-
 export function useCheckoutProfile(
-  form: UseFormReturn<CheckoutFormValues>,
+  form: UseFormReturn<any>,
   isCollective: boolean,
 ) {
   const navigate = useNavigate();
@@ -47,7 +33,7 @@ export function useCheckoutProfile(
           streetNumber: "",
           floor: "",
           postalCode: "",
-          city: "Ciudad Autónoma de Buenos Aires",
+          city: "Capital Federal (CABA)",
           province: "Buenos Aires",
           references: "",
           paymentMethod: "",
@@ -60,7 +46,7 @@ export function useCheckoutProfile(
             form.setValue("streetNumber", addr.number);
             form.setValue("floor", addr.floor);
             form.setValue("postalCode", addr.postalCode);
-            form.setValue("city", addr.city || "Ciudad Autónoma de Buenos Aires");
+            form.setValue("city", addr.city || "Capital Federal (CABA)");
             form.setValue("province", addr.province || "Buenos Aires");
             form.setValue("references", addr.references);
           } else {

@@ -66,7 +66,7 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
       streetNumber: "",
       floor: "",
       postalCode: "",
-      city: "Ciudad Autónoma de Buenos Aires",
+      city: "Capital Federal (CABA)",
       province: "Buenos Aires",
       references: "",
       paymentMethod: "",
@@ -122,7 +122,7 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
       <Header isVisible={headerVisible} />
 
       <main className="pt-[120px] sm:pt-[104px] pb-8 px-4">
-        <div className="container mx-auto max-w-2xl">
+        <div className="container mx-auto max-w-2xl flex flex-col">
           <Link
             to={isCollective || fromWaitingList ? "/lista-espera" : "/carrito"}
             className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"

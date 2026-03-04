@@ -50,7 +50,7 @@ const CompletarDatosColectiva = () => {
   const [floor, setFloor] = useState("");
   const [postalCode, setPostalCode] = useState("");
   const [city, setCity] = useState("");
-  const [province, setProvince] = useState("Ciudad Autónoma de Buenos Aires");
+  const [province, setProvince] = useState("Buenos Aires");
   const [references, setReferences] = useState("");
   
   // Contact fields
@@ -116,7 +116,7 @@ const CompletarDatosColectiva = () => {
             setFloor(addr.floor || "");
             setPostalCode(addr.postalCode || "");
             setCity(addr.city || "");
-            setProvince(addr.province || "Ciudad Autónoma de Buenos Aires");
+            setProvince(addr.province || "Buenos Aires");
             setReferences(addr.references || "");
           } catch {
             setStreet(profile.address);
