@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { User, LogIn, ShoppingCart, Clock } from "lucide-react";
 import olaLogo from "@/assets/ola-logo-new.webp";
-import { TopHeader } from "@/components/TopHeader";
+import { TopBar } from "@/components/TopBar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BurgerMenu } from "@/components/BurgerMenu";
@@ -41,16 +41,15 @@ export const Header = ({ isVisible }: HeaderProps) => {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b shadow-soft transition-transform duration-300 ${
-        isVisible ? "translate-y-0" : "-translate-y-full"
-      }`}
+      className={`fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b shadow-soft transition-transform duration-300 ${isVisible ? "translate-y-0" : "-translate-y-full"
+        }`}
     >
-      <TopHeader />
+      <TopBar />
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <BurgerMenu />
-          <div 
-            className="flex items-center gap-1 cursor-pointer" 
+          <div
+            className="flex items-center gap-1 cursor-pointer"
             onClick={handleHomeClick}
           >
             <div className="w-10 h-10 flex items-center justify-center">
@@ -65,8 +64,8 @@ export const Header = ({ isVisible }: HeaderProps) => {
         <div className="flex items-center gap-2">
           {/* Waiting List Icon */}
           <Link to="/lista-espera">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               size="icon"
               className="relative hover:bg-primary/5"
             >
@@ -81,8 +80,8 @@ export const Header = ({ isVisible }: HeaderProps) => {
 
           {/* Cart Icon */}
           <Link to="/carrito">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               size="icon"
               className="relative hover:bg-primary/5"
             >
@@ -97,9 +96,9 @@ export const Header = ({ isVisible }: HeaderProps) => {
 
           {/* User Account */}
           <Link to={user ? "/mi-cuenta" : "/ingresar"}>
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               className="border-primary/20 hover:border-primary hover:bg-primary/5 gap-2 px-3"
             >
               {user ? (
