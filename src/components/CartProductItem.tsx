@@ -79,7 +79,7 @@ export const CartProductItem = ({
             value={flavor || ""}
             onValueChange={(value) => onFlavorChange(id, value)}
           >
-            <SelectTrigger className="w-full h-7 text-xs mb-2">
+            <SelectTrigger className="w-full h-7 text-xs mb-2 max-w-[200px]">
               <SelectValue placeholder="Seleccionar sabor" />
             </SelectTrigger>
             <SelectContent>
