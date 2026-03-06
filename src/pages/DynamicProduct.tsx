@@ -171,9 +171,9 @@ const DynamicProduct = () => {
     <div className="min-h-screen bg-background">
       <Header isVisible={headerVisible} />
 
-      <main className="pb-[24px] pt-[120px] sm:pt-[104px]">
+      <main className="pb-[24px] pt-[64px]">
         <Breadcrumb items={breadcrumbItems} />
-        <div className="container gap-4 lg:grid lg:grid-cols-2 lg:justify-center lg:pt-10">
+        <div className="max-w-[1088px] px-4 mx-auto gap-4 lg:grid lg:grid-cols-[20fr_12fr] lg:justify-center lg:pt-10">
           <div className="contents lg:block">
             <DynamicProductCarousel images={product.images} productName={product.name} />
 
@@ -188,7 +188,7 @@ const DynamicProduct = () => {
           </div>
 
           <div className="sticky-viewport lg:contents">
-            <div className="sm:flex sm:justify-center sm:gap-6 lg:block">
+            <div className="sm:flex sm:justify-center lg:justify-start sm:gap-6 lg:block">
               <GroupBuyPriceBlock
                 productName={product.name}
                 productId={product.id}

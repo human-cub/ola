@@ -61,17 +61,17 @@ export const RelatedProducts = ({ currentProduct = "" }: RelatedProductsProps) =
     const scrollTarget = sessionStorage.getItem('scrollTarget');
     if (scrollTarget === 'product-photos') {
       sessionStorage.removeItem('scrollTarget');
-      
+
       const timer = setTimeout(() => {
         const element = document.getElementById('product-photos');
         if (element) {
-          element.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'start' 
+          element.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
           });
         }
       }, 500);
-      
+
       return () => clearTimeout(timer);
     }
   }, []);
@@ -100,19 +100,19 @@ export const RelatedProducts = ({ currentProduct = "" }: RelatedProductsProps) =
           </p>
         </div>
 
-        <div className="flex flex-col gap-4 sm:flex-row justify-center">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 justify-items-center w-fit mx-auto">
           {otherProducts.map((product) => (
-            <button 
+            <button
               key={product.id}
               onClick={() => handleProductClick(product.link)}
-              className="block group /*w-full*/ text-left"
+              className="block group w-full text-left max-w-[360px] h-full"
             >
-              <Card className="p-4 bg-gradient-card shadow-soft hover:shadow-elegant transition-all duration-300 group-hover:scale-[1.01] max-w-[360px] border border-primary">
-                <div className="flex gap-4">
+              <Card className="p-4 bg-gradient-card shadow-soft hover:shadow-elegant transition-all duration-300 group-hover:scale-[1.01] w-full h-full max-w-[360px] border border-primary">
+                <div className="flex gap-4 h-full">
                   {/* Image - larger and square */}
                   <div className="w-24 h-24 rounded-xl bg-white flex items-center justify-center overflow-hidden flex-shrink-0 shadow-sm">
-                    <img 
-                      src={product.image} 
+                    <img
+                      src={product.image}
                       alt={product.name}
                       className="w-full h-full object-contain p-1"
                       onError={(e) => {
@@ -122,7 +122,7 @@ export const RelatedProducts = ({ currentProduct = "" }: RelatedProductsProps) =
                       }}
                     />
                   </div>
-                  
+
                   {/* Content - stacked vertically */}
                   <div className="flex-1 min-w-0 flex flex-col justify-between py-1">
                     <div>
@@ -133,7 +133,7 @@ export const RelatedProducts = ({ currentProduct = "" }: RelatedProductsProps) =
                         {product.weight}
                       </p>
                     </div>
-                    
+
                     {/* Pricing */}
                     <div className="flex flex-col mt-1">
                       <div className="flex gap-2 items-baseline">
@@ -151,7 +151,7 @@ export const RelatedProducts = ({ currentProduct = "" }: RelatedProductsProps) =
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* Arrow */}
                   <div className="text-primary self-center group-hover:translate-x-1 transition-transform">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
