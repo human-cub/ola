@@ -37,8 +37,8 @@ export const DynamicProductInfo = ({ name, weight, flavors, variants }: DynamicP
   const hasContent = (flavors && flavors.length > 0) || (variants && variants.length > 0);
 
   return (
-    <section className="sm:px-4 pt-3 pb-0" data-test-id="product-info">
-      <div className="mx-auto max-w-md">
+    <section className="sm:px-4 pt-3 pb-0 flex justify-center lg:justify-start" data-test-id="product-info">
+      <div className="/*mx-auto*/ max-w-md">
         <div className="text-center sm:text-left mb-6">
           <h2 className="text-2xl font-bold text-foreground mb-2 leading-[1.15]">
             {name}
@@ -50,7 +50,7 @@ export const DynamicProductInfo = ({ name, weight, flavors, variants }: DynamicP
               <span className="text-primary font-semibold">{weight}</span>
             )}
           </p>
-          
+
           <TagList label="Sabores Disponibles:" items={flavors} />
           <TagList label="Características:" items={variants} />
         </div>
