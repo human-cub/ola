@@ -271,7 +271,8 @@ export const GroupBuyPriceBlock = ({
 
   // Get next threshold
   const getNextThreshold = () => {
-    for (let i = 0; i < priceData.length; i++) {
+    // Skip tier 0 (retail) — start from tier 1
+    for (let i = 1; i < priceData.length; i++) {
       if (priceData[i].people > waitingCount) {
         return priceData[i];
       }
