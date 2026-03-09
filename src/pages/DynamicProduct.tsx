@@ -178,23 +178,16 @@ const DynamicProduct = () => {
           flavors={product.flavors}
           variants={product.variants}
         />
-        <PriceSlider priceData={product.prices} waitingCount={waitingCount} />
+        <GroupBuyPriceBlock
+          productName={product.name}
+          productId={product.id}
+          productImage={product.images.length > 0 ? product.images[0] : null}
+          flavors={product.flavors}
+          priceData={product.prices}
+          waitingCount={waitingCount}
+        />
         <DynamicProductDescription description={product.description} />
         <RelatedProducts currentProduct={product.id} />
-      </main>
-
-      <Footer />
-
-      <FloatingButton
-        productName={product.name}
-        productId={product.id}
-        productImage={product.images.length > 0 ? product.images[0] : null}
-        flavors={product.flavors}
-        prices={product.prices}
-        waitingCount={waitingCount}
-      />
-    </div>
-  );
 };
 
 export default DynamicProduct;
