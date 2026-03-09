@@ -285,7 +285,7 @@ export const GroupBuyPriceBlock = ({
     <>
       <section className="px-3 sm:px-4 py-4">
         <div className="mx-auto max-w-[calc(100%-16px)] sm:max-w-md">
-          <div className="bg-card rounded-3xl shadow-floating overflow-hidden border-[3px] animate-border-pulse">
+          <div className="bg-card rounded-3xl shadow-floating overflow-hidden border-[3px] animate-border-pulse-gold">
             
             {/* Header with countdown and participants */}
             <div className="px-4 py-4 relative overflow-hidden bg-gradient-primary">
