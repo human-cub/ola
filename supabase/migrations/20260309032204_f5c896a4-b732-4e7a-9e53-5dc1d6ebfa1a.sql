@@ -1,0 +1,1 @@
+SELECT public.recompute_waiting_for_discount_counts();
