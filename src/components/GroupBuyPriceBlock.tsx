@@ -286,10 +286,30 @@ export const GroupBuyPriceBlock = ({
   };
   const nextThreshold = getNextThreshold();
   const remaining = nextThreshold ? nextThreshold.people - waitingCount : 0;
+  const priceComparisonItems = [
+    {
+      label: "Retail",
+      price: retailPrice,
+      labelClassName: "text-muted-foreground",
+      priceClassName: "text-muted-foreground line-through",
+    },
+    {
+      label: "Ya bajó a",
+      price: currentPrice,
+      labelClassName: "text-foreground",
+      priceClassName: "text-foreground",
+    },
+    {
+      label: "Súper-Precio",
+      price: superPrice,
+      labelClassName: "text-primary",
+      priceClassName: "text-primary",
+    },
+  ];
 
   return (
     <>
-      <section className="px-3 sm:px-4 lg:px-0 py-4 w-full">
+      <section className="w-full">
         <div className="mx-auto max-w-[390px]">
           <div className="bg-card rounded-3xl shadow-floating overflow-hidden border-[3px] animate-border-pulse">
             
@@ -315,24 +335,14 @@ export const GroupBuyPriceBlock = ({
             {/* Price Comparison */}
             <div className="px-6 py-6 bg-card border-b border-border">
               <div className="grid grid-cols-3 gap-2 text-center items-start">
-                <div className="flex flex-col items-center gap-1">
-                  <div className="text-[11px] font-bold text-muted-foreground">Retail</div>
-                  <div className="text-lg font-bold text-muted-foreground line-through">
-                    {formatPrice(retailPrice)}
+                {priceComparisonItems.map((item) => (
+                  <div key={item.label} className="flex flex-col items-center gap-1">
+                    <div className={`text-[13px] font-bold ${item.labelClassName}`}>{item.label}</div>
+                    <div className={`text-[20px] sm:text-[24px] font-bold leading-none ${item.priceClassName}`}>
+                      {formatPrice(item.price)}
+                    </div>
                   </div>
-                </div>
-                <div className="flex flex-col items-center gap-1">
-                  <div className="text-[11px] font-bold text-primary">Ya bajó a</div>
-                  <div className="text-lg font-bold text-primary">
-                    {formatPrice(currentPrice)}
-                  </div>
-                </div>
-                <div className="flex flex-col items-center gap-1">
-                  <div className="text-[11px] font-bold text-accent">Súper-Precio</div>
-                  <div className="text-lg font-bold text-accent">
-                    {formatPrice(superPrice)}
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
 
@@ -362,7 +372,7 @@ export const GroupBuyPriceBlock = ({
                 </div>
 
                 {/* Tier prices (bottom) */}
-                <div className="flex justify-between mt-3 text-[11px] font-bold text-muted-foreground">
+                <div className="flex justify-between mt-3 text-[13px] font-bold text-muted-foreground">
                   {progressTiers.map((tier, i) => (
                     <span key={i} className="w-14 text-center first:text-left last:text-right">
                       {formatPrice(tier.price)}
@@ -375,7 +385,7 @@ export const GroupBuyPriceBlock = ({
               {nextThreshold && remaining > 0 && (
                 <div className="mt-8 text-center">
                   <p className="text-[15px] font-semibold text-foreground">
-                    Faltan <span className="font-bold text-accent">{remaining} unidades</span> para{' '}
+                    Faltan <span className="font-bold text-primary">{remaining} unidades</span> para{' '}
                     <span className="font-bold text-primary">{formatPrice(nextThreshold.price)}</span>
                   </p>
                 </div>

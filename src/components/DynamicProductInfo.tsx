@@ -9,7 +9,7 @@ const TagList = ({ label, items }: { label: string; items?: string[] }) => {
   if (!items || items.length === 0) return null;
   return (
     <div className="mt-4">
-      <h4 className="text-lg font-medium mb-3 text-primary">{label}</h4>
+      <h4 className="text-lg font-medium text-primary">{label}</h4>
       <div className="flex flex-wrap justify-center sm:justify-start gap-3">
         {items.map((item, index) => (
           <div key={index} className="flex items-center sm:justify-start gap-2">
@@ -37,7 +37,7 @@ export const DynamicProductInfo = ({ name, weight, flavors, variants }: DynamicP
   const hasContent = (flavors && flavors.length > 0) || (variants && variants.length > 0);
 
   return (
-    <section className="sm:px-4 pt-3 pb-0 flex justify-center lg:justify-start" data-test-id="product-info">
+    <section className="sm:px-4 flex justify-center lg:justify-start" data-test-id="product-info">
       <div className="/*mx-auto*/ max-w-md">
         <div className="text-center sm:text-left mb-6">
           <h2 className="text-2xl font-bold text-foreground mb-2 leading-[1.15]">

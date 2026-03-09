@@ -173,7 +173,7 @@ const DynamicProduct = () => {
 
       <main className="pb-[24px] pt-[64px]">
         <Breadcrumb items={breadcrumbItems} />
-        <div className="max-w-[1088px] px-4 mx-auto gap-4 lg:grid lg:grid-cols-[20fr_12fr] lg:justify-center lg:pt-10">
+        <div className="max-w-[1088px] px-4 mx-auto gap-4 grid grid-cols-1 lg:grid-cols-[20fr_12fr] lg:justify-center lg:pt-10">
           <div className="contents lg:block">
             <DynamicProductCarousel images={product.images} productName={product.name} />
 
@@ -187,17 +187,18 @@ const DynamicProduct = () => {
             <DynamicProductDescription description={product.description} />
           </div>
 
-<<<<<<< HEAD
           <div className="sticky-viewport lg:contents">
-            <div className="sm:flex sm:justify-center lg:justify-start sm:gap-6 lg:block">
-              <GroupBuyPriceBlock
-                productName={product.name}
-                productId={product.id}
-                productImage={product.images.length > 0 ? product.images[0] : null}
-                flavors={product.flavors}
-                priceData={product.prices}
-                waitingCount={waitingCount}
-              />
+            <div className="contents lg:block">
+              <div className="sm:flex sm:justify-center lg:justify-start sm:gap-6 lg:sticky top-[72px]">
+                <GroupBuyPriceBlock
+                  productName={product.name}
+                  productId={product.id}
+                  productImage={product.images.length > 0 ? product.images[0] : null}
+                  flavors={product.flavors}
+                  priceData={product.prices}
+                  waitingCount={waitingCount}
+                />
+              </div>
             </div>
           </div>
         </div>

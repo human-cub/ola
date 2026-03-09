@@ -89,7 +89,7 @@ export const RelatedProducts = ({ currentProduct = "" }: RelatedProductsProps) =
   };
 
   return (
-    <section className="sm:px-4 py-6">
+    <section className="sm:px-4 py-6 mt-10">
       <div className="container mx-auto">
         <div className="text-center mb-6">
           <h3 className="text-2xl font-bold text-foreground mb-2">
