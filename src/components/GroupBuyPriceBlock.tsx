@@ -238,28 +238,34 @@ export const GroupBuyPriceBlock = ({
     }).format(price)}`;
   };
 
-  // Progress bar uses tiers starting from index 1 (skip retail at index 0)
-  // 3 symmetric segments: tier1→tier2, tier2→tier3 (equal width 33.33% each)
-  const progressTiers = priceData.slice(1); // [6, 18, 42]
+  // Progress bar: 4 markers (tiers 2-5) with 3 symmetric segments
+  const progressTiers = priceData.slice(1); // people: [1, 6, 18, 42]
   let visualProgress = 0;
-  if (progressTiers.length >= 3) {
-    const t0 = progressTiers[0].people; // 6
-    const t1 = progressTiers[1].people; // 18
-    const t2 = progressTiers[2].people; // 42
+  if (progressTiers.length >= 4) {
+    const t0 = progressTiers[0].people; // 1
+    const t1 = progressTiers[1].people; // 6
+    const t2 = progressTiers[2].people; // 18
+    const t3 = progressTiers[3].people; // 42
     const segWidth = 100 / 3;
 
-    if (waitingCount <= t0) {
-      visualProgress = (waitingCount / Math.max(1, t0)) * segWidth;
-    } else if (waitingCount <= t1) {
-      visualProgress = segWidth + ((waitingCount - t0) / Math.max(1, t1 - t0)) * segWidth;
+    if (waitingCount <= t1) {
+      visualProgress = ((waitingCount - t0) / Math.max(1, t1 - t0)) * segWidth;
     } else if (waitingCount <= t2) {
-      visualProgress = segWidth * 2 + ((waitingCount - t1) / Math.max(1, t2 - t1)) * segWidth;
+      visualProgress = segWidth + ((waitingCount - t1) / Math.max(1, t2 - t1)) * segWidth;
+    } else if (waitingCount <= t3) {
+      visualProgress = segWidth * 2 + ((waitingCount - t2) / Math.max(1, t3 - t2)) * segWidth;
     } else {
       visualProgress = 100;
     }
-  } else if (progressTiers.length > 0) {
-    const maxPeople = progressTiers[progressTiers.length - 1].people;
-    visualProgress = (waitingCount / maxPeople) * 100;
+  } else if (progressTiers.length >= 3) {
+    const t0 = progressTiers[0].people;
+    const t1 = progressTiers[1].people;
+    const t2 = progressTiers[2].people;
+    const segWidth = 100 / 3;
+    if (waitingCount <= t0) visualProgress = (waitingCount / Math.max(1, t0)) * segWidth;
+    else if (waitingCount <= t1) visualProgress = segWidth + ((waitingCount - t0) / Math.max(1, t1 - t0)) * segWidth;
+    else if (waitingCount <= t2) visualProgress = segWidth * 2 + ((waitingCount - t1) / Math.max(1, t2 - t1)) * segWidth;
+    else visualProgress = 100;
   }
   visualProgress = Math.min(100, Math.max(0, visualProgress));
 
