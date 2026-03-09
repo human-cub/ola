@@ -346,8 +346,7 @@ export const GroupBuyPriceBlock = ({
                 <div className="relative h-5 bg-muted rounded-full overflow-hidden shadow-inner">
                   <div
                     className="absolute top-0 left-0 h-full rounded-full transition-all duration-1000 z-10"
-                    style={{ background: 'linear-gradient(135deg, #FFC000, #FFD54F)' }}
-                    style={{ width: `${visualProgress}%` }}
+                    style={{ background: 'linear-gradient(135deg, #FFC000, #FFD54F)', width: `${visualProgress}%` }}
                   />
                   {/* 2 divider lines at 33.33% and 66.67% */}
                   <div className="absolute top-0 left-0 w-full h-full z-20">
