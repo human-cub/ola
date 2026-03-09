@@ -285,10 +285,10 @@ export const GroupBuyPriceBlock = ({
     <>
       <section className="px-3 sm:px-4 py-4">
         <div className="mx-auto max-w-[calc(100%-16px)] sm:max-w-md">
-          <div className="bg-card rounded-3xl shadow-floating overflow-hidden border-[3px] animate-border-pulse">
+          <div className="bg-card rounded-3xl shadow-floating overflow-hidden border-[3px] animate-border-pulse-gold">
             
             {/* Header with countdown and participants */}
-            <div className="px-4 py-4 relative overflow-hidden bg-gradient-primary">
+            <div className="px-4 py-4 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #FFC000, #FFD54F)' }}>
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" style={{ backgroundSize: '200% 100%' }} />
               <div className="flex items-center justify-between gap-2 relative">
                 <div className="flex items-center gap-1.5 min-w-0 flex-shrink">
@@ -345,8 +345,8 @@ export const GroupBuyPriceBlock = ({
                 {/* Progress bar — 3 symmetric segments */}
                 <div className="relative h-5 bg-muted rounded-full overflow-hidden shadow-inner">
                   <div
-                    className="absolute top-0 left-0 h-full rounded-full transition-all duration-1000 z-10 bg-gradient-primary"
-                    style={{ width: `${visualProgress}%` }}
+                    className="absolute top-0 left-0 h-full rounded-full transition-all duration-1000 z-10"
+                    style={{ background: 'linear-gradient(135deg, #FFC000, #FFD54F)', width: `${visualProgress}%` }}
                   />
                   {/* 2 divider lines at 33.33% and 66.67% */}
                   <div className="absolute top-0 left-0 w-full h-full z-20">
@@ -380,7 +380,8 @@ export const GroupBuyPriceBlock = ({
             <div className="px-6 pb-8 space-y-4 bg-card">
               <button
                 onClick={handleWaitForDiscount}
-                className="w-full py-4 rounded-2xl font-bold text-white text-[17px] flex items-center justify-center gap-2 shadow-lg transform transition active:scale-95 bg-gradient-primary"
+                className="w-full py-4 rounded-2xl font-bold text-white text-[17px] flex items-center justify-center gap-2 shadow-lg transform transition active:scale-95"
+                style={{ background: 'linear-gradient(135deg, #FFC000, #FFD54F)' }}
               >
                 <Users className="w-6 h-6" />
                 Sumáte al grupo
