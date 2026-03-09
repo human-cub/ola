@@ -238,25 +238,27 @@ export const GroupBuyPriceBlock = ({
     }).format(price)}`;
   };
 
-  // Calculate visual progress for the bar
+  // Progress bar uses tiers starting from index 1 (skip retail at index 0)
+  // 3 symmetric segments: tier1→tier2, tier2→tier3 (equal width 33.33% each)
+  const progressTiers = priceData.slice(1); // [6, 18, 42]
   let visualProgress = 0;
-  if (priceData.length >= 4) {
-    const tier1 = priceData[1]?.people ?? 1;
-    const tier2 = priceData[2]?.people ?? tier1;
-    const tier3 = priceData[3]?.people ?? tier2;
-    const maxTier = priceData[priceData.length - 1]?.people ?? tier3;
+  if (progressTiers.length >= 3) {
+    const t0 = progressTiers[0].people; // 6
+    const t1 = progressTiers[1].people; // 18
+    const t2 = progressTiers[2].people; // 42
+    const segWidth = 100 / 3;
 
-    if (waitingCount <= tier1) {
-      visualProgress = ((waitingCount - 1) / Math.max(1, tier1 - 1)) * 25;
-    } else if (waitingCount <= tier2) {
-      visualProgress = 25 + ((waitingCount - tier1) / Math.max(1, tier2 - tier1)) * 25;
-    } else if (waitingCount <= tier3) {
-      visualProgress = 50 + ((waitingCount - tier2) / Math.max(1, tier3 - tier2)) * 25;
+    if (waitingCount <= t0) {
+      visualProgress = (waitingCount / Math.max(1, t0)) * segWidth;
+    } else if (waitingCount <= t1) {
+      visualProgress = segWidth + ((waitingCount - t0) / Math.max(1, t1 - t0)) * segWidth;
+    } else if (waitingCount <= t2) {
+      visualProgress = segWidth * 2 + ((waitingCount - t1) / Math.max(1, t2 - t1)) * segWidth;
     } else {
-      visualProgress = 75 + ((waitingCount - tier3) / Math.max(1, maxTier - tier3)) * 25;
+      visualProgress = 100;
     }
-  } else if (priceData.length > 1) {
-    const maxPeople = priceData[priceData.length - 1].people;
+  } else if (progressTiers.length > 0) {
+    const maxPeople = progressTiers[progressTiers.length - 1].people;
     visualProgress = (waitingCount / maxPeople) * 100;
   }
   visualProgress = Math.min(100, Math.max(0, visualProgress));
