@@ -271,12 +271,17 @@ export const GroupBuyPriceBlock = ({
 
   // Get next threshold
   const getNextThreshold = () => {
-    // Skip tier 0 (retail) — start from tier 1
-    for (let i = 1; i < priceData.length; i++) {
-      if (priceData[i].people > waitingCount) {
-        return priceData[i];
+    // Message should point to the next meaningful drop tier (skip retail + first discount tier)
+    const messageTiers = priceData.slice(2);
+
+    if (messageTiers.length === 0) return null;
+
+    for (const tier of messageTiers) {
+      if (tier.people > waitingCount) {
+        return tier;
       }
     }
+
     return null;
   };
   const nextThreshold = getNextThreshold();
