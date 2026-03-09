@@ -288,7 +288,7 @@ export const GroupBuyPriceBlock = ({
           <div className="bg-card rounded-3xl shadow-floating overflow-hidden border-[3px] animate-border-pulse-gold">
             
             {/* Header with countdown and participants */}
-            <div className="px-4 py-4 relative overflow-hidden bg-gradient-primary">
+            <div className="px-4 py-4 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #FFC000, #FFD54F)' }}>
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" style={{ backgroundSize: '200% 100%' }} />
               <div className="flex items-center justify-between gap-2 relative">
                 <div className="flex items-center gap-1.5 min-w-0 flex-shrink">
