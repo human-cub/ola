@@ -320,3 +320,7 @@ All colors MUST be HSL.
     );
   }
 }
+
+.squircle {
+  corner-shape: squircle;
+}

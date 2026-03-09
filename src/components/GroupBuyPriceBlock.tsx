@@ -289,8 +289,8 @@ export const GroupBuyPriceBlock = ({
 
   return (
     <>
-      <section className="px-3 sm:px-4 py-4">
-        <div className="mx-auto max-w-[calc(100%-16px)] sm:max-w-md">
+      <section className="px-3 sm:px-4 lg:px-0 py-4 w-full">
+        <div className="mx-auto max-w-[390px]">
           <div className="bg-card rounded-3xl shadow-floating overflow-hidden border-[3px] animate-border-pulse">
             
             {/* Header with countdown and participants */}
@@ -303,7 +303,7 @@ export const GroupBuyPriceBlock = ({
                     Ya se sumaron {waitingCount}
                   </span>
                 </div>
-                <div className="px-2.5 py-1.5 rounded-full shadow-md flex items-center gap-1 bg-accent flex-shrink-0">
+                <div className="px-2.5 py-1.5 rounded-full shadow-md flex items-center gap-1 bg-gray-800/80 flex-shrink-0 squircle">
                   <Timer className="w-3.5 h-3.5 text-white" />
                   <div className="text-white font-mono font-bold text-xs tracking-wide whitespace-nowrap">
                     {timeLeft.days}d {timeLeft.hours}h {timeLeft.minutes}m
