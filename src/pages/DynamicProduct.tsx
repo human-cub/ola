@@ -188,6 +188,11 @@ const DynamicProduct = () => {
         />
         <DynamicProductDescription description={product.description} />
         <RelatedProducts currentProduct={product.id} />
+      </main>
+
+      <Footer />
+    </div>
+  );
 };
 
 export default DynamicProduct;
