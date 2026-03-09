@@ -340,11 +340,8 @@ export const GroupBuyPriceBlock = ({
                 {/* Progress bar */}
                 <div className="relative h-5 bg-muted rounded-full overflow-hidden shadow-inner">
                   <div
-                    className="absolute top-0 left-0 h-full rounded-full transition-all duration-1000 z-10"
-                    style={{
-                      width: `${visualProgress}%`,
-                      background: 'linear-gradient(90deg, hsl(var(--primary)), hsl(var(--accent)))',
-                    }}
+                    className="absolute top-0 left-0 h-full rounded-full transition-all duration-1000 z-10 bg-gradient-primary"
+                    style={{ width: `${visualProgress}%` }}
                   />
                   {/* Divider lines */}
                   <div className="absolute top-0 left-0 w-full h-full z-20">
