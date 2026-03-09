@@ -469,7 +469,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       lastSunday.setHours(23, 59, 59, 999);
 
-      const isFrozenCycle = orderCreatedAt < lastSunday && now > lastSunday;
+      // Check if items already have participants_count frozen (manually frozen orders)
+      const hasManuallyFrozenItems = existingOrder.items && (existingOrder.items as any[]).some(
+        (item: any) => item.participants_count != null && Number(item.participants_count) > 0
+      );
+      const isFrozenCycle = hasManuallyFrozenItems || (orderCreatedAt < lastSunday && now > lastSunday);
 
       // Build frozen price and participants map from existing order items
       const frozenPriceMap = new Map<string, number>();
