@@ -3,8 +3,8 @@ import { useParams } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { Footer } from "@/components/Footer";
-import { GroupBuyPriceBlock } from "@/components/GroupBuyPriceBlock";
 import { RelatedProducts } from "@/components/RelatedProducts";
+import { GroupBuyPriceBlock } from "@/components/GroupBuyPriceBlock";
 import { supabase } from "@/integrations/supabase/client";
 import { DynamicProductCarousel } from "@/components/DynamicProductCarousel";
 import { DynamicProductInfo } from "@/components/DynamicProductInfo";
@@ -187,6 +187,7 @@ const DynamicProduct = () => {
             <DynamicProductDescription description={product.description} />
           </div>
 
+<<<<<<< HEAD
           <div className="sticky-viewport lg:contents">
             <div className="sm:flex sm:justify-center lg:justify-start sm:gap-6 lg:block">
               <GroupBuyPriceBlock
