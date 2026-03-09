@@ -383,7 +383,7 @@ export const GroupBuyPriceBlock = ({
                 className="w-full py-4 rounded-2xl font-bold text-white text-[17px] flex items-center justify-center gap-2 shadow-lg transform transition active:scale-95 bg-gradient-primary"
               >
                 <Users className="w-6 h-6" />
-                Sumáte al grupo
+                Sumate al grupo
               </button>
               <button
                 onClick={handleBuyNow}
