@@ -45,12 +45,9 @@ const DynamicProduct = () => {
   const [waitingCount, setWaitingCount] = useState(0);
 
   useEffect(() => {
-    if (!slug) return;
-
-    let cancelled = false;
-    let channel: ReturnType<typeof supabase.channel> | null = null;
-
     const fetchProduct = async () => {
+      if (!slug) return;
+
       // Try to find by short link first (e.g., /sn-creatina-300)
       let { data, error } = await supabase
         .from("products")
@@ -69,8 +66,6 @@ const DynamicProduct = () => {
         data = fallbackResult.data;
         error = fallbackResult.error;
       }
-
-      if (cancelled) return;
 
       if (error || !data) {
         console.error("Product not found:", error);
@@ -96,8 +91,8 @@ const DynamicProduct = () => {
       setWaitingCount(data.total_orders_count || 0);
       setLoading(false);
 
-      // Subscribe to realtime updates (incl. prices thresholds)
-      channel = supabase
+      // Subscribe to realtime updates
+      const channel = supabase
         .channel(`product-${data.id}`)
         .on(
           "postgres_changes",
@@ -109,33 +104,19 @@ const DynamicProduct = () => {
           },
           (payload) => {
             const newData = payload.new as any;
-
             if (newData.total_orders_count !== undefined) {
-              setWaitingCount(newData.total_orders_count ?? 0);
+              setWaitingCount(newData.total_orders_count);
             }
-
-            // Keep product fields in sync when admin updates prices/flavors/images
-            setProduct((prev) => {
-              if (!prev) return prev;
-              return {
-                ...prev,
-                prices: (newData.prices as { people: number; price: number }[]) ?? prev.prices,
-                flavors: (newData.flavors as string[]) ?? prev.flavors,
-                variants: (newData.variants as string[]) ?? prev.variants,
-                images: (newData.images as string[]) ?? prev.images,
-              };
-            });
           }
         )
         .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     };
 
     fetchProduct();
-
-    return () => {
-      cancelled = true;
-      if (channel) supabase.removeChannel(channel);
-    };
   }, [slug]);
 
   if (loading) {
