@@ -327,42 +327,35 @@ export const GroupBuyPriceBlock = ({
             {/* Progress Bar Section */}
             <div className="px-6 py-8 bg-card">
               <div className="relative">
-                {/* Tier numbers (top) */}
+                {/* Tier people counts (top) — from progressTiers */}
                 <div className="flex justify-between mb-3 text-sm font-bold text-foreground">
-                  {priceData.slice(0, 4).map((tier, i) => (
+                  {progressTiers.map((tier, i) => (
                     <span key={i} className="w-8 text-center first:text-left last:text-right">
                       {tier.people}
                     </span>
                   ))}
-                  {priceData.length > 4 && (
-                    <span className="w-8 text-right">{priceData[priceData.length - 1].people}</span>
-                  )}
                 </div>
 
-                {/* Progress bar */}
+                {/* Progress bar — 3 symmetric segments */}
                 <div className="relative h-5 bg-muted rounded-full overflow-hidden shadow-inner">
                   <div
                     className="absolute top-0 left-0 h-full rounded-full transition-all duration-1000 z-10 bg-gradient-primary"
                     style={{ width: `${visualProgress}%` }}
                   />
-                  {/* Divider lines */}
+                  {/* 2 divider lines at 33.33% and 66.67% */}
                   <div className="absolute top-0 left-0 w-full h-full z-20">
-                    <div className="absolute top-0 w-0.5 h-full bg-white opacity-70" style={{ left: '25%' }} />
-                    <div className="absolute top-0 w-0.5 h-full bg-white opacity-70" style={{ left: '50%' }} />
-                    <div className="absolute top-0 w-0.5 h-full bg-white opacity-70" style={{ left: '75%' }} />
+                    <div className="absolute top-0 w-0.5 h-full bg-white opacity-70" style={{ left: '33.33%' }} />
+                    <div className="absolute top-0 w-0.5 h-full bg-white opacity-70" style={{ left: '66.67%' }} />
                   </div>
                 </div>
 
                 {/* Tier prices (bottom) */}
                 <div className="flex justify-between mt-3 text-[11px] font-bold text-muted-foreground">
-                  {priceData.slice(0, 4).map((tier, i) => (
+                  {progressTiers.map((tier, i) => (
                     <span key={i} className="w-14 text-center first:text-left last:text-right">
                       {formatPrice(tier.price)}
                     </span>
                   ))}
-                  {priceData.length > 4 && (
-                    <span className="w-14 text-right">{formatPrice(priceData[priceData.length - 1].price)}</span>
-                  )}
                 </div>
               </div>
 
