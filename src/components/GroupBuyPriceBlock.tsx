@@ -381,7 +381,8 @@ export const GroupBuyPriceBlock = ({
             <div className="px-6 pb-8 space-y-4 bg-card">
               <button
                 onClick={handleWaitForDiscount}
-                className="w-full py-4 rounded-2xl font-bold text-white text-[17px] flex items-center justify-center gap-2 shadow-lg transform transition active:scale-95 bg-gradient-primary"
+                className="w-full py-4 rounded-2xl font-bold text-white text-[17px] flex items-center justify-center gap-2 shadow-lg transform transition active:scale-95"
+                style={{ background: 'linear-gradient(135deg, #FFC000, #FFD54F)' }}
               >
                 <Users className="w-6 h-6" />
                 Sumáte al grupo
