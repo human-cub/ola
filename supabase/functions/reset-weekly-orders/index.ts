@@ -336,6 +336,14 @@ Deno.serve(async (req) => {
 
     console.log(`[reset-weekly-orders] Successfully reset virtual counters for ${products?.length || 0} products`);
 
+    // Recompute waiting_for_discount_count based on current week only
+    const { error: recomputeError } = await supabase.rpc('recompute_waiting_for_discount_counts');
+    if (recomputeError) {
+      console.error('[reset-weekly-orders] Error recomputing waiting_for_discount_counts:', recomputeError);
+    } else {
+      console.log('[reset-weekly-orders] Successfully recomputed waiting_for_discount_counts for new week');
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true, 
