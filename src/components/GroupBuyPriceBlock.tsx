@@ -296,14 +296,14 @@ export const GroupBuyPriceBlock = ({
     {
       label: "Ya bajó a",
       price: currentPrice,
-      labelClassName: "text-foreground",
-      priceClassName: "text-foreground",
+      labelClassName: "text-primary",
+      priceClassName: "text-primary",
     },
     {
       label: "Súper-Precio",
       price: superPrice,
-      labelClassName: "text-primary",
-      priceClassName: "text-primary",
+      labelClassName: "text-accent",
+      priceClassName: "text-accent",
     },
   ];
 
@@ -323,7 +323,7 @@ export const GroupBuyPriceBlock = ({
                     Ya se sumaron {waitingCount}
                   </span>
                 </div>
-                <div className="px-2.5 py-1.5 rounded-full shadow-md flex items-center gap-1 bg-gray-800/80 flex-shrink-0 squircle">
+                <div className="px-2.5 py-1.5 rounded-full shadow-md flex items-center gap-1 bg-accent flex-shrink-0 squircle">
                   <Timer className="w-3.5 h-3.5 text-white" />
                   <div className="text-white font-mono font-bold text-xs tracking-wide whitespace-nowrap">
                     {timeLeft.days}d {timeLeft.hours}h {timeLeft.minutes}m
@@ -350,9 +350,9 @@ export const GroupBuyPriceBlock = ({
             <div className="px-6 py-8 bg-card">
               <div className="relative">
                 {/* Tier people counts (top) — from progressTiers */}
-                <div className="flex justify-between mb-3 text-sm font-bold text-foreground">
+                <div className="flex justify-between mb-3 text-sm font-bold text-foreground -mx-3">
                   {progressTiers.map((tier, i) => (
-                    <span key={i} className="w-8 text-center first:text-left last:text-right">
+                    <span key={i} className="w-8 text-center">
                       {tier.people}
                     </span>
                   ))}
@@ -369,10 +369,10 @@ export const GroupBuyPriceBlock = ({
                     <div className="absolute top-0 w-0.5 h-full bg-white opacity-70" style={{ left: '33.33%' }} />
                     <div className="absolute top-0 w-0.5 h-full bg-white opacity-70" style={{ left: '66.67%' }} />
                   </div>
-                </div>
+                </div>                
 
                 {/* Tier prices (bottom) */}
-                <div className="flex justify-between mt-3 text-[13px] font-bold text-muted-foreground">
+                <div className="flex justify-between mt-3 text-[13px] font-bold text-muted-foreground -mx-3">
                   {progressTiers.map((tier, i) => (
                     <span key={i} className="w-14 text-center first:text-left last:text-right">
                       {formatPrice(tier.price)}
@@ -385,7 +385,7 @@ export const GroupBuyPriceBlock = ({
               {nextThreshold && remaining > 0 && (
                 <div className="mt-8 text-center">
                   <p className="text-[15px] font-semibold text-foreground">
-                    Faltan <span className="font-bold text-primary">{remaining} unidades</span> para{' '}
+                    Faltan <span className="font-bold text-accent">{remaining} unidades</span> para{' '}
                     <span className="font-bold text-primary">{formatPrice(nextThreshold.price)}</span>
                   </p>
                 </div>
@@ -393,7 +393,7 @@ export const GroupBuyPriceBlock = ({
             </div>
 
             {/* CTA Buttons */}
-            <div className="px-6 pb-8 space-y-4 bg-card">
+            <div className="px-6 pb-6 space-y-4 bg-card">
               <button
                 onClick={handleWaitForDiscount}
                 className="w-full py-4 rounded-2xl font-bold text-white text-[17px] flex items-center justify-center gap-2 shadow-lg transform transition active:scale-95 bg-gradient-primary"

@@ -40,7 +40,7 @@ export const DynamicProductDescription = ({ description }: DynamicProductDescrip
 
   return (
     <section data-test-id="product-description" className="flex justify-center">
-      <div className="sm:bg-gradient-card sm:rounded-2xl pl-4 max-w-[72ch] mt-8 sm:mt-0 text-balance">
+      <div className="sm:bg-gradient-card sm:rounded-2xl lg:pl-4 max-w-[72ch] mt-8 sm:mt-0 text-balance">
         <h3 className="text-xl font-semibold text-foreground mb-4">Descripción del Producto</h3>
         <div className="space-y-4 font-normal">
           {paragraphs.map((paragraph, index) => (

@@ -175,19 +175,25 @@ const DynamicProduct = () => {
         <Breadcrumb items={breadcrumbItems} />
         <div className="max-w-[1088px] px-4 mx-auto gap-4 grid grid-cols-1 lg:grid-cols-[20fr_12fr] lg:justify-center lg:pt-10">
           <div className="contents lg:block">
-            <DynamicProductCarousel images={product.images} productName={product.name} />
+            <div className="order-1">
+              <DynamicProductCarousel images={product.images} productName={product.name} />
+            </div>
 
-            <DynamicProductInfo
-              name={product.name}
-              weight={product.weight}
-              flavors={product.flavors}
-              variants={product.variants}
-            />
+            <div className="order-2">
+              <DynamicProductInfo
+                name={product.name}
+                weight={product.weight}
+                flavors={product.flavors}
+                variants={product.variants}
+              />
+            </div>
 
-            <DynamicProductDescription description={product.description} />
+            <div className="order-4">
+              <DynamicProductDescription description={product.description} />
+            </div>
           </div>
 
-          <div className="sticky-viewport lg:contents">
+          <div className="sticky-viewport lg:contents order-3">
             <div className="contents lg:block">
               <div className="sm:flex sm:justify-center lg:justify-start sm:gap-6 lg:sticky top-[72px]">
                 <GroupBuyPriceBlock
