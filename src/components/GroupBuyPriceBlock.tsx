@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, type CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
 import { Users, Sparkles, Timer, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,14 @@ interface GroupBuyPriceBlockProps {
   flavors?: string[];
   priceData: PriceData[];
   waitingCount?: number;
+}
+
+interface PriceComparisonItem {
+  label: string;
+  price: number | null;
+  labelClassName: string;
+  priceClassName: string;
+  style?: CSSProperties;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -229,6 +237,10 @@ export const GroupBuyPriceBlock = ({
   const currentPrice = getCurrentTierPrice(priceData, waitingCount);
   const superPrice = getMaxDiscountPrice(priceData);
   const buyNowPrice = getBuyNowPrice(priceData);
+  const groupBuyAccentStyle = { color: "hsl(var(--group-buy-accent))" } satisfies CSSProperties;
+  const groupBuyAccentBackgroundStyle = {
+    backgroundColor: "hsl(var(--group-buy-accent))",
+  } satisfies CSSProperties;
 
   const formatPrice = (price: number | null) => {
     if (price === null) return "-";
@@ -268,6 +280,11 @@ export const GroupBuyPriceBlock = ({
     else visualProgress = 100;
   }
   visualProgress = Math.min(100, Math.max(0, visualProgress));
+  const groupBuyProgressStyle = {
+    width: `${visualProgress}%`,
+    background:
+      "linear-gradient(90deg, hsl(36 100% 50%), hsl(var(--group-buy-accent)), hsl(48 100% 60%))",
+  } satisfies CSSProperties;
 
   // Get next threshold
   const getNextThreshold = () => {
@@ -286,7 +303,7 @@ export const GroupBuyPriceBlock = ({
   };
   const nextThreshold = getNextThreshold();
   const remaining = nextThreshold ? nextThreshold.people - waitingCount : 0;
-  const priceComparisonItems = [
+  const priceComparisonItems: PriceComparisonItem[] = [
     {
       label: "Retail",
       price: retailPrice,
@@ -302,8 +319,9 @@ export const GroupBuyPriceBlock = ({
     {
       label: "Súper-Precio",
       price: superPrice,
-      labelClassName: "text-accent",
-      priceClassName: "text-accent",
+      labelClassName: "",
+      priceClassName: "",
+      style: groupBuyAccentStyle,
     },
   ];
 
@@ -323,7 +341,10 @@ export const GroupBuyPriceBlock = ({
                     Ya se sumaron {waitingCount}
                   </span>
                 </div>
-                <div className="px-2.5 py-1.5 rounded-full shadow-md flex items-center gap-1 bg-accent flex-shrink-0 squircle">
+                <div
+                  className="px-2.5 py-1.5 rounded-full shadow-md flex items-center gap-1 flex-shrink-0 squircle"
+                  style={groupBuyAccentBackgroundStyle}
+                >
                   <Timer className="w-3.5 h-3.5 text-white" />
                   <div className="text-white font-mono font-bold text-xs tracking-wide whitespace-nowrap">
                     {timeLeft.days}d {timeLeft.hours}h {timeLeft.minutes}m
@@ -337,8 +358,13 @@ export const GroupBuyPriceBlock = ({
               <div className="grid grid-cols-3 gap-2 text-center items-start">
                 {priceComparisonItems.map((item) => (
                   <div key={item.label} className="flex flex-col items-center gap-1">
-                    <div className={`text-[13px] font-bold ${item.labelClassName}`}>{item.label}</div>
-                    <div className={`text-[20px] sm:text-[24px] font-bold leading-none ${item.priceClassName}`}>
+                    <div className={`text-[13px] font-bold ${item.labelClassName}`} style={item.style}>
+                      {item.label}
+                    </div>
+                    <div
+                      className={`text-[20px] sm:text-[24px] font-bold leading-none ${item.priceClassName}`}
+                      style={item.style}
+                    >
                       {formatPrice(item.price)}
                     </div>
                   </div>
@@ -362,7 +388,7 @@ export const GroupBuyPriceBlock = ({
                 <div className="relative h-5 bg-muted rounded-full overflow-hidden shadow-inner">
                   <div
                     className="absolute top-0 left-0 h-full rounded-full transition-all duration-1000 z-10"
-                    style={{ width: `${visualProgress}%`, background: 'linear-gradient(90deg, hsl(36 100% 50%), hsl(42 100% 50%), hsl(48 100% 60%))' }}
+                    style={groupBuyProgressStyle}
                   />
                   {/* 2 divider lines at 33.33% and 66.67% */}
                   <div className="absolute top-0 left-0 w-full h-full z-20">
@@ -385,7 +411,7 @@ export const GroupBuyPriceBlock = ({
               {nextThreshold && remaining > 0 && (
                 <div className="mt-8 text-center">
                   <p className="text-[15px] font-semibold text-foreground">
-                    Faltan <span className="font-bold text-accent">{remaining} unidades</span> para{' '}
+                    Faltan <span className="font-bold" style={groupBuyAccentStyle}>{remaining} unidades</span> para{' '}
                     <span className="font-bold text-primary">{formatPrice(nextThreshold.price)}</span>
                   </p>
                 </div>

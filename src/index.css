@@ -32,8 +32,10 @@ All colors MUST be HSL.
     --muted: 195 20% 96%;
     --muted-foreground: 195 15% 45%;
 
-    --accent: 42 100% 50%;
-    --accent-foreground: 42 100% 25%;
+    --accent: 195 100% 94%;
+    --accent-foreground: 195 100% 35%;
+    --group-buy-accent: 42 100% 50%;
+    --group-buy-accent-foreground: 42 100% 25%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
@@ -92,8 +94,10 @@ All colors MUST be HSL.
     --muted: 195 25% 12%;
     --muted-foreground: 195 15% 65%;
 
-    --accent: 195 25% 18%;
-    --accent-foreground: 195 15% 90%;
+    --accent: 195 35% 18%;
+    --accent-foreground: 195 100% 78%;
+    --group-buy-accent: 42 100% 50%;
+    --group-buy-accent-foreground: 42 100% 25%;
 
     --destructive: 0 84% 50%;
     --destructive-foreground: 0 0% 100%;
