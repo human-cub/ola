@@ -11,7 +11,8 @@ import {
 } from "@/components/ui/dialog";
 import { AddToCartDialog } from "./AddToCartDialog";
 import { supabase } from "@/integrations/supabase/client";
-import { getNextSunday } from "@/lib/collectivePricing";
+import { getLastSundayClose } from "@/lib/collectivePricing";
+import { useCollectiveClock } from "@/hooks/useCollectiveClock";
 import type { PriceData } from "@/lib/types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -35,13 +36,14 @@ function getBuyNowPrice(prices: PriceData[]): number | null {
   return prices.length > 1 ? prices[1].price : prices[0].price;
 }
 
-async function hasPendingConflict(userId: string): Promise<boolean> {
-  const now = new Date();
-
-  // Fallback for legacy rows without collective_close_date
-  const weekStart = new Date(now);
-  weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
-  weekStart.setHours(0, 0, 0, 0);
+async function hasPendingConflict(
+  userId: string,
+  now: Date,
+  nextCollectiveClose: Date | null
+): Promise<boolean> {
+  const fallbackLastClose = nextCollectiveClose
+    ? new Date(nextCollectiveClose.getTime() - 7 * 24 * 60 * 60 * 1000)
+    : getLastSundayClose(now);
 
   const { data, error } = await supabase
     .from("user_orders")
@@ -53,7 +55,7 @@ async function hasPendingConflict(userId: string): Promise<boolean> {
   if (error || !data?.length) return false;
 
   const nowMs = now.getTime();
-  const weekStartMs = weekStart.getTime();
+  const fallbackLastCloseMs = fallbackLastClose.getTime();
 
   return data.some((order) => {
     if (order.collective_close_date) {
@@ -64,7 +66,7 @@ async function hasPendingConflict(userId: string): Promise<boolean> {
     }
 
     const createdAt = new Date(order.created_at).getTime();
-    return !Number.isNaN(createdAt) && createdAt < weekStartMs;
+    return !Number.isNaN(createdAt) && createdAt < fallbackLastCloseMs && nowMs > fallbackLastCloseMs;
   });
 }
 
@@ -76,10 +78,16 @@ function useFloatingButton(prices: PriceData[]) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isWaitingList, setIsWaitingList] = useState(false);
   const [conflictDialogOpen, setConflictDialogOpen] = useState(false);
+  const { nextCollectiveClose, serverOffsetMs } = useCollectiveClock();
 
   useEffect(() => {
     const calculate = () => {
-      const diff = getNextSunday().getTime() - Date.now();
+      if (!nextCollectiveClose) {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0 });
+        return;
+      }
+
+      const diff = nextCollectiveClose.getTime() - (Date.now() + serverOffsetMs);
       if (diff > 0) {
         setTimeLeft({
           days: Math.floor(diff / (1000 * 60 * 60 * 24)),
@@ -94,7 +102,7 @@ function useFloatingButton(prices: PriceData[]) {
     calculate();
     const timer = setInterval(calculate, 60000);
     return () => clearInterval(timer);
-  }, []);
+  }, [nextCollectiveClose, serverOffsetMs]);
 
   const handleBuyNow = () => {
     setIsWaitingList(false);
@@ -103,7 +111,11 @@ function useFloatingButton(prices: PriceData[]) {
 
   const handleWaitForDiscount = async () => {
     const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user && await hasPendingConflict(session.user.id)) {
+    if (session?.user && await hasPendingConflict(
+      session.user.id,
+      new Date(Date.now() + serverOffsetMs),
+      nextCollectiveClose,
+    )) {
       setConflictDialogOpen(true);
       return;
     }

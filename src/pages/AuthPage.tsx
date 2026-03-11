@@ -9,7 +9,6 @@ import { ArrowLeft } from "lucide-react";
 import { consumePendingAddAction, PendingAddAction } from "@/lib/postAuthAction";
 import { toast } from "sonner";
 import { formatPrice } from "@/lib/formatting";
-import { getNextSundayIso } from "@/lib/collectivePricing";
 
 const AuthPage = () => {
   const navigate = useNavigate();
@@ -81,7 +80,6 @@ const AuthPage = () => {
                 items: orderItems,
                 subtotal,
                 total_amount: subtotal,
-                collective_close_date: getNextSundayIso(),
               })
               .eq("id", existingOrder.id);
           }
@@ -137,7 +135,6 @@ const AuthPage = () => {
               total_amount: subtotal,
               delivery_address: deliveryAddress,
               status: "pending",
-              collective_close_date: getNextSundayIso(),
               notes: phone || null,
             })
             .select("id, order_number")

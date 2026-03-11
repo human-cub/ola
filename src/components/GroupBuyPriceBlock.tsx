@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/dialog";
 import { AddToCartDialog } from "./AddToCartDialog";
 import { supabase } from "@/integrations/supabase/client";
+import { getLastSundayClose } from "@/lib/collectivePricing";
+import { useCollectiveClock } from "@/hooks/useCollectiveClock";
 
 interface PriceData {
   people: number;
@@ -35,21 +37,6 @@ interface PriceComparisonItem {
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function getNextSunday(): Date {
-  const now = new Date();
-  const next = new Date(now);
-  const daysUntilSunday = (7 - now.getDay()) % 7;
-
-  if (daysUntilSunday === 0 && now.getHours() < 23) {
-    next.setHours(23, 59, 59, 999);
-  } else {
-    next.setDate(now.getDate() + (daysUntilSunday || 7));
-    next.setHours(23, 59, 59, 999);
-  }
-
-  return next;
-}
 
 function getBuyNowPrice(prices: PriceData[]): number | null {
   if (prices.length === 0) return null;
@@ -83,11 +70,14 @@ function getCurrentTierPrice(prices: PriceData[], count: number): number | null 
   return secondTierPrice;
 }
 
-async function hasPendingConflict(userId: string): Promise<boolean> {
-  const now = new Date();
-  const weekStart = new Date(now);
-  weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
-  weekStart.setHours(0, 0, 0, 0);
+async function hasPendingConflict(
+  userId: string,
+  now: Date,
+  nextCollectiveClose: Date | null
+): Promise<boolean> {
+  const fallbackLastClose = nextCollectiveClose
+    ? new Date(nextCollectiveClose.getTime() - 7 * 24 * 60 * 60 * 1000)
+    : getLastSundayClose(now);
 
   const { data, error } = await supabase
     .from("user_orders")
@@ -99,7 +89,7 @@ async function hasPendingConflict(userId: string): Promise<boolean> {
   if (error || !data?.length) return false;
 
   const nowMs = now.getTime();
-  const weekStartMs = weekStart.getTime();
+  const fallbackLastCloseMs = fallbackLastClose.getTime();
 
   return data.some((order) => {
     if (order.collective_close_date) {
@@ -109,7 +99,7 @@ async function hasPendingConflict(userId: string): Promise<boolean> {
       }
     }
     const createdAt = new Date(order.created_at).getTime();
-    return !Number.isNaN(createdAt) && createdAt < weekStartMs;
+    return !Number.isNaN(createdAt) && createdAt < fallbackLastCloseMs && nowMs > fallbackLastCloseMs;
   });
 }
 
@@ -121,10 +111,16 @@ function useGroupBuyBlock(prices: PriceData[]) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isWaitingList, setIsWaitingList] = useState(false);
   const [conflictDialogOpen, setConflictDialogOpen] = useState(false);
+  const { nextCollectiveClose, serverOffsetMs } = useCollectiveClock();
 
   useEffect(() => {
     const calculate = () => {
-      const diff = getNextSunday().getTime() - Date.now();
+      if (!nextCollectiveClose) {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0 });
+        return;
+      }
+
+      const diff = nextCollectiveClose.getTime() - (Date.now() + serverOffsetMs);
       if (diff > 0) {
         setTimeLeft({
           days: Math.floor(diff / (1000 * 60 * 60 * 24)),
@@ -139,7 +135,7 @@ function useGroupBuyBlock(prices: PriceData[]) {
     calculate();
     const timer = setInterval(calculate, 60000);
     return () => clearInterval(timer);
-  }, []);
+  }, [nextCollectiveClose, serverOffsetMs]);
 
   const handleBuyNow = () => {
     setIsWaitingList(false);
@@ -148,7 +144,11 @@ function useGroupBuyBlock(prices: PriceData[]) {
 
   const handleWaitForDiscount = async () => {
     const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user && await hasPendingConflict(session.user.id)) {
+    if (session?.user && await hasPendingConflict(
+      session.user.id,
+      new Date(Date.now() + serverOffsetMs),
+      nextCollectiveClose,
+    )) {
       setConflictDialogOpen(true);
       return;
     }

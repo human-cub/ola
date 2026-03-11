@@ -46,11 +46,11 @@ const WaitingList = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isMovingToCart, setIsMovingToCart] = useState(false);
 
-  const { hasExistingOrder, profileCompleted, pendingOrderCreatedAt, frozenOrderData } =
+  const { hasExistingOrder, profileCompleted, pendingOrderCreatedAt, collectiveCloseDate, frozenOrderData } =
     usePendingOrder(waitingListItems);
 
   const { timeLeft, isCollectionEnded } =
-    useCollectiveCountdown(pendingOrderCreatedAt);
+    useCollectiveCountdown(pendingOrderCreatedAt, collectiveCloseDate);
 
   const {
     getNextDiscountThreshold,

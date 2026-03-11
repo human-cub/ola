@@ -45,6 +45,7 @@ import {
 } from "@/lib/types";
 import { formatPrice } from "@/lib/formatting";
 import { applyPromoTier } from "@/services/orderService";
+import { fetchServerTime } from "@/lib/serverClock";
 import { OrderFilters } from "./OrderFilters";
 import { OrderStats } from "./OrderStats";
 import { OrderDetailDialog, type DialogOrder } from "./OrderDetailDialog";
@@ -147,13 +148,17 @@ const UserOrdersTable = () => {
       profiles: profilesMap[order.user_id] || null,
     })) as UserOrder[];
 
+    const serverNow = await fetchServerTime().catch(() => new Date());
+
     const shouldSyncOrder = (order: UserOrder) =>
       shouldUseDynamicCollectivePricing({
         orderType: order.order_type,
         status: order.status,
         createdAt: order.created_at,
+        collectiveCloseDate: order.collective_close_date,
         isPromo: order.is_promo,
         items: order.items,
+        now: serverNow,
       });
 
     const dynamicOrders = parsedOrders.filter(shouldSyncOrder);

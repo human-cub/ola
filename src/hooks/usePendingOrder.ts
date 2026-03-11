@@ -20,6 +20,7 @@ interface PendingOrderResult {
   hasExistingOrder: boolean;
   profileCompleted: boolean;
   pendingOrderCreatedAt: Date | null;
+  collectiveCloseDate: Date | null;
   frozenOrderData: FrozenOrderData | null;
 }
 
@@ -29,6 +30,7 @@ export const usePendingOrder = (
   const [hasExistingOrder, setHasExistingOrder] = useState(false);
   const [profileCompleted, setProfileCompleted] = useState(false);
   const [pendingOrderCreatedAt, setPendingOrderCreatedAt] = useState<Date | null>(null);
+  const [collectiveCloseDate, setCollectiveCloseDate] = useState<Date | null>(null);
   const [frozenOrderData, setFrozenOrderData] = useState<FrozenOrderData | null>(null);
 
   useEffect(() => {
@@ -37,6 +39,7 @@ export const usePendingOrder = (
       if (!session) {
         setHasExistingOrder(false);
         setPendingOrderCreatedAt(null);
+        setCollectiveCloseDate(null);
         setFrozenOrderData(null);
         setProfileCompleted(false);
         return;
@@ -45,7 +48,7 @@ export const usePendingOrder = (
       const [orderResult, profileResult] = await Promise.all([
         supabase
           .from("user_orders")
-          .select("id, created_at, items, subtotal, participants_count")
+          .select("id, created_at, collective_close_date, items, subtotal, participants_count")
           .eq("user_id", session.user.id)
           .eq("order_type", "collective")
           .eq("status", "pending")
@@ -62,6 +65,7 @@ export const usePendingOrder = (
 
       setHasExistingOrder(!!data);
       setPendingOrderCreatedAt(data ? new Date(data.created_at) : null);
+  setCollectiveCloseDate(data?.collective_close_date ? new Date(data.collective_close_date) : null);
 
       const isComplete = profile?.profile_completed === true &&
                          !!profile?.first_name?.trim() &&
@@ -83,5 +87,5 @@ export const usePendingOrder = (
     checkExistingOrder();
   }, [waitingListItems]);
 
-  return { hasExistingOrder, profileCompleted, pendingOrderCreatedAt, frozenOrderData };
+  return { hasExistingOrder, profileCompleted, pendingOrderCreatedAt, collectiveCloseDate, frozenOrderData };
 };

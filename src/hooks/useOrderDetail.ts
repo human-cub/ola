@@ -6,6 +6,7 @@ import {
   shouldUseDynamicCollectivePricing,
 } from "@/lib/collectivePricing";
 import { recalculateOrderItems, type ProductPricingData } from "@/lib/orderPricingSync";
+import { fetchServerTime } from "@/lib/serverClock";
 
 interface OrderItem {
   product_id: string;
@@ -96,14 +97,17 @@ export function useOrderDetail(orderId: string | undefined) {
       }
 
       let resolvedOrder = data as unknown as Order;
+      const serverNow = await fetchServerTime().catch(() => new Date());
 
       if (
         shouldUseDynamicCollectivePricing({
           orderType: resolvedOrder.order_type,
           status: resolvedOrder.status,
           createdAt: resolvedOrder.created_at,
+          collectiveCloseDate: resolvedOrder.collective_close_date,
           isPromo: resolvedOrder.is_promo,
           items: resolvedOrder.items,
+          now: serverNow,
         })
       ) {
         const productIds = [...new Set(resolvedOrder.items.map((item) => item.product_id))];

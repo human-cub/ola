@@ -1,7 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
-import { getCollectiveTierPrice, getFirstTierPrice, getNextSundayIso, getLastSundayClose } from "@/lib/collectivePricing";
+import { getCollectiveTierPrice, getFirstTierPrice, isCollectiveOrderClosed, getLastSundayClose } from "@/lib/collectivePricing";
 import { formatPrice, formatFullName } from "@/lib/formatting";
 import { parseAddress } from "@/lib/address";
+import { fetchServerTime } from "@/lib/serverClock";
 import type { OrderItem, OrderType, OrderStatus } from "@/lib/types";
 
 /**
@@ -96,7 +97,6 @@ export const ensurePendingCollectiveOrder = async (userId: string) => {
       discount_amount: discountAmount,
       delivery_address: deliveryAddress,
       status: "pending",
-      collective_close_date: getNextSundayIso(),
       notes: phone || null,
     })
     .select("id, order_number")
@@ -132,7 +132,7 @@ export const syncWaitingListOrder = async (userId: string) => {
 
     const { data: existingOrder } = await supabase
       .from("user_orders")
-      .select("id, items, created_at")
+      .select("id, items, created_at, collective_close_date")
       .eq("user_id", userId)
       .eq("order_type", "collective")
       .eq("status", "pending")
@@ -148,13 +148,16 @@ export const syncWaitingListOrder = async (userId: string) => {
       return;
     }
 
+    const serverNow = await fetchServerTime().catch(() => new Date());
     const orderCreatedAt = new Date(existingOrder.created_at);
-    const now = new Date();
-    const lastSunday = getLastSundayClose(now);
     const hasManuallyFrozenItems = existingOrder.items && (existingOrder.items as any[]).some(
       (item: any) => item.participants_count != null && Number(item.participants_count) > 0
     );
-    const isFrozenCycle = hasManuallyFrozenItems || (orderCreatedAt < lastSunday && now > lastSunday);
+    const isFrozenCycle = hasManuallyFrozenItems || isCollectiveOrderClosed({
+      createdAt: existingOrder.created_at,
+      collectiveCloseDate: existingOrder.collective_close_date,
+      now: serverNow,
+    });
 
     const frozenPriceMap = new Map<string, number>();
     const frozenParticipantsMap = new Map<string, number>();
@@ -254,7 +257,6 @@ export const syncWaitingListOrder = async (userId: string) => {
         subtotal,
         total_amount: subtotal,
         discount_amount: discountAmount,
-        collective_close_date: getNextSundayIso(),
       })
       .eq("id", existingOrder.id);
   } catch (error) {

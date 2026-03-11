@@ -14,7 +14,6 @@ import { AddressForm } from "@/components/AddressForm";
 import { isCABAProvince } from "@/data/argentinaLocations";
 import { useScrollHeader } from "@/hooks/useScrollHeader";
 import { formatPrice } from "@/lib/formatting";
-import { getNextSunday } from "@/lib/collectivePricing";
 
 const addressSchema = z.object({
   street: z.string().min(1, "La calle es requerida").max(200),
@@ -212,9 +211,6 @@ const CompletarDatosColectiva = () => {
       if (waitingListError) throw waitingListError;
 
       if (waitingListItems && waitingListItems.length > 0) {
-        // Calculate next Sunday 23:59
-        const nextSunday = getNextSunday();
-
         // Prepare order items
         const orderItems = waitingListItems.map(item => ({
           product_id: item.product_id,
@@ -252,7 +248,6 @@ const CompletarDatosColectiva = () => {
               subtotal,
               total_amount: subtotal,
               delivery_address: addressData,
-              collective_close_date: nextSunday.toISOString(),
               notes: phone,
             })
             .eq("id", existingOrder.id);
@@ -273,7 +268,6 @@ const CompletarDatosColectiva = () => {
               total_amount: subtotal,
               delivery_address: addressData,
               status: "pending",
-              collective_close_date: nextSunday.toISOString(),
               notes: phone,
             })
             .select("id, order_number")
