@@ -38,7 +38,7 @@ export const DynamicProductInfo = ({ name, weight, flavors, variants }: DynamicP
 
   return (
     <section className="sm:px-4 flex justify-center lg:justify-start" data-test-id="product-info">
-      <div className="/*mx-auto*/ max-w-md">
+      <div className="">
         <div className="text-center sm:text-left mb-6">
           <h2 className="text-2xl font-bold text-foreground mb-2 leading-[1.15]">
             {name}

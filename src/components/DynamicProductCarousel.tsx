@@ -180,11 +180,11 @@ export const DynamicProductCarousel = ({ images, productName }: DynamicProductCa
               <CarouselContent>
                 {displayImages.map((image, index) => (
                   <CarouselItem key={index}>
-                    <div className="flex items-center justify-center">
+                    <div className="flex items-center justify-center h-full">
                       <img
                         src={image}
                         alt={`${productName} - Imagen ${index + 1}`}
-                        className="max-w-full max-h-[80vh] object-contain"
+                        className="max-w-full max-h-[80vh] h-full object-contain"
                       />
                     </div>
                   </CarouselItem>
