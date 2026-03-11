@@ -114,11 +114,11 @@ const OrderDetail = () => {
           />
 
           {/* Actions */}
-          <div className="space-y-3">
+          <div className="space-y-3 flex flex-col">
             {order.status === 'pending' && (
               <Button
                 variant="destructive"
-                className="w-full"
+                className="w-full mx-auto"
                 onClick={handleCancelOrder}
               >
                 <XCircle className="w-4 h-4 mr-2" />
@@ -129,7 +129,7 @@ const OrderDetail = () => {
             {order.status !== 'delivered' && order.status !== 'cancelled' && (
               <Button
                 variant="outline"
-                className="w-full"
+                className="w-full mx-auto"
                 onClick={handleReportProblem}
               >
                 <MessageCircle className="w-4 h-4 mr-2" />

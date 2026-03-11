@@ -140,7 +140,7 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
           <Separator className="mb-6" />
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)}>
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col">
               <div className="mb-6">
                 <AddressForm
                   street={street}
@@ -187,7 +187,7 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full"
+                className="w-full mx-auto"
                 size="lg"
               >
                 {loading ? (
