@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -37,6 +38,7 @@ const AddProductDialog = ({ onProductAdded }: AddProductDialogProps) => {
     prices: "",
     description: "",
     flavors: "",
+    isQaOnly: false,
   });
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -151,6 +153,7 @@ const AddProductDialog = ({ onProductAdded }: AddProductDialogProps) => {
         flavors: flavorsArray,
         link: link,
         is_manual: true,
+        is_qa_only: formData.isQaOnly,
         real_orders_count: 0,
         virtual_orders_count: 0,
         waiting_for_discount_count: 0,
@@ -178,6 +181,7 @@ const AddProductDialog = ({ onProductAdded }: AddProductDialogProps) => {
       prices: "",
       description: "",
       flavors: "",
+      isQaOnly: false,
     });
     setImageUrls([]);
   };
@@ -185,7 +189,7 @@ const AddProductDialog = ({ onProductAdded }: AddProductDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="gap-2">
+        <Button className="gap-2 ml-auto mr-0">
           <Plus className="h-4 w-4" />
           Añadir Producto
         </Button>
@@ -331,6 +335,20 @@ const AddProductDialog = ({ onProductAdded }: AddProductDialogProps) => {
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               rows={6}
             />
+          </div>
+
+          <div className="flex items-start gap-3 rounded-lg border p-4">
+            <Checkbox
+              id="is-qa-only"
+              checked={formData.isQaOnly}
+              onCheckedChange={(checked) => setFormData({ ...formData, isQaOnly: checked === true })}
+            />
+            <div className="space-y-1">
+              <Label htmlFor="is-qa-only">Producto QA solo para admins</Label>
+              <p className="text-xs text-muted-foreground">
+                Los usuarios comunes no podrán verlo en listados ni abrirlo por URL directa.
+              </p>
+            </div>
           </div>
 
           <div className="flex gap-3 pt-4">

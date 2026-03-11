@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import AddProductDialog from "./AddProductDialog";
 import EditProductDialog from "./EditProductDialog";
@@ -25,6 +26,7 @@ interface Product {
   prices: ProductPrices[];
   link: string | null;
   is_manual: boolean | null;
+  is_qa_only: boolean;
   base_probability: number | null;
   real_orders_count: number;
   buynow_count: number;
@@ -121,6 +123,7 @@ const ProductsTable = () => {
                   <TableHead>Peso</TableHead>
                   <TableHead>Esperando</TableHead>
                   <TableHead>Offline</TableHead>
+                  <TableHead>Visibilidad</TableHead>
                   <TableHead>Total</TableHead>
                   <TableHead>Acciones</TableHead>
                 </TableRow>
@@ -132,11 +135,23 @@ const ProductsTable = () => {
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() => handleRowClick(product)}
                   >
-                    <TableCell className="font-medium">{product.name}</TableCell>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        <span>{product.name}</span>
+                        {product.is_qa_only && <Badge variant="secondary">QA</Badge>}
+                      </div>
+                    </TableCell>
                     <TableCell className="text-sm text-muted-foreground">{product.category || '-'}</TableCell>
                     <TableCell>{product.weight}</TableCell>
                     <TableCell className="font-semibold text-primary">{product.waiting_for_discount_count}</TableCell>
                     <TableCell>{product.virtual_orders_count}</TableCell>
+                    <TableCell>
+                      {product.is_qa_only ? (
+                        <Badge variant="outline">Solo admin</Badge>
+                      ) : (
+                        <Badge variant="outline">Público</Badge>
+                      )}
+                    </TableCell>
                     <TableCell className="font-bold">
                       {product.waiting_for_discount_count + product.virtual_orders_count}
                     </TableCell>
