@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 
+const TOP_BAR_HEIGHT = 48;
+
 export const TopBar = () => {
     const [isVisible, setIsVisible] = useState(true);
     const [isRendered, setIsRendered] = useState(true);
@@ -11,6 +13,14 @@ export const TopBar = () => {
             setIsRendered(false);
         }
     }, []);
+
+    useEffect(() => {
+        document.documentElement.style.paddingTop = isVisible ? `${TOP_BAR_HEIGHT}px` : "0px";
+
+        return () => {
+            document.documentElement.style.paddingTop = "0px";
+        };
+    }, [isVisible]);
 
     const handleClose = () => {
         setIsVisible(false);
@@ -24,10 +34,10 @@ export const TopBar = () => {
 
     return (
         <div
-            className={`bg-primary text-primary-foreground transition-all duration-300 ease-in-out origin-top ${isVisible ? "translate-y-0 max-h-16 opacity-100" : "-translate-y-full max-h-0 opacity-0"
+            className={`bg-primary text-primary-foreground transition-all duration-300 ease-in-out origin-top ${isVisible ? "translate-y-0 max-h-[48px] opacity-100" : "-translate-y-full max-h-0 opacity-0"
                 }`}
         >
-            <div className="container mx-auto px-4 py-2 flex justify-center items-center w-full min-h-[32px] overflow-hidden">
+            <div className="container mx-auto px-4 py-2 flex justify-center items-center w-full h-[48px] overflow-hidden">
                 <div className="flex items-center gap-4">
                     <p className="text-xs sm:text-sm font-medium uppercase tracking-wide text-center">
                         ENTREGA EL MISMO DÍA EN CABA Y GBA SI PEDÍS ANTES DE LAS 14:00 HS
