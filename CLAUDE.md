@@ -9,11 +9,11 @@ OLA (alaola.com.ar) is a sports supplements e-commerce SPA with a collective/gro
 ## Commands
 
 ```bash
-npm run dev          # Dev server on port 8517
-npm run build        # Production build
-npm run lint         # ESLint
-npm run test         # Vitest (single run)
-npm run test:watch   # Vitest (watch mode)
+bun run dev          # Dev server on port 8517
+bun run build        # Production build
+bun run lint         # ESLint
+bun run test         # Vitest (single run)
+bun run test:watch   # Vitest (watch mode)
 ```
 
 ## Tech Stack
