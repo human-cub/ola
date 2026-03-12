@@ -3,13 +3,14 @@ import { useParams } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { Footer } from "@/components/Footer";
-import { GroupBuyPriceBlock } from "@/components/GroupBuyPriceBlock";
 import { RelatedProducts } from "@/components/RelatedProducts";
+import { GroupBuyPriceBlock } from "@/components/GroupBuyPriceBlock";
 import { supabase } from "@/integrations/supabase/client";
 import { DynamicProductCarousel } from "@/components/DynamicProductCarousel";
 import { DynamicProductInfo } from "@/components/DynamicProductInfo";
 import { DynamicProductDescription } from "@/components/DynamicProductDescription";
 import { Spinner } from "@/components/ui/spinner";
+import { useScrollHeader } from "@/hooks/useScrollHeader";
 
 const categoryLabels: Record<string, string> = {
   proteinas: "Proteínas",
@@ -38,8 +39,7 @@ interface ProductData {
 
 const DynamicProduct = () => {
   const { slug } = useParams<{ slug: string }>();
-  const [headerVisible, setHeaderVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  const headerVisible = useScrollHeader();
   const [product, setProduct] = useState<ProductData | null>(null);
   const [loading, setLoading] = useState(true);
   const [waitingCount, setWaitingCount] = useState(0);
@@ -138,29 +138,12 @@ const DynamicProduct = () => {
     };
   }, [slug]);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-
-      if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        setHeaderVisible(false);
-      } else {
-        setHeaderVisible(true);
-      }
-
-      setLastScrollY(currentScrollY);
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScrollY]);
-
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Spinner />
       </div>
-    );  
+    );
   }
 
   if (!product) {
@@ -188,24 +171,43 @@ const DynamicProduct = () => {
     <div className="min-h-screen bg-background">
       <Header isVisible={headerVisible} />
 
-      <main className="pb-[24px] pt-[120px] sm:pt-[104px]">
+      <main className="pb-[24px] pt-[64px]">
         <Breadcrumb items={breadcrumbItems} />
-        <DynamicProductCarousel images={product.images} productName={product.name} />
-        <DynamicProductInfo
-          name={product.name}
-          weight={product.weight}
-          flavors={product.flavors}
-          variants={product.variants}
-        />
-        <GroupBuyPriceBlock
-          productName={product.name}
-          productId={product.id}
-          productImage={product.images.length > 0 ? product.images[0] : null}
-          flavors={product.flavors}
-          priceData={product.prices}
-          waitingCount={waitingCount}
-        />
-        <DynamicProductDescription description={product.description} />
+        <div className="max-w-[1088px] px-4 mx-auto gap-4 grid grid-cols-1 lg:grid-cols-[20fr_12fr] lg:justify-center lg:pt-10">
+          <div className="contents lg:block">
+            <div className="order-1">
+              <DynamicProductCarousel images={product.images} productName={product.name} />
+            </div>
+
+            <div className="order-2">
+              <DynamicProductInfo
+                name={product.name}
+                weight={product.weight}
+                flavors={product.flavors}
+                variants={product.variants}
+              />
+            </div>
+
+            <div className="order-4">
+              <DynamicProductDescription description={product.description} />
+            </div>
+          </div>
+
+          <div className="sticky-viewport lg:contents order-3">
+            <div className="contents lg:block">
+              <div className="sm:flex sm:justify-center lg:justify-start sm:gap-6 lg:sticky top-[72px]">
+                <GroupBuyPriceBlock
+                  productName={product.name}
+                  productId={product.id}
+                  productImage={product.images.length > 0 ? product.images[0] : null}
+                  flavors={product.flavors}
+                  priceData={product.prices}
+                  waitingCount={waitingCount}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
         <RelatedProducts currentProduct={product.id} />
       </main>
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, type CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
 import { Users, Sparkles, Timer, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/dialog";
 import { AddToCartDialog } from "./AddToCartDialog";
 import { supabase } from "@/integrations/supabase/client";
+import { getLastSundayClose } from "@/lib/collectivePricing";
+import { useCollectiveClock } from "@/hooks/useCollectiveClock";
 
 interface PriceData {
   people: number;
@@ -26,22 +28,15 @@ interface GroupBuyPriceBlockProps {
   waitingCount?: number;
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function getNextSunday(): Date {
-  const now = new Date();
-  const next = new Date(now);
-  const daysUntilSunday = (7 - now.getDay()) % 7;
-
-  if (daysUntilSunday === 0 && now.getHours() < 23) {
-    next.setHours(23, 59, 59, 999);
-  } else {
-    next.setDate(now.getDate() + (daysUntilSunday || 7));
-    next.setHours(23, 59, 59, 999);
-  }
-
-  return next;
+interface PriceComparisonItem {
+  label: string;
+  price: number | null;
+  labelClassName: string;
+  priceClassName: string;
+  style?: CSSProperties;
 }
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function getBuyNowPrice(prices: PriceData[]): number | null {
   if (prices.length === 0) return null;
@@ -75,11 +70,14 @@ function getCurrentTierPrice(prices: PriceData[], count: number): number | null 
   return secondTierPrice;
 }
 
-async function hasPendingConflict(userId: string): Promise<boolean> {
-  const now = new Date();
-  const weekStart = new Date(now);
-  weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
-  weekStart.setHours(0, 0, 0, 0);
+async function hasPendingConflict(
+  userId: string,
+  now: Date,
+  nextCollectiveClose: Date | null
+): Promise<boolean> {
+  const fallbackLastClose = nextCollectiveClose
+    ? new Date(nextCollectiveClose.getTime() - 7 * 24 * 60 * 60 * 1000)
+    : getLastSundayClose(now);
 
   const { data, error } = await supabase
     .from("user_orders")
@@ -91,7 +89,7 @@ async function hasPendingConflict(userId: string): Promise<boolean> {
   if (error || !data?.length) return false;
 
   const nowMs = now.getTime();
-  const weekStartMs = weekStart.getTime();
+  const fallbackLastCloseMs = fallbackLastClose.getTime();
 
   return data.some((order) => {
     if (order.collective_close_date) {
@@ -101,7 +99,7 @@ async function hasPendingConflict(userId: string): Promise<boolean> {
       }
     }
     const createdAt = new Date(order.created_at).getTime();
-    return !Number.isNaN(createdAt) && createdAt < weekStartMs;
+    return !Number.isNaN(createdAt) && createdAt < fallbackLastCloseMs && nowMs > fallbackLastCloseMs;
   });
 }
 
@@ -113,10 +111,16 @@ function useGroupBuyBlock(prices: PriceData[]) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isWaitingList, setIsWaitingList] = useState(false);
   const [conflictDialogOpen, setConflictDialogOpen] = useState(false);
+  const { nextCollectiveClose, serverOffsetMs } = useCollectiveClock();
 
   useEffect(() => {
     const calculate = () => {
-      const diff = getNextSunday().getTime() - Date.now();
+      if (!nextCollectiveClose) {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0 });
+        return;
+      }
+
+      const diff = nextCollectiveClose.getTime() - (Date.now() + serverOffsetMs);
       if (diff > 0) {
         setTimeLeft({
           days: Math.floor(diff / (1000 * 60 * 60 * 24)),
@@ -131,7 +135,7 @@ function useGroupBuyBlock(prices: PriceData[]) {
     calculate();
     const timer = setInterval(calculate, 60000);
     return () => clearInterval(timer);
-  }, []);
+  }, [nextCollectiveClose, serverOffsetMs]);
 
   const handleBuyNow = () => {
     setIsWaitingList(false);
@@ -140,7 +144,11 @@ function useGroupBuyBlock(prices: PriceData[]) {
 
   const handleWaitForDiscount = async () => {
     const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user && await hasPendingConflict(session.user.id)) {
+    if (session?.user && await hasPendingConflict(
+      session.user.id,
+      new Date(Date.now() + serverOffsetMs),
+      nextCollectiveClose,
+    )) {
       setConflictDialogOpen(true);
       return;
     }
@@ -213,6 +221,7 @@ export const GroupBuyPriceBlock = ({
   priceData = [],
   waitingCount = 0,
 }: GroupBuyPriceBlockProps) => {
+  const [displayWaitingCount, setDisplayWaitingCount] = useState(waitingCount);
   const {
     timeLeft,
     dialogOpen,
@@ -225,10 +234,30 @@ export const GroupBuyPriceBlock = ({
     goToWaitingList,
   } = useGroupBuyBlock(priceData);
 
+  useEffect(() => {
+    setDisplayWaitingCount(waitingCount);
+  }, [waitingCount]);
+
+  const refreshWaitingCount = async () => {
+    const { data, error } = await supabase
+      .from("products")
+      .select("total_orders_count")
+      .eq("id", productId)
+      .maybeSingle();
+
+    if (!error && data?.total_orders_count !== null && data?.total_orders_count !== undefined) {
+      setDisplayWaitingCount(data.total_orders_count);
+    }
+  };
+
   const retailPrice = getRetailPrice(priceData);
-  const currentPrice = getCurrentTierPrice(priceData, waitingCount);
+  const currentPrice = getCurrentTierPrice(priceData, displayWaitingCount);
   const superPrice = getMaxDiscountPrice(priceData);
   const buyNowPrice = getBuyNowPrice(priceData);
+  const groupBuyAccentStyle = { color: "hsl(var(--group-buy-accent))" } satisfies CSSProperties;
+  const groupBuyAccentBackgroundStyle = {
+    backgroundColor: "hsl(var(--group-buy-accent))",
+  } satisfies CSSProperties;
 
   const formatPrice = (price: number | null) => {
     if (price === null) return "-";
@@ -249,11 +278,11 @@ export const GroupBuyPriceBlock = ({
     const segWidth = 100 / 3;
 
     if (waitingCount <= t1) {
-      visualProgress = ((waitingCount - t0) / Math.max(1, t1 - t0)) * segWidth;
-    } else if (waitingCount <= t2) {
-      visualProgress = segWidth + ((waitingCount - t1) / Math.max(1, t2 - t1)) * segWidth;
-    } else if (waitingCount <= t3) {
-      visualProgress = segWidth * 2 + ((waitingCount - t2) / Math.max(1, t3 - t2)) * segWidth;
+      visualProgress = ((displayWaitingCount - t0) / Math.max(1, t1 - t0)) * segWidth;
+    } else if (displayWaitingCount <= t2) {
+      visualProgress = segWidth + ((displayWaitingCount - t1) / Math.max(1, t2 - t1)) * segWidth;
+    } else if (displayWaitingCount <= t3) {
+      visualProgress = segWidth * 2 + ((displayWaitingCount - t2) / Math.max(1, t3 - t2)) * segWidth;
     } else {
       visualProgress = 100;
     }
@@ -262,12 +291,17 @@ export const GroupBuyPriceBlock = ({
     const t1 = progressTiers[1].people;
     const t2 = progressTiers[2].people;
     const segWidth = 100 / 3;
-    if (waitingCount <= t0) visualProgress = (waitingCount / Math.max(1, t0)) * segWidth;
-    else if (waitingCount <= t1) visualProgress = segWidth + ((waitingCount - t0) / Math.max(1, t1 - t0)) * segWidth;
-    else if (waitingCount <= t2) visualProgress = segWidth * 2 + ((waitingCount - t1) / Math.max(1, t2 - t1)) * segWidth;
+    if (displayWaitingCount <= t0) visualProgress = (displayWaitingCount / Math.max(1, t0)) * segWidth;
+    else if (displayWaitingCount <= t1) visualProgress = segWidth + ((displayWaitingCount - t0) / Math.max(1, t1 - t0)) * segWidth;
+    else if (displayWaitingCount <= t2) visualProgress = segWidth * 2 + ((displayWaitingCount - t1) / Math.max(1, t2 - t1)) * segWidth;
     else visualProgress = 100;
   }
   visualProgress = Math.min(100, Math.max(0, visualProgress));
+  const groupBuyProgressStyle = {
+    width: `${visualProgress}%`,
+    background:
+      "linear-gradient(90deg, hsl(36 100% 50%), hsl(var(--group-buy-accent)), hsl(48 100% 60%))",
+  } satisfies CSSProperties;
 
   // Get next threshold
   const getNextThreshold = () => {
@@ -277,7 +311,7 @@ export const GroupBuyPriceBlock = ({
     if (messageTiers.length === 0) return null;
 
     for (const tier of messageTiers) {
-      if (tier.people > waitingCount) {
+      if (tier.people > displayWaitingCount) {
         return tier;
       }
     }
@@ -285,12 +319,33 @@ export const GroupBuyPriceBlock = ({
     return null;
   };
   const nextThreshold = getNextThreshold();
-  const remaining = nextThreshold ? nextThreshold.people - waitingCount : 0;
+  const remaining = nextThreshold ? nextThreshold.people - displayWaitingCount : 0;
+  const priceComparisonItems: PriceComparisonItem[] = [
+    {
+      label: "Retail",
+      price: retailPrice,
+      labelClassName: "text-muted-foreground",
+      priceClassName: "text-muted-foreground line-through",
+    },
+    {
+      label: "Ya bajó a",
+      price: currentPrice,
+      labelClassName: "text-primary",
+      priceClassName: "text-primary",
+    },
+    {
+      label: "Súper-Precio",
+      price: superPrice,
+      labelClassName: "",
+      priceClassName: "",
+      style: groupBuyAccentStyle,
+    },
+  ];
 
   return (
     <>
-      <section className="px-3 sm:px-4 py-4">
-        <div className="mx-auto max-w-[calc(100%-16px)] sm:max-w-md">
+      <section className="w-full">
+        <div className="mx-auto max-w-[390px]">
           <div className="bg-card rounded-3xl shadow-floating overflow-hidden border-[3px] animate-border-pulse">
             
             {/* Header with countdown and participants */}
@@ -300,10 +355,13 @@ export const GroupBuyPriceBlock = ({
                 <div className="flex items-center gap-1.5 min-w-0 flex-shrink">
                   <Sparkles className="w-5 h-5 text-white animate-pulse flex-shrink-0" />
                   <span className="text-white font-bold text-base whitespace-nowrap">
-                    Ya se sumaron {waitingCount}
+                    Ya se sumaron {displayWaitingCount}
                   </span>
                 </div>
-                <div className="px-2.5 py-1.5 rounded-full shadow-md flex items-center gap-1 bg-accent flex-shrink-0">
+                <div
+                  className="px-2.5 py-1.5 rounded-full shadow-md flex items-center gap-1 flex-shrink-0 squircle"
+                  style={groupBuyAccentBackgroundStyle}
+                >
                   <Timer className="w-3.5 h-3.5 text-white" />
                   <div className="text-white font-mono font-bold text-xs tracking-wide whitespace-nowrap">
                     {timeLeft.days}d {timeLeft.hours}h {timeLeft.minutes}m
@@ -315,24 +373,19 @@ export const GroupBuyPriceBlock = ({
             {/* Price Comparison */}
             <div className="px-6 py-6 bg-card border-b border-border">
               <div className="grid grid-cols-3 gap-2 text-center items-start">
-                <div className="flex flex-col items-center gap-1">
-                  <div className="text-[11px] font-bold text-muted-foreground">Retail</div>
-                  <div className="text-lg font-bold text-muted-foreground line-through">
-                    {formatPrice(retailPrice)}
+                {priceComparisonItems.map((item) => (
+                  <div key={item.label} className="flex flex-col items-center gap-1">
+                    <div className={`text-[13px] font-bold ${item.labelClassName}`} style={item.style}>
+                      {item.label}
+                    </div>
+                    <div
+                      className={`text-[20px] sm:text-[24px] font-bold leading-none ${item.priceClassName}`}
+                      style={item.style}
+                    >
+                      {formatPrice(item.price)}
+                    </div>
                   </div>
-                </div>
-                <div className="flex flex-col items-center gap-1">
-                  <div className="text-[11px] font-bold text-primary">Ya bajó a</div>
-                  <div className="text-lg font-bold text-primary">
-                    {formatPrice(currentPrice)}
-                  </div>
-                </div>
-                <div className="flex flex-col items-center gap-1">
-                  <div className="text-[11px] font-bold text-accent">Súper-Precio</div>
-                  <div className="text-lg font-bold text-accent">
-                    {formatPrice(superPrice)}
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
 
@@ -340,9 +393,9 @@ export const GroupBuyPriceBlock = ({
             <div className="px-6 py-8 bg-card">
               <div className="relative">
                 {/* Tier people counts (top) — from progressTiers */}
-                <div className="flex justify-between mb-3 text-sm font-bold text-foreground">
+                <div className="flex justify-between mb-3 text-sm font-bold text-foreground -mx-3">
                   {progressTiers.map((tier, i) => (
-                    <span key={i} className="w-8 text-center first:text-left last:text-right">
+                    <span key={i} className="w-8 text-center">
                       {tier.people}
                     </span>
                   ))}
@@ -352,17 +405,17 @@ export const GroupBuyPriceBlock = ({
                 <div className="relative h-5 bg-muted rounded-full overflow-hidden shadow-inner">
                   <div
                     className="absolute top-0 left-0 h-full rounded-full transition-all duration-1000 z-10"
-                    style={{ width: `${visualProgress}%`, background: 'linear-gradient(90deg, hsl(36 100% 50%), hsl(42 100% 50%), hsl(48 100% 60%))' }}
+                    style={groupBuyProgressStyle}
                   />
                   {/* 2 divider lines at 33.33% and 66.67% */}
                   <div className="absolute top-0 left-0 w-full h-full z-20">
                     <div className="absolute top-0 w-0.5 h-full bg-white opacity-70" style={{ left: '33.33%' }} />
                     <div className="absolute top-0 w-0.5 h-full bg-white opacity-70" style={{ left: '66.67%' }} />
                   </div>
-                </div>
+                </div>                
 
                 {/* Tier prices (bottom) */}
-                <div className="flex justify-between mt-3 text-[11px] font-bold text-muted-foreground">
+                <div className="flex justify-between mt-3 text-[13px] font-bold text-muted-foreground -mx-3">
                   {progressTiers.map((tier, i) => (
                     <span key={i} className="w-14 text-center first:text-left last:text-right">
                       {formatPrice(tier.price)}
@@ -375,7 +428,7 @@ export const GroupBuyPriceBlock = ({
               {nextThreshold && remaining > 0 && (
                 <div className="mt-8 text-center">
                   <p className="text-[15px] font-semibold text-foreground">
-                    Faltan <span className="font-bold text-accent">{remaining} unidades</span> para{' '}
+                    Faltan <span className="font-bold" style={groupBuyAccentStyle}>{remaining} unidades</span> para{' '}
                     <span className="font-bold text-primary">{formatPrice(nextThreshold.price)}</span>
                   </p>
                 </div>
@@ -383,7 +436,7 @@ export const GroupBuyPriceBlock = ({
             </div>
 
             {/* CTA Buttons */}
-            <div className="px-6 pb-8 space-y-4 bg-card">
+            <div className="px-6 pb-6 space-y-4 bg-card">
               <button
                 onClick={handleWaitForDiscount}
                 className="w-full py-4 rounded-2xl font-bold text-white text-[17px] flex items-center justify-center gap-2 shadow-lg transform transition active:scale-95 bg-gradient-primary"
@@ -411,7 +464,8 @@ export const GroupBuyPriceBlock = ({
         flavors={flavors}
         prices={priceData}
         isWaitingList={isWaitingList}
-        currentParticipants={waitingCount}
+        currentParticipants={displayWaitingCount}
+        onWaitingListAdded={refreshWaitingCount}
       />
 
       <ConflictDialog

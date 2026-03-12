@@ -5,6 +5,23 @@ interface DynamicProductInfoProps {
   variants?: string[];
 }
 
+const TagList = ({ label, items }: { label: string; items?: string[] }) => {
+  if (!items || items.length === 0) return null;
+  return (
+    <div className="mt-4">
+      <h4 className="text-lg font-medium text-primary">{label}</h4>
+      <div className="flex flex-wrap justify-center sm:justify-start gap-3">
+        {items.map((item, index) => (
+          <div key={index} className="flex items-center sm:justify-start gap-2">
+            <div className="w-2 h-2 bg-primary rounded-full"></div>
+            <span className="text-foreground">{item}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 export const DynamicProductInfo = ({ name, weight, flavors, variants }: DynamicProductInfoProps) => {
   const formatWeight = (w: string) => {
     const lower = w.toLowerCase();
@@ -20,9 +37,9 @@ export const DynamicProductInfo = ({ name, weight, flavors, variants }: DynamicP
   const hasContent = (flavors && flavors.length > 0) || (variants && variants.length > 0);
 
   return (
-    <section className="px-4 pt-3 pb-0">
-      <div className="container mx-auto max-w-md">
-        <div className="text-center mb-6">
+    <section className="sm:px-4 flex justify-center lg:justify-start" data-test-id="product-info">
+      <div className="">
+        <div className="text-center sm:text-left mb-6">
           <h2 className="text-2xl font-bold text-foreground mb-2 leading-[1.15]">
             {name}
           </h2>
@@ -33,40 +50,9 @@ export const DynamicProductInfo = ({ name, weight, flavors, variants }: DynamicP
               <span className="text-primary font-semibold">{weight}</span>
             )}
           </p>
-          
-          {/* Flavors */}
-          {flavors && flavors.length > 0 && (
-            <div className="mt-4">
-              <h4 className="text-lg font-medium mb-3 text-primary">
-                Sabores Disponibles:
-              </h4>
-              <div className="flex flex-wrap justify-center gap-3">
-                {flavors.map((flavor, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-primary rounded-full"></div>
-                    <span className="text-foreground">{flavor}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
-          {/* Variants */}
-          {variants && variants.length > 0 && (
-            <div className="mt-4">
-              <h4 className="text-lg font-medium mb-3 text-primary">
-                Características:
-              </h4>
-              <div className="flex flex-wrap justify-center gap-3">
-                {variants.map((variant, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-primary rounded-full"></div>
-                    <span className="text-foreground">{variant}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          <TagList label="Sabores Disponibles:" items={flavors} />
+          <TagList label="Características:" items={variants} />
         </div>
       </div>
     </section>

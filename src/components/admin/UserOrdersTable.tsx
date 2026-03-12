@@ -16,17 +16,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Loader2, Search, Save, Trash2, Eye, Package, ShoppingCart, Clock, Tag, Archive } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Loader2, Trash2, Eye, ShoppingCart, Clock, Tag } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,33 +31,24 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
-  getCollectiveTierPrice,
-  getFirstTierPrice,
   shouldUseDynamicCollectivePricing,
 } from "@/lib/collectivePricing";
-
-type OrderStatus = "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled";
-type OrderType = "immediate" | "collective";
-
-interface OrderItem {
-  product_id: string;
-  product_name: string;
-  flavor: string | null;
-  quantity: number;
-  price_per_unit: number;
-  product_image: string | null;
-  participants_count?: number; // per-product frozen count from cycle close
-}
-
-interface DeliveryAddress {
-  street: string;
-  number: string;
-  floor: string | null;
-  postalCode: string;
-  city: string;
-  province: string;
-  references: string | null;
-}
+import { recalculateOrderItems, type ProductPricingData } from "@/lib/orderPricingSync";
+import {
+  type OrderStatus,
+  type OrderType,
+  type OrderItem,
+  type DeliveryAddress,
+  ORDER_STATUS_LABELS,
+  ORDER_STATUS_COLORS,
+  ORDER_TYPE_LABELS,
+} from "@/lib/types";
+import { formatPrice } from "@/lib/formatting";
+import { applyPromoTier } from "@/services/orderService";
+import { fetchServerTime } from "@/lib/serverClock";
+import { OrderFilters } from "./OrderFilters";
+import { OrderStats } from "./OrderStats";
+import { OrderDetailDialog, type DialogOrder } from "./OrderDetailDialog";
 
 interface UserOrder {
   id: string;
@@ -89,7 +72,6 @@ interface UserOrder {
   updated_at: string;
   is_promo: boolean;
   promo_tier: number | null;
-  // Profile data
   profiles?: {
     email: string | null;
     phone: string | null;
@@ -98,28 +80,9 @@ interface UserOrder {
   };
 }
 
-const statusColors: Record<OrderStatus, string> = {
-  pending: "bg-yellow-100 text-yellow-800",
-  confirmed: "bg-blue-100 text-blue-800",
-  processing: "bg-purple-100 text-purple-800",
-  shipped: "bg-indigo-100 text-indigo-800",
-  delivered: "bg-green-100 text-green-800",
-  cancelled: "bg-red-100 text-red-800",
-};
-
-const statusLabels: Record<OrderStatus, string> = {
-  pending: "Pendiente",
-  confirmed: "Confirmado",
-  processing: "Procesando",
-  shipped: "Enviado",
-  delivered: "Entregado",
-  cancelled: "Cancelado",
-};
-
-const orderTypeLabels: Record<OrderType, string> = {
-  immediate: "Inmediato",
-  collective: "Colectivo",
-};
+const statusColors = ORDER_STATUS_COLORS;
+const statusLabels = ORDER_STATUS_LABELS;
+const orderTypeLabels = ORDER_TYPE_LABELS;
 
 const UserOrdersTable = () => {
   const [orders, setOrders] = useState<UserOrder[]>([]);
@@ -128,21 +91,16 @@ const UserOrdersTable = () => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [editingNotes, setEditingNotes] = useState<string | null>(null);
-  const [tempNotes, setTempNotes] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<UserOrder | null>(null);
-  const [productCounters, setProductCounters] = useState<Record<string, number>>({});
 
   const fetchOrders = async () => {
     setLoading(true);
-    
-    // First fetch orders
+
     let query = supabase
       .from("user_orders")
       .select("*")
       .order("created_at", { ascending: false });
 
-    // Archive filter: delivered/cancelled go to archive
     const archivedStatuses: OrderStatus[] = ['delivered', 'cancelled'];
     if (showArchive) {
       query = query.in("status", archivedStatuses);
@@ -167,17 +125,15 @@ const UserOrdersTable = () => {
       return;
     }
 
-    // Get unique user IDs
     const userIds = [...new Set((ordersData || []).map((o: any) => o.user_id))];
-    
-    // Fetch profiles for those users
+
     let profilesMap: Record<string, any> = {};
     if (userIds.length > 0) {
       const { data: profilesData } = await supabase
         .from("profiles")
         .select("user_id, email, phone, first_name, last_name")
         .in("user_id", userIds);
-      
+
       if (profilesData) {
         profilesData.forEach((p: any) => {
           profilesMap[p.user_id] = p;
@@ -185,7 +141,6 @@ const UserOrdersTable = () => {
       }
     }
 
-    // Merge orders with profiles
     const parsedOrders = (ordersData || []).map((order: any) => ({
       ...order,
       items: Array.isArray(order.items) ? order.items : [],
@@ -193,13 +148,17 @@ const UserOrdersTable = () => {
       profiles: profilesMap[order.user_id] || null,
     })) as UserOrder[];
 
+    const serverNow = await fetchServerTime().catch(() => new Date());
+
     const shouldSyncOrder = (order: UserOrder) =>
       shouldUseDynamicCollectivePricing({
         orderType: order.order_type,
         status: order.status,
         createdAt: order.created_at,
+        collectiveCloseDate: order.collective_close_date,
         isPromo: order.is_promo,
         items: order.items,
+        now: serverNow,
       });
 
     const dynamicOrders = parsedOrders.filter(shouldSyncOrder);
@@ -207,7 +166,7 @@ const UserOrdersTable = () => {
       ...new Set(dynamicOrders.flatMap((order) => order.items.map((item) => item.product_id))),
     ];
 
-    const productPricingMap = new Map<string, { prices: unknown; totalOrdersCount: number }>();
+    const productPricingMap = new Map<string, ProductPricingData>();
 
     if (dynamicProductIds.length > 0) {
       const { data: productsData } = await supabase
@@ -230,55 +189,34 @@ const UserOrdersTable = () => {
         return order;
       }
 
-      let hasChanges = false;
-
-      const recalculatedItems = order.items.map((item) => {
-        const productData = productPricingMap.get(item.product_id);
-        if (!productData) return item;
-
-        const newPrice = getCollectiveTierPrice(productData.prices, productData.totalOrdersCount);
-        if (newPrice === null || newPrice === item.price_per_unit) return item;
-
-        hasChanges = true;
-        return { ...item, price_per_unit: newPrice };
-      });
-
-      if (!hasChanges) {
-        return order;
-      }
-
-      const subtotal = recalculatedItems.reduce(
-        (sum, item) => sum + Number(item.price_per_unit) * item.quantity,
-        0
+      const result = recalculateOrderItems(
+        order.items,
+        productPricingMap,
+        Number(order.delivery_cost || 0),
       );
 
-      const fullPrice = recalculatedItems.reduce((sum, item) => {
-        const productData = productPricingMap.get(item.product_id);
-        const firstTierPrice = getFirstTierPrice(productData?.prices, Number(item.price_per_unit));
-        return sum + firstTierPrice * item.quantity;
-      }, 0);
-
-      const discountAmount = Math.max(0, fullPrice - subtotal);
-      const totalAmount = subtotal + Number(order.delivery_cost || 0);
+      if (!result.hasChanges) {
+        return order;
+      }
 
       syncUpdates.push(
         supabase
           .from("user_orders")
           .update({
-            items: recalculatedItems as any,
-            subtotal,
-            discount_amount: discountAmount,
-            total_amount: totalAmount,
+            items: result.items as any,
+            subtotal: result.subtotal,
+            discount_amount: result.discountAmount,
+            total_amount: result.totalAmount,
           })
           .eq("id", order.id)
       );
 
       return {
         ...order,
-        items: recalculatedItems,
-        subtotal,
-        discount_amount: discountAmount,
-        total_amount: totalAmount,
+        items: result.items,
+        subtotal: result.subtotal,
+        discount_amount: result.discountAmount,
+        total_amount: result.totalAmount,
       };
     });
 
@@ -286,7 +224,6 @@ const UserOrdersTable = () => {
       await Promise.all(syncUpdates);
     }
 
-    // Apply search filter
     const filtered = searchQuery
       ? normalizedOrders.filter(
           (o) =>
@@ -303,7 +240,6 @@ const UserOrdersTable = () => {
   useEffect(() => {
     fetchOrders();
 
-    // Subscribe to realtime updates
     const channel = supabase
       .channel("user-orders-changes")
       .on(
@@ -332,21 +268,6 @@ const UserOrdersTable = () => {
     }
   };
 
-  const handleSaveNotes = async (orderId: string) => {
-    const { error } = await supabase
-      .from("user_orders")
-      .update({ admin_notes: tempNotes })
-      .eq("id", orderId);
-
-    if (error) {
-      toast.error("Error al guardar las notas");
-    } else {
-      toast.success("Notas guardadas");
-      setEditingNotes(null);
-      fetchOrders();
-    }
-  };
-
   const handleDeleteOrder = async (orderId: string) => {
     const { error } = await supabase
       .from("user_orders")
@@ -361,142 +282,18 @@ const UserOrdersTable = () => {
     }
   };
 
-  // Apply PROMO tier to order - recalculates prices based on the selected tier
   const handleApplyPromo = async (orderId: string, tier: number | null) => {
     const order = orders.find(o => o.id === orderId);
     if (!order) return;
 
     try {
-      // Always fetch product first-tier prices for correct discount calculation
-      const productIds = [...new Set(order.items.map(item => item.product_id))];
-      const { data: productsData } = await supabase
-        .from("products")
-        .select("id, prices, total_orders_count")
-        .in("id", productIds);
-
-      if (!productsData) {
-        toast.error("Error al obtener precios de productos");
-        return;
-      }
-
-      const productPricesMap: Record<string, any[]> = {};
-      const productCountersMap: Record<string, number> = {};
-      productsData.forEach((p: any) => {
-        productPricesMap[p.id] = p.prices || [];
-        productCountersMap[p.id] = p.total_orders_count || 0;
-      });
-
-      if (tier === null) {
-        // Cancel promo: restore to original prices based on order type
-        const restoredItems = order.items.map(item => {
-          const prices = productPricesMap[item.product_id] || [];
-          let restoredPrice = item.price_per_unit;
-
-          if (order.order_type === 'immediate') {
-            // Immediate orders use tier 2 (prices[1]) - "Comprar ahora" price
-            restoredPrice = prices[1]?.price || prices[0]?.price || item.price_per_unit;
-          } else {
-            const participantsCount =
-              (item as any).participants_count ||
-              order.participants_count ||
-              productCountersMap[item.product_id] ||
-              1;
-
-            const matchedPrice = getCollectiveTierPrice(prices, participantsCount);
-            restoredPrice = matchedPrice ?? item.price_per_unit;
-          }
-
-          return { ...item, price_per_unit: restoredPrice };
-        });
-
-        const restoredSubtotal = restoredItems.reduce((sum, item) => sum + item.price_per_unit * item.quantity, 0);
-        const firstTierTotal = restoredItems.reduce((sum, item) => {
-          const prices = productPricesMap[item.product_id] || [];
-          return sum + (prices[0]?.price || item.price_per_unit) * item.quantity;
-        }, 0);
-        const restoredDiscount = firstTierTotal - restoredSubtotal;
-        const restoredTotal = restoredSubtotal + order.delivery_cost;
-
-        const { error } = await supabase
-          .from("user_orders")
-          .update({
-            items: restoredItems as any,
-            subtotal: restoredSubtotal,
-            discount_amount: restoredDiscount,
-            total_amount: restoredTotal,
-            is_promo: false,
-            promo_tier: null,
-          })
-          .eq("id", orderId);
-
-        if (error) {
-          toast.error("Error al cancelar promoción");
-        } else {
-          toast.success("Promoción cancelada - precios restaurados");
-          fetchOrders();
-        }
-        return;
-      }
-
-      // Recalculate items with new prices based on tier (1-5 maps to prices[0]-prices[4])
-      const updatedItems = order.items.map(item => {
-        const prices = productPricesMap[item.product_id] || [];
-        const priceIndex = tier - 1;
-        const newPrice = prices[priceIndex]?.price || item.price_per_unit;
-        return { ...item, price_per_unit: newPrice };
-      });
-
-      // Discount is ALWAYS relative to first-tier (full retail) prices
-      const newSubtotal = updatedItems.reduce((sum, item) => sum + item.price_per_unit * item.quantity, 0);
-      const firstTierTotal = order.items.reduce((sum, item) => {
-        const prices = productPricesMap[item.product_id] || [];
-        const firstPrice = prices[0]?.price || item.price_per_unit;
-        return sum + firstPrice * item.quantity;
-      }, 0);
-      const discountAmount = firstTierTotal - newSubtotal;
-      const newTotal = newSubtotal + order.delivery_cost;
-
-      const { error } = await supabase
-        .from("user_orders")
-        .update({
-          items: updatedItems as any,
-          subtotal: newSubtotal,
-          discount_amount: discountAmount,
-          total_amount: newTotal,
-          is_promo: true,
-          promo_tier: tier,
-        })
-        .eq("id", orderId);
-
-      if (error) {
-        toast.error("Error al aplicar promoción");
-      } else {
-        toast.success(`Promoción tier ${tier} aplicada`);
-        fetchOrders();
-      }
-    } catch (err) {
-      toast.error("Error al aplicar promoción");
+      await applyPromoTier(order, tier);
+      toast.success(tier === null ? "Promoción cancelada - precios restaurados" : `Promoción tier ${tier} aplicada`);
+      fetchOrders();
+    } catch {
+      toast.error(tier === null ? "Error al cancelar promoción" : "Error al aplicar promoción");
     }
   };
-
-  // Fetch product counters when an order is selected
-  useEffect(() => {
-    if (!selectedOrder) return;
-    const fetchCounters = async () => {
-      const productIds = [...new Set(selectedOrder.items.map(i => i.product_id))];
-      if (productIds.length === 0) return;
-      const { data } = await supabase
-        .from("products")
-        .select("id, total_orders_count")
-        .in("id", productIds);
-      if (data) {
-        const map: Record<string, number> = {};
-        data.forEach((p: any) => { map[p.id] = p.total_orders_count || 0; });
-        setProductCounters(map);
-      }
-    };
-    fetchCounters();
-  }, [selectedOrder?.id]);
 
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString("es-AR", {
@@ -506,10 +303,6 @@ const UserOrdersTable = () => {
       hour: "2-digit",
       minute: "2-digit",
     });
-  };
-
-  const formatPrice = (price: number) => {
-    return `$${Math.round(price).toLocaleString("es-AR")}`;
   };
 
   if (loading) {
@@ -522,94 +315,21 @@ const UserOrdersTable = () => {
 
   return (
     <div className="space-y-4">
-      {/* Archive Toggle */}
-      <div className="flex items-center gap-3">
-        <Button
-          variant={showArchive ? "default" : "outline"}
-          size="sm"
-          onClick={() => {
-            setShowArchive(!showArchive);
-            setStatusFilter("all");
-          }}
-          className="gap-2"
-        >
-          <Archive className="w-4 h-4" />
-          {showArchive ? "Volver a activos" : "Ver archivo"}
-        </Button>
-        {showArchive && (
-          <span className="text-sm text-muted-foreground">Mostrando pedidos entregados y cancelados</span>
-        )}
-      </div>
+      <OrderFilters
+        showArchive={showArchive}
+        onToggleArchive={() => {
+          setShowArchive(!showArchive);
+          setStatusFilter("all");
+        }}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        typeFilter={typeFilter}
+        onTypeFilterChange={setTypeFilter}
+        statusFilter={statusFilter}
+        onStatusFilterChange={setStatusFilter}
+      />
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-4">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por pedido, email o teléfono..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-        <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger className="w-[160px]">
-            <SelectValue placeholder="Tipo" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos los tipos</SelectItem>
-            <SelectItem value="immediate">Inmediato</SelectItem>
-            <SelectItem value="collective">Colectivo</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[160px]">
-            <SelectValue placeholder="Estado" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos los estados</SelectItem>
-            {showArchive ? (
-              <>
-                <SelectItem value="delivered">Entregado</SelectItem>
-                <SelectItem value="cancelled">Cancelado</SelectItem>
-              </>
-            ) : (
-              <>
-                <SelectItem value="pending">Pendiente</SelectItem>
-                <SelectItem value="confirmed">Confirmado</SelectItem>
-                <SelectItem value="processing">Procesando</SelectItem>
-                <SelectItem value="shipped">Enviado</SelectItem>
-              </>
-            )}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-muted/50 rounded-lg p-4">
-          <p className="text-sm text-muted-foreground">Total Pedidos</p>
-          <p className="text-2xl font-bold">{orders.length}</p>
-        </div>
-        <div className="bg-yellow-50 rounded-lg p-4">
-          <p className="text-sm text-yellow-700">Pendientes</p>
-          <p className="text-2xl font-bold text-yellow-700">
-            {orders.filter((o) => o.status === "pending").length}
-          </p>
-        </div>
-        <div className="bg-blue-50 rounded-lg p-4">
-          <p className="text-sm text-blue-700">Inmediatos</p>
-          <p className="text-2xl font-bold text-blue-700">
-            {orders.filter((o) => o.order_type === "immediate").length}
-          </p>
-        </div>
-        <div className="bg-purple-50 rounded-lg p-4">
-          <p className="text-sm text-purple-700">Colectivos</p>
-          <p className="text-2xl font-bold text-purple-700">
-            {orders.filter((o) => o.order_type === "collective").length}
-          </p>
-        </div>
-      </div>
+      <OrderStats orders={orders} />
 
       {/* Table */}
       <div className="rounded-lg border overflow-x-auto">
@@ -702,7 +422,6 @@ const UserOrdersTable = () => {
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      {/* PROMO Tier Selector */}
                       <Select
                         value={order.promo_tier?.toString() || "-"}
                         onValueChange={(value) => handleApplyPromo(order.id, value === "-" ? null : parseInt(value))}
@@ -759,226 +478,11 @@ const UserOrdersTable = () => {
         </Table>
       </div>
 
-      {/* Order Detail Dialog */}
-      <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Package className="w-5 h-5" />
-              Pedido {selectedOrder?.order_number}
-            </DialogTitle>
-          </DialogHeader>
-
-          {selectedOrder && (
-            <div className="space-y-6">
-              {/* Order Info */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Tipo</p>
-                  <p className="font-medium">
-                    {orderTypeLabels[selectedOrder.order_type]}
-                    {selectedOrder.is_promo && <span className="text-green-600 ml-1">(PROMO)</span>}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Estado</p>
-                  <Badge className={statusColors[selectedOrder.status]}>
-                    {statusLabels[selectedOrder.status]}
-                  </Badge>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Fecha</p>
-                  <p className="font-medium">{formatDate(selectedOrder.created_at)}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Método de Pago</p>
-                  <p className="font-medium capitalize">
-                    {selectedOrder.payment_method || "No especificado"}
-                  </p>
-                </div>
-              </div>
-
-              {/* Customer Info */}
-              <div>
-                <h4 className="font-semibold mb-2">Cliente</h4>
-                <div className="bg-muted/50 rounded-lg p-4 space-y-1">
-                  <p>
-                    {selectedOrder.profiles?.first_name}{" "}
-                    {selectedOrder.profiles?.last_name}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedOrder.profiles?.email}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedOrder.profiles?.phone}
-                  </p>
-                </div>
-              </div>
-
-              {/* Delivery Address */}
-              {selectedOrder.delivery_address && (
-                <div>
-                  <h4 className="font-semibold mb-2">Dirección de Entrega</h4>
-                  <div className="bg-muted/50 rounded-lg p-4 space-y-1">
-                    <p>
-                      {selectedOrder.delivery_address.street}{" "}
-                      {selectedOrder.delivery_address.number}
-                      {selectedOrder.delivery_address.floor &&
-                        `, ${selectedOrder.delivery_address.floor}`}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {selectedOrder.delivery_address.city},{" "}
-                      {selectedOrder.delivery_address.province} (
-                      {selectedOrder.delivery_address.postalCode})
-                    </p>
-                    {selectedOrder.delivery_address.references && (
-                      <p className="text-sm text-muted-foreground">
-                        Ref: {selectedOrder.delivery_address.references}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Products */}
-              <div>
-                <h4 className="font-semibold mb-2">Productos</h4>
-                <div className="space-y-2">
-                  {selectedOrder.items.map((item, idx) => {
-                    const isCollective = selectedOrder.order_type === "collective";
-                    const perItemCount = item.participants_count;
-                    const orderLevelCount = selectedOrder.participants_count;
-                    // Show frozen counts if per-item snapshot exists (cycle closed)
-                    // OR if order already left pending status
-                    const hasFrozenCount = isCollective && (
-                      (perItemCount != null && perItemCount > 0) ||
-                      (selectedOrder.status !== 'pending' && orderLevelCount != null && orderLevelCount > 0)
-                    );
-                    const counter = hasFrozenCount
-                      ? (perItemCount != null && perItemCount > 0 ? perItemCount : orderLevelCount)
-                      : (isCollective ? productCounters[item.product_id] : undefined);
-
-                    return (
-                      <div
-                        key={idx}
-                        className="flex items-center gap-4 bg-muted/50 rounded-lg p-3"
-                      >
-                        {item.product_image && (
-                          <img
-                            src={item.product_image}
-                            alt={item.product_name}
-                            className="w-12 h-12 object-cover rounded"
-                          />
-                        )}
-                        <div className="flex-1">
-                          <p className="font-medium">{item.product_name}</p>
-                          {item.flavor && (
-                            <p className="text-sm text-muted-foreground">
-                              Sabor: {item.flavor}
-                            </p>
-                          )}
-                          {counter !== undefined && counter !== null && (
-                            <p className="text-xs text-muted-foreground">
-                              👥 {hasFrozenCount ? `${counter} (al cierre)` : `${counter} en contador`}
-                            </p>
-                          )}
-                        </div>
-                        <div className="text-right">
-                          <p className="font-medium">
-                            {item.quantity} x {formatPrice(item.price_per_unit)}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {formatPrice(item.quantity * item.price_per_unit)}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Totals */}
-              <div className="border-t pt-4 space-y-2">
-                <div className="flex justify-between">
-                  <span>Subtotal:</span>
-                  <span>{formatPrice(selectedOrder.subtotal)}</span>
-                </div>
-                {selectedOrder.discount_amount > 0 && (
-                  <div className="flex justify-between text-green-600">
-                    <span>
-                      {selectedOrder.is_promo ? "Descuento (PROMO):" : "Descuento:"}
-                    </span>
-                    <span>-{formatPrice(selectedOrder.discount_amount)}</span>
-                  </div>
-                )}
-                <div className="flex justify-between">
-                  <span>Envío:</span>
-                  <span>
-                    {selectedOrder.delivery_cost === 0
-                      ? "Gratis"
-                      : formatPrice(selectedOrder.delivery_cost)}
-                  </span>
-                </div>
-                <div className="flex justify-between font-bold text-lg border-t pt-2">
-                  <span>Total:</span>
-                  <span>{formatPrice(selectedOrder.total_amount)}</span>
-                </div>
-              </div>
-
-              {/* Notes */}
-              {selectedOrder.notes && (
-                <div>
-                  <h4 className="font-semibold mb-2">Notas del Cliente</h4>
-                  <p className="text-sm bg-muted/50 rounded-lg p-3">
-                    {selectedOrder.notes}
-                  </p>
-                </div>
-              )}
-
-              {/* Admin Notes */}
-              <div>
-                <h4 className="font-semibold mb-2">Notas del Admin</h4>
-                {editingNotes === selectedOrder.id ? (
-                  <div className="space-y-2">
-                    <Textarea
-                      value={tempNotes}
-                      onChange={(e) => setTempNotes(e.target.value)}
-                      placeholder="Agregar notas..."
-                      rows={3}
-                    />
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        onClick={() => handleSaveNotes(selectedOrder.id)}
-                      >
-                        <Save className="w-4 h-4 mr-2" />
-                        Guardar
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setEditingNotes(null)}
-                      >
-                        Cancelar
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div
-                    className="text-sm bg-muted/50 rounded-lg p-3 cursor-pointer hover:bg-muted transition-colors"
-                    onClick={() => {
-                      setEditingNotes(selectedOrder.id);
-                      setTempNotes(selectedOrder.admin_notes || "");
-                    }}
-                  >
-                    {selectedOrder.admin_notes || "Click para agregar notas..."}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <OrderDetailDialog
+        order={selectedOrder}
+        onClose={() => setSelectedOrder(null)}
+        onNotesUpdated={fetchOrders}
+      />
     </div>
   );
 };

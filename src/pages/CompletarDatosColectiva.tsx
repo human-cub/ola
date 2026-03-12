@@ -12,6 +12,8 @@ import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import { Separator } from "@/components/ui/separator";
 import { AddressForm } from "@/components/AddressForm";
 import { isCABAProvince } from "@/data/argentinaLocations";
+import { useScrollHeader } from "@/hooks/useScrollHeader";
+import { formatPrice } from "@/lib/formatting";
 
 const addressSchema = z.object({
   street: z.string().min(1, "La calle es requerida").max(200),
@@ -36,8 +38,7 @@ const contactSchema = z.object({
 const CompletarDatosColectiva = () => {
   const navigate = useNavigate();
   
-  const [headerVisible, setHeaderVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  const headerVisible = useScrollHeader();
   const [loading, setLoading] = useState(false);
   const [dataLoading, setDataLoading] = useState(true);
   const [hasExistingOrder, setHasExistingOrder] = useState(false);
@@ -47,8 +48,8 @@ const CompletarDatosColectiva = () => {
   const [streetNumber, setStreetNumber] = useState("");
   const [floor, setFloor] = useState("");
   const [postalCode, setPostalCode] = useState("");
-  const [city, setCity] = useState("");
-  const [province, setProvince] = useState("Ciudad Autónoma de Buenos Aires");
+  const [city, setCity] = useState("Capital Federal (CABA)");
+  const [province, setProvince] = useState("Buenos Aires");
   const [references, setReferences] = useState("");
   
   // Contact fields
@@ -114,7 +115,7 @@ const CompletarDatosColectiva = () => {
             setFloor(addr.floor || "");
             setPostalCode(addr.postalCode || "");
             setCity(addr.city || "");
-            setProvince(addr.province || "Ciudad Autónoma de Buenos Aires");
+            setProvince(addr.province || "Buenos Aires");
             setReferences(addr.references || "");
           } catch {
             setStreet(profile.address);
@@ -126,25 +127,6 @@ const CompletarDatosColectiva = () => {
 
     loadProfile();
   }, [navigate]);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        setHeaderVisible(false);
-      } else {
-        setHeaderVisible(true);
-      }
-      setLastScrollY(currentScrollY);
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScrollY]);
-
-  const formatPrice = (price: number) => {
-    return `$${Math.round(price).toLocaleString('es-AR')}`;
-  };
 
   const handleSubmit = async () => {
     setErrors({});
@@ -229,17 +211,6 @@ const CompletarDatosColectiva = () => {
       if (waitingListError) throw waitingListError;
 
       if (waitingListItems && waitingListItems.length > 0) {
-        // Calculate next Sunday 23:59
-        const now = new Date();
-        const nextSunday = new Date(now);
-        const daysUntilSunday = (7 - now.getDay()) % 7;
-        if (daysUntilSunday === 0 && now.getHours() < 23) {
-          nextSunday.setHours(23, 59, 59, 999);
-        } else {
-          nextSunday.setDate(now.getDate() + (daysUntilSunday || 7));
-          nextSunday.setHours(23, 59, 59, 999);
-        }
-
         // Prepare order items
         const orderItems = waitingListItems.map(item => ({
           product_id: item.product_id,
@@ -277,7 +248,6 @@ const CompletarDatosColectiva = () => {
               subtotal,
               total_amount: subtotal,
               delivery_address: addressData,
-              collective_close_date: nextSunday.toISOString(),
               notes: phone,
             })
             .eq("id", existingOrder.id);
@@ -298,7 +268,6 @@ const CompletarDatosColectiva = () => {
               total_amount: subtotal,
               delivery_address: addressData,
               status: "pending",
-              collective_close_date: nextSunday.toISOString(),
               notes: phone,
             })
             .select("id, order_number")
@@ -441,7 +410,7 @@ const CompletarDatosColectiva = () => {
           <Button
             onClick={handleSubmit}
             disabled={loading}
-            className="w-full"
+            className="w-full mx-auto"
             size="lg"
           >
             {loading ? (

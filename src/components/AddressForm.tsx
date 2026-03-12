@@ -2,6 +2,19 @@ import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import {
+  Command,
+  CommandEmpty,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -9,15 +22,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Check, Truck, MapPin } from "lucide-react";
+import { Check, ChevronsUpDown, Truck, MapPin } from "lucide-react";
 import {
   ARGENTINA_PROVINCES,
   CABA_PROVINCE_ALIASES,
   getDeliveryZone,
   searchLocalities,
   isCABAProvince,
-  getLocationByPostalCode,
 } from "@/data/argentinaLocations";
+import { cn } from "@/lib/utils";
 
 interface AddressFormProps {
   street: string;
@@ -62,10 +75,8 @@ export const AddressForm = ({
 }: AddressFormProps) => {
   const [deliveryZone, setDeliveryZone] = useState<'caba' | 'gba' | 'other' | 'pending'>('pending');
   const [cityQuery, setCityQuery] = useState(city);
+  const [cityComboboxOpen, setCityComboboxOpen] = useState(false);
   const [citySuggestions, setCitySuggestions] = useState<string[]>([]);
-  const [showCitySuggestions, setShowCitySuggestions] = useState(false);
-  const cityInputRef = useRef<HTMLInputElement>(null);
-  const suggestionsRef = useRef<HTMLDivElement>(null);
 
   // Check if current province is CABA (hide city field)
   const isCABA = isCABAProvince(province);
@@ -137,27 +148,10 @@ export const AddressForm = ({
     }
   }, [cityQuery, province, isCABA]);
 
-  // Handle clicks outside to close suggestions
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        suggestionsRef.current &&
-        !suggestionsRef.current.contains(event.target as Node) &&
-        cityInputRef.current &&
-        !cityInputRef.current.contains(event.target as Node)
-      ) {
-        setShowCitySuggestions(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
   const handleCitySelect = (selectedCity: string) => {
     setCity(selectedCity);
     setCityQuery(selectedCity);
-    setShowCitySuggestions(false);
+    setCityComboboxOpen(false);
   };
 
   const handleProvinceChange = (newProvince: string) => {
@@ -167,6 +161,7 @@ export const AddressForm = ({
     if (isCABAProvince(newProvince)) {
       setCity("");
       setCityQuery("");
+      setCityComboboxOpen(false);
       setDeliveryZone('caba');
       onDeliveryZoneChange?.('caba');
     } else {
@@ -254,39 +249,59 @@ export const AddressForm = ({
       {!isCABA && (
         <div className="space-y-1 relative">
           <Label htmlFor="city" className="text-sm">Ciudad/Localidad *</Label>
-          <Input
-            ref={cityInputRef}
-            id="city"
-            value={cityQuery}
-            onChange={(e) => {
-              setCityQuery(e.target.value);
-              setCity(e.target.value);
-              setShowCitySuggestions(true);
-            }}
-            onFocus={() => setShowCitySuggestions(true)}
-            placeholder="Escribí tu ciudad o localidad"
-            className={errors.city ? "border-destructive" : ""}
-            autoComplete="off"
-          />
+          <Popover open={cityComboboxOpen} onOpenChange={setCityComboboxOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                id="city"
+                type="button"
+                variant="outline"
+                role="combobox"
+                aria-expanded={cityComboboxOpen}
+                className={cn(
+                  "h-10 w-full max-w-none justify-between rounded-md px-3 py-2 text-left text-sm font-normal tracking-normal shadow-none hover:bg-background hover:shadow-none mx-0",
+                  !city && "text-muted-foreground",
+                  errors.city && "border-destructive"
+                )}
+              >
+                <span className="truncate">
+                  {city || "Escribí tu ciudad o localidad"}
+                </span>
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+              <Command shouldFilter={false}>
+                <CommandInput
+                  value={cityQuery}
+                  onValueChange={(value) => {
+                    setCityQuery(value);
+                    setCity(value);
+                  }}
+                  placeholder="Escribí tu ciudad o localidad"
+                />
+                <CommandList className="max-h-[200px]">
+                  <CommandEmpty>No se encontraron localidades.</CommandEmpty>
+                  {citySuggestions.map((suggestion) => (
+                    <CommandItem
+                      key={suggestion}
+                      value={suggestion}
+                      onSelect={() => handleCitySelect(suggestion)}
+                      className="px-3 py-2 text-sm"
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          city === suggestion ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      {suggestion}
+                    </CommandItem>
+                  ))}
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
           {errors.city && <p className="text-xs text-destructive">{errors.city}</p>}
-          
-          {showCitySuggestions && citySuggestions.length > 0 && (
-            <div 
-              ref={suggestionsRef}
-              className="absolute z-50 w-full mt-1 bg-background border border-border rounded-md shadow-lg max-h-[200px] overflow-auto"
-            >
-              {citySuggestions.map((suggestion) => (
-                <button
-                  key={suggestion}
-                  type="button"
-                  className="w-full px-3 py-2 text-left text-sm hover:bg-accent transition-colors"
-                  onClick={() => handleCitySelect(suggestion)}
-                >
-                  {suggestion}
-                </button>
-              ))}
-            </div>
-          )}
         </div>
       )}
 

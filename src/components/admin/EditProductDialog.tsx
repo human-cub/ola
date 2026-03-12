@@ -1,10 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { X, Upload, Loader2, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -36,6 +38,7 @@ interface Product {
   prices: ProductPrices[];
   link: string | null;
   is_manual: boolean | null;
+  is_qa_only: boolean;
 }
 
 interface EditProductDialogProps {
@@ -45,10 +48,18 @@ interface EditProductDialogProps {
   onProductUpdated: () => void;
 }
 
+interface ProductDebugState {
+  total_pending_orders: number;
+  completed_pending_orders: number;
+  waiting_stage_complete: boolean;
+}
+
 const EditProductDialog = ({ product, open, onOpenChange, onProductUpdated }: EditProductDialogProps) => {
   const [loading, setLoading] = useState(false);
   const [uploadingImages, setUploadingImages] = useState(false);
+  const [debugLoading, setDebugLoading] = useState(false);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [debugState, setDebugState] = useState<ProductDebugState | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     name: "",
@@ -57,6 +68,7 @@ const EditProductDialog = ({ product, open, onOpenChange, onProductUpdated }: Ed
     prices: "",
     description: "",
     flavors: "",
+    isQaOnly: false,
   });
 
   useEffect(() => {
@@ -72,10 +84,79 @@ const EditProductDialog = ({ product, open, onOpenChange, onProductUpdated }: Ed
         prices: pricesStr,
         description: product.description || "",
         flavors: flavorsStr,
+        isQaOnly: product.is_qa_only ?? false,
       });
       setImageUrls(images);
     }
   }, [product]);
+
+  useEffect(() => {
+    const loadDebugState = async () => {
+      if (!open || !product || !formData.isQaOnly) {
+        setDebugState(null);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase.rpc("get_collective_stage_debug_state_for_product", {
+          _product_id: product.id,
+        });
+
+        if (error) throw error;
+
+        setDebugState((data && data[0]) || {
+          total_pending_orders: 0,
+          completed_pending_orders: 0,
+          waiting_stage_complete: false,
+        });
+      } catch (error) {
+        console.error("Error loading product debug state:", error);
+        setDebugState(null);
+      }
+    };
+
+    void loadDebugState();
+  }, [formData.isQaOnly, open, product]);
+
+  const handleWaitingStageToggle = async (checked: boolean) => {
+    if (!product) return;
+
+    setDebugLoading(true);
+
+    try {
+      const { data, error } = await supabase.rpc("set_collective_stage_complete_for_product", {
+        _product_id: product.id,
+        _complete: checked,
+      });
+
+      if (error) throw error;
+
+      const affectedCount = Number(data || 0);
+
+      const { data: debugData, error: debugError } = await supabase.rpc(
+        "get_collective_stage_debug_state_for_product",
+        { _product_id: product.id }
+      );
+
+      if (debugError) throw debugError;
+
+      setDebugState((debugData && debugData[0]) || {
+        total_pending_orders: 0,
+        completed_pending_orders: 0,
+        waiting_stage_complete: checked,
+      });
+
+      toast.success(
+        checked
+          ? `Etapa de espera cerrada para ${affectedCount} pedido(s) pendiente(s)`
+          : `Etapa de espera reabierta para ${affectedCount} pedido(s) pendiente(s)`
+      );
+    } catch (error: any) {
+      toast.error(error.message || "Error al actualizar el estado debug");
+    } finally {
+      setDebugLoading(false);
+    }
+  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -166,6 +247,7 @@ const EditProductDialog = ({ product, open, onOpenChange, onProductUpdated }: Ed
         images: imageUrls,
         description: formData.description || null,
         flavors: flavorsArray,
+        is_qa_only: formData.isQaOnly,
         link: link,
       } as any).eq("id", product.id);
 
@@ -337,6 +419,54 @@ const EditProductDialog = ({ product, open, onOpenChange, onProductUpdated }: Ed
               rows={6}
             />
           </div>
+
+          <div className="flex items-start gap-3 rounded-lg border p-4">
+            <Checkbox
+              id="edit-is-qa-only"
+              checked={formData.isQaOnly}
+              onCheckedChange={(checked) => setFormData({ ...formData, isQaOnly: checked === true })}
+            />
+            <div className="space-y-1">
+              <Label htmlFor="edit-is-qa-only">Producto QA solo para admins</Label>
+              <p className="text-xs text-muted-foreground">
+                Si está activo, solo los admins autenticados podrán verlo y comprarlo.
+              </p>
+            </div>
+          </div>
+
+          {formData.isQaOnly && (
+            <div className="space-y-3 rounded-lg border border-dashed p-4">
+              <div>
+                <Label className="text-sm font-semibold">Debug QA</Label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Fuerza la etapa de espera como terminada o reabierta para todos los pedidos colectivos pendientes que incluyan este producto.
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between gap-4 rounded-md bg-muted/40 px-3 py-2">
+                <div>
+                  <p className="text-sm font-medium">Etapa de espera finalizada</p>
+                  <p className="text-xs text-muted-foreground">
+                    {debugState
+                      ? `${debugState.completed_pending_orders}/${debugState.total_pending_orders} pedido(s) pendiente(s) en fase cerrada`
+                      : "Sin datos debug cargados todavía"}
+                  </p>
+                </div>
+                <Switch
+                  checked={debugState?.waiting_stage_complete ?? false}
+                  onCheckedChange={handleWaitingStageToggle}
+                  disabled={debugLoading || !product}
+                />
+              </div>
+
+              {debugLoading && (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Aplicando estado debug...
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="flex gap-3 pt-4">
             <Button type="submit" className="flex-1" disabled={loading || uploadingImages}>

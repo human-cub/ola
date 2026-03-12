@@ -11,13 +11,11 @@ import {
 } from "@/components/ui/dialog";
 import { AddToCartDialog } from "./AddToCartDialog";
 import { supabase } from "@/integrations/supabase/client";
+import { getLastSundayClose } from "@/lib/collectivePricing";
+import { useCollectiveClock } from "@/hooks/useCollectiveClock";
+import type { PriceData } from "@/lib/types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-
-interface PriceData {
-  people: number;
-  price: number;
-}
 
 interface FloatingButtonProps {
   productName: string;
@@ -26,23 +24,6 @@ interface FloatingButtonProps {
   flavors?: string[];
   prices?: PriceData[];
   waitingCount?: number;
-}
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function getNextSunday(): Date {
-  const now = new Date();
-  const next = new Date(now);
-  const daysUntilSunday = (7 - now.getDay()) % 7;
-
-  if (daysUntilSunday === 0 && now.getHours() < 23) {
-    next.setHours(23, 59, 59, 999);
-  } else {
-    next.setDate(now.getDate() + (daysUntilSunday || 7));
-    next.setHours(23, 59, 59, 999);
-  }
-
-  return next;
 }
 
 function getDiscountPrice(prices: PriceData[]): number | null {
@@ -55,13 +36,14 @@ function getBuyNowPrice(prices: PriceData[]): number | null {
   return prices.length > 1 ? prices[1].price : prices[0].price;
 }
 
-async function hasPendingConflict(userId: string): Promise<boolean> {
-  const now = new Date();
-
-  // Fallback for legacy rows without collective_close_date
-  const weekStart = new Date(now);
-  weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
-  weekStart.setHours(0, 0, 0, 0);
+async function hasPendingConflict(
+  userId: string,
+  now: Date,
+  nextCollectiveClose: Date | null
+): Promise<boolean> {
+  const fallbackLastClose = nextCollectiveClose
+    ? new Date(nextCollectiveClose.getTime() - 7 * 24 * 60 * 60 * 1000)
+    : getLastSundayClose(now);
 
   const { data, error } = await supabase
     .from("user_orders")
@@ -73,7 +55,7 @@ async function hasPendingConflict(userId: string): Promise<boolean> {
   if (error || !data?.length) return false;
 
   const nowMs = now.getTime();
-  const weekStartMs = weekStart.getTime();
+  const fallbackLastCloseMs = fallbackLastClose.getTime();
 
   return data.some((order) => {
     if (order.collective_close_date) {
@@ -84,7 +66,7 @@ async function hasPendingConflict(userId: string): Promise<boolean> {
     }
 
     const createdAt = new Date(order.created_at).getTime();
-    return !Number.isNaN(createdAt) && createdAt < weekStartMs;
+    return !Number.isNaN(createdAt) && createdAt < fallbackLastCloseMs && nowMs > fallbackLastCloseMs;
   });
 }
 
@@ -96,10 +78,16 @@ function useFloatingButton(prices: PriceData[]) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isWaitingList, setIsWaitingList] = useState(false);
   const [conflictDialogOpen, setConflictDialogOpen] = useState(false);
+  const { nextCollectiveClose, serverOffsetMs } = useCollectiveClock();
 
   useEffect(() => {
     const calculate = () => {
-      const diff = getNextSunday().getTime() - Date.now();
+      if (!nextCollectiveClose) {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0 });
+        return;
+      }
+
+      const diff = nextCollectiveClose.getTime() - (Date.now() + serverOffsetMs);
       if (diff > 0) {
         setTimeLeft({
           days: Math.floor(diff / (1000 * 60 * 60 * 24)),
@@ -114,7 +102,7 @@ function useFloatingButton(prices: PriceData[]) {
     calculate();
     const timer = setInterval(calculate, 60000);
     return () => clearInterval(timer);
-  }, []);
+  }, [nextCollectiveClose, serverOffsetMs]);
 
   const handleBuyNow = () => {
     setIsWaitingList(false);
@@ -123,7 +111,11 @@ function useFloatingButton(prices: PriceData[]) {
 
   const handleWaitForDiscount = async () => {
     const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user && await hasPendingConflict(session.user.id)) {
+    if (session?.user && await hasPendingConflict(
+      session.user.id,
+      new Date(Date.now() + serverOffsetMs),
+      nextCollectiveClose,
+    )) {
       setConflictDialogOpen(true);
       return;
     }
@@ -156,9 +148,9 @@ function useFloatingButton(prices: PriceData[]) {
 function CountdownTimer({ days, hours, minutes }: { days: number; hours: number; minutes: number }) {
   return (
     <div className="flex items-center gap-2 justify-center mb-3">
-      <Clock className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
       <div className="text-sm">
         <div className="flex gap-1 items-center justify-center">
+          <Clock className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 mr-1" />
           <span className="font-bold">{days}d</span>
           <span>:</span>
           <span className="font-bold">{hours}h</span>
@@ -280,16 +272,16 @@ export const FloatingButton = ({
 
   return (
     <>
-      <div className="fixed bottom-0 left-0 right-0 z-50 px-3 py-3 sm:px-4 sm:py-4 md:left-auto md:top-[110px] md:bottom-auto">
-        <div className="mx-auto max-w-[calc(100%-16px)] sm:max-w-md">
-          <div className="bg-gradient-primary rounded-2xl px-3 py-3 sm:p-4 shadow-floating text-white">
-            <CountdownTimer {...timeLeft} />
-            <div className="flex flex-col gap-2">
-              <WaitForDiscountButton discountPrice={discountPrice} onClick={handleWaitForDiscount} />
-              <BuyNowButton buyNowPrice={buyNowPrice} onClick={handleBuyNow} />
-            </div>
+      <div className="bottom-0 left-0 right-0 z-50 md:left-auto md:top-[110px] md:bottom-auto flex-[0_1_448px]">
+        <div className="bg-gradient-primary rounded-2xl px-3 py-3 sm:p-4 shadow-floating text-white max-w-md sm:max-w-md mx-auto">
+          <CountdownTimer {...timeLeft} />
+          <div className="flex flex-col gap-2">
+            <WaitForDiscountButton discountPrice={discountPrice} onClick={handleWaitForDiscount} />
+            <BuyNowButton buyNowPrice={buyNowPrice} onClick={handleBuyNow} />
           </div>
         </div>
+        {/* <div className="mx-auto max-w-[calc(100%-16px)] sm:max-w-md">
+        </div> */}
       </div>
 
       <AddToCartDialog

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Copy } from "lucide-react";
+import { formatPrice } from "@/lib/formatting";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -39,6 +40,7 @@ interface AddToCartDialogProps {
   prices: PriceData[];
   isWaitingList: boolean;
   currentParticipants?: number;
+  onWaitingListAdded?: () => Promise<void> | void;
 }
 
 export const AddToCartDialog = ({
@@ -51,6 +53,7 @@ export const AddToCartDialog = ({
   prices,
   isWaitingList,
   currentParticipants = 0,
+  onWaitingListAdded,
 }: AddToCartDialogProps) => {
   const { addToCart, addToWaitingList } = useCart();
   const navigate = useNavigate();
@@ -168,6 +171,7 @@ export const AddToCartDialog = ({
           current_price_per_unit: pricePerUnit,
           product_image: productImage,
         });
+        await onWaitingListAdded?.();
       } else {
         await addToCart({
           product_id: productId,
@@ -194,10 +198,6 @@ export const AddToCartDialog = ({
 
   const productUrl = `https://alaola.com.ar${location.pathname}`;
   const shareText = `Mirá este producto con descuento en Ola 🎉 ${productName} — comprá ahora o esperá y pagá menos 🤑 ${productUrl}`;
-
-  const formatPrice = (price: number) => {
-    return `$${price.toLocaleString('es-AR')}`;
-  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -379,7 +379,7 @@ export const AddToCartDialog = ({
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
-                className="flex-1"
+                className="flex-1 ml-auto mr-0"
                 disabled={loading}
               >
                 Cancelar

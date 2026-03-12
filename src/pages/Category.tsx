@@ -5,6 +5,8 @@ import { Breadcrumb } from "@/components/Breadcrumb";
 import { Footer } from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { Spinner } from "@/components/ui/spinner";
+import { useScrollHeader } from "@/hooks/useScrollHeader";
+import { formatPrice } from "@/lib/formatting";
 
 
 interface Product {
@@ -31,8 +33,7 @@ const Category = () => {
   const { category } = useParams<{ category: string }>();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [headerVisible, setHeaderVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  const headerVisible = useScrollHeader();
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -62,29 +63,6 @@ const Category = () => {
 
     fetchProducts();
   }, [category]);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        setHeaderVisible(false);
-      } else {
-        setHeaderVisible(true);
-      }
-      setLastScrollY(currentScrollY);
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScrollY]);
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("es-AR", {
-      style: "currency",
-      currency: "ARS",
-      minimumFractionDigits: 0,
-    }).format(price);
-  };
 
   const categoryName = category ? categoryLabels[category] || category : "Categoría";
 

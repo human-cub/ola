@@ -18,38 +18,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { 
-  Search, 
-  Loader2, 
-  ChevronLeft, 
+import {
+  Search,
+  Loader2,
+  ChevronLeft,
   ChevronRight,
   Ban,
   CheckCircle,
   Download,
   Eye,
-  Trash2
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { UserDetailDialog } from "./UserDetailDialog";
+import { UserDeleteDialog } from "./UserDeleteDialog";
 
 interface UserProfile {
   id: string;
@@ -66,38 +50,7 @@ interface UserProfile {
   email?: string;
 }
 
-interface LoginEntry {
-  login_at: string;
-  ip_address: string | null;
-  user_agent: string | null;
-}
-
 const ITEMS_PER_PAGE = 50;
-
-// Format address from JSON or string
-const formatAddress = (address: string | null): string => {
-  if (!address) return "-";
-  
-  try {
-    // Try parsing as JSON
-    const parsed = JSON.parse(address);
-    if (typeof parsed === 'object' && parsed !== null) {
-      const parts = [
-        parsed.street,
-        parsed.number,
-        parsed.floor,
-        parsed.postalCode,
-        parsed.city,
-        parsed.province
-      ].filter(Boolean);
-      return parts.length > 0 ? parts.join(', ') : "-";
-    }
-    return address;
-  } catch {
-    // Not JSON, return as-is
-    return address;
-  }
-};
 
 const UsersTable = () => {
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -107,11 +60,8 @@ const UsersTable = () => {
   const [page, setPage] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
-  const [loginHistory, setLoginHistory] = useState<LoginEntry[]>([]);
-  const [loadingHistory, setLoadingHistory] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<UserProfile | null>(null);
-  const [deleting, setDeleting] = useState(false);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -151,26 +101,6 @@ const UsersTable = () => {
     fetchUsers();
   }, [page, searchTerm, statusFilter]);
 
-  const handleViewUser = async (user: UserProfile) => {
-    setSelectedUser(user);
-    setLoadingHistory(true);
-    
-    try {
-      const { data } = await supabase
-        .from("login_history")
-        .select("*")
-        .eq("user_id", user.user_id)
-        .order("login_at", { ascending: false })
-        .limit(20);
-
-      setLoginHistory(data || []);
-    } catch (error) {
-      console.error("Error loading login history:", error);
-    } finally {
-      setLoadingHistory(false);
-    }
-  };
-
   const handleBlockUser = async (user: UserProfile) => {
     try {
       const { error } = await supabase
@@ -185,38 +115,12 @@ const UsersTable = () => {
 
       toast.success(user.is_blocked ? "Usuario desbloqueado" : "Usuario bloqueado");
       fetchUsers();
-      
+
       if (selectedUser?.id === user.id) {
         setSelectedUser({ ...user, is_blocked: !user.is_blocked });
       }
     } catch (error: any) {
       toast.error("Error al actualizar usuario");
-    }
-  };
-
-  const handleDeleteUser = async () => {
-    if (!userToDelete) return;
-    
-    setDeleting(true);
-    try {
-      // Call edge function to completely delete user from auth.users
-      const { data, error } = await supabase.functions.invoke("delete-user", {
-        body: { user_id: userToDelete.user_id },
-      });
-
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-
-      toast.success("Usuario eliminado completamente");
-      setDeleteDialogOpen(false);
-      setUserToDelete(null);
-      setSelectedUser(null);
-      fetchUsers();
-    } catch (error: any) {
-      console.error("Error deleting user:", error);
-      toast.error(error.message || "Error al eliminar el usuario");
-    } finally {
-      setDeleting(false);
     }
   };
 
@@ -333,7 +237,7 @@ const UsersTable = () => {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleViewUser(user)}
+                            onClick={() => setSelectedUser(user)}
                           >
                             <Eye className="w-4 h-4" />
                           </Button>
@@ -385,142 +289,26 @@ const UsersTable = () => {
         </CardContent>
       </Card>
 
-      {/* User Detail Modal */}
-      <Dialog open={!!selectedUser} onOpenChange={() => setSelectedUser(null)}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Detalle del usuario</DialogTitle>
-            <DialogDescription>
-              Información completa y actividad del usuario
-            </DialogDescription>
-          </DialogHeader>
-          
-          {selectedUser && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-muted-foreground">Nombre</p>
-                  <p className="font-medium">
-                    {selectedUser.first_name || "-"} {selectedUser.last_name || ""}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Teléfono</p>
-                  <p className="font-medium">{selectedUser.phone || "-"}</p>
-                </div>
-                <div className="col-span-2">
-                  <p className="text-muted-foreground">Dirección</p>
-                  <p className="font-medium">{formatAddress(selectedUser.address)}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Email</p>
-                  <p className="font-medium">{selectedUser.email || "-"}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Fecha de registro</p>
-                  <p className="font-medium">
-                    {format(new Date(selectedUser.created_at), "dd/MM/yyyy HH:mm", { locale: es })}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Estado</p>
-                  {selectedUser.is_blocked ? (
-                    <Badge variant="destructive">Bloqueado</Badge>
-                  ) : (
-                    <Badge className="bg-success text-success-foreground">Activo</Badge>
-                  )}
-                </div>
-              </div>
+      <UserDetailDialog
+        user={selectedUser}
+        onClose={() => setSelectedUser(null)}
+        onBlockUser={handleBlockUser}
+        onDeleteUser={(user) => {
+          setUserToDelete(user);
+          setDeleteDialogOpen(true);
+        }}
+      />
 
-              <div className="border-t pt-4">
-                <h4 className="font-medium mb-2">Historial de accesos</h4>
-                {loadingHistory ? (
-                  <Loader2 className="w-5 h-5 animate-spin mx-auto" />
-                ) : loginHistory.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Sin accesos registrados</p>
-                ) : (
-                  <div className="max-h-40 overflow-y-auto space-y-1">
-                    {loginHistory.map((entry, i) => (
-                      <div key={i} className="text-sm flex justify-between py-1 border-b last:border-0">
-                        <span>
-                          {format(new Date(entry.login_at), "dd/MM/yyyy HH:mm", { locale: es })}
-                        </span>
-                        <span className="text-muted-foreground text-xs">
-                          {entry.ip_address || "IP desconocida"}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="flex gap-2 pt-2">
-                <Button
-                  variant={selectedUser.is_blocked ? "default" : "destructive"}
-                  onClick={() => handleBlockUser(selectedUser)}
-                  className="flex-1"
-                >
-                  {selectedUser.is_blocked ? (
-                    <>
-                      <CheckCircle className="w-4 h-4 mr-2" />
-                      Desbloquear
-                    </>
-                  ) : (
-                    <>
-                      <Ban className="w-4 h-4 mr-2" />
-                      Bloquear
-                    </>
-                  )}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setUserToDelete(selectedUser);
-                    setDeleteDialogOpen(true);
-                  }}
-                  className="text-destructive hover:text-destructive"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar este perfil?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta acción no se puede deshacer. Se eliminará permanentemente el perfil de{" "}
-              <span className="font-medium">
-                {userToDelete?.first_name || userToDelete?.last_name
-                  ? `${userToDelete.first_name || ""} ${userToDelete.last_name || ""}`.trim()
-                  : "este usuario"}
-              </span>.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteUser}
-              disabled={deleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {deleting ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Eliminando...
-                </>
-              ) : (
-                "Eliminar"
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <UserDeleteDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        user={userToDelete}
+        onDeleted={() => {
+          setUserToDelete(null);
+          setSelectedUser(null);
+          fetchUsers();
+        }}
+      />
     </>
   );
 };

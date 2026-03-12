@@ -15,6 +15,7 @@ export interface ProductData {
   discountPrice: string;
   flavors?: string[];
   variants?: string[];
+  isQaOnly?: boolean;
 }
 
 export const products: Record<string, ProductData> = {
@@ -237,6 +238,25 @@ export const products: Record<string, ProductData> = {
     ],
     originalPrice: "$45.247",
     discountPrice: "$28.306"
+  },
+  "qa-timer-probe": {
+    id: "qa-timer-probe",
+    name: "QA Creatina Timer Probe",
+    description: "Producto interno para reproducir flujos de QA y errores de temporizador.",
+    weight: "100g",
+    link: "/qa-timer-probe-100",
+    image: "https://www.demusculos.com/web/wp-content/uploads/2024/11/creatina-500-grs-star-1.jpg",
+    priceSlider: [
+      { people: 1, price: 11111 },
+      { people: 25, price: 9999 },
+      { people: 50, price: 8888 },
+      { people: 75, price: 7777 },
+      { people: 100, price: 6666 },
+    ],
+    originalPrice: "$11.111",
+    discountPrice: "$6.666",
+    variants: ["Uso interno de admins"],
+    isQaOnly: true,
   }
 };
 

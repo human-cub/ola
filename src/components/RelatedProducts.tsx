@@ -61,17 +61,17 @@ export const RelatedProducts = ({ currentProduct = "" }: RelatedProductsProps) =
     const scrollTarget = sessionStorage.getItem('scrollTarget');
     if (scrollTarget === 'product-photos') {
       sessionStorage.removeItem('scrollTarget');
-      
+
       const timer = setTimeout(() => {
         const element = document.getElementById('product-photos');
         if (element) {
-          element.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'start' 
+          element.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
           });
         }
       }, 500);
-      
+
       return () => clearTimeout(timer);
     }
   }, []);
@@ -89,8 +89,8 @@ export const RelatedProducts = ({ currentProduct = "" }: RelatedProductsProps) =
   };
 
   return (
-    <section className="sm:px-4 py-6">
-      <div className="container mx-auto max-w-lg">
+    <section className="sm:px-4 py-6 mt-10">
+      <div className="container mx-auto">
         <div className="text-center mb-6">
           <h3 className="text-2xl font-bold text-foreground mb-2">
             Otros Productos
@@ -100,19 +100,19 @@ export const RelatedProducts = ({ currentProduct = "" }: RelatedProductsProps) =
           </p>
         </div>
 
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 justify-items-center w-fit mx-auto">
           {otherProducts.map((product) => (
-            <button 
+            <button
               key={product.id}
               onClick={() => handleProductClick(product.link)}
-              className="block group w-full text-left"
+              className="block group w-full text-left max-w-[360px] h-full"
             >
-              <Card className="p-4 border-0 bg-gradient-card shadow-soft hover:shadow-elegant transition-all duration-300 group-hover:scale-[1.01]">
-                <div className="flex gap-4">
+              <Card className="p-4 bg-gradient-card shadow-soft hover:shadow-elegant transition-all duration-300 group-hover:scale-[1.01] w-full h-full max-w-[360px] border border-primary">
+                <div className="flex gap-4 h-full">
                   {/* Image - larger and square */}
                   <div className="w-24 h-24 rounded-xl bg-white flex items-center justify-center overflow-hidden flex-shrink-0 shadow-sm">
-                    <img 
-                      src={product.image} 
+                    <img
+                      src={product.image}
                       alt={product.name}
                       className="w-full h-full object-contain p-1"
                       onError={(e) => {
@@ -122,18 +122,18 @@ export const RelatedProducts = ({ currentProduct = "" }: RelatedProductsProps) =
                       }}
                     />
                   </div>
-                  
+
                   {/* Content - stacked vertically */}
                   <div className="flex-1 min-w-0 flex flex-col justify-between py-1">
                     <div>
-                      <h4 className="font-bold text-foreground text-sm leading-tight mb-1 group-hover:text-primary transition-colors">
+                      <h4 className="font-bold text-foreground text-sm leading-tight mb-1 transition-colors">
                         {product.name}
                       </h4>
                       <p className="text-xs font-medium text-primary">
                         {product.weight}
                       </p>
                     </div>
-                    
+
                     {/* Pricing */}
                     <div className="flex flex-col mt-1">
                       <div className="flex gap-2 items-baseline">
@@ -151,7 +151,7 @@ export const RelatedProducts = ({ currentProduct = "" }: RelatedProductsProps) =
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* Arrow */}
                   <div className="text-primary self-center group-hover:translate-x-1 transition-transform">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

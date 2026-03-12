@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Package, Clock, Truck, CheckCircle, XCircle, ChevronRight, FileText } from "lucide-react";
+import { formatPrice, formatDateNatural } from "@/lib/formatting";
 
 interface OrderItem {
   product_id: string;
@@ -84,17 +85,6 @@ const OrdersTab = () => {
     fetchOrders();
   }, [filterType, filterStatus, sortOrder]);
 
-  const formatPrice = (price: number) => {
-    return `$${Math.round(price).toLocaleString('es-AR')}`;
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-AR', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
-  };
 
   if (loading) {
     return (
@@ -170,7 +160,7 @@ const OrdersTab = () => {
                   <div className="flex items-start justify-between mb-3">
                     <div>
                       <h3 className="font-semibold">Pedido {order.order_number}</h3>
-                      <p className="text-sm text-muted-foreground">{formatDate(order.created_at)}</p>
+                      <p className="text-sm text-muted-foreground">{formatDateNatural(order.created_at)}</p>
                     </div>
                     <div className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm ${statusConfig[order.status]?.color}`}>
                       <StatusIcon className="w-4 h-4" />

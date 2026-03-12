@@ -150,6 +150,7 @@ export type Database = {
           id: string
           images: Json | null
           is_manual: boolean | null
+          is_qa_only: boolean
           last_increment_at: string | null
           link: string | null
           max_weekly_participants: number | null
@@ -175,6 +176,7 @@ export type Database = {
           id?: string
           images?: Json | null
           is_manual?: boolean | null
+          is_qa_only?: boolean
           last_increment_at?: string | null
           link?: string | null
           max_weekly_participants?: number | null
@@ -200,6 +202,7 @@ export type Database = {
           id?: string
           images?: Json | null
           is_manual?: boolean | null
+          is_qa_only?: boolean
           last_increment_at?: string | null
           link?: string | null
           max_weekly_participants?: number | null
@@ -425,6 +428,26 @@ export type Database = {
     }
     Functions: {
       assign_admin_role: { Args: { user_email: string }; Returns: string }
+      get_collective_clock: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          next_collective_close: string
+          server_now: string
+        }[]
+      }
+      get_collective_cycle_close: {
+        Args: { _reference?: string }
+        Returns: string
+      }
+      get_collective_stage_debug_state_for_product: {
+        Args: { _product_id: string }
+        Returns: {
+          completed_pending_orders: number
+          total_pending_orders: number
+          waiting_stage_complete: boolean
+        }[]
+      }
+      get_server_time: { Args: Record<PropertyKey, never>; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -440,6 +463,10 @@ export type Database = {
         }[]
       }
       recompute_waiting_for_discount_counts: { Args: never; Returns: undefined }
+      set_collective_stage_complete_for_product: {
+        Args: { _complete: boolean; _product_id: string }
+        Returns: number
+      }
     }
     Enums: {
       app_role: "admin" | "user"

@@ -15,6 +15,7 @@ interface ProductData {
   priceSlider: { people: number; price: number }[];
   flavors?: string[];
   variants?: string[];
+  isQaOnly?: boolean;
 }
 
 Deno.serve(async (req) => {
@@ -165,6 +166,7 @@ Deno.serve(async (req) => {
       images: p.image ? [p.image] : [],
       flavors: p.flavors || p.variants || [],
       is_manual: false,
+      is_qa_only: p.isQaOnly ?? false,
       category: getCategoryFromProduct(p),
     }))
 

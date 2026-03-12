@@ -7,6 +7,35 @@ export interface CollectiveOrderItemSnapshot {
   participants_count?: number | null;
 }
 
+export interface CollectiveCountdownState {
+  timeLeft: { days: number; hours: number; minutes: number; seconds: number };
+  isCollectionEnded: boolean;
+  confirmationDeadline: Date | null;
+}
+
+const COLLECTIVE_CONFIRMATION_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+
+const getSundayClose = (date: Date): Date => {
+  const close = new Date(date);
+  close.setHours(23, 59, 59, 999);
+  return close;
+};
+
+const isBeforeSundayClose = (date: Date): boolean => {
+  return date.getDay() === 0 && date.getTime() < getSundayClose(date).getTime();
+};
+
+const toTimeLeft = (difference: number) => {
+  const safeDifference = Math.max(0, difference);
+
+  return {
+    days: Math.floor(safeDifference / (1000 * 60 * 60 * 24)),
+    hours: Math.floor((safeDifference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+    minutes: Math.floor((safeDifference % (1000 * 60 * 60)) / (1000 * 60)),
+    seconds: Math.floor((safeDifference % (1000 * 60)) / 1000),
+  };
+};
+
 export const normalizePriceTiers = (rawPrices: unknown): PriceTier[] => {
   if (!Array.isArray(rawPrices)) return [];
 
@@ -55,16 +84,13 @@ export const getLastSundayClose = (now: Date = new Date()): Date => {
   const lastSunday = new Date(now);
   const daysSinceSunday = now.getDay();
 
-  if (daysSinceSunday === 0) {
-    if (now.getHours() < 23 || (now.getHours() === 23 && now.getMinutes() < 59)) {
-      lastSunday.setDate(now.getDate() - 7);
-    }
+  if (daysSinceSunday === 0 && isBeforeSundayClose(now)) {
+    lastSunday.setDate(now.getDate() - 7);
   } else {
     lastSunday.setDate(now.getDate() - daysSinceSunday);
   }
 
-  lastSunday.setHours(23, 59, 59, 999);
-  return lastSunday;
+  return getSundayClose(lastSunday);
 };
 
 export const isCollectiveOrderFrozen = (createdAt: string, now: Date = new Date()): boolean => {
@@ -73,14 +99,113 @@ export const isCollectiveOrderFrozen = (createdAt: string, now: Date = new Date(
   return orderCreatedAt < lastSundayClose && now > lastSundayClose;
 };
 
+export const isCollectiveOrderClosed = (params: {
+  collectiveCloseDate?: string | Date | null;
+  createdAt: string;
+  now?: Date;
+}): boolean => {
+  const { collectiveCloseDate, createdAt, now = new Date() } = params;
+
+  if (collectiveCloseDate) {
+    const closeDate = new Date(collectiveCloseDate);
+
+    if (!Number.isNaN(closeDate.getTime())) {
+      return now >= closeDate;
+    }
+  }
+
+  return isCollectiveOrderFrozen(createdAt, now);
+};
+
+export const getNextSunday = (now: Date = new Date()): Date => {
+  const next = new Date(now);
+  const daysUntilSunday = (7 - now.getDay()) % 7;
+
+  if (daysUntilSunday === 0 && isBeforeSundayClose(now)) {
+    return getSundayClose(next);
+  }
+
+  next.setDate(now.getDate() + (daysUntilSunday || 7));
+  return getSundayClose(next);
+};
+
+export const getNextSundayIso = (now: Date = new Date()): string => {
+  return getNextSunday(now).toISOString();
+};
+
+export const getCollectiveCountdownState = (params: {
+  pendingOrderCreatedAt: Date | null;
+  collectiveCloseDate?: Date | null;
+  nextCollectiveClose?: Date | null;
+  now?: Date;
+}): CollectiveCountdownState => {
+  const { pendingOrderCreatedAt, collectiveCloseDate, nextCollectiveClose, now = new Date() } = params;
+  const resolvedNextClose = nextCollectiveClose ?? getNextSunday(now);
+
+  if (collectiveCloseDate && !Number.isNaN(collectiveCloseDate.getTime())) {
+    const confirmationDeadline = new Date(
+      collectiveCloseDate.getTime() + COLLECTIVE_CONFIRMATION_WINDOW_MS
+    );
+
+    if (now < collectiveCloseDate) {
+      return {
+        timeLeft: toTimeLeft(collectiveCloseDate.getTime() - now.getTime()),
+        isCollectionEnded: false,
+        confirmationDeadline,
+      };
+    }
+
+    if (now < confirmationDeadline) {
+      return {
+        timeLeft: toTimeLeft(confirmationDeadline.getTime() - now.getTime()),
+        isCollectionEnded: true,
+        confirmationDeadline,
+      };
+    }
+
+    return {
+      timeLeft: toTimeLeft(resolvedNextClose.getTime() - now.getTime()),
+      isCollectionEnded: false,
+      confirmationDeadline,
+    };
+  }
+
+  const lastClose = getLastSundayClose(now);
+  const nextClose = resolvedNextClose;
+  const confirmationDeadline = new Date(lastClose);
+  confirmationDeadline.setDate(confirmationDeadline.getDate() + 7);
+
+  const hasPendingOrderFromPreviousCycle =
+    !!pendingOrderCreatedAt &&
+    pendingOrderCreatedAt < lastClose &&
+    now > lastClose &&
+    now < confirmationDeadline;
+
+  if (hasPendingOrderFromPreviousCycle) {
+    return {
+      timeLeft: toTimeLeft(confirmationDeadline.getTime() - now.getTime()),
+      isCollectionEnded: true,
+      confirmationDeadline,
+    };
+  }
+
+  return {
+    timeLeft: toTimeLeft(nextClose.getTime() - now.getTime()),
+    isCollectionEnded: false,
+    confirmationDeadline,
+  };
+};
+
 export const shouldUseDynamicCollectivePricing = (params: {
   orderType: string;
   status: string;
   createdAt: string;
+  collectiveCloseDate?: string | null;
   isPromo?: boolean | null;
   items: CollectiveOrderItemSnapshot[];
+  now?: Date;
 }): boolean => {
-  const { orderType, status, createdAt, isPromo, items } = params;
+  const { orderType, status, createdAt, collectiveCloseDate, isPromo, items, now } = params;
 
   if (orderType !== "collective" || status !== "pending" || isPromo) {
     return false;
@@ -94,5 +219,5 @@ export const shouldUseDynamicCollectivePricing = (params: {
     return false;
   }
 
-  return !isCollectiveOrderFrozen(createdAt);
+  return !isCollectiveOrderClosed({ createdAt, collectiveCloseDate, now });
 };

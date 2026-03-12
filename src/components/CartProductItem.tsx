@@ -8,6 +8,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus, Minus, Trash2 } from "lucide-react";
+import { formatPrice } from "@/lib/formatting";
 
 interface CartProductItemProps {
   id: string;
@@ -22,7 +23,6 @@ interface CartProductItemProps {
   onQuantityChange: (id: string, delta: number, currentQty: number) => void;
   onFlavorChange: (id: string, flavor: string) => void;
   onDelete: (id: string) => void;
-  formatPrice: (price: number) => string;
 }
 
 export const CartProductItem = ({
@@ -38,7 +38,6 @@ export const CartProductItem = ({
   onQuantityChange,
   onFlavorChange,
   onDelete,
-  formatPrice,
 }: CartProductItemProps) => {
   return (
     <div className="flex gap-3 py-4">
@@ -80,7 +79,7 @@ export const CartProductItem = ({
             value={flavor || ""}
             onValueChange={(value) => onFlavorChange(id, value)}
           >
-            <SelectTrigger className="w-full h-7 text-xs mb-2">
+            <SelectTrigger className="w-full h-7 text-xs mb-2 max-w-[200px]">
               <SelectValue placeholder="Seleccionar sabor" />
             </SelectTrigger>
             <SelectContent>
