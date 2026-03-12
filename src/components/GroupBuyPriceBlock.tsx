@@ -221,6 +221,7 @@ export const GroupBuyPriceBlock = ({
   priceData = [],
   waitingCount = 0,
 }: GroupBuyPriceBlockProps) => {
+  const [displayWaitingCount, setDisplayWaitingCount] = useState(waitingCount);
   const {
     timeLeft,
     dialogOpen,
@@ -233,8 +234,24 @@ export const GroupBuyPriceBlock = ({
     goToWaitingList,
   } = useGroupBuyBlock(priceData);
 
+  useEffect(() => {
+    setDisplayWaitingCount(waitingCount);
+  }, [waitingCount]);
+
+  const refreshWaitingCount = async () => {
+    const { data, error } = await supabase
+      .from("products")
+      .select("total_orders_count")
+      .eq("id", productId)
+      .maybeSingle();
+
+    if (!error && data?.total_orders_count !== null && data?.total_orders_count !== undefined) {
+      setDisplayWaitingCount(data.total_orders_count);
+    }
+  };
+
   const retailPrice = getRetailPrice(priceData);
-  const currentPrice = getCurrentTierPrice(priceData, waitingCount);
+  const currentPrice = getCurrentTierPrice(priceData, displayWaitingCount);
   const superPrice = getMaxDiscountPrice(priceData);
   const buyNowPrice = getBuyNowPrice(priceData);
   const groupBuyAccentStyle = { color: "hsl(var(--group-buy-accent))" } satisfies CSSProperties;
@@ -261,11 +278,11 @@ export const GroupBuyPriceBlock = ({
     const segWidth = 100 / 3;
 
     if (waitingCount <= t1) {
-      visualProgress = ((waitingCount - t0) / Math.max(1, t1 - t0)) * segWidth;
-    } else if (waitingCount <= t2) {
-      visualProgress = segWidth + ((waitingCount - t1) / Math.max(1, t2 - t1)) * segWidth;
-    } else if (waitingCount <= t3) {
-      visualProgress = segWidth * 2 + ((waitingCount - t2) / Math.max(1, t3 - t2)) * segWidth;
+      visualProgress = ((displayWaitingCount - t0) / Math.max(1, t1 - t0)) * segWidth;
+    } else if (displayWaitingCount <= t2) {
+      visualProgress = segWidth + ((displayWaitingCount - t1) / Math.max(1, t2 - t1)) * segWidth;
+    } else if (displayWaitingCount <= t3) {
+      visualProgress = segWidth * 2 + ((displayWaitingCount - t2) / Math.max(1, t3 - t2)) * segWidth;
     } else {
       visualProgress = 100;
     }
@@ -274,9 +291,9 @@ export const GroupBuyPriceBlock = ({
     const t1 = progressTiers[1].people;
     const t2 = progressTiers[2].people;
     const segWidth = 100 / 3;
-    if (waitingCount <= t0) visualProgress = (waitingCount / Math.max(1, t0)) * segWidth;
-    else if (waitingCount <= t1) visualProgress = segWidth + ((waitingCount - t0) / Math.max(1, t1 - t0)) * segWidth;
-    else if (waitingCount <= t2) visualProgress = segWidth * 2 + ((waitingCount - t1) / Math.max(1, t2 - t1)) * segWidth;
+    if (displayWaitingCount <= t0) visualProgress = (displayWaitingCount / Math.max(1, t0)) * segWidth;
+    else if (displayWaitingCount <= t1) visualProgress = segWidth + ((displayWaitingCount - t0) / Math.max(1, t1 - t0)) * segWidth;
+    else if (displayWaitingCount <= t2) visualProgress = segWidth * 2 + ((displayWaitingCount - t1) / Math.max(1, t2 - t1)) * segWidth;
     else visualProgress = 100;
   }
   visualProgress = Math.min(100, Math.max(0, visualProgress));
@@ -294,7 +311,7 @@ export const GroupBuyPriceBlock = ({
     if (messageTiers.length === 0) return null;
 
     for (const tier of messageTiers) {
-      if (tier.people > waitingCount) {
+      if (tier.people > displayWaitingCount) {
         return tier;
       }
     }
@@ -302,7 +319,7 @@ export const GroupBuyPriceBlock = ({
     return null;
   };
   const nextThreshold = getNextThreshold();
-  const remaining = nextThreshold ? nextThreshold.people - waitingCount : 0;
+  const remaining = nextThreshold ? nextThreshold.people - displayWaitingCount : 0;
   const priceComparisonItems: PriceComparisonItem[] = [
     {
       label: "Retail",
@@ -338,7 +355,7 @@ export const GroupBuyPriceBlock = ({
                 <div className="flex items-center gap-1.5 min-w-0 flex-shrink">
                   <Sparkles className="w-5 h-5 text-white animate-pulse flex-shrink-0" />
                   <span className="text-white font-bold text-base whitespace-nowrap">
-                    Ya se sumaron {waitingCount}
+                    Ya se sumaron {displayWaitingCount}
                   </span>
                 </div>
                 <div
@@ -447,7 +464,8 @@ export const GroupBuyPriceBlock = ({
         flavors={flavors}
         prices={priceData}
         isWaitingList={isWaitingList}
-        currentParticipants={waitingCount}
+        currentParticipants={displayWaitingCount}
+        onWaitingListAdded={refreshWaitingCount}
       />
 
       <ConflictDialog

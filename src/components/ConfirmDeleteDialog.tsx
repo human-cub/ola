@@ -35,7 +35,8 @@ export const ConfirmDeleteDialog = ({
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={loading}>Cancelar</AlertDialogCancel>
+          <AlertDialogCancel disabled={loading} className="mr-0">Cancelar</AlertDialogCancel>
+
           <AlertDialogAction onClick={onConfirm} disabled={loading}>
             {loading ? (
               <>

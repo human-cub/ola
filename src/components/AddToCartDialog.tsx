@@ -40,6 +40,7 @@ interface AddToCartDialogProps {
   prices: PriceData[];
   isWaitingList: boolean;
   currentParticipants?: number;
+  onWaitingListAdded?: () => Promise<void> | void;
 }
 
 export const AddToCartDialog = ({
@@ -52,6 +53,7 @@ export const AddToCartDialog = ({
   prices,
   isWaitingList,
   currentParticipants = 0,
+  onWaitingListAdded,
 }: AddToCartDialogProps) => {
   const { addToCart, addToWaitingList } = useCart();
   const navigate = useNavigate();
@@ -169,6 +171,7 @@ export const AddToCartDialog = ({
           current_price_per_unit: pricePerUnit,
           product_image: productImage,
         });
+        await onWaitingListAdded?.();
       } else {
         await addToCart({
           product_id: productId,
@@ -376,7 +379,7 @@ export const AddToCartDialog = ({
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
-                className="flex-1"
+                className="flex-1 ml-auto mr-0"
                 disabled={loading}
               >
                 Cancelar
