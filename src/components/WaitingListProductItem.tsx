@@ -1,49 +1,42 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Plus, Minus, Trash2, Share2 } from "lucide-react";
 import { formatPrice } from "@/lib/formatting";
 
+interface FlavorEntry {
+  id: string;
+  flavor: string | null;
+  quantity: number;
+}
+
 interface WaitingListProductItemProps {
   id: string;
-  productId: string;
   productName: string;
   productImage: string | null;
   pricePerUnit: number;
-  quantity: number;
-  flavor?: string | null;
-  flavors: string[];
+  totalQuantity: number;
+  flavorEntries: FlavorEntry[];
   productLink: string;
   participantCount: number;
   nextThreshold: { people: number; price: number } | null;
   isCollectionEnded?: boolean;
   onQuantityChange: (id: string, delta: number, currentQty: number) => void;
-  onFlavorChange: (id: string, flavor: string) => void;
   onDelete: (id: string) => void;
   onShare: () => void;
 }
 
 export const WaitingListProductItem = ({
   id,
-  productId,
   productName,
   productImage,
   pricePerUnit,
-  quantity,
-  flavor,
-  flavors,
+  totalQuantity,
+  flavorEntries,
   productLink,
   participantCount,
   nextThreshold,
   isCollectionEnded = false,
   onQuantityChange,
-  onFlavorChange,
   onDelete,
   onShare,
 }: WaitingListProductItemProps) => {
@@ -103,57 +96,54 @@ export const WaitingListProductItem = ({
           )}
         </div>
 
-        {/* Row 3: Flavor selector if available */}
-        {flavors.length > 0 && (
-          <Select
-            value={flavor || ""}
-            onValueChange={(value) => onFlavorChange(id, value)}
-          >
-            <SelectTrigger className="w-full h-7 text-xs mb-2 max-w-[200px]">
-              <SelectValue placeholder="Seleccionar sabor" />
-            </SelectTrigger>
-            <SelectContent>
-              {flavors.map((f) => (
-                <SelectItem key={f} value={f}>
-                  {f}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        {/* Row 3: Plain-text flavor list with per-flavor quantity controls */}
+        {flavorEntries.length > 0 && (
+          <div className="my-3 space-y-1.5 w-fit">
+            {flavorEntries.map((entry) => (
+              <div key={entry.id} className="flex items-center justify-between gap-3">
+                <p className="text-xs text-muted-foreground truncate">
+                  {entry.flavor || "Sin sabor"}
+                </p>
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={() => onQuantityChange(entry.id, -1, entry.quantity)}
+                    disabled={entry.quantity <= 1}
+                  >
+                    <Minus className="w-3 h-3" />
+                  </Button>
+                  <span className="w-6 text-center font-medium text-sm">
+                    {entry.quantity}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={() => onQuantityChange(entry.id, 1, entry.quantity)}
+                    disabled={entry.quantity >= 99}
+                  >
+                    <Plus className="w-3 h-3" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
         )}
 
-        {/* Row 4: Quantity controls and price - always at bottom */}
+        {/* Row 4: Group total and price */}
         <div className="flex items-center justify-between mt-auto">
-          <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-7 w-7"
-              onClick={() => onQuantityChange(id, -1, quantity)}
-              disabled={quantity <= 1}
-            >
-              <Minus className="w-3 h-3" />
-            </Button>
-            <span className="w-6 text-center font-medium text-sm">
-              {quantity}
-            </span>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-7 w-7"
-              onClick={() => onQuantityChange(id, 1, quantity)}
-              disabled={quantity >= 99}
-            >
-              <Plus className="w-3 h-3" />
-            </Button>
-          </div>
+          <p className="text-xs text-muted-foreground whitespace-nowrap">
+            {totalQuantity} {totalQuantity === 1 ? "unidad" : "unidades"}
+          </p>
 
           <div className="text-right">
             <p className="text-xs text-muted-foreground whitespace-nowrap">
               {formatPrice(pricePerUnit)} c/u
             </p>
             <p className="font-semibold text-sm">
-              {formatPrice(pricePerUnit * quantity)}
+              {formatPrice(pricePerUnit * totalQuantity)}
             </p>
           </div>
         </div>

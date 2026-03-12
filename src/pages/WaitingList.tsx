@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
@@ -30,18 +30,15 @@ const WaitingList = () => {
   const navigate = useNavigate();
   const {
     waitingListItems,
-    waitingListCount,
     isLoading,
     updateWaitingListItemQuantity,
-    updateWaitingListItemFlavor,
     removeFromWaitingList,
     clearWaitingList,
     moveWaitingListToCart,
     syncPendingOrderPrices,
   } = useCart();
   const headerVisible = useScrollHeader();
-  const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
-  const [productFlavors, setProductFlavors] = useState<Record<string, string[]>>({});
+  const [deleteGroup, setDeleteGroup] = useState<{ productName: string; itemIds: string[] } | null>(null);
   const [productData, setProductData] = useState<Record<string, ProductData>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isMovingToCart, setIsMovingToCart] = useState(false);
@@ -70,46 +67,102 @@ const WaitingList = () => {
     frozenOrderData,
   });
 
-  // Fetch flavors and product data
-  useEffect(() => {
-    const fetchData = async () => {
-      const productIds = [...new Set(waitingListItems.map((item) => item.product_id))];
-      if (productIds.length === 0) return;
+  const groupedWaitingListItems = useMemo(() => {
+    const grouped = new Map<string, {
+      productId: string;
+      productName: string;
+      productImage: string | null;
+      itemIds: string[];
+      totalQuantity: number;
+      flavorEntries: Array<{ id: string; flavor: string | null; quantity: number }>;
+    }>();
 
-      const { data } = await supabase
-        .from("products")
-        .select("id, flavors, link, total_orders_count, prices")
-        .in("id", productIds);
+    waitingListItems.forEach((item) => {
+      const existing = grouped.get(item.product_id);
 
-      if (data) {
-        const flavorsMap: Record<string, string[]> = {};
-        const prodDataMap: Record<string, ProductData> = {};
-
-        data.forEach((p) => {
-          flavorsMap[p.id] = (p.flavors as string[]) || [];
-          prodDataMap[p.id] = {
-            id: p.id,
-            link: p.link || "",
-            total_orders_count: p.total_orders_count || 0,
-            prices: (p.prices as unknown as PriceData[]) || [],
-          };
+      if (existing) {
+        existing.itemIds.push(item.id);
+        existing.totalQuantity += item.quantity;
+        existing.flavorEntries.push({
+          id: item.id,
+          flavor: item.flavor,
+          quantity: item.quantity,
         });
-
-        setProductFlavors(flavorsMap);
-        setProductData(prodDataMap);
+        return;
       }
-    };
 
-    void fetchData();
+      grouped.set(item.product_id, {
+        productId: item.product_id,
+        productName: item.product_name,
+        productImage: item.product_image,
+        itemIds: [item.id],
+        totalQuantity: item.quantity,
+        flavorEntries: [
+          {
+            id: item.id,
+            flavor: item.flavor,
+            quantity: item.quantity,
+          },
+        ],
+      });
+    });
+
+    return Array.from(grouped.values());
+  }, [waitingListItems]);
+
+  const displayedProductCount = groupedWaitingListItems.length;
+  const productIds = useMemo(
+    () => [...new Set(waitingListItems.map((item) => item.product_id))],
+    [waitingListItems]
+  );
+  const productIdsKey = useMemo(() => productIds.slice().sort().join(","), [productIds]);
+
+  const fetchProductData = useCallback(async () => {
+    if (productIds.length === 0) {
+      setProductData({});
+      return;
+    }
+
+    const { data } = await supabase
+      .from("products")
+      .select("id, link, total_orders_count, prices")
+      .in("id", productIds);
+
+    if (data) {
+      const prodDataMap: Record<string, ProductData> = {};
+
+      data.forEach((p) => {
+        prodDataMap[p.id] = {
+          id: p.id,
+          link: p.link || "",
+          total_orders_count: p.total_orders_count || 0,
+          prices: (p.prices as unknown as PriceData[]) || [],
+        };
+      });
+
+      setProductData(prodDataMap);
+    }
+  }, [productIds]);
+
+  // Fetch product data
+  useEffect(() => {
+    void fetchProductData();
+  }, [fetchProductData, productIdsKey]);
+
+  useEffect(() => {
     void syncPendingOrderPrices();
 
+    return undefined;
+  }, [syncPendingOrderPrices]);
+
+  useEffect(() => {
     const channel = supabase
       .channel("products-price-updates")
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "products" },
         () => {
-          void fetchData();
+          void fetchProductData();
           void syncPendingOrderPrices();
         }
       )
@@ -118,18 +171,15 @@ const WaitingList = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [
-    syncPendingOrderPrices,
-    waitingListItems.map((i) => `${i.id}:${i.quantity}`).join(","),
-  ]);
+  }, [fetchProductData, syncPendingOrderPrices]);
 
-  const handleShare = (item: typeof waitingListItems[0]) => {
-    const prod = productData[item.product_id];
+  const handleShare = (productId: string, productName: string) => {
+    const prod = productData[productId];
     if (!prod) return;
     const link = `${window.location.origin}${prod.link}`;
-    const text = `¡Sumate a la compra colectiva de ${item.product_name}! Seamos más, pagamos menos. ${link}`;
+    const text = `¡Sumate a la compra colectiva de ${productName}! Seamos más, pagamos menos. ${link}`;
     if (navigator.share) {
-      navigator.share({ title: item.product_name, text, url: link });
+      navigator.share({ title: productName, text, url: link });
     } else {
       navigator.clipboard.writeText(text);
       toast.success("Enlace copiado al portapapeles");
@@ -140,36 +190,15 @@ const WaitingList = () => {
     const newQty = currentQty + delta;
     if (newQty >= 1 && newQty <= 99) {
       await updateWaitingListItemQuantity(id, newQty);
-      if (hasExistingOrder) {
-        const productIds = [...new Set(waitingListItems.map((item) => item.product_id))];
-        if (productIds.length > 0) {
-          const { data } = await supabase
-            .from("products")
-            .select("id, link, total_orders_count, prices")
-            .in("id", productIds);
-
-          if (data) {
-            setProductData(prev => {
-              const updated = { ...prev };
-              data.forEach((p) => {
-                updated[p.id] = {
-                  ...updated[p.id],
-                  total_orders_count: p.total_orders_count || 0,
-                  prices: (p.prices as unknown as PriceData[]) || [],
-                };
-              });
-              return updated;
-            });
-          }
-        }
-      }
     }
   };
 
   const handleDeleteConfirm = async () => {
-    if (deleteItemId) {
-      await removeFromWaitingList(deleteItemId);
-      setDeleteItemId(null);
+    if (deleteGroup) {
+      for (const itemId of deleteGroup.itemIds) {
+        await removeFromWaitingList(itemId);
+      }
+      setDeleteGroup(null);
     }
   };
 
@@ -263,7 +292,7 @@ const WaitingList = () => {
               )}
             </h1>
             <p className="text-muted-foreground">
-              {waitingListCount} {waitingListCount === 1 ? "producto" : "productos"}
+              {displayedProductCount} {displayedProductCount === 1 ? "producto" : "productos"}
             </p>
           </div>
 
@@ -283,33 +312,31 @@ const WaitingList = () => {
           ) : (
             <>
               <div className="space-y-0 mb-6">
-                {waitingListItems.map((item, index) => {
-                  const prod = productData[item.product_id];
-                  const participantCount = getParticipantsCount(item.product_id, item.quantity);
-                  const nextThreshold = getNextDiscountThreshold(item.product_id, item.quantity);
-                  const dynamicPrice = getCurrentPrice(item.product_id, item.quantity) || item.current_price_per_unit;
+                {groupedWaitingListItems.map((item, index) => {
+                  const prod = productData[item.productId];
+                  const participantCount = getParticipantsCount(item.productId, item.totalQuantity);
+                  const nextThreshold = getNextDiscountThreshold(item.productId, item.totalQuantity);
+                  const fallbackPrice = waitingListItems.find((waitingItem) => waitingItem.product_id === item.productId)?.current_price_per_unit || 0;
+                  const dynamicPrice = getCurrentPrice(item.productId, item.totalQuantity) || fallbackPrice;
 
                   return (
-                    <div key={item.id}>
+                    <div key={item.productId}>
                       <WaitingListProductItem
-                        id={item.id}
-                        productId={item.product_id}
-                        productName={item.product_name}
-                        productImage={item.product_image}
+                        id={item.productId}
+                        productName={item.productName}
+                        productImage={item.productImage}
                         pricePerUnit={dynamicPrice}
-                        quantity={item.quantity}
-                        flavor={item.flavor}
-                        flavors={productFlavors[item.product_id] || []}
+                        totalQuantity={item.totalQuantity}
+                        flavorEntries={item.flavorEntries}
                         productLink={prod?.link || "#"}
                         participantCount={participantCount}
                         nextThreshold={nextThreshold}
                         isCollectionEnded={isCollectionEnded}
                         onQuantityChange={handleQuantityChange}
-                        onFlavorChange={updateWaitingListItemFlavor}
-                        onDelete={(id) => setDeleteItemId(id)}
-                        onShare={() => handleShare(item)}
+                        onDelete={() => setDeleteGroup({ productName: item.productName, itemIds: item.itemIds })}
+                        onShare={() => handleShare(item.productId, item.productName)}
                       />
-                      {index < waitingListItems.length - 1 && <Separator />}
+                      {index < groupedWaitingListItems.length - 1 && <Separator />}
                     </div>
                   );
                 })}
@@ -344,10 +371,12 @@ const WaitingList = () => {
       </main>
 
       <ConfirmDeleteDialog
-        open={!!deleteItemId}
-        onOpenChange={() => setDeleteItemId(null)}
+        open={!!deleteGroup}
+        onOpenChange={() => setDeleteGroup(null)}
         title="¿Eliminar producto?"
-        description="¿Estás seguro de que querés eliminar este producto de la lista de espera?"
+        description={deleteGroup
+          ? `¿Estás seguro de que querés eliminar ${deleteGroup.productName} de la lista de espera?`
+          : "¿Estás seguro de que querés eliminar este producto de la lista de espera?"}
         onConfirm={handleDeleteConfirm}
       />
 
