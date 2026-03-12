@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Users, ShoppingCart, Calculator, FileCheck, Truck, CreditCard, Package, ClipboardCheck } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const waitingListSteps = [
   {
@@ -88,7 +89,7 @@ export const ProcessSteps = () => {
           <div className="w-20 h-1 bg-gradient-primary mx-auto rounded-full mb-6"></div>
           
           {/* Segmented Toggle - centered in viewport, ignoring parent padding */}
-          <div className="max-w-[640px] lg:mx-auto -mx-2 sm:w-auto flex bg-muted rounded-full p-1 gap-1">
+          <div className="max-w-[640px] md:mx-auto -mx-2 sm:w-auto flex bg-muted rounded-full p-1 gap-1">
             <SegmentedToggleButton
               isActive={isWaitingList}
               onClick={() => setIsWaitingList(true)}
@@ -102,15 +103,22 @@ export const ProcessSteps = () => {
           </div>
         </div>
         
-        <div className="relative max-w-md mx-auto flex flex-col gap-6">
+        <div
+          className={cn(
+            "relative mx-auto flex max-w-md flex-col gap-6 items-center",
+            "md:grid md:max-w-none md:grid-cols-2 md:gap-8 md:px-6 md:w-fit",
+            "lg:px-[88px]",
+            "xl:grid-cols-3"
+          )}
+        >
           {steps.map((step, index) => {
             const IconComponent = step.icon;
             
             return (
-              <div key={`${isWaitingList ? 'wait' : 'buy'}-${index}`} className="relative min-w-[280px] max-w-[560px]">
+              <div key={`${isWaitingList ? 'wait' : 'buy'}-${index}`} className="relative min-w-0 w-full h-full max-w-[360px] /*mx-auto">
                 {/* Step Block */}
                  <div
-                   className="relative bg-background rounded-xl p-4 shadow-sm transition-all duration-300 border border-border/50 animate-fade-in mx-6"
+                   className="relative h-full bg-background rounded-xl p-4 shadow-sm transition-all duration-300 border border-border/50 animate-fade-in /*mx-6 lg:mx-0 lg:p-5"
                    style={{ animationDelay: `${index * 0.1}s`, animationFillMode: 'both' }}
                  >
                    {/* Step Number */}

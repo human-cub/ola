@@ -129,7 +129,7 @@ export const Testimonials = () => {
         onMouseLeave={handleMouseLeave}
         className=""
       >
-        <CarouselContent className="-ml-6 min-[969px]:-ml-0 min-[1500px]:justify-center">
+        <CarouselContent className="-ml-6 min-[969px]:-ml-0 min-[1200px]:justify-center">
           {testimonials.map((t, i) => (
             <CarouselItem
               key={i}
