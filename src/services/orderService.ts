@@ -87,18 +87,18 @@ export const ensurePendingCollectiveOrder = async (userId: string) => {
 
   const { data: newOrder, error: insertError } = await supabase
     .from("user_orders")
-    .insert({
+    .insert([{
       user_id: userId,
       order_number: orderNumber,
-      order_type: "collective",
-      items: orderItems,
+      order_type: "collective" as const,
+      items: orderItems as any,
       subtotal,
       total_amount: subtotal,
       discount_amount: discountAmount,
-      delivery_address: deliveryAddress,
-      status: "pending",
+      delivery_address: deliveryAddress as any,
+      status: "pending" as const,
       notes: phone || null,
-    })
+    }])
     .select("id, order_number")
     .single();
 
