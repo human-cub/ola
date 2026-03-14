@@ -429,7 +429,7 @@ export type Database = {
     Functions: {
       assign_admin_role: { Args: { user_email: string }; Returns: string }
       get_collective_clock: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           next_collective_close: string
           server_now: string
@@ -447,7 +447,7 @@ export type Database = {
           waiting_stage_complete: boolean
         }[]
       }
-      get_server_time: { Args: Record<PropertyKey, never>; Returns: string }
+      get_server_time: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
