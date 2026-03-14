@@ -37,8 +37,12 @@ function getDayNumber(weekStartDate: string): number {
 function getDailyTarget(productId: string, day: number): { min: number; max: number } {
   const ph = productHash(productId);
   if (day === 1) return { min: 4, max: 7 };
-  if (day === 2) return { min: 2, max: 4 };
-  return { min: 1, max: 3 };
+  if (day === 2) return { min: 1, max: 3 };
+  if (day === 3) return { min: 0, max: 1 };
+  if (day === 4) return { min: 0, max: 1 };
+  if (day === 5) return { min: 0, max: 2 };
+  if (day === 6) return { min: 1, max: 2 };
+  return { min: 1, max: 2 }; // day 7
 }
 
 function getCumulativeTarget(productId: string, day: number): number {
