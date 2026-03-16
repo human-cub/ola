@@ -89,7 +89,7 @@ export const WaitingListProductItem = ({
         {/* Row 2: Participant indicator */}
         <div className="flex flex-wrap items-center gap-1 mb-1">
           <span className="text-xs font-medium text-primary">
-            {participantCount}/100
+            {participantCount}/{maxParticipants}
           </span>
           {nextThreshold && nextThreshold.people > participantCount && (
             <span className="text-xs text-muted-foreground">
