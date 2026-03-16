@@ -318,6 +318,7 @@ const WaitingList = () => {
                   const nextThreshold = getNextDiscountThreshold(item.productId, item.totalQuantity);
                   const fallbackPrice = waitingListItems.find((waitingItem) => waitingItem.product_id === item.productId)?.current_price_per_unit || 0;
                   const dynamicPrice = getCurrentPrice(item.productId, item.totalQuantity) || fallbackPrice;
+                  const maxParticipants = prod?.prices?.length ? prod.prices[prod.prices.length - 1].people : 100;
 
                   return (
                     <div key={item.productId}>
