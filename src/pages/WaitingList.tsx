@@ -331,6 +331,7 @@ const WaitingList = () => {
                         flavorEntries={item.flavorEntries}
                         productLink={prod?.link || "#"}
                         participantCount={participantCount}
+                        maxParticipants={maxParticipants}
                         nextThreshold={nextThreshold}
                         isCollectionEnded={isCollectionEnded}
                         onQuantityChange={handleQuantityChange}
