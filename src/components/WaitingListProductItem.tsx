@@ -35,6 +35,7 @@ export const WaitingListProductItem = ({
   flavorEntries,
   productLink,
   participantCount,
+  maxParticipants,
   nextThreshold,
   isCollectionEnded = false,
   onQuantityChange,
