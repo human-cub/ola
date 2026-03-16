@@ -18,6 +18,7 @@ interface WaitingListProductItemProps {
   flavorEntries: FlavorEntry[];
   productLink: string;
   participantCount: number;
+  maxParticipants: number;
   nextThreshold: { people: number; price: number } | null;
   isCollectionEnded?: boolean;
   onQuantityChange: (id: string, delta: number, currentQty: number) => void;
