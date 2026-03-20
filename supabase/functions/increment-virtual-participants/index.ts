@@ -6,11 +6,10 @@ const corsHeaders = {
 };
 
 // ============================================================
-// NEW ALGORITHM — linear daily growth
+// Virtual growth algorithm
 // Start: Monday 10:00 ART (13:00 UTC)
-// Day 1 (first 24h): 4-7 units total
-// Day 2 (24-48h):    +2-4 units
-// Day 3+ (each 24h): +1-3 units
+// Day 1: 3-7, Day 2: 1-4, Day 3: 0-3, Day 4: 0-3
+// Day 5: 1-3, Day 6: 1-3, Day 7: 1-4
 // ============================================================
 
 function productHash(id: string): number {
@@ -35,14 +34,13 @@ function getDayNumber(weekStartDate: string): number {
 }
 
 function getDailyTarget(productId: string, day: number): { min: number; max: number } {
-  const ph = productHash(productId);
-  if (day === 1) return { min: 4, max: 7 };
-  if (day === 2) return { min: 1, max: 3 };
-  if (day === 3) return { min: 0, max: 1 };
-  if (day === 4) return { min: 0, max: 1 };
-  if (day === 5) return { min: 0, max: 2 };
-  if (day === 6) return { min: 1, max: 2 };
-  return { min: 1, max: 2 }; // day 7
+  if (day === 1) return { min: 3, max: 7 };
+  if (day === 2) return { min: 1, max: 4 };
+  if (day === 3) return { min: 0, max: 3 };
+  if (day === 4) return { min: 0, max: 3 };
+  if (day === 5) return { min: 1, max: 3 };
+  if (day === 6) return { min: 1, max: 3 };
+  return { min: 1, max: 4 }; // day 7
 }
 
 function getCumulativeTarget(productId: string, day: number): number {
