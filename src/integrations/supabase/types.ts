@@ -156,6 +156,7 @@ export type Database = {
           max_weekly_participants: number | null
           name: string
           prices: Json
+          pricing_participants_count: number | null
           real_orders_count: number
           total_orders_count: number | null
           updated_at: string | null
@@ -182,6 +183,7 @@ export type Database = {
           max_weekly_participants?: number | null
           name: string
           prices?: Json
+          pricing_participants_count?: number | null
           real_orders_count?: number
           total_orders_count?: number | null
           updated_at?: string | null
@@ -208,6 +210,7 @@ export type Database = {
           max_weekly_participants?: number | null
           name?: string
           prices?: Json
+          pricing_participants_count?: number | null
           real_orders_count?: number
           total_orders_count?: number | null
           updated_at?: string | null
