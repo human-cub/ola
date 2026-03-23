@@ -76,6 +76,10 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
   const [street, streetNumber, floor, postalCode, city, province, references, paymentMethod] =
     form.watch(["street", "streetNumber", "floor", "postalCode", "city", "province", "references", "paymentMethod"]);
 
+  const validationErrors = Object.values(form.formState.errors)
+    .map((error) => error?.message)
+    .filter((message): message is string => typeof message === "string" && message.trim().length > 0);
+
   useCheckoutProfile(form, isCollective);
 
   const { subtotal, fullPrice, discount, deliveryCost, total } =
@@ -183,6 +187,23 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
                 deliveryCost={deliveryCost}
                 total={total}
               />
+
+              {validationErrors.length > 0 && (
+                <div
+                  role="alert"
+                  aria-live="polite"
+                  className="mb-4 rounded-md border border-destructive/30 bg-destructive/5 p-4"
+                >
+                  <p className="mb-2 text-sm font-semibold text-destructive">
+                    Revisá los siguientes campos antes de continuar:
+                  </p>
+                  <ul className="list-disc space-y-1 pl-5 text-sm text-destructive">
+                    {validationErrors.map((message, index) => (
+                      <li key={`${message}-${index}`}>{message}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               <Button
                 type="submit"
