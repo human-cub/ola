@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { Users, ShoppingCart, Calculator, FileCheck, Truck, CreditCard, Package, ClipboardCheck } from "lucide-react";
+import { useState, useRef } from "react";
+import { Users, ShoppingCart, Calculator, FileCheck, Truck, CreditCard, Package, ClipboardCheck, Play } from "lucide-react";
+import videoCover from "@/assets/video-cover.png";
 import { cn } from "@/lib/utils";
 
 const waitingListSteps = [
@@ -74,6 +75,44 @@ const SegmentedToggleButton = ({ isActive, onClick, label }: SegmentedToggleButt
   </button>
 );
 
+const VideoPlayer = () => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const handlePlay = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (isPlaying) {
+      video.pause();
+      setIsPlaying(false);
+    } else {
+      video.play();
+      setIsPlaying(true);
+    }
+  };
+
+  return (
+    <div className="relative max-w-md mx-auto mb-6 rounded-2xl overflow-hidden cursor-pointer group" onClick={handlePlay}>
+      <video
+        ref={videoRef}
+        src="https://gl71nzm2l7iaribb.public.blob.vercel-storage.com/ola_optimized.mp4"
+        poster={videoCover}
+        playsInline
+        preload="none"
+        className="w-full rounded-2xl"
+        onEnded={() => setIsPlaying(false)}
+      />
+      {!isPlaying && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/10 transition-opacity">
+          <div className="w-16 h-16 rounded-full bg-primary/90 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+            <Play className="w-7 h-7 text-primary-foreground ml-1" fill="currentColor" />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const ProcessSteps = () => {
   const [isWaitingList, setIsWaitingList] = useState(true);
   
@@ -87,6 +126,10 @@ export const ProcessSteps = () => {
             ¿Cómo Funciona?
           </h2>
           <div className="w-20 h-1 bg-gradient-primary mx-auto rounded-full mb-6"></div>
+
+          {/* Video Player */}
+          <VideoPlayer />
+
           
           {/* Segmented Toggle - centered in viewport, ignoring parent padding */}
           <div className="max-w-[640px] md:mx-auto -mx-2 sm:w-auto flex bg-muted rounded-full p-1 gap-1">
