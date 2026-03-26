@@ -100,6 +100,7 @@ const VideoPlayer = () => {
         playsInline
         preload="none"
         className="w-full rounded-2xl"
+        style={{ objectPosition: '50% 35%' }}
         onEnded={() => setIsPlaying(false)}
       />
       {!isPlaying && (
