@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { Users, ShoppingCart, Calculator, FileCheck, Truck, CreditCard, Package, ClipboardCheck } from "lucide-react";
+import { useState, useRef } from "react";
+import { Users, ShoppingCart, Calculator, FileCheck, Truck, CreditCard, Package, ClipboardCheck, Play } from "lucide-react";
+import videoCover from "@/assets/video-cover.png";
 import { cn } from "@/lib/utils";
 
 const waitingListSteps = [
