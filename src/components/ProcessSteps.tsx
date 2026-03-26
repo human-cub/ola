@@ -75,6 +75,44 @@ const SegmentedToggleButton = ({ isActive, onClick, label }: SegmentedToggleButt
   </button>
 );
 
+const VideoPlayer = () => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const handlePlay = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (isPlaying) {
+      video.pause();
+      setIsPlaying(false);
+    } else {
+      video.play();
+      setIsPlaying(true);
+    }
+  };
+
+  return (
+    <div className="relative max-w-md mx-auto mb-6 rounded-2xl overflow-hidden cursor-pointer group" onClick={handlePlay}>
+      <video
+        ref={videoRef}
+        src="https://gl71nzm2l7iaribb.public.blob.vercel-storage.com/ola_optimized.mp4"
+        poster={videoCover}
+        playsInline
+        preload="none"
+        className="w-full rounded-2xl"
+        onEnded={() => setIsPlaying(false)}
+      />
+      {!isPlaying && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/10 transition-opacity">
+          <div className="w-16 h-16 rounded-full bg-primary/90 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+            <Play className="w-7 h-7 text-primary-foreground ml-1" fill="currentColor" />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const ProcessSteps = () => {
   const [isWaitingList, setIsWaitingList] = useState(true);
   
