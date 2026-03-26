@@ -88,6 +88,10 @@ export const ProcessSteps = () => {
             ¿Cómo Funciona?
           </h2>
           <div className="w-20 h-1 bg-gradient-primary mx-auto rounded-full mb-6"></div>
+
+          {/* Video Player */}
+          <VideoPlayer />
+
           
           {/* Segmented Toggle - centered in viewport, ignoring parent padding */}
           <div className="max-w-[640px] md:mx-auto -mx-2 sm:w-auto flex bg-muted rounded-full p-1 gap-1">
