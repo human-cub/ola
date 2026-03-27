@@ -188,38 +188,42 @@ const VideoPlayer = () => {
           </div>
 
           {/* Buttons */}
-          <div className="flex items-center justify-center gap-6">
-            <button onClick={skip(-5)} className="text-white/90 hover:text-white transition-colors">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M11.5 19a8.5 8.5 0 1 0 0-17 8.5 8.5 0 0 0 0 17Z" />
-                <path d="m3 3 3.5 3.5" />
-                <text x="7" y="14" fontSize="7" fill="currentColor" stroke="none" fontWeight="bold">5</text>
-              </svg>
-            </button>
+          <div className="flex items-center">
+            <div className="flex-1" />
+            <div className="flex items-center gap-6">
+              <button onClick={skip(-5)} className="text-white/90 hover:text-white transition-colors">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12.5 5a8.5 8.5 0 1 0 8.5 8.5" />
+                  <polyline points="12.5 2 12.5 5 9.5 5" />
+                  <text x="8" y="15" fontSize="8" fill="currentColor" stroke="none" fontWeight="bold">5</text>
+                </svg>
+              </button>
 
-            <button onClick={handlePlayPause} className="text-white/90 hover:text-white transition-colors">
-              {isPlaying ? (
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
-              ) : (
-                <Play className="w-5 h-5" fill="currentColor" />
-              )}
-            </button>
+              <button onClick={(e) => { e.stopPropagation(); handlePlayPause(); }} className="text-white/90 hover:text-white transition-colors">
+                {isPlaying ? (
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+                ) : (
+                  <Play className="w-5 h-5" fill="currentColor" />
+                )}
+              </button>
 
-            <button onClick={skip(5)} className="text-white/90 hover:text-white transition-colors">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12.5 19a8.5 8.5 0 1 1 0-17 8.5 8.5 0 0 1 0 17Z" />
-                <path d="m21 3-3.5 3.5" />
-                <text x="8.5" y="14" fontSize="7" fill="currentColor" stroke="none" fontWeight="bold">5</text>
-              </svg>
-            </button>
-
-            <button onClick={toggleMute} className="text-white/90 hover:text-white transition-colors ml-2">
-              {isMuted ? (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
-              ) : (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
-              )}
-            </button>
+              <button onClick={skip(5)} className="text-white/90 hover:text-white transition-colors">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M11.5 5a8.5 8.5 0 1 1-8.5 8.5" />
+                  <polyline points="11.5 2 11.5 5 14.5 5" />
+                  <text x="8" y="15" fontSize="8" fill="currentColor" stroke="none" fontWeight="bold">5</text>
+                </svg>
+              </button>
+            </div>
+            <div className="flex-1 flex justify-end">
+              <button onClick={toggleMute} className="text-white/90 hover:text-white transition-colors">
+                {isMuted ? (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+                ) : (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}
