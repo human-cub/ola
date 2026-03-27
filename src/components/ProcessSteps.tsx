@@ -183,16 +183,16 @@ const VideoPlayer = () => {
           onClick={(e) => e.stopPropagation()}
         >
           {/* Progress bar */}
-          <div className="w-full h-1.5 bg-white/30 rounded-full mb-2 cursor-pointer" onClick={handleProgressClick}>
+          <div className="w-full h-2 bg-white/30 rounded-full mb-3 cursor-pointer" onClick={handleProgressClick}>
             <div className="h-full bg-primary rounded-full transition-all duration-150" style={{ width: `${progress}%` }} />
           </div>
 
           {/* Buttons */}
           <div className="flex items-center">
             <div className="flex-1" />
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-7">
               <button onClick={skip(-5)} className="text-white/90 hover:text-white transition-colors">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" stroke="none">
                   <path d="M11.99 5V1l-5 5 5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6h-2c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>
                   <text x="12" y="15.5" fontSize="7.5" textAnchor="middle" fontWeight="bold" fontFamily="Arial">5</text>
                 </svg>
@@ -200,14 +200,14 @@ const VideoPlayer = () => {
 
               <button onClick={(e) => { e.stopPropagation(); handlePlayPause(); }} className="text-white/90 hover:text-white transition-colors">
                 {isPlaying ? (
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
                 ) : (
-                  <Play className="w-5 h-5" fill="currentColor" />
+                  <Play className="w-7 h-7" fill="currentColor" />
                 )}
               </button>
 
               <button onClick={skip(5)} className="text-white/90 hover:text-white transition-colors">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" stroke="none">
                   <path d="M12.01 5V1l5 5-5 5V7c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6h2c0 4.42-3.58 8-8 8s-8-3.58-8-8 3.58-8 8-8z"/>
                   <text x="12" y="15.5" fontSize="7.5" textAnchor="middle" fontWeight="bold" fontFamily="Arial">5</text>
                 </svg>
@@ -216,9 +216,9 @@ const VideoPlayer = () => {
             <div className="flex-1 flex justify-end">
               <button onClick={toggleMute} className="text-white/90 hover:text-white transition-colors">
                 {isMuted ? (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
                 ) : (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
                 )}
               </button>
             </div>
