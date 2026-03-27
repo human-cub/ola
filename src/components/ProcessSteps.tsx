@@ -177,7 +177,7 @@ const VideoPlayer = () => {
       {(isPlaying || progress > 0) && (
         <div
           className={cn(
-            "absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent px-3 pb-2 pt-6 transition-opacity duration-300",
+            "absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-4 pb-3 pt-8 transition-opacity duration-300",
             (showControls || !isPlaying) ? "opacity-100" : "opacity-0"
           )}
           onClick={(e) => e.stopPropagation()}
