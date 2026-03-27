@@ -78,8 +78,12 @@ const SegmentedToggleButton = ({ isActive, onClick, label }: SegmentedToggleButt
 const VideoPlayer = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [showControls, setShowControls] = useState(false);
+  const controlsTimeout = useRef<ReturnType<typeof setTimeout>>(null);
 
-  const handlePlay = () => {
+  const handlePlayPause = () => {
     const video = videoRef.current;
     if (!video) return;
     if (isPlaying) {
@@ -88,20 +92,65 @@ const VideoPlayer = () => {
     } else {
       video.play();
       setIsPlaying(true);
+      showControlsTemporarily();
     }
   };
 
+  const showControlsTemporarily = () => {
+    setShowControls(true);
+    if (controlsTimeout.current) clearTimeout(controlsTimeout.current);
+    controlsTimeout.current = setTimeout(() => setShowControls(false), 3000);
+  };
+
+  const handleTimeUpdate = () => {
+    const video = videoRef.current;
+    if (!video || !video.duration) return;
+    setProgress((video.currentTime / video.duration) * 100);
+  };
+
+  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    const video = videoRef.current;
+    if (!video) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    video.currentTime = (x / rect.width) * video.duration;
+  };
+
+  const skip = (seconds: number) => (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const video = videoRef.current;
+    if (!video) return;
+    video.currentTime = Math.max(0, Math.min(video.duration, video.currentTime + seconds));
+    showControlsTemporarily();
+  };
+
+  const toggleMute = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const video = videoRef.current;
+    if (!video) return;
+    video.muted = !video.muted;
+    setIsMuted(video.muted);
+    showControlsTemporarily();
+  };
+
   return (
-    <div className="relative max-w-md mx-auto mb-6 rounded-2xl overflow-hidden cursor-pointer group" onClick={handlePlay}>
+    <div
+      className="relative max-w-md mx-auto mb-6 rounded-2xl overflow-hidden cursor-pointer group"
+      onClick={() => { if (isPlaying) showControlsTemporarily(); else handlePlayPause(); }}
+    >
       <video
         ref={videoRef}
         src="https://gl71nzm2l7iaribb.public.blob.vercel-storage.com/ola_optimized.mp4"
         playsInline
         preload="none"
         className="w-full rounded-2xl"
-        onEnded={() => setIsPlaying(false)}
+        onTimeUpdate={handleTimeUpdate}
+        onEnded={() => { setIsPlaying(false); setProgress(0); }}
       />
-      {!isPlaying && (
+
+      {/* Cover overlay */}
+      {!isPlaying && progress === 0 && (
         <>
           <div
             className="absolute inset-0 rounded-2xl bg-no-repeat bg-cover"
@@ -113,6 +162,66 @@ const VideoPlayer = () => {
             </div>
           </div>
         </>
+      )}
+
+      {/* Paused overlay (after started) */}
+      {!isPlaying && progress > 0 && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+          <div className="w-14 h-14 rounded-full bg-primary/90 flex items-center justify-center shadow-lg" onClick={handlePlayPause}>
+            <Play className="w-6 h-6 text-primary-foreground ml-0.5" fill="currentColor" />
+          </div>
+        </div>
+      )}
+
+      {/* Controls bar */}
+      {(isPlaying || progress > 0) && (
+        <div
+          className={cn(
+            "absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent px-3 pb-2 pt-6 transition-opacity duration-300",
+            (showControls || !isPlaying) ? "opacity-100" : "opacity-0"
+          )}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Progress bar */}
+          <div className="w-full h-1.5 bg-white/30 rounded-full mb-2 cursor-pointer" onClick={handleProgressClick}>
+            <div className="h-full bg-primary rounded-full transition-all duration-150" style={{ width: `${progress}%` }} />
+          </div>
+
+          {/* Buttons */}
+          <div className="flex items-center justify-center gap-6">
+            <button onClick={skip(-5)} className="text-white/90 hover:text-white transition-colors">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M11.5 19a8.5 8.5 0 1 0 0-17 8.5 8.5 0 0 0 0 17Z" />
+                <path d="m3 3 3.5 3.5" />
+                <text x="7" y="14" fontSize="7" fill="currentColor" stroke="none" fontWeight="bold">5</text>
+              </svg>
+            </button>
+
+            <button onClick={handlePlayPause} className="text-white/90 hover:text-white transition-colors">
+              {isPlaying ? (
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+              ) : (
+                <Play className="w-5 h-5" fill="currentColor" />
+              )}
+            </button>
+
+            <button onClick={skip(5)} className="text-white/90 hover:text-white transition-colors">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12.5 19a8.5 8.5 0 1 1 0-17 8.5 8.5 0 0 1 0 17Z" />
+                <path d="m21 3-3.5 3.5" />
+                <text x="8.5" y="14" fontSize="7" fill="currentColor" stroke="none" fontWeight="bold">5</text>
+              </svg>
+            </button>
+
+            <button onClick={toggleMute} className="text-white/90 hover:text-white transition-colors ml-2">
+              {isMuted ? (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+              ) : (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+              )}
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
