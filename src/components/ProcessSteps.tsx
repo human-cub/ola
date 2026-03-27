@@ -136,7 +136,7 @@ const VideoPlayer = () => {
 
   return (
     <div
-      className="relative max-w-md mx-auto mb-6 rounded-2xl overflow-hidden cursor-pointer group"
+      className="relative max-w-md md:max-w-sm mx-auto mb-6 rounded-2xl overflow-hidden cursor-pointer group"
       onClick={handlePlayPause}
     >
       <video
