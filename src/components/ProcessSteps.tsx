@@ -192,10 +192,9 @@ const VideoPlayer = () => {
             <div className="flex-1" />
             <div className="flex items-center gap-6">
               <button onClick={skip(-5)} className="text-white/90 hover:text-white transition-colors">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12.5 5a8.5 8.5 0 1 0 8.5 8.5" />
-                  <polyline points="12.5 2 12.5 5 9.5 5" />
-                  <text x="8" y="15" fontSize="8" fill="currentColor" stroke="none" fontWeight="bold">5</text>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                  <path d="M11.99 5V1l-5 5 5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6h-2c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>
+                  <text x="12" y="15.5" fontSize="7.5" textAnchor="middle" fontWeight="bold" fontFamily="Arial">5</text>
                 </svg>
               </button>
 
@@ -208,10 +207,9 @@ const VideoPlayer = () => {
               </button>
 
               <button onClick={skip(5)} className="text-white/90 hover:text-white transition-colors">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M11.5 5a8.5 8.5 0 1 1-8.5 8.5" />
-                  <polyline points="11.5 2 11.5 5 14.5 5" />
-                  <text x="8" y="15" fontSize="8" fill="currentColor" stroke="none" fontWeight="bold">5</text>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                  <path d="M12.01 5V1l5 5-5 5V7c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6h2c0 4.42-3.58 8-8 8s-8-3.58-8-8 3.58-8 8-8z"/>
+                  <text x="12" y="15.5" fontSize="7.5" textAnchor="middle" fontWeight="bold" fontFamily="Arial">5</text>
                 </svg>
               </button>
             </div>
