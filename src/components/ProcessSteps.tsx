@@ -137,7 +137,7 @@ const VideoPlayer = () => {
   return (
     <div
       className="relative max-w-md mx-auto mb-6 rounded-2xl overflow-hidden cursor-pointer group"
-      onClick={() => { if (isPlaying) showControlsTemporarily(); else handlePlayPause(); }}
+      onClick={handlePlayPause}
     >
       <video
         ref={videoRef}
