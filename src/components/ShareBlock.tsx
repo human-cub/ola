@@ -16,7 +16,7 @@ interface ShareBlockProps {
 
 export const ShareBlock = ({ showQR = false }: ShareBlockProps) => {
   const handleShare = () => {
-    amplitude.track('Share', { method: 'native' });
+    amplitude.track('Referral Shared', { method: 'native' });
     if (navigator.share) {
       navigator.share({ text: SHARE_TEXT }).catch(() => {});
     } else {
