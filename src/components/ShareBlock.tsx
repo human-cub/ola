@@ -1,5 +1,6 @@
 import { Copy } from 'lucide-react';
 import { toast } from 'sonner';
+import * as amplitude from "@amplitude/analytics-browser";
 import instagramIcon from '../assets/instagram-icon-new.png';
 import { ShareIcon } from './icons/ShareIcon';
 import { WhatsAppIcon } from './icons/WhatsAppIcon';
