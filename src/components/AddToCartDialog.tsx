@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Copy } from "lucide-react";
 import { formatPrice } from "@/lib/formatting";
+import * as amplitude from "@amplitude/analytics-browser";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
