@@ -255,7 +255,7 @@ export const AddToCartDialog = ({
                 <Button
                   variant="outline"
                   onClick={() => {
-                    amplitude.track('WhatsApp Click', { source: 'add_to_cart_success', product_name: productName });
+                    amplitude.track('Whatsapp Opened', { source: 'add_to_cart_success', product_name: productName });
                     window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
                   }}
                   className="w-full py-2.5"
