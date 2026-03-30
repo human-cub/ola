@@ -1,5 +1,6 @@
 import { ShareBlock } from './ShareBlock';
 import { WhatsAppIcon } from './icons/WhatsAppIcon';
+import * as amplitude from "@amplitude/analytics-browser";
 
 export const ServiceDescription = () => {
   return (
