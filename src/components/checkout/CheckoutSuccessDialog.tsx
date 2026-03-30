@@ -8,6 +8,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Check, Share2, MessageCircle, FileText } from "lucide-react";
+import * as amplitude from "@amplitude/analytics-browser";
 import { toast } from "sonner";
 import { formatPrice } from "@/lib/formatting";
 
