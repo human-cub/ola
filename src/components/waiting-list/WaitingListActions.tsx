@@ -33,7 +33,7 @@ export const WaitingListActions = ({
   if (isCollectionEnded) {
     return (
       <div className="flex flex-col gap-3">
-        <Button onClick={() => { amplitude.track('Continue to Checkout', { source: 'waiting_list' }); onContinueToCheckout(); }} className="w-full gap-2" size="lg">
+        <Button onClick={() => { amplitude.track('CTA Clicked', { button_label: 'Continuar con la compra', source: 'waiting_list' }); onContinueToCheckout(); }} className="w-full gap-2" size="lg">
           <ArrowRight className="w-4 h-4" />
           Continuar con la compra
         </Button>
