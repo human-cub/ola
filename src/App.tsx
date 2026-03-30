@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+import * as amplitude from "@amplitude/analytics-browser";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -44,7 +46,21 @@ const DynamicProductGuard = () => {
 
 const queryClient = new QueryClient();
 
-const App = () => (
+const App = () => {
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('utm_source')) {
+      amplitude.track('UTM Visit', {
+        utm_source: params.get('utm_source'),
+        utm_medium: params.get('utm_medium'),
+        utm_campaign: params.get('utm_campaign'),
+        utm_term: params.get('utm_term'),
+        utm_content: params.get('utm_content'),
+      });
+    }
+  }, []);
+
+  return (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
@@ -76,6 +92,7 @@ const App = () => (
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;
