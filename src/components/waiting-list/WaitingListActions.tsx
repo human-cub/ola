@@ -3,6 +3,7 @@ import { Separator } from "@/components/ui/separator";
 import { ArrowRight, ShoppingCart, Check } from "lucide-react";
 import { formatPrice } from "@/lib/formatting";
 import { ShareBlock } from "@/components/ShareBlock";
+import * as amplitude from "@amplitude/analytics-browser";
 
 interface WaitingListActionsProps {
   isCollectionEnded: boolean;
