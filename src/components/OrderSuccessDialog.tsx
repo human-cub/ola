@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import * as amplitude from "@amplitude/analytics-browser";
 import {
   AlertDialog,
   AlertDialogContent,
