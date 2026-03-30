@@ -139,7 +139,7 @@ function useGroupBuyBlock(prices: PriceData[], productName: string, productId: s
   }, [nextCollectiveClose, serverOffsetMs]);
 
   const handleBuyNow = () => {
-    amplitude.track('Buy Now Click', { source: 'group_buy_block' });
+    amplitude.track('CTA Clicked', { button_label: 'Comprar ahora', source: 'group_buy_block' });
     setIsWaitingList(false);
     setDialogOpen(true);
   };

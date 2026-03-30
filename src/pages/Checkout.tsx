@@ -95,7 +95,8 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
     items,
     clearItems: isCollective ? clearWaitingList : clearCart,
     onSuccess: (data) => {
-      amplitude.track('Checkout Complete', {
+      amplitude.track('CTA Clicked', {
+        button_label: 'Finalizar pedido',
         order_number: data.orderNumber,
         order_id: data.orderId,
         total: data.total,

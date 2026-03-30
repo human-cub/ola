@@ -63,7 +63,7 @@ export const WaitingListActions = ({
       </Button>
 
       <Button
-        onClick={() => { amplitude.track('Buy Now Click', { source: 'waiting_list', total: buyNowTotal }); onBuyNow(); }}
+        onClick={() => { amplitude.track('CTA Clicked', { button_label: 'Comprar ahora', source: 'waiting_list', total: buyNowTotal }); onBuyNow(); }}
         variant="outline"
         className="w-full gap-2"
         size="lg"
