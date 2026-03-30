@@ -13,6 +13,7 @@ import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import { Separator } from "@/components/ui/separator";
 import { AddressForm } from "@/components/AddressForm";
 import { useScrollHeader } from "@/hooks/useScrollHeader";
+import * as amplitude from "@amplitude/analytics-browser";
 import { useCheckoutProfile } from "@/hooks/useCheckoutProfile";
 import { useCheckoutPricing } from "@/hooks/useCheckoutPricing";
 import { useCheckoutSubmit } from "@/hooks/useCheckoutSubmit";
