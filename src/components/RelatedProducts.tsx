@@ -106,7 +106,7 @@ export const RelatedProducts = ({ currentProduct = "" }: RelatedProductsProps) =
           {otherProducts.map((product) => (
             <button
               key={product.id}
-              onClick={() => handleProductClick(product.link)}
+              onClick={() => handleProductClick(product.link, product.name)}
               className="block group w-full text-left max-w-[360px] h-full"
             >
               <Card className="p-4 bg-gradient-card shadow-soft hover:shadow-elegant transition-all duration-300 group-hover:scale-[1.01] w-full h-full max-w-[360px] border border-primary">
