@@ -106,7 +106,7 @@ async function hasPendingConflict(
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
-function useGroupBuyBlock(prices: PriceData[]) {
+function useGroupBuyBlock(prices: PriceData[], productName: string, productId: string) {
   const navigate = useNavigate();
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0 });
   const [dialogOpen, setDialogOpen] = useState(false);

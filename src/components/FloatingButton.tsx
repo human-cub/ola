@@ -73,7 +73,7 @@ async function hasPendingConflict(
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
-function useFloatingButton(prices: PriceData[]) {
+function useFloatingButton(prices: PriceData[], productName: string, productId: string) {
   const navigate = useNavigate();
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0 });
   const [dialogOpen, setDialogOpen] = useState(false);
