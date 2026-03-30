@@ -36,6 +36,7 @@ export const CheckoutSuccessDialog = ({
   const navigate = useNavigate();
 
   const handleNativeShare = async () => {
+    amplitude.track('Share', { method: 'native', source: 'checkout_success' });
     if (navigator.share) {
       try {
         await navigator.share({ text: SHARE_TEXT });
