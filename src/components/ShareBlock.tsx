@@ -37,7 +37,7 @@ export const ShareBlock = ({ showQR = false }: ShareBlockProps) => {
   };
 
   const handleCopyLink = () => {
-    amplitude.track('Share', { method: 'copy_link' });
+    amplitude.track('Referral Shared', { method: 'copy_link' });
     navigator.clipboard.writeText(SHARE_URL);
     toast.success("¡Enlace copiado!");
   };
