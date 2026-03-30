@@ -297,8 +297,7 @@ const CompletarDatosColectiva = () => {
         }
       }
 
-      amplitude.track('CTA Clicked', {
-        button_label: 'Listo',
+      amplitude.track('List Joined', {
         has_existing_order: hasExistingOrder,
         items_count: waitingListItems?.length || 0,
       });
