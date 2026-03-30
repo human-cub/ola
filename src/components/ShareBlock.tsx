@@ -31,7 +31,7 @@ export const ShareBlock = ({ showQR = false }: ShareBlockProps) => {
   };
 
   const handleCopyInvitation = () => {
-    amplitude.track('Share', { method: 'copy_invitation' });
+    amplitude.track('Referral Shared', { method: 'copy_invitation' });
     navigator.clipboard.writeText(SHARE_TEXT);
     toast.success("¡Invitación copiada!");
   };
