@@ -106,7 +106,7 @@ async function hasPendingConflict(
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
-function useGroupBuyBlock(prices: PriceData[]) {
+function useGroupBuyBlock(prices: PriceData[], productName: string, productId: string) {
   const navigate = useNavigate();
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0 });
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -145,7 +145,7 @@ function useGroupBuyBlock(prices: PriceData[]) {
   };
 
   const handleWaitForDiscount = async () => {
-    amplitude.track('Wait for Discount Click', { source: 'group_buy_block' });
+    amplitude.track('List Joined', { list_name: productName, list_id: productId });
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user && await hasPendingConflict(
       session.user.id,
@@ -235,7 +235,7 @@ export const GroupBuyPriceBlock = ({
     handleBuyNow,
     handleWaitForDiscount,
     goToWaitingList,
-  } = useGroupBuyBlock(priceData);
+  } = useGroupBuyBlock(priceData, productName, productId);
 
   useEffect(() => {
     setDisplayWaitingCount(waitingCount);
