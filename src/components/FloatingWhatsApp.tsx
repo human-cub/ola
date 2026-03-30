@@ -1,10 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { useLocation, useMatch } from "react-router-dom";
+import * as amplitude from "@amplitude/analytics-browser";
 
 export const FloatingWhatsApp = () => {
   const location = useLocation();
 
   const handleWhatsAppClick = () => {
+    amplitude.track('WhatsApp Click', { source: 'floating_button', page: location.pathname });
     window.open("http://wa.me/5491166650878", "_blank");
   };
 
