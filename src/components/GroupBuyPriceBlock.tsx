@@ -235,7 +235,7 @@ export const GroupBuyPriceBlock = ({
     handleBuyNow,
     handleWaitForDiscount,
     goToWaitingList,
-  } = useGroupBuyBlock(priceData);
+  } = useGroupBuyBlock(priceData, productName, productId);
 
   useEffect(() => {
     setDisplayWaitingCount(waitingCount);

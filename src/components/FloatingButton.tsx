@@ -271,7 +271,7 @@ export const FloatingButton = ({
     handleBuyNow,
     handleWaitForDiscount,
     goToWaitingList,
-  } = useFloatingButton(prices);
+  } = useFloatingButton(prices, productName, productId);
 
   return (
     <>
