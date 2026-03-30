@@ -53,7 +53,7 @@ export const WaitingListActions = ({
   return (
     <div className="flex flex-col gap-3">
       <Button
-        onClick={onCompletarDatos}
+        onClick={() => { amplitude.track('Complete Info Click', { has_existing_order: hasExistingOrder, profile_completed: profileCompleted }); onCompletarDatos(); }}
         className={`w-full gap-2 ${hasExistingOrder && profileCompleted ? "bg-white text-primary hover:bg-white/90 border border-primary" : ""}`}
         size="lg"
         variant={hasExistingOrder && profileCompleted ? "outline" : "default"}
