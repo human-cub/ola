@@ -33,7 +33,7 @@ export const WaitingListActions = ({
   if (isCollectionEnded) {
     return (
       <div className="flex flex-col gap-3">
-        <Button onClick={() => { amplitude.track('Continue to Checkout', { source: 'waiting_list' }); onContinueToCheckout(); }} className="w-full gap-2" size="lg">
+        <Button onClick={() => { amplitude.track('CTA Clicked', { button_label: 'Continuar con la compra', source: 'waiting_list' }); onContinueToCheckout(); }} className="w-full gap-2" size="lg">
           <ArrowRight className="w-4 h-4" />
           Continuar con la compra
         </Button>
@@ -53,7 +53,7 @@ export const WaitingListActions = ({
   return (
     <div className="flex flex-col gap-3">
       <Button
-        onClick={() => { amplitude.track('Complete Info Click', { has_existing_order: hasExistingOrder, profile_completed: profileCompleted }); onCompletarDatos(); }}
+        onClick={() => { amplitude.track('CTA Clicked', { button_label: 'Completar información', has_existing_order: hasExistingOrder, profile_completed: profileCompleted }); onCompletarDatos(); }}
         className={`w-full gap-2 ${hasExistingOrder && profileCompleted ? "bg-white text-primary hover:bg-white/90 border border-primary" : ""}`}
         size="lg"
         variant={hasExistingOrder && profileCompleted ? "outline" : "default"}
@@ -63,7 +63,7 @@ export const WaitingListActions = ({
       </Button>
 
       <Button
-        onClick={() => { amplitude.track('Buy Now Click', { source: 'waiting_list', total: buyNowTotal }); onBuyNow(); }}
+        onClick={() => { amplitude.track('CTA Clicked', { button_label: 'Comprar ahora', source: 'waiting_list', total: buyNowTotal }); onBuyNow(); }}
         variant="outline"
         className="w-full gap-2"
         size="lg"

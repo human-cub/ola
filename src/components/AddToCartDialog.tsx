@@ -184,7 +184,8 @@ export const AddToCartDialog = ({
         });
       }
 
-      amplitude.track(isWaitingList ? 'Add to Waiting List' : 'Add to Cart', {
+      amplitude.track('CTA Clicked', {
+        button_label: isWaitingList ? 'Agregar a Lista de Espera' : 'Agregar al Carrito',
         product_id: productId,
         product_name: productName,
         flavor: selectedFlavor || "",

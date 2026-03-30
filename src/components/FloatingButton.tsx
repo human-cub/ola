@@ -106,7 +106,7 @@ function useFloatingButton(prices: PriceData[], productName: string, productId: 
   }, [nextCollectiveClose, serverOffsetMs]);
 
   const handleBuyNow = () => {
-    amplitude.track('Buy Now Click', { source: 'floating_button' });
+    amplitude.track('CTA Clicked', { button_label: 'Comprar ahora', source: 'floating_button' });
     setIsWaitingList(false);
     setDialogOpen(true);
   };
