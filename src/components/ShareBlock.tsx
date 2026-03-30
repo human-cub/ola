@@ -16,7 +16,7 @@ interface ShareBlockProps {
 
 export const ShareBlock = ({ showQR = false }: ShareBlockProps) => {
   const handleShare = () => {
-    amplitude.track('Share', { method: 'native' });
+    amplitude.track('Referral Shared', { method: 'native' });
     if (navigator.share) {
       navigator.share({ text: SHARE_TEXT }).catch(() => {});
     } else {
@@ -26,18 +26,18 @@ export const ShareBlock = ({ showQR = false }: ShareBlockProps) => {
   };
 
   const handleWhatsApp = () => {
-    amplitude.track('Share', { method: 'whatsapp' });
+    amplitude.track('Referral Shared', { method: 'whatsapp' });
     window.open(`https://wa.me/?text=${encodeURIComponent(SHARE_TEXT)}`, '_blank');
   };
 
   const handleCopyInvitation = () => {
-    amplitude.track('Share', { method: 'copy_invitation' });
+    amplitude.track('Referral Shared', { method: 'copy_invitation' });
     navigator.clipboard.writeText(SHARE_TEXT);
     toast.success("¡Invitación copiada!");
   };
 
   const handleCopyLink = () => {
-    amplitude.track('Share', { method: 'copy_link' });
+    amplitude.track('Referral Shared', { method: 'copy_link' });
     navigator.clipboard.writeText(SHARE_URL);
     toast.success("¡Enlace copiado!");
   };

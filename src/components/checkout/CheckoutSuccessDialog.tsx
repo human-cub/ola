@@ -36,7 +36,7 @@ export const CheckoutSuccessDialog = ({
   const navigate = useNavigate();
 
   const handleNativeShare = async () => {
-    amplitude.track('Share', { method: 'native', source: 'checkout_success' });
+    amplitude.track('Referral Shared', { method: 'native', source: 'checkout_success' });
     if (navigator.share) {
       try {
         await navigator.share({ text: SHARE_TEXT });
@@ -53,7 +53,7 @@ export const CheckoutSuccessDialog = ({
   };
 
   const handleWhatsAppShare = () => {
-    amplitude.track('Share', { method: 'whatsapp', source: 'checkout_success' });
+    amplitude.track('Referral Shared', { method: 'whatsapp', source: 'checkout_success' });
     window.open(`https://wa.me/?text=${encodeURIComponent(SHARE_TEXT)}`, '_blank');
   };
 
