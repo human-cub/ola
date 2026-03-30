@@ -56,7 +56,7 @@ export const OrderSuccessDialog = ({
   };
 
   const handleWhatsAppShare = () => {
-    amplitude.track('WhatsApp Click', { source: 'order_success' });
+    amplitude.track('Whatsapp Opened', { source: 'order_success' });
     const text = encodeURIComponent(getShareText());
     window.open(`https://wa.me/?text=${text}`, '_blank');
   };
