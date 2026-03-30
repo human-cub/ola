@@ -48,6 +48,7 @@ const OrderDetail = () => {
   };
 
   const handleReportProblem = () => {
+    amplitude.track('WhatsApp Click', { source: 'order_report_problem', order_number: order?.order_number || '' });
     const message = `Hola! Tengo un problema con mi pedido ${order?.order_number}`;
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank');
   };
