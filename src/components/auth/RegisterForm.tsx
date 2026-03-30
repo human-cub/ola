@@ -71,7 +71,7 @@ export const RegisterForm = () => {
         return;
       }
 
-      amplitude.track('CTA Clicked', { button_label: 'Crear Cuenta', method: 'email' });
+      amplitude.track('Sign Up', { button_label: 'Crear Cuenta', method: 'email' });
       setEmailSent(true);
 
       // Send welcome email (fire and forget)
