@@ -85,7 +85,7 @@ export const RelatedProducts = ({ currentProduct = "" }: RelatedProductsProps) =
   }, [currentProduct, products]);
 
   const handleProductClick = (productLink: string, productName: string) => {
-    amplitude.track('Product Click', { product_name: productName, source: 'related_products' });
+    amplitude.track('Product Viewed', { product_name: productName, source: 'related_products' });
     sessionStorage.setItem('scrollTarget', 'product-photos');
     window.location.href = productLink;
   };
