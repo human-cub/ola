@@ -26,7 +26,7 @@ export const ShareBlock = ({ showQR = false }: ShareBlockProps) => {
   };
 
   const handleWhatsApp = () => {
-    amplitude.track('Share', { method: 'whatsapp' });
+    amplitude.track('Referral Shared', { method: 'whatsapp' });
     window.open(`https://wa.me/?text=${encodeURIComponent(SHARE_TEXT)}`, '_blank');
   };
 
