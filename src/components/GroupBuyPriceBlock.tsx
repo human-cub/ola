@@ -1,5 +1,6 @@
 import { useState, useEffect, type CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
+import * as amplitude from "@amplitude/analytics-browser";
 import { Users, Sparkles, Timer, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {

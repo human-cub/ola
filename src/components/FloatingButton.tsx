@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import * as amplitude from "@amplitude/analytics-browser";
 import { Clock, ShoppingCart, Timer, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
