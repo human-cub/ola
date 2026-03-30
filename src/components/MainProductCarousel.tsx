@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import * as amplitude from "@amplitude/analytics-browser";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CarouselArrowButton } from "@/components/ui/carousel-arrow-button";
