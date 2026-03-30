@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
+import * as amplitude from "@amplitude/analytics-browser";
 
 interface RelatedProductsProps {
   currentProduct?: string;
@@ -83,7 +84,8 @@ export const RelatedProducts = ({ currentProduct = "" }: RelatedProductsProps) =
     return shuffled.slice(0, 3);
   }, [currentProduct, products]);
 
-  const handleProductClick = (productLink: string) => {
+  const handleProductClick = (productLink: string, productName: string) => {
+    amplitude.track('Product Click', { product_name: productName, source: 'related_products' });
     sessionStorage.setItem('scrollTarget', 'product-photos');
     window.location.href = productLink;
   };
@@ -104,7 +106,7 @@ export const RelatedProducts = ({ currentProduct = "" }: RelatedProductsProps) =
           {otherProducts.map((product) => (
             <button
               key={product.id}
-              onClick={() => handleProductClick(product.link)}
+              onClick={() => handleProductClick(product.link, product.name)}
               className="block group w-full text-left max-w-[360px] h-full"
             >
               <Card className="p-4 bg-gradient-card shadow-soft hover:shadow-elegant transition-all duration-300 group-hover:scale-[1.01] w-full h-full max-w-[360px] border border-primary">

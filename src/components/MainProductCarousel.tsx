@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import * as amplitude from "@amplitude/analytics-browser";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CarouselArrowButton } from "@/components/ui/carousel-arrow-button";
@@ -123,7 +124,7 @@ export const MainProductCarousel = () => {
                   {products.map((product) => (
                     <div key={product.id} className="grow-0 shrink-0 basis-[calc(100%/var(--slides))]">
                       <div className="flex justify-center px-3 h-full">
-                        <a href={product.link}>
+                        <a href={product.link} onClick={() => amplitude.track('Product Click', { product_name: product.name, source: 'main_carousel' })}>
                           <Card
                             className={cn(
                               "p-6 shadow-soft border border-1 border-transparent bg-gradient-card w-full max-w-sm cursor-pointer transition-all duration-300 ease-out h-full min-w-[280px]",
