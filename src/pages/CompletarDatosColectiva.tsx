@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import * as amplitude from "@amplitude/analytics-browser";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -296,6 +297,10 @@ const CompletarDatosColectiva = () => {
         }
       }
 
+      amplitude.track('Confirm Group Purchase', {
+        has_existing_order: hasExistingOrder,
+        items_count: waitingListItems?.length || 0,
+      });
       toast.success("¡Datos guardados correctamente!", { id: loadingToastId });
       navigate("/lista-espera", { replace: true });
     } catch (error: any) {
