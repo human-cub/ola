@@ -1,5 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import * as amplitude from "@amplitude/analytics-browser";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Package, Clock, Truck, CheckCircle, XCircle, MessageCircle } from "lucide-react";
