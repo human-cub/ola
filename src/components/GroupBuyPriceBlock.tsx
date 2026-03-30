@@ -138,11 +138,13 @@ function useGroupBuyBlock(prices: PriceData[]) {
   }, [nextCollectiveClose, serverOffsetMs]);
 
   const handleBuyNow = () => {
+    amplitude.track('Buy Now Click', { source: 'group_buy_block' });
     setIsWaitingList(false);
     setDialogOpen(true);
   };
 
   const handleWaitForDiscount = async () => {
+    amplitude.track('Wait for Discount Click', { source: 'group_buy_block' });
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user && await hasPendingConflict(
       session.user.id,

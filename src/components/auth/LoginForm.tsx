@@ -76,6 +76,7 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
         return;
       }
 
+      amplitude.track('Login', { method: 'email' });
       toast.success("¡Bienvenido/a!");
       onSuccess();
     } catch (error: any) {

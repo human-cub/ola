@@ -53,6 +53,7 @@ export const CheckoutSuccessDialog = ({
   };
 
   const handleWhatsAppShare = () => {
+    amplitude.track('Share', { method: 'whatsapp', source: 'checkout_success' });
     window.open(`https://wa.me/?text=${encodeURIComponent(SHARE_TEXT)}`, '_blank');
   };
 

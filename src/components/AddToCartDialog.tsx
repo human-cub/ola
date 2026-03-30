@@ -184,6 +184,15 @@ export const AddToCartDialog = ({
         });
       }
 
+      amplitude.track(isWaitingList ? 'Add to Waiting List' : 'Add to Cart', {
+        product_id: productId,
+        product_name: productName,
+        flavor: selectedFlavor || "",
+        quantity,
+        price_per_unit: pricePerUnit,
+        total_price: totalPrice,
+      });
+
       setSuccess(true);
       if (!isWaitingList) {
         setTimeout(() => {

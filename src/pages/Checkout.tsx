@@ -95,6 +95,13 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
     items,
     clearItems: isCollective ? clearWaitingList : clearCart,
     onSuccess: (data) => {
+      amplitude.track('Checkout Complete', {
+        order_number: data.orderNumber,
+        order_id: data.orderId,
+        total: data.total,
+        order_type: isCollective ? 'collective' : 'immediate',
+        items_count: items.length,
+      });
       setOrderNumber(data.orderNumber);
       setOrderId(data.orderId);
       setFinalTotal(data.total);
