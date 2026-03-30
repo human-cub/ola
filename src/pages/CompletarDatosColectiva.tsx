@@ -298,7 +298,6 @@ const CompletarDatosColectiva = () => {
       }
 
       amplitude.track('Confirm Group Purchase', {
-        is_new_order: isNewOrder,
         has_existing_order: hasExistingOrder,
         items_count: waitingListItems?.length || 0,
       });
