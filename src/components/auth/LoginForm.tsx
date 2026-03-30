@@ -76,7 +76,7 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
         return;
       }
 
-      amplitude.track('CTA Clicked', { button_label: 'Iniciar Sesión', method: 'email' });
+      amplitude.track('Login', { button_label: 'Iniciar Sesión', method: 'email' });
       toast.success("¡Bienvenido/a!");
       onSuccess();
     } catch (error: any) {
