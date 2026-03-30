@@ -1,5 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import * as amplitude from "@amplitude/analytics-browser";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Package, Clock, Truck, CheckCircle, XCircle, MessageCircle } from "lucide-react";
@@ -47,6 +48,7 @@ const OrderDetail = () => {
   };
 
   const handleReportProblem = () => {
+    amplitude.track('WhatsApp Click', { source: 'order_report_problem', order_number: order?.order_number || '' });
     const message = `Hola! Tengo un problema con mi pedido ${order?.order_number}`;
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank');
   };

@@ -1,5 +1,6 @@
 import { ShareBlock } from './ShareBlock';
 import { WhatsAppIcon } from './icons/WhatsAppIcon';
+import * as amplitude from "@amplitude/analytics-browser";
 
 export const ServiceDescription = () => {
   return (
@@ -68,7 +69,7 @@ export const ServiceDescription = () => {
                 <div className="flex justify-center">
                   <button 
                     onClick={() => {
-                      console.log("Bottom WhatsApp button clicked");
+                      amplitude.track('WhatsApp Click', { source: 'service_description' });
                       window.open("http://wa.me/5491166650878", "_blank");
                     }}
                     className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium transition-colors"
