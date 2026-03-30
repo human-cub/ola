@@ -145,7 +145,7 @@ function useGroupBuyBlock(prices: PriceData[]) {
   };
 
   const handleWaitForDiscount = async () => {
-    amplitude.track('Wait for Discount Click', { source: 'group_buy_block' });
+    amplitude.track('List Joined', { list_name: productName, list_id: productId });
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user && await hasPendingConflict(
       session.user.id,

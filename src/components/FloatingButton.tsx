@@ -112,7 +112,7 @@ function useFloatingButton(prices: PriceData[]) {
   };
 
   const handleWaitForDiscount = async () => {
-    amplitude.track('Wait for Discount Click', { source: 'floating_button' });
+    amplitude.track('List Joined', { list_name: productName, list_id: productId });
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user && await hasPendingConflict(
       session.user.id,
