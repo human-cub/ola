@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Copy } from "lucide-react";
 import { formatPrice } from "@/lib/formatting";
+import * as amplitude from "@amplitude/analytics-browser";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -182,6 +183,15 @@ export const AddToCartDialog = ({
           product_image: productImage,
         });
       }
+
+      amplitude.track(isWaitingList ? 'Add to Waiting List' : 'Add to Cart', {
+        product_id: productId,
+        product_name: productName,
+        flavor: selectedFlavor || "",
+        quantity,
+        price_per_unit: pricePerUnit,
+        total_price: totalPrice,
+      });
 
       setSuccess(true);
       if (!isWaitingList) {

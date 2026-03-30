@@ -13,6 +13,7 @@ import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import { Separator } from "@/components/ui/separator";
 import { AddressForm } from "@/components/AddressForm";
 import { useScrollHeader } from "@/hooks/useScrollHeader";
+import * as amplitude from "@amplitude/analytics-browser";
 import { useCheckoutProfile } from "@/hooks/useCheckoutProfile";
 import { useCheckoutPricing } from "@/hooks/useCheckoutPricing";
 import { useCheckoutSubmit } from "@/hooks/useCheckoutSubmit";
@@ -94,6 +95,13 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
     items,
     clearItems: isCollective ? clearWaitingList : clearCart,
     onSuccess: (data) => {
+      amplitude.track('Checkout Complete', {
+        order_number: data.orderNumber,
+        order_id: data.orderId,
+        total: data.total,
+        order_type: isCollective ? 'collective' : 'immediate',
+        items_count: items.length,
+      });
       setOrderNumber(data.orderNumber);
       setOrderId(data.orderId);
       setFinalTotal(data.total);

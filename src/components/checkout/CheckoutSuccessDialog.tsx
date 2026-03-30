@@ -8,6 +8,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Check, Share2, MessageCircle, FileText } from "lucide-react";
+import * as amplitude from "@amplitude/analytics-browser";
 import { toast } from "sonner";
 import { formatPrice } from "@/lib/formatting";
 
@@ -35,6 +36,7 @@ export const CheckoutSuccessDialog = ({
   const navigate = useNavigate();
 
   const handleNativeShare = async () => {
+    amplitude.track('Share', { method: 'native', source: 'checkout_success' });
     if (navigator.share) {
       try {
         await navigator.share({ text: SHARE_TEXT });
@@ -51,6 +53,7 @@ export const CheckoutSuccessDialog = ({
   };
 
   const handleWhatsAppShare = () => {
+    amplitude.track('Share', { method: 'whatsapp', source: 'checkout_success' });
     window.open(`https://wa.me/?text=${encodeURIComponent(SHARE_TEXT)}`, '_blank');
   };
 

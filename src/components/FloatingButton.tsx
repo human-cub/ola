@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import * as amplitude from "@amplitude/analytics-browser";
 import { Clock, ShoppingCart, Timer, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -105,11 +106,13 @@ function useFloatingButton(prices: PriceData[]) {
   }, [nextCollectiveClose, serverOffsetMs]);
 
   const handleBuyNow = () => {
+    amplitude.track('Buy Now Click', { source: 'floating_button' });
     setIsWaitingList(false);
     setDialogOpen(true);
   };
 
   const handleWaitForDiscount = async () => {
+    amplitude.track('Wait for Discount Click', { source: 'floating_button' });
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user && await hasPendingConflict(
       session.user.id,

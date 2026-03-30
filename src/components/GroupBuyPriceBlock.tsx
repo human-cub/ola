@@ -1,5 +1,6 @@
 import { useState, useEffect, type CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
+import * as amplitude from "@amplitude/analytics-browser";
 import { Users, Sparkles, Timer, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -138,11 +139,13 @@ function useGroupBuyBlock(prices: PriceData[]) {
   }, [nextCollectiveClose, serverOffsetMs]);
 
   const handleBuyNow = () => {
+    amplitude.track('Buy Now Click', { source: 'group_buy_block' });
     setIsWaitingList(false);
     setDialogOpen(true);
   };
 
   const handleWaitForDiscount = async () => {
+    amplitude.track('Wait for Discount Click', { source: 'group_buy_block' });
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user && await hasPendingConflict(
       session.user.id,

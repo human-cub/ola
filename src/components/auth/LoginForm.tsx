@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import * as amplitude from "@amplitude/analytics-browser";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -75,6 +76,7 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
         return;
       }
 
+      amplitude.track('Login', { method: 'email' });
       toast.success("¡Bienvenido/a!");
       onSuccess();
     } catch (error: any) {

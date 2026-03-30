@@ -1,5 +1,6 @@
 import { Copy } from 'lucide-react';
 import { toast } from 'sonner';
+import * as amplitude from "@amplitude/analytics-browser";
 import instagramIcon from '../assets/instagram-icon-new.png';
 import { ShareIcon } from './icons/ShareIcon';
 import { WhatsAppIcon } from './icons/WhatsAppIcon';
@@ -15,6 +16,7 @@ interface ShareBlockProps {
 
 export const ShareBlock = ({ showQR = false }: ShareBlockProps) => {
   const handleShare = () => {
+    amplitude.track('Share', { method: 'native' });
     if (navigator.share) {
       navigator.share({ text: SHARE_TEXT }).catch(() => {});
     } else {
@@ -24,15 +26,18 @@ export const ShareBlock = ({ showQR = false }: ShareBlockProps) => {
   };
 
   const handleWhatsApp = () => {
+    amplitude.track('Share', { method: 'whatsapp' });
     window.open(`https://wa.me/?text=${encodeURIComponent(SHARE_TEXT)}`, '_blank');
   };
 
   const handleCopyInvitation = () => {
+    amplitude.track('Share', { method: 'copy_invitation' });
     navigator.clipboard.writeText(SHARE_TEXT);
     toast.success("¡Invitación copiada!");
   };
 
   const handleCopyLink = () => {
+    amplitude.track('Share', { method: 'copy_link' });
     navigator.clipboard.writeText(SHARE_URL);
     toast.success("¡Enlace copiado!");
   };

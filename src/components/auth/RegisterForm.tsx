@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import * as amplitude from "@amplitude/analytics-browser";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -70,6 +71,7 @@ export const RegisterForm = () => {
         return;
       }
 
+      amplitude.track('Sign Up', { method: 'email' });
       setEmailSent(true);
 
       // Send welcome email (fire and forget)
