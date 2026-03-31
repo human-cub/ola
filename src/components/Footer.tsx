@@ -123,7 +123,7 @@ export const Footer = ({ isHomePage = false }: FooterProps) => {
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
                   >
-                    <img src={instagramIcon} alt="Instagram" className="w-5 h-5" />
+                    <img src={instagramIcon} alt="Instagram" className="w-5 h-5" loading="lazy" decoding="async" />
                     @ola.unity
                   </a>
                 </div>

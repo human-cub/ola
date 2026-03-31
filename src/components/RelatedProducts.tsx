@@ -117,6 +117,8 @@ export const RelatedProducts = ({ currentProduct = "" }: RelatedProductsProps) =
                       src={product.image}
                       alt={product.name}
                       className="w-full h-full object-contain p-1"
+                      loading="lazy"
+                      decoding="async"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
                         target.style.display = 'none';

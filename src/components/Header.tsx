@@ -53,7 +53,7 @@ export const Header = ({ isVisible }: HeaderProps) => {
             onClick={handleHomeClick}
           >
             <div className="w-10 h-10 flex items-center justify-center">
-              <img src={olaLogo} alt="Ola Wave Logo" className="w-8 h-8 object-contain" />
+              <img src={olaLogo} alt="Ola Wave Logo" className="w-8 h-8 object-contain" loading="eager" decoding="async" />
             </div>
             <span className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
               Ola!

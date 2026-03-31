@@ -40,6 +40,8 @@ export const OrderItemsCard = ({
                 src={item.product_image}
                 alt={item.product_name}
                 className="w-16 h-16 object-cover rounded-lg"
+                loading="lazy"
+                decoding="async"
               />
             )}
             <div className="flex-1">

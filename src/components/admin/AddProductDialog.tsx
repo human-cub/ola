@@ -240,6 +240,8 @@ const AddProductDialog = ({ onProductAdded }: AddProductDialogProps) => {
                       src={url}
                       alt={`Imagen ${index + 1}`}
                       className="w-20 h-20 object-cover rounded-lg border"
+                      loading="lazy"
+                      decoding="async"
                     />
                     <button
                       type="button"

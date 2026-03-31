@@ -300,6 +300,8 @@ export const AddToCartDialog = ({
                   src={productImage}
                   alt={productName}
                   className="w-20 h-20 object-cover rounded-lg"
+                  loading="lazy"
+                  decoding="async"
                 />
               )}
               <div className="flex-1">

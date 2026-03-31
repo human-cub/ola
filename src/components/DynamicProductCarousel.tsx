@@ -191,6 +191,8 @@ export const DynamicProductCarousel = ({ images, productName }: DynamicProductCa
                         src={image}
                         alt={`${productName} - Imagen ${index + 1}`}
                         className="max-w-full max-h-[80vh] h-full object-contain"
+                        loading="lazy"
+                        decoding="async"
                       />
                     </div>
                   </CarouselItem>
