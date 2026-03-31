@@ -66,7 +66,9 @@ const ForgotPassword = () => {
               <img 
                 src="/lovable-uploads/f61342f0-4c86-4d5f-8e4a-6f6380460a50.png" 
                 alt="Ola Logo" 
-                className="w-12 h-12" 
+                className="w-12 h-12"
+                loading="eager"
+                decoding="async"
               />
             </div>
             <CardTitle className="text-2xl">¿Olvidaste tu contraseña?</CardTitle>

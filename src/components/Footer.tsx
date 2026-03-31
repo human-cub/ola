@@ -28,7 +28,7 @@ export const Footer = ({ isHomePage = false }: FooterProps) => {
         <nav className="mb-6">
           <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-2">
             <Link to="/" className="flex items-center gap-1 hover:opacity-80 transition-opacity">
-              <img src={olaLogo} alt="Ola Wave Logo" className="w-6 h-6 object-contain" />
+              <img src={olaLogo} alt="Ola Wave Logo" className="w-6 h-6 object-contain" loading="lazy" decoding="async" />
               <span className="text-lg font-bold bg-gradient-primary bg-clip-text text-transparent">
                 Ola!
               </span>
@@ -123,7 +123,7 @@ export const Footer = ({ isHomePage = false }: FooterProps) => {
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
                   >
-                    <img src={instagramIcon} alt="Instagram" className="w-5 h-5" />
+                    <img src={instagramIcon} alt="Instagram" className="w-5 h-5" loading="lazy" decoding="async" />
                     @ola.unity
                   </a>
                 </div>

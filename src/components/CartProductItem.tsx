@@ -49,6 +49,8 @@ export const CartProductItem = ({
               src={productImage}
               alt={productName}
               className="w-full h-full object-contain"
+              loading="lazy"
+              decoding="async"
             />
           </div>
         )}

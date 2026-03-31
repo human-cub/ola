@@ -206,6 +206,8 @@ export const OrderDetailDialog = ({ order, onClose, onNotesUpdated }: OrderDetai
                           src={item.product_image}
                           alt={item.product_name}
                           className="w-12 h-12 object-cover rounded"
+                          loading="lazy"
+                          decoding="async"
                         />
                       )}
                       <div className="flex-1">

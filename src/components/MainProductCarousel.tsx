@@ -138,6 +138,10 @@ export const MainProductCarousel = () => {
                                   src={product.image}
                                   alt={product.name}
                                   className="w-full h-full object-contain rounded-xl"
+                                  loading="lazy"
+                                  decoding="async"
+                                  width={400}
+                                  height={400}
                                   onError={(e) => {
                                     const target = e.target as HTMLImageElement;
                                     target.style.display = 'none';

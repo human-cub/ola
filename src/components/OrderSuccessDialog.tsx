@@ -153,7 +153,7 @@ export const OrderSuccessDialog = ({
             rel="noopener noreferrer"
             className="gradient-border flex items-center justify-center gap-2 w-full rounded-md py-2.5 px-4 text-sm font-medium"
           >
-            <img src={instagramIcon} alt="Instagram" className="h-5 w-5 flex-shrink-0" />
+            <img src={instagramIcon} alt="Instagram" className="h-5 w-5 flex-shrink-0" loading="lazy" decoding="async" />
             <span>Seguinos en Instagram</span>
           </a>
 

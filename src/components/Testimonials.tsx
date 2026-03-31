@@ -149,6 +149,8 @@ export const Testimonials = () => {
                         src={t.avatar}
                         alt={t.name}
                         className="w-full h-full object-cover"
+                        loading="lazy"
+                        decoding="async"
                       />
                     </div>
                   </div>

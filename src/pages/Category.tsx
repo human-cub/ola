@@ -106,6 +106,10 @@ const Category = () => {
                         src={firstImage}
                         alt={product.name}
                         className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                        decoding="async"
+                        width={400}
+                        height={400}
                       />
                     </div>
                     <div className="p-4 space-y-2">
