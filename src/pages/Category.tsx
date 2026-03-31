@@ -29,11 +29,78 @@ const categoryLabels: Record<string, string> = {
   vitaminas: "Vitaminas y minerales",
 };
 
+const DEFAULT_TITLE = "Ola! - Suplementos Deportivos | Precio Mayorista en Argentina";
+const DEFAULT_DESCRIPTION = "Comprá suplementos deportivos al precio mayorista en Argentina. Proteínas whey, creatina, aminoácidos y más. Envío el mismo día en CABA y GBA. ¡Sin riesgos, pagás al recibir!";
+
+const CATEGORY_META: Record<string, { title: string; description: string }> = {
+  proteinas: {
+    title: "Proteínas Whey al Precio Mayorista | Ola! Argentina",
+    description: "Compra proteínas whey, isolate y concentrado al precio de mayorista en Argentina. ENA, Mervick, Gold Nutrition. Envío en CABA y GBA el mismo día.",
+  },
+  creatinas: {
+    title: "Creatina al Precio Mayorista | Ola! Suplementos Argentina",
+    description: "Creatina monohidratada y micronizada al precio mayorista. Mejor precio garantizado. Entrega en CABA y GBA.",
+  },
+  aminoacidos: {
+    title: "Aminoácidos al Precio Mayorista | Ola! Argentina",
+    description: "BCAAs, glutamina y aminoácidos esenciales al precio de mayorista. Marcas líderes con envío express en Buenos Aires.",
+  },
+  aumentadores: {
+    title: "Ganadores de Masa al Precio Mayorista | Ola! Argentina",
+    description: "Mass gainers y aumentadores de masa muscular al precio mayorista. Hasta 50% de descuento vs precio minorista.",
+  },
+  barras: {
+    title: "Barras y Snacks Proteicos Mayorista | Ola! Argentina",
+    description: "Barras proteicas y snacks saludables al precio mayorista. Mervick Protein Bar y más. Envío en CABA y GBA.",
+  },
+  "pre-entrenos": {
+    title: "Pre-Entrenos al Precio Mayorista | Ola! Argentina",
+    description: "Pre-workout y pre-entrenos al precio mayorista en Argentina. Beta alanina, cafeína y complejos energéticos.",
+  },
+  colageno: {
+    title: "Colágeno Hidrolizado al Precio Mayorista | Ola! Argentina",
+    description: "Colágeno hidrolizado y peptídico al precio mayorista. Gold Nutrition y más marcas. Envío el mismo día en CABA.",
+  },
+  vitaminas: {
+    title: "Vitaminas y Minerales al Precio Mayorista | Ola! Argentina",
+    description: "ZMA, vitamina C, magnesio y multivitamínicos al precio mayorista. Star Nutrition y más marcas en Argentina.",
+  },
+};
+
 const Category = () => {
   const { category } = useParams<{ category: string }>();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const headerVisible = useScrollHeader();
+
+  useEffect(() => {
+    if (!category) return;
+    const meta = CATEGORY_META[category];
+    const title = meta?.title || DEFAULT_TITLE;
+    const description = meta?.description || DEFAULT_DESCRIPTION;
+    const canonical = `https://alaola.com.ar/categoria/${category}`;
+
+    document.title = title;
+
+    let descTag = document.querySelector('meta[name="description"]');
+    if (descTag) descTag.setAttribute("content", description);
+
+    let canonicalTag = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+    if (canonicalTag) {
+      canonicalTag.href = canonical;
+    } else {
+      canonicalTag = document.createElement("link");
+      canonicalTag.rel = "canonical";
+      canonicalTag.href = canonical;
+      document.head.appendChild(canonicalTag);
+    }
+
+    return () => {
+      document.title = DEFAULT_TITLE;
+      if (descTag) descTag.setAttribute("content", DEFAULT_DESCRIPTION);
+      if (canonicalTag) canonicalTag.href = "https://alaola.com.ar/";
+    };
+  }, [category]);
 
   useEffect(() => {
     const fetchProducts = async () => {
