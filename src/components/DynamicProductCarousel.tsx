@@ -102,6 +102,8 @@ export const DynamicProductCarousel = ({ images, productName }: DynamicProductCa
                             src={image}
                             alt={`${productName} Thumbnail ${index + 1}`}
                             className="w-full h-full object-contain bg-white rounded-lg max-h-full"
+                            loading="lazy"
+                            decoding="async"
                           />
                         </button>
                       </CarouselItem>
