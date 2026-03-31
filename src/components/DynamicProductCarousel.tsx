@@ -123,6 +123,8 @@ export const DynamicProductCarousel = ({ images, productName }: DynamicProductCa
                           src={image}
                           alt={`${productName} - Imagen ${index + 1}`}
                           className="w-full max-w-[280px] h-auto object-contain rounded-xl cursor-pointer hover:opacity-90 transition-opacity max-h-full"
+                          loading="lazy"
+                          decoding="async"
                           onClick={() => setSelectedIndex(index)}
                         />
                       </div>
