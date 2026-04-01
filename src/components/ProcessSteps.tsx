@@ -141,7 +141,7 @@ const VideoPlayer = () => {
     >
       <video
         ref={videoRef}
-        src="https://gl71nzm2l7iaribb.public.blob.vercel-storage.com/ola_optimized.mp4"
+        src="https://gl71nzm2l7iaribb.public.blob.vercel-storage.com/ola_optimized_b.mp4"
         playsInline
         preload="none"
         className="w-full rounded-2xl"
