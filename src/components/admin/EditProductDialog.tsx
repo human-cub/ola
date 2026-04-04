@@ -205,8 +205,9 @@ const EditProductDialog = ({ product, open, onOpenChange, onProductUpdated }: Ed
     if (priceValues.length !== 5 || priceValues.some(isNaN)) {
       throw new Error("Debe ingresar 5 precios válidos separados por espacios");
     }
-    const tiers = [1, 25, 50, 75, 100];
-    return tiers.map((people, i) => ({ people, price: priceValues[i] }));
+    // Preserve existing people thresholds from the product — only update price values
+    const existingTiers = product?.prices?.map(p => p.people) ?? [1, 1, 6, 18, 42];
+    return existingTiers.map((people, i) => ({ people, price: priceValues[i] }));
   };
 
   const generateSlug = (name: string, weight: string): string => {
@@ -408,7 +409,7 @@ const EditProductDialog = ({ product, open, onOpenChange, onProductUpdated }: Ed
               onChange={(e) => setFormData({ ...formData, prices: e.target.value })}
             />
             <p className="text-xs text-muted-foreground">
-              De mayor a menor: 1 → 25 → 50 → 75 → 100
+              Tiers actuales: {product?.prices?.map(p => p.people).join(" → ") || "—"}
             </p>
           </div>
 
