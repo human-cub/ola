@@ -280,7 +280,7 @@ export const GroupBuyPriceBlock = ({
     const t3 = progressTiers[3].people; // 42
     const segWidth = 100 / 3;
 
-    if (waitingCount <= t1) {
+    if (displayWaitingCount <= t1) {
       visualProgress = ((displayWaitingCount - t0) / Math.max(1, t1 - t0)) * segWidth;
     } else if (displayWaitingCount <= t2) {
       visualProgress = segWidth + ((displayWaitingCount - t1) / Math.max(1, t2 - t1)) * segWidth;

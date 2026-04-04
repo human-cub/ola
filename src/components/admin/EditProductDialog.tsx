@@ -409,7 +409,7 @@ const EditProductDialog = ({ product, open, onOpenChange, onProductUpdated }: Ed
               onChange={(e) => setFormData({ ...formData, prices: e.target.value })}
             />
             <p className="text-xs text-muted-foreground">
-              De mayor a menor: 1 → 25 → 50 → 75 → 100
+              Tiers actuales: {product?.prices?.map(p => p.people).join(" → ") || "—"}
             </p>
           </div>
 
