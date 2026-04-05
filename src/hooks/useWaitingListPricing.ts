@@ -90,7 +90,19 @@ export const useWaitingListPricing = ({
   const getCurrentPrice = (productId: string, userQty: number): number => {
     if (isCollectionEnded && frozenOrderData) {
       const frozenItem = frozenOrderData.items.find(i => i.product_id === productId);
-      if (frozenItem) return frozenItem.price_per_unit;
+      if (frozenItem) {
+        // Even for frozen orders, apply promo bonus
+        if (promoTierBonus > 0) {
+          const prod = productData[productId];
+          if (prod && prod.prices.length > 1) {
+            const matchIndex = prod.prices.findIndex(t => t.price === frozenItem.price_per_unit);
+            const baseTierIndex = matchIndex >= 0 ? matchIndex : 0;
+            const effectiveIndex = getPromoTierIndex(baseTierIndex, promoTierBonus, prod.prices.length);
+            return prod.prices[effectiveIndex]?.price ?? frozenItem.price_per_unit;
+          }
+        }
+        return frozenItem.price_per_unit;
+      }
     }
     const prod = productData[productId];
     if (!prod || prod.prices.length === 0) return 0;
@@ -102,16 +114,30 @@ export const useWaitingListPricing = ({
       ? prod.total_orders_count
       : prod.total_orders_count + userQty;
 
-    if (totalParticipants < secondTierThreshold) return secondTierPrice;
+    if (totalParticipants < secondTierThreshold) {
+      // Before second tier threshold, base is second tier price
+      if (promoTierBonus > 0 && prod.prices.length > 1) {
+        const baseTierIndex = 1; // second tier
+        const effectiveIndex = getPromoTierIndex(baseTierIndex, promoTierBonus, prod.prices.length);
+        return prod.prices[effectiveIndex]?.price ?? secondTierPrice;
+      }
+      return secondTierPrice;
+    }
 
-    let currentPrice = secondTierPrice;
+    let currentTierIndex = 1;
     for (let i = prod.prices.length - 1; i >= 0; i--) {
       if (totalParticipants >= prod.prices[i].people) {
-        currentPrice = prod.prices[i].price;
+        currentTierIndex = i;
         break;
       }
     }
-    return currentPrice;
+
+    if (promoTierBonus > 0) {
+      const effectiveIndex = getPromoTierIndex(currentTierIndex, promoTierBonus, prod.prices.length);
+      return prod.prices[effectiveIndex]?.price ?? prod.prices[currentTierIndex].price;
+    }
+
+    return prod.prices[currentTierIndex].price;
   };
 
   const getUserQtyForProduct = (productId: string): number => {
@@ -159,7 +185,7 @@ export const useWaitingListPricing = ({
       currentDiscount: full - sub,
       estimatedDiscount: full - est,
     };
-  }, [waitingListItems, productData, isCollectionEnded, frozenOrderData, hasExistingOrder]);
+  }, [waitingListItems, productData, isCollectionEnded, frozenOrderData, hasExistingOrder, promoTierBonus]);
 
   const getBuyNowTotal = (): number => {
     return waitingListItems.reduce((sum, item) => {
