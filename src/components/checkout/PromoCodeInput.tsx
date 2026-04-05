@@ -74,7 +74,7 @@ export const PromoCodeInput = ({ appliedPromo, onApply, onRemove }: PromoCodeInp
         <Input
           value={code}
           onChange={(e) => { setCode(e.target.value.toUpperCase()); setError(""); }}
-          placeholder="Ej: SUMMER2026"
+          placeholder="Código promocional"
           className="font-mono flex-1"
         />
         <Button
