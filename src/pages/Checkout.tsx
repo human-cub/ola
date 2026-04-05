@@ -191,6 +191,12 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
 
               <Separator className="mb-6" />
 
+              <PromoCodeInput
+                appliedPromo={appliedPromo}
+                onApply={setAppliedPromo}
+                onRemove={() => setAppliedPromo(null)}
+              />
+
               <CheckoutPriceSummary
                 fullPrice={fullPrice}
                 discount={discount}
