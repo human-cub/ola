@@ -22,8 +22,7 @@ interface ProductPriceData {
  * capped at tier index 4 (0-based index 3, which is the 4th tier).
  */
 function getPromoTierIndex(currentTierIndex: number, tierBonus: number, maxTiers: number): number {
-  const maxIndex = Math.min(maxTiers - 1, 3); // max tier 4 (index 3)
-  return Math.min(currentTierIndex + tierBonus, maxIndex);
+  return Math.min(currentTierIndex + tierBonus, maxTiers - 1);
 }
 
 export function useCheckoutPricing(

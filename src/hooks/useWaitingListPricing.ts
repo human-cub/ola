@@ -33,8 +33,7 @@ interface WaitingListPricingParams {
 }
 
 function getPromoTierIndex(currentTierIndex: number, tierBonus: number, maxTiers: number): number {
-  const maxIndex = Math.min(maxTiers - 1, 3);
-  return Math.min(currentTierIndex + tierBonus, maxIndex);
+  return Math.min(currentTierIndex + tierBonus, maxTiers - 1);
 }
 
 export const useWaitingListPricing = ({
