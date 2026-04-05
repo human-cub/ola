@@ -8,6 +8,7 @@ import ProductsTable from "@/components/admin/ProductsTable";
 import OrdersTable from "@/components/admin/OrdersTable";
 import UsersTable from "@/components/admin/UsersTable";
 import UserOrdersTable from "@/components/admin/UserOrdersTable";
+import PromoCodesTable from "@/components/admin/PromoCodesTable";
 import { getAllProducts } from "@/data/products";
 
 const Admin = () => {
@@ -111,10 +112,11 @@ const Admin = () => {
         </div>
 
         <Tabs defaultValue="userorders" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="userorders">Pedidos</TabsTrigger>
             <TabsTrigger value="products">Productos</TabsTrigger>
             <TabsTrigger value="users">Usuarios</TabsTrigger>
+            <TabsTrigger value="promos">Promos</TabsTrigger>
           </TabsList>
           <TabsContent value="userorders">
             <UserOrdersTable />
@@ -124,6 +126,9 @@ const Admin = () => {
           </TabsContent>
           <TabsContent value="users">
             <UsersTable />
+          </TabsContent>
+          <TabsContent value="promos">
+            <PromoCodesTable />
           </TabsContent>
         </Tabs>
       </div>
