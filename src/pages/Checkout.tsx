@@ -22,6 +22,7 @@ import { CheckoutOrderSummary } from "@/components/checkout/CheckoutOrderSummary
 import { CheckoutContactForm } from "@/components/checkout/CheckoutContactForm";
 import { CheckoutPaymentForm } from "@/components/checkout/CheckoutPaymentForm";
 import { CheckoutPriceSummary } from "@/components/checkout/CheckoutPriceSummary";
+import { PromoCodeInput } from "@/components/checkout/PromoCodeInput";
 
 const checkoutSchema = z.object({
   firstName: z.string().trim().min(1, "El nombre es requerido").max(100),
@@ -56,6 +57,7 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
   const [orderId, setOrderId] = useState("");
   const [finalTotal, setFinalTotal] = useState(0);
   const [deliveryZone, setDeliveryZone] = useState<'caba' | 'gba' | 'other'>('caba');
+  const [appliedPromo, setAppliedPromo] = useState<{ code: string; tier_bonus: number } | null>(null);
 
   const form = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutSchema),
@@ -84,7 +86,7 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
   useCheckoutProfile(form, isCollective);
 
   const { subtotal, fullPrice, discount, deliveryCost, total } =
-    useCheckoutPricing(items, deliveryZone);
+    useCheckoutPricing(items, deliveryZone, appliedPromo?.tier_bonus ?? 0, isCollective);
 
   const { loading, handleSubmit } = useCheckoutSubmit({
     isCollective,
@@ -188,6 +190,12 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
               <CheckoutPaymentForm form={form} />
 
               <Separator className="mb-6" />
+
+              <PromoCodeInput
+                appliedPromo={appliedPromo}
+                onApply={setAppliedPromo}
+                onRemove={() => setAppliedPromo(null)}
+              />
 
               <CheckoutPriceSummary
                 fullPrice={fullPrice}
