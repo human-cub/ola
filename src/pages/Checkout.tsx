@@ -57,6 +57,7 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
   const [orderId, setOrderId] = useState("");
   const [finalTotal, setFinalTotal] = useState(0);
   const [deliveryZone, setDeliveryZone] = useState<'caba' | 'gba' | 'other'>('caba');
+  const [appliedPromo, setAppliedPromo] = useState<{ code: string; tier_bonus: number } | null>(null);
 
   const form = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutSchema),
