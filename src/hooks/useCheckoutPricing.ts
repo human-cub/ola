@@ -64,9 +64,9 @@ export function useCheckoutPricing(
       fullPrice += firstTierPrice * item.quantity;
 
       if (promoTierBonus > 0 && tiers.length > 1) {
-        // For "Comprar Ahora" (immediate): base tier = 0 (first tier)
+        // For "Comprar Ahora" (immediate): base tier = 1 (buy now price, not retail)
         // For "Sumate al grupo" (collective): base tier = current item price tier
-        let baseTierIndex = 0;
+        let baseTierIndex = 1;
 
         if (isCollective) {
           // Find which tier the current price corresponds to
