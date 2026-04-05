@@ -12,6 +12,8 @@ import { CartProductItem } from "@/components/CartProductItem";
 import { useScrollHeader } from "@/hooks/useScrollHeader";
 import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import { CartSummary } from "@/components/cart/CartSummary";
+import { PromoCodeInput } from "@/components/checkout/PromoCodeInput";
+import { useCheckoutPricing } from "@/hooks/useCheckoutPricing";
 
 const Cart = () => {
   const navigate = useNavigate();
@@ -28,6 +30,7 @@ const Cart = () => {
   const [productFlavors, setProductFlavors] = useState<Record<string, string[]>>({});
   const [productLinks, setProductLinks] = useState<Record<string, string>>({});
   const [productFirstPrices, setProductFirstPrices] = useState<Record<string, number>>({});
+  const [appliedPromo, setAppliedPromo] = useState<{ code: string; tier_bonus: number } | null>(null);
 
   useEffect(() => {
     const fetchProductData = async () => {
@@ -58,16 +61,12 @@ const Cart = () => {
     fetchProductData();
   }, [cartItems]);
 
-  const subtotal = cartItems.reduce(
-    (sum, item) => sum + item.price_per_unit * item.quantity,
-    0
+  const { subtotal, fullPrice, discount } = useCheckoutPricing(
+    cartItems,
+    "caba",
+    appliedPromo?.tier_bonus ?? 0,
+    false,
   );
-
-  const fullPrice = cartItems.reduce(
-    (sum, item) => sum + (productFirstPrices[item.product_id] || item.price_per_unit) * item.quantity,
-    0
-  );
-  const discount = fullPrice - subtotal;
 
   const handleQuantityChange = async (id: string, delta: number, currentQty: number) => {
     const newQty = currentQty + delta;
@@ -162,6 +161,12 @@ const Cart = () => {
               </div>
 
               <Separator className="my-6" />
+
+              <PromoCodeInput
+                appliedPromo={appliedPromo}
+                onApply={setAppliedPromo}
+                onRemove={() => setAppliedPromo(null)}
+              />
 
               <CartSummary
                 fullPrice={fullPrice}
