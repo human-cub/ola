@@ -22,6 +22,7 @@ import OrderDetail from "./pages/OrderDetail";
 import NotFound from "./pages/NotFound";
 import { FloatingWhatsApp } from "./components/FloatingWhatsApp";
 import { ScrollToTop } from "./components/ScrollToTop";
+import { CartProvider } from "./contexts/CartContext";
 
 const SHORT_LINK_REDIRECTS: Record<string, string> = {
   s1: "https://alaola.com.ar/?utm_source=offline&utm_medium=sticker&utm_campaign=gym&utm_term=12-4&utm_content=v1",
