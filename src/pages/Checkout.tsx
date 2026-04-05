@@ -86,7 +86,7 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
   useCheckoutProfile(form, isCollective);
 
   const { subtotal, fullPrice, discount, deliveryCost, total } =
-    useCheckoutPricing(items, deliveryZone);
+    useCheckoutPricing(items, deliveryZone, appliedPromo?.tier_bonus ?? 0, isCollective);
 
   const { loading, handleSubmit } = useCheckoutSubmit({
     isCollective,
