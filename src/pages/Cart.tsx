@@ -14,6 +14,7 @@ import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import { CartSummary } from "@/components/cart/CartSummary";
 import { PromoCodeInput } from "@/components/checkout/PromoCodeInput";
 import { useCheckoutPricing } from "@/hooks/useCheckoutPricing";
+import { usePromoCode } from "@/hooks/usePromoCode";
 
 const Cart = () => {
   const navigate = useNavigate();
@@ -30,7 +31,7 @@ const Cart = () => {
   const [productFlavors, setProductFlavors] = useState<Record<string, string[]>>({});
   const [productLinks, setProductLinks] = useState<Record<string, string>>({});
   const [productFirstPrices, setProductFirstPrices] = useState<Record<string, number>>({});
-  const [appliedPromo, setAppliedPromo] = useState<{ code: string; tier_bonus: number } | null>(null);
+  const { appliedPromo, setAppliedPromo, removePromo } = usePromoCode();
 
   useEffect(() => {
     const fetchProductData = async () => {
@@ -165,7 +166,7 @@ const Cart = () => {
               <PromoCodeInput
                 appliedPromo={appliedPromo}
                 onApply={setAppliedPromo}
-                onRemove={() => setAppliedPromo(null)}
+                onRemove={removePromo}
               />
 
               <CartSummary
