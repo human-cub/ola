@@ -282,6 +282,33 @@ export type Database = {
         }
         Relationships: []
       }
+      promo_codes: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          is_active: boolean
+          tier_bonus: number
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          tier_bonus?: number
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          tier_bonus?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_orders: {
         Row: {
           admin_notes: string | null
