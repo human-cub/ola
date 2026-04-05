@@ -23,6 +23,7 @@ import { CheckoutContactForm } from "@/components/checkout/CheckoutContactForm";
 import { CheckoutPaymentForm } from "@/components/checkout/CheckoutPaymentForm";
 import { CheckoutPriceSummary } from "@/components/checkout/CheckoutPriceSummary";
 import { PromoCodeInput } from "@/components/checkout/PromoCodeInput";
+import { usePromoCode } from "@/hooks/usePromoCode";
 
 const checkoutSchema = z.object({
   firstName: z.string().trim().min(1, "El nombre es requerido").max(100),
@@ -57,7 +58,7 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
   const [orderId, setOrderId] = useState("");
   const [finalTotal, setFinalTotal] = useState(0);
   const [deliveryZone, setDeliveryZone] = useState<'caba' | 'gba' | 'other'>('caba');
-  const [appliedPromo, setAppliedPromo] = useState<{ code: string; tier_bonus: number } | null>(null);
+  const { appliedPromo, setAppliedPromo, removePromo } = usePromoCode();
 
   const form = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutSchema),
