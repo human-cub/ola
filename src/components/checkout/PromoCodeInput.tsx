@@ -54,9 +54,9 @@ export const PromoCodeInput = ({ appliedPromo, onApply, onRemove }: PromoCodeInp
   if (appliedPromo) {
     return (
       <div className="mb-6">
-        <div className="flex items-center gap-2 p-3 rounded-lg border border-green-200 bg-green-50">
-          <Tag className="w-4 h-4 text-green-600" />
-          <span className="text-sm text-green-700 flex-1">
+      <div className="flex items-center gap-2 p-3 rounded-lg border border-primary/30 bg-primary/5">
+          <Tag className="w-4 h-4 text-primary" />
+          <span className="text-sm text-foreground flex-1">
             Promoción aplicada: <strong>{appliedPromo.code}</strong> — +{appliedPromo.tier_bonus} nivel{appliedPromo.tier_bonus > 1 ? "es" : ""} de precio
           </span>
           <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onRemove}>
