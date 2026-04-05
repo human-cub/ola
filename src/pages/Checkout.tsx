@@ -22,6 +22,7 @@ import { CheckoutOrderSummary } from "@/components/checkout/CheckoutOrderSummary
 import { CheckoutContactForm } from "@/components/checkout/CheckoutContactForm";
 import { CheckoutPaymentForm } from "@/components/checkout/CheckoutPaymentForm";
 import { CheckoutPriceSummary } from "@/components/checkout/CheckoutPriceSummary";
+import { PromoCodeInput } from "@/components/checkout/PromoCodeInput";
 
 const checkoutSchema = z.object({
   firstName: z.string().trim().min(1, "El nombre es requerido").max(100),
