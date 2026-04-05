@@ -67,6 +67,7 @@ const App = () => {
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <CartProvider>
         <ScrollToTop />
         <Routes>
           <Route path="/" element={<Index />} />
@@ -90,6 +91,7 @@ const App = () => {
           <Route path="*" element={<NotFound />} />
         </Routes>
         <FloatingWhatsApp />
+        </CartProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
