@@ -432,7 +432,7 @@ const UserOrdersTable = () => {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="-">-</SelectItem>
-                          {[1, 2, 3, 4, 5].map((tier) => (
+                          {[1, 2, 3, 4].map((tier) => (
                             <SelectItem key={tier} value={tier.toString()}>
                               Tier {tier}
                             </SelectItem>
