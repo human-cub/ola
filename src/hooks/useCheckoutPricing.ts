@@ -77,6 +77,16 @@ export function useCheckoutPricing(
 
         const effectiveIndex = getPromoTierIndex(baseTierIndex, promoTierBonus, tiers.length);
         const promoPrice = tiers[effectiveIndex]?.price ?? getItemPrice(item);
+        console.log('[useCheckoutPricing] promo debug:', {
+          productId: item.product_id,
+          promoTierBonus,
+          isCollective,
+          baseTierIndex,
+          effectiveIndex,
+          tiers: tiers.map(t => ({ people: t.people, price: t.price })),
+          promoPrice,
+          itemPrice: getItemPrice(item),
+        });
         subtotal += promoPrice * item.quantity;
       } else {
         subtotal += getItemPrice(item) * item.quantity;
