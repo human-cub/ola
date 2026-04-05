@@ -160,10 +160,6 @@ export const useWaitingListPricing = ({
 
   const { subtotal, fullPrice, estimatedTotal, currentDiscount, estimatedDiscount } = useMemo(() => {
     const sub = waitingListItems.reduce((sum, item) => {
-      if (isCollectionEnded && frozenOrderData) {
-        const frozen = findFrozenItem(item);
-        if (frozen) return sum + frozen.price_per_unit * item.quantity;
-      }
       const userQty = getUserQtyForProduct(item.product_id);
       const dynamicPrice = getCurrentPrice(item.product_id, userQty) || item.current_price_per_unit;
       return sum + dynamicPrice * item.quantity;
