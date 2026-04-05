@@ -339,11 +339,10 @@ export const applyPromoTier = async (
     return;
   }
 
-  // Recalculate items with new prices based on tier (1-5 maps to prices[0]-prices[4])
+  // Recalculate items with new prices based on tier (tier index maps directly to prices array)
   const updatedItems = order.items.map(item => {
     const prices = productPricesMap[item.product_id] || [];
-    const priceIndex = tier - 1;
-    const newPrice = prices[priceIndex]?.price || item.price_per_unit;
+    const newPrice = prices[tier]?.price || item.price_per_unit;
     return { ...item, price_per_unit: newPrice };
   });
 
