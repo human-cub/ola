@@ -52,19 +52,29 @@ export const WaitingListSummary = ({
           {formatPrice(fullPrice)}
         </span>
       </div>
-      <div className="flex justify-between text-sm text-green-600">
-        <span>Descuento actual:</span>
-        <span>-{formatPrice(currentDiscount)}</span>
-      </div>
+      {currentDiscount > 0 && (
+        <div className="flex justify-between text-sm text-green-600">
+          <span>Descuento actual:</span>
+          <span>-{formatPrice(currentDiscount)}</span>
+        </div>
+      )}
       <Separator />
-      <div className="flex justify-between text-sm text-primary font-medium">
-        <span>Descuento estimado:</span>
-        <span>-{formatPrice(estimatedDiscount)}</span>
-      </div>
       <div className="flex justify-between text-lg font-bold pt-2">
-        <span className="text-primary">Total estimado:</span>
-        <span className="text-primary">{formatPrice(estimatedTotal)}</span>
+        <span>Total actual:</span>
+        <span>{formatPrice(subtotal)}</span>
       </div>
+      {estimatedTotal < subtotal && (
+        <>
+          <div className="flex justify-between text-sm text-primary font-medium pt-2">
+            <span>Descuento estimado al cierre:</span>
+            <span>-{formatPrice(estimatedDiscount)}</span>
+          </div>
+          <div className="flex justify-between text-sm text-primary font-medium">
+            <span>Total estimado al cierre:</span>
+            <span>{formatPrice(estimatedTotal)}</span>
+          </div>
+        </>
+      )}
       <p className="text-xs text-muted-foreground text-center">
         El precio final se calculará al cerrar la compra colectiva el domingo 23:59
       </p>
