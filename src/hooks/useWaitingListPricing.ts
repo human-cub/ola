@@ -29,6 +29,12 @@ interface WaitingListPricingParams {
   isCollectionEnded: boolean;
   hasExistingOrder: boolean;
   frozenOrderData: FrozenOrderData | null;
+  promoTierBonus?: number;
+}
+
+function getPromoTierIndex(currentTierIndex: number, tierBonus: number, maxTiers: number): number {
+  const maxIndex = Math.min(maxTiers - 1, 3);
+  return Math.min(currentTierIndex + tierBonus, maxIndex);
 }
 
 export const useWaitingListPricing = ({
@@ -37,6 +43,7 @@ export const useWaitingListPricing = ({
   isCollectionEnded,
   hasExistingOrder,
   frozenOrderData,
+  promoTierBonus = 0,
 }: WaitingListPricingParams) => {
   const getFullPrice = (productId: string): number => {
     const prod = productData[productId];
