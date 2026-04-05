@@ -208,6 +208,7 @@ const PromoCodesTable = () => {
                 <SelectContent>
                   <SelectItem value="1">+1 tier</SelectItem>
                   <SelectItem value="2">+2 tiers</SelectItem>
+                  <SelectItem value="3">+3 tiers</SelectItem>
                 </SelectContent>
               </Select>
             </div>
