@@ -18,6 +18,7 @@ import { CountdownBanner } from "@/components/waiting-list/CountdownBanner";
 import { WaitingListSummary } from "@/components/waiting-list/WaitingListSummary";
 import { WaitingListActions } from "@/components/waiting-list/WaitingListActions";
 import { PromoCodeInput } from "@/components/checkout/PromoCodeInput";
+import { usePromoCode } from "@/hooks/usePromoCode";
 import type { PriceData } from "@/lib/types";
 
 interface ProductData {
@@ -43,7 +44,7 @@ const WaitingList = () => {
   const [productData, setProductData] = useState<Record<string, ProductData>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isMovingToCart, setIsMovingToCart] = useState(false);
-  const [appliedPromo, setAppliedPromo] = useState<{ code: string; tier_bonus: number } | null>(null);
+  const { appliedPromo, setAppliedPromo, removePromo } = usePromoCode();
 
   const { hasExistingOrder, profileCompleted, pendingOrderCreatedAt, collectiveCloseDate, frozenOrderData } =
     usePendingOrder(waitingListItems);
@@ -67,6 +68,7 @@ const WaitingList = () => {
     isCollectionEnded,
     hasExistingOrder,
     frozenOrderData,
+    promoTierBonus: appliedPromo?.tier_bonus ?? 0,
   });
 
   const groupedWaitingListItems = useMemo(() => {
