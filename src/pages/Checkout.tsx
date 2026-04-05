@@ -195,7 +195,7 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
               <PromoCodeInput
                 appliedPromo={appliedPromo}
                 onApply={setAppliedPromo}
-                onRemove={() => setAppliedPromo(null)}
+                onRemove={removePromo}
               />
 
               <CheckoutPriceSummary
