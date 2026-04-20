@@ -88,7 +88,7 @@ const AddProductDialog = ({ onProductAdded }: AddProductDialogProps) => {
     if (priceValues.length !== 5 || priceValues.some(isNaN)) {
       throw new Error("Debe ingresar 5 precios válidos separados por espacios");
     }
-    const tiers = [1, 25, 50, 75, 100];
+    const tiers = [1, 1, 6, 18, 42];
     return tiers.map((people, i) => ({ people, price: priceValues[i] }));
   };
 
