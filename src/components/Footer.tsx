@@ -10,6 +10,7 @@ interface FooterProps {
 const navItems = [
   { to: "/", label: "Inicio" },
   { to: "/catalogo", label: "Catálogo" },
+  { to: "/como-comprar", label: "Cómo Comprar" },
   { to: "/categoria/proteinas", label: "Proteínas" },
   { to: "/categoria/creatinas", label: "Creatinas" },
   { to: "/categoria/aminoacidos", label: "Aminoácidos" },
