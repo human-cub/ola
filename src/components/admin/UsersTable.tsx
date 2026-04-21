@@ -265,6 +265,7 @@ const UsersTable = () => {
                       <TableHead>Nombre</TableHead>
                       <TableHead>Teléfono</TableHead>
                       <TableHead>Registro</TableHead>
+                      <TableHead>Rol</TableHead>
                       <TableHead>Estado</TableHead>
                       <TableHead className="text-right">Acciones</TableHead>
                     </TableRow>
@@ -281,6 +282,22 @@ const UsersTable = () => {
                         <TableCell>{user.phone || "-"}</TableCell>
                         <TableCell>
                           {format(new Date(user.created_at), "dd/MM/yyyy", { locale: es })}
+                        </TableCell>
+                        <TableCell>
+                          <Select
+                            value={userRoles[user.user_id] ?? "cliente"}
+                            onValueChange={(v) => handleRoleChange(user.user_id, v as UserRole)}
+                            disabled={updatingRole === user.user_id}
+                          >
+                            <SelectTrigger className="w-32 h-8">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="cliente">Cliente</SelectItem>
+                              <SelectItem value="mayorista">Mayorista</SelectItem>
+                              <SelectItem value="admin">Admin</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </TableCell>
                         <TableCell>
                           {user.is_blocked ? (
