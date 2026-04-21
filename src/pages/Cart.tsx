@@ -163,13 +163,17 @@ const Cart = () => {
                 ))}
               </div>
 
-              <Separator className="my-6" />
+              {!isMayorista && (
+                <>
+                  <Separator className="my-6" />
 
-              <PromoCodeInput
-                appliedPromo={appliedPromo}
-                onApply={setAppliedPromo}
-                onRemove={removePromo}
-              />
+                  <PromoCodeInput
+                    appliedPromo={appliedPromo}
+                    onApply={setAppliedPromo}
+                    onRemove={removePromo}
+                  />
+                </>
+              )}
 
               <CartSummary
                 fullPrice={fullPrice}
