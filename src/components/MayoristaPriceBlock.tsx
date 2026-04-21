@@ -220,8 +220,8 @@ export const MayoristaPriceBlock = ({
 
           {success ? (
             <div className="flex flex-col items-center justify-center py-6 gap-4">
-              <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
-                <Check className="w-8 h-8 text-green-600" />
+              <div className="w-16 h-16 rounded-full bg-success/20 flex items-center justify-center">
+                <Check className="w-8 h-8 text-success" />
               </div>
               <p className="text-lg font-medium text-center">¡Producto agregado!</p>
             </div>
@@ -317,7 +317,8 @@ export const MayoristaPriceBlock = ({
                 <Button
                   type="button"
                   onClick={handleAdd}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                  className="flex-1 hover:opacity-90"
+                  style={mayoristaBgStyle}
                   disabled={submitting}
                 >
                   {submitting ? "Agregando..." : "Agregar"}
