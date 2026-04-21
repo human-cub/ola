@@ -21,6 +21,16 @@ import { useCart } from "@/contexts/CartContext";
 import { useAppSetting } from "@/hooks/useAppSetting";
 import { formatPrice } from "@/lib/formatting";
 
+const formatShortPrice = (n: number): string => {
+  if (n === 0) return "$0";
+  if (n >= 1000) {
+    const k = n / 1000;
+    const str = Number.isInteger(k) ? k.toString() : k.toFixed(1).replace(".", ",");
+    return `$${str}k`;
+  }
+  return `$${n}`;
+};
+
 interface PriceData {
   people: number;
   price: number;
