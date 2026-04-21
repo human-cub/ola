@@ -71,7 +71,7 @@ const QuienesSomos = () => {
         </div>
 
         <p className="text-foreground text-base md:text-lg text-center font-medium mb-8 leading-relaxed">
-          Sumate a Ola. Consumo consciente, precios reales y el respaldo de comprar en comunidad.
+          Sumate a la Ola. Consumo consciente, precios reales y el respaldo de comprar en comunidad.
         </p>
 
         <div className="flex justify-center">

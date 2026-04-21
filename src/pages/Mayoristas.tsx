@@ -138,7 +138,7 @@ const Mayoristas = () => {
           <ul className="space-y-3 ml-2">
             <li className="text-foreground">
               <span className="font-semibold">Mínimo de compra:</span>{" "}
-              <span className="text-muted-foreground">$300.000</span>
+              <span className="text-muted-foreground">$200.000</span>
             </li>
             <li className="text-foreground">
               <span className="font-semibold">Entrega:</span>{" "}

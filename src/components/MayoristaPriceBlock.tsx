@@ -44,7 +44,7 @@ interface MayoristaPriceBlockProps {
   priceData: PriceData[];
 }
 
-const DEFAULT_MIN_ORDER = 300000;
+const DEFAULT_MIN_ORDER = 200000;
 
 export const MayoristaPriceBlock = ({
   productName,
