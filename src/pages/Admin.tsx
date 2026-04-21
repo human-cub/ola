@@ -118,7 +118,7 @@ const Admin = () => {
             <TabsTrigger value="products">Productos</TabsTrigger>
             <TabsTrigger value="users">Usuarios</TabsTrigger>
             <TabsTrigger value="promos">Promos</TabsTrigger>
-            <TabsTrigger value="settings">Configuración</TabsTrigger>
+            <TabsTrigger value="settings">Mayorista</TabsTrigger>
           </TabsList>
           <TabsContent value="userorders">
             <UserOrdersTable />

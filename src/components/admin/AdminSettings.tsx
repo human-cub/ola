@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import WholesaleLeadsTable from "@/components/admin/WholesaleLeadsTable";
 
 const MAYORISTA_MIN_KEY = "mayorista_min_order";
 
@@ -57,30 +58,41 @@ export const AdminSettings = () => {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Configuración Mayorista</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4 max-w-md">
-        <div className="space-y-2">
-          <Label htmlFor="min-order">Monto mínimo de pedido mayorista (ARS)</Label>
-          <Input
-            id="min-order"
-            type="number"
-            min={0}
-            step={1000}
-            value={minOrder}
-            onChange={(e) => setMinOrder(e.target.value)}
-          />
-          <p className="text-xs text-muted-foreground">
-            Los usuarios con rol Mayorista necesitan alcanzar este monto para poder finalizar el pedido.
-          </p>
-        </div>
-        <Button onClick={handleSave} disabled={saving}>
-          {saving ? "Guardando..." : "Guardar"}
-        </Button>
-      </CardContent>
-    </Card>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Configuración Mayorista</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 max-w-md">
+          <div className="space-y-2">
+            <Label htmlFor="min-order">Monto mínimo de pedido mayorista (ARS)</Label>
+            <Input
+              id="min-order"
+              type="number"
+              min={0}
+              step={1000}
+              value={minOrder}
+              onChange={(e) => setMinOrder(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Los usuarios con rol Mayorista necesitan alcanzar este monto para poder finalizar el pedido.
+            </p>
+          </div>
+          <Button onClick={handleSave} disabled={saving}>
+            {saving ? "Guardando..." : "Guardar"}
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Solicitudes de Catálogo</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <WholesaleLeadsTable />
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
