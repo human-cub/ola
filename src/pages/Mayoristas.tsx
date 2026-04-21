@@ -196,21 +196,23 @@ const Mayoristas = () => {
                   required
                 />
               </div>
-              <Button
-                type="submit"
-                disabled={submitting}
-                className="w-full bg-gradient-primary text-white hover:opacity-90 justify-center"
-                size="lg"
-              >
-                {submitting ? (
-                  <span className="inline-flex items-center justify-center">
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Enviando...
-                  </span>
-                ) : (
-                  <span className="text-center">Quiero el catálogo mayorista</span>
-                )}
-              </Button>
+              <div className="flex justify-center pt-2">
+                <Button
+                  type="submit"
+                  disabled={submitting}
+                  className="bg-gradient-primary text-white hover:opacity-90 px-8"
+                  size="lg"
+                >
+                  {submitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Enviando...
+                    </>
+                  ) : (
+                    "Quiero el catálogo mayorista"
+                  )}
+                </Button>
+              </div>
             </form>
           )}
         </section>
