@@ -21,6 +21,16 @@ import { useCart } from "@/contexts/CartContext";
 import { useAppSetting } from "@/hooks/useAppSetting";
 import { formatPrice } from "@/lib/formatting";
 
+const formatShortPrice = (n: number): string => {
+  if (n === 0) return "$0";
+  if (n >= 1000) {
+    const k = n / 1000;
+    const str = Number.isInteger(k) ? k.toString() : k.toFixed(1).replace(".", ",");
+    return `$${str}k`;
+  }
+  return `$${n}`;
+};
+
 interface PriceData {
   people: number;
   price: number;
@@ -164,11 +174,21 @@ export const MayoristaPriceBlock = ({
                   </div>
                 </div>
 
-                {/* Bottom markers: 0, min/3, 2*min/3, min */}
-                <div className="flex justify-between mt-3 text-[13px] font-bold text-muted-foreground -mx-3">
+                {/* Bottom markers: 0, min/3, 2*min/3, min — symmetric layout */}
+                <div className="flex mt-3 text-[13px] font-bold text-muted-foreground">
                   {progressMarkers.map((m, i) => (
-                    <span key={i} className="w-20 text-center first:text-left last:text-right">
-                      {formatPrice(m)}
+                    <span
+                      key={i}
+                      className={
+                        "flex-1 " +
+                        (i === 0
+                          ? "text-left"
+                          : i === progressMarkers.length - 1
+                          ? "text-right"
+                          : "text-center")
+                      }
+                    >
+                      {formatShortPrice(m)}
                     </span>
                   ))}
                 </div>
