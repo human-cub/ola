@@ -23,7 +23,7 @@ export const AdminSettings = () => {
         .eq("key", MAYORISTA_MIN_KEY)
         .maybeSingle();
       const val = (data as any)?.value;
-      setMinOrder(val !== undefined && val !== null ? String(val) : "300000");
+      setMinOrder(val !== undefined && val !== null ? String(val) : "200000");
       setLoading(false);
     };
     void load();
