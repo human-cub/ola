@@ -136,17 +136,22 @@ export const MayoristaPriceBlock = ({
               </div>
             </div>
 
-            {/* Price Comparison: Súper-Precio centered, Retail strikethrough above */}
+            {/* Price Comparison: Retail on the left, Súper-Precio centered in the block */}
             <div className="px-6 py-6 bg-card border-b border-border">
-              <div className="flex flex-col items-center gap-1 text-center">
-                <div className="text-[15px] font-bold text-muted-foreground line-through leading-none">
-                  {formatPrice(retailPrice)}
+              <div className="relative flex items-center justify-center min-h-[60px]">
+                <div className="absolute left-0 flex flex-col items-start gap-1">
+                  <div className="text-[13px] font-bold text-muted-foreground">Retail</div>
+                  <div className="text-[20px] sm:text-[24px] font-bold leading-none text-muted-foreground line-through">
+                    {formatPrice(retailPrice)}
+                  </div>
                 </div>
-                <div className="text-[13px] font-bold" style={groupBuyAccentStyle}>
-                  Súper-Precio
-                </div>
-                <div className="text-[24px] sm:text-[28px] font-bold leading-none" style={groupBuyAccentStyle}>
-                  {formatPrice(superPrice)}
+                <div className="flex flex-col items-center gap-1 text-center">
+                  <div className="text-[13px] font-bold" style={groupBuyAccentStyle}>
+                    Súper-Precio
+                  </div>
+                  <div className="text-[20px] sm:text-[24px] font-bold leading-none" style={groupBuyAccentStyle}>
+                    {formatPrice(superPrice)}
+                  </div>
                 </div>
               </div>
             </div>
