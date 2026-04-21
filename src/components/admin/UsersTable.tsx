@@ -52,6 +52,14 @@ interface UserProfile {
 
 const ITEMS_PER_PAGE = 50;
 
+type UserRole = "admin" | "mayorista" | "cliente";
+
+const roleLabel: Record<UserRole, string> = {
+  admin: "Admin",
+  mayorista: "Mayorista",
+  cliente: "Cliente",
+};
+
 const UsersTable = () => {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
