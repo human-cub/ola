@@ -70,6 +70,8 @@ const UsersTable = () => {
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<UserProfile | null>(null);
+  const [userRoles, setUserRoles] = useState<Record<string, UserRole>>({});
+  const [updatingRole, setUpdatingRole] = useState<string | null>(null);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -98,6 +100,26 @@ const UsersTable = () => {
 
       setUsers(data || []);
       setTotalCount(count || 0);
+
+      // Load roles for the visible users
+      const userIds = (data ?? []).map((u) => u.user_id);
+      if (userIds.length > 0) {
+        const { data: rolesData } = await supabase
+          .from("user_roles")
+          .select("user_id, role")
+          .in("user_id", userIds);
+
+        const map: Record<string, UserRole> = {};
+        userIds.forEach((id) => { map[id] = "cliente"; });
+        (rolesData ?? []).forEach((r: any) => {
+          // admin overrides mayorista; mayorista overrides cliente
+          if (r.role === "admin") map[r.user_id] = "admin";
+          else if (r.role === "mayorista" && map[r.user_id] !== "admin") map[r.user_id] = "mayorista";
+        });
+        setUserRoles(map);
+      } else {
+        setUserRoles({});
+      }
     } catch (error: any) {
       toast.error("Error al cargar usuarios");
     } finally {
