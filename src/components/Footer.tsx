@@ -12,6 +12,7 @@ const navItems = [
   { to: "/catalogo", label: "Catálogo" },
   { to: "/como-comprar", label: "Cómo Comprar" },
   { to: "/mayoristas", label: "Ventas Mayoristas" },
+  { to: "/quienes-somos", label: "Quiénes Somos" },
   { to: "/contacto", label: "Contacto" },
   { to: "/categoria/proteinas", label: "Proteínas" },
   { to: "/categoria/creatinas", label: "Creatinas" },
