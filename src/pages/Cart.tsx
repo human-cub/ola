@@ -33,6 +33,7 @@ const Cart = () => {
   const [productLinks, setProductLinks] = useState<Record<string, string>>({});
   const [productFirstPrices, setProductFirstPrices] = useState<Record<string, number>>({});
   const { appliedPromo, setAppliedPromo, removePromo } = usePromoCode();
+  const { isMayorista } = useUserRole();
 
   useEffect(() => {
     const fetchProductData = async () => {
