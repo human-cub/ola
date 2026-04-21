@@ -177,6 +177,34 @@ const UsersTable = () => {
     URL.revokeObjectURL(url);
   };
 
+  const handleRoleChange = async (userId: string, newRole: UserRole) => {
+    setUpdatingRole(userId);
+    try {
+      // Remove existing admin/mayorista roles for this user
+      const { error: delError } = await supabase
+        .from("user_roles")
+        .delete()
+        .eq("user_id", userId)
+        .in("role", ["admin", "mayorista"]);
+      if (delError) throw delError;
+
+      // Insert the new role unless it's "cliente" (no row needed)
+      if (newRole !== "cliente") {
+        const { error: insError } = await supabase
+          .from("user_roles")
+          .insert({ user_id: userId, role: newRole as any });
+        if (insError) throw insError;
+      }
+
+      setUserRoles((prev) => ({ ...prev, [userId]: newRole }));
+      toast.success(`Rol actualizado a ${roleLabel[newRole]}`);
+    } catch (error: any) {
+      toast.error("Error al actualizar el rol");
+    } finally {
+      setUpdatingRole(null);
+    }
+  };
+
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
   return (
