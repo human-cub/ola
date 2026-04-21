@@ -15,6 +15,7 @@ import { CartSummary } from "@/components/cart/CartSummary";
 import { PromoCodeInput } from "@/components/checkout/PromoCodeInput";
 import { useCheckoutPricing } from "@/hooks/useCheckoutPricing";
 import { usePromoCode } from "@/hooks/usePromoCode";
+import { useUserRole } from "@/hooks/useUserRole";
 
 const Cart = () => {
   const navigate = useNavigate();
@@ -32,6 +33,7 @@ const Cart = () => {
   const [productLinks, setProductLinks] = useState<Record<string, string>>({});
   const [productFirstPrices, setProductFirstPrices] = useState<Record<string, number>>({});
   const { appliedPromo, setAppliedPromo, removePromo } = usePromoCode();
+  const { isMayorista } = useUserRole();
 
   useEffect(() => {
     const fetchProductData = async () => {
@@ -161,13 +163,17 @@ const Cart = () => {
                 ))}
               </div>
 
-              <Separator className="my-6" />
+              {!isMayorista && (
+                <>
+                  <Separator className="my-6" />
 
-              <PromoCodeInput
-                appliedPromo={appliedPromo}
-                onApply={setAppliedPromo}
-                onRemove={removePromo}
-              />
+                  <PromoCodeInput
+                    appliedPromo={appliedPromo}
+                    onApply={setAppliedPromo}
+                    onRemove={removePromo}
+                  />
+                </>
+              )}
 
               <CartSummary
                 fullPrice={fullPrice}
