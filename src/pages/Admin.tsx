@@ -11,6 +11,7 @@ import UserOrdersTable from "@/components/admin/UserOrdersTable";
 import PromoCodesTable from "@/components/admin/PromoCodesTable";
 import AdminSettings from "@/components/admin/AdminSettings";
 import { getAllProducts } from "@/data/products";
+import { ExternalLink } from "lucide-react";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -107,9 +108,18 @@ const Admin = () => {
       <div className="container mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Panel de Administración</h1>
-          <Button onClick={handleLogout} variant="outline" className="mx-0">
-            Cerrar Sesión
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => window.open("/", "_blank", "noopener,noreferrer")}
+            >
+              <ExternalLink className="w-4 h-4 mr-2" />
+              Abrir sitio
+            </Button>
+            <Button onClick={handleLogout} variant="outline" className="mx-0">
+              Cerrar Sesión
+            </Button>
+          </div>
         </div>
 
         <Tabs defaultValue="userorders" className="w-full">
