@@ -19,9 +19,14 @@ const Contacto = () => {
         </h1>
         <div className="w-20 h-1 bg-gradient-primary mx-auto rounded-full mb-8" />
 
-        <p className="text-muted-foreground text-base md:text-lg text-center mb-6 max-w-2xl mx-auto">
-          Mejoramos todos los días para que la plataforma sea cada vez más fácil y cómoda de usar. Por eso, no dudes en escribirnos con tus preguntas, ideas o sugerencias. Además, si no sabés bien qué llevar, nuestros expertos siempre están listos para darte una mano y ayudarte a elegir los suplementos que mejor se adapten a tus objetivos.
-        </p>
+        <div className="text-muted-foreground text-base md:text-lg text-left mb-6 max-w-2xl mx-auto space-y-4">
+          <p>
+            Mejoramos todos los días para que la plataforma sea cada vez más fácil y cómoda de usar. Por eso, no dudes en escribirnos con tus preguntas, ideas o sugerencias.
+          </p>
+          <p>
+            Además, si no sabés bien qué llevar, nuestros expertos siempre están listos para darte una mano y ayudarte a elegir los suplementos que mejor se adapten a tus objetivos.
+          </p>
+        </div>
 
         <p className="text-muted-foreground text-base md:text-lg text-center mb-8">
           Para una respuesta más rápida, escribinos por WhatsApp
