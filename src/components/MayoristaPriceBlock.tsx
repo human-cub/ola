@@ -71,6 +71,7 @@ export const MayoristaPriceBlock = ({
   const totalForButton = superPrice * quantity;
 
   const groupBuyAccentStyle = { color: "hsl(var(--group-buy-accent))" } satisfies CSSProperties;
+  const mayoristaBgStyle = { backgroundColor: "hsl(var(--mayorista))", color: "hsl(var(--mayorista-foreground))" } satisfies CSSProperties;
 
   // Progress: 0, minOrder/3, 2*minOrder/3, minOrder
   const progressMarkers = [0, Math.round(minOrder / 3), Math.round((minOrder * 2) / 3), minOrder];
@@ -197,7 +198,8 @@ export const MayoristaPriceBlock = ({
                   });
                   setDialogOpen(true);
                 }}
-                className="w-full py-4 rounded-2xl font-bold text-white text-[17px] flex items-center justify-center gap-2 shadow-lg transform transition active:scale-95 bg-blue-600 hover:bg-blue-700"
+                className="w-full py-4 rounded-2xl font-bold text-[17px] flex items-center justify-center gap-2 shadow-lg transform transition active:scale-95 hover:opacity-90"
+                style={mayoristaBgStyle}
               >
                 <ShoppingCart className="w-6 h-6" />
                 Agregar al pedido {formatPrice(superPrice)}
