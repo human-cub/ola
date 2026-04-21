@@ -470,6 +470,36 @@ export type Database = {
           },
         ]
       }
+      wholesale_leads: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          full_name: string
+          id: string
+          phone: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          full_name: string
+          id?: string
+          phone: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          full_name?: string
+          id?: string
+          phone?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
