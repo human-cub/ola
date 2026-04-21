@@ -7,11 +7,11 @@ import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import * as amplitude from "@amplitude/analytics-browser";
 
 const ComoComprar = () => {
-  const isScrolled = useScrollHeader();
+  const isVisible = useScrollHeader();
 
   return (
     <div className="min-h-screen bg-background">
-      <Header isScrolled={isScrolled} />
+      <Header isVisible={isVisible} />
 
       <main className="container mx-auto px-4 py-8 md:py-12 max-w-3xl">
         <h1 className="text-3xl md:text-4xl font-bold text-foreground text-center mb-4">
