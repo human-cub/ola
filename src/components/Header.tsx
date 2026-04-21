@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { BurgerMenu } from "@/components/BurgerMenu";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
+import { useUserRole } from "@/hooks/useUserRole";
 
 interface HeaderProps {
   isVisible: boolean;
@@ -16,6 +17,7 @@ interface HeaderProps {
 export const Header = ({ isVisible }: HeaderProps) => {
   const [user, setUser] = useState<any>(null);
   const { cartItems, waitingListItems } = useCart();
+  const { isMayorista } = useUserRole();
 
   // Show number of unique items (positions), not total quantities
   const cartCount = cartItems.length;
@@ -62,21 +64,23 @@ export const Header = ({ isVisible }: HeaderProps) => {
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Waiting List Icon */}
-          <Link to="/lista-espera">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="relative hover:bg-primary/5"
-            >
-              <Clock className="w-5 h-5 text-muted-foreground" />
-              {waitingCount > 0 && (
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs bg-amber-500 hover:bg-amber-500">
-                  {waitingCount}
-                </Badge>
-              )}
-            </Button>
-          </Link>
+          {/* Waiting List Icon — hidden for mayorista (no waiting list flow) */}
+          {!isMayorista && (
+            <Link to="/lista-espera">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative hover:bg-primary/5"
+              >
+                <Clock className="w-5 h-5 text-muted-foreground" />
+                {waitingCount > 0 && (
+                  <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs bg-amber-500 hover:bg-amber-500">
+                    {waitingCount}
+                  </Badge>
+                )}
+              </Button>
+            </Link>
+          )}
 
           {/* Cart Icon */}
           <Link to="/carrito">

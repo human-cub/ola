@@ -5,6 +5,8 @@ import { Breadcrumb } from "@/components/Breadcrumb";
 import { Footer } from "@/components/Footer";
 import { RelatedProducts } from "@/components/RelatedProducts";
 import { GroupBuyPriceBlock } from "@/components/GroupBuyPriceBlock";
+import { MayoristaPriceBlock } from "@/components/MayoristaPriceBlock";
+import { useUserRole } from "@/hooks/useUserRole";
 import { supabase } from "@/integrations/supabase/client";
 import { DynamicProductCarousel } from "@/components/DynamicProductCarousel";
 import { DynamicProductInfo } from "@/components/DynamicProductInfo";
@@ -40,6 +42,7 @@ interface ProductData {
 const DynamicProduct = () => {
   const { slug } = useParams<{ slug: string }>();
   const headerVisible = useScrollHeader();
+  const { isMayorista } = useUserRole();
   const [product, setProduct] = useState<ProductData | null>(null);
   const [loading, setLoading] = useState(true);
   const [waitingCount, setWaitingCount] = useState(0);
@@ -196,14 +199,24 @@ const DynamicProduct = () => {
           <div className="sticky-viewport lg:contents order-3">
             <div className="contents lg:block">
               <div className="sm:flex sm:justify-center lg:justify-start sm:gap-6 lg:sticky top-[72px]">
-                <GroupBuyPriceBlock
-                  productName={product.name}
-                  productId={product.id}
-                  productImage={product.images.length > 0 ? product.images[0] : null}
-                  flavors={product.flavors}
-                  priceData={product.prices}
-                  waitingCount={waitingCount}
-                />
+                {isMayorista ? (
+                  <MayoristaPriceBlock
+                    productName={product.name}
+                    productId={product.id}
+                    productImage={product.images.length > 0 ? product.images[0] : null}
+                    flavors={product.flavors}
+                    priceData={product.prices}
+                  />
+                ) : (
+                  <GroupBuyPriceBlock
+                    productName={product.name}
+                    productId={product.id}
+                    productImage={product.images.length > 0 ? product.images[0] : null}
+                    flavors={product.flavors}
+                    priceData={product.prices}
+                    waitingCount={waitingCount}
+                  />
+                )}
               </div>
             </div>
           </div>

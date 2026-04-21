@@ -52,6 +52,14 @@ interface UserProfile {
 
 const ITEMS_PER_PAGE = 50;
 
+type UserRole = "admin" | "mayorista" | "cliente";
+
+const roleLabel: Record<UserRole, string> = {
+  admin: "Admin",
+  mayorista: "Mayorista",
+  cliente: "Cliente",
+};
+
 const UsersTable = () => {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,6 +70,8 @@ const UsersTable = () => {
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<UserProfile | null>(null);
+  const [userRoles, setUserRoles] = useState<Record<string, UserRole>>({});
+  const [updatingRole, setUpdatingRole] = useState<string | null>(null);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -90,6 +100,26 @@ const UsersTable = () => {
 
       setUsers(data || []);
       setTotalCount(count || 0);
+
+      // Load roles for the visible users
+      const userIds = (data ?? []).map((u) => u.user_id);
+      if (userIds.length > 0) {
+        const { data: rolesData } = await supabase
+          .from("user_roles")
+          .select("user_id, role")
+          .in("user_id", userIds);
+
+        const map: Record<string, UserRole> = {};
+        userIds.forEach((id) => { map[id] = "cliente"; });
+        (rolesData ?? []).forEach((r: any) => {
+          // admin overrides mayorista; mayorista overrides cliente
+          if (r.role === "admin") map[r.user_id] = "admin";
+          else if (r.role === "mayorista" && map[r.user_id] !== "admin") map[r.user_id] = "mayorista";
+        });
+        setUserRoles(map);
+      } else {
+        setUserRoles({});
+      }
     } catch (error: any) {
       toast.error("Error al cargar usuarios");
     } finally {
@@ -145,6 +175,34 @@ const UsersTable = () => {
     a.download = `usuarios_${format(new Date(), "yyyy-MM-dd")}.csv`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleRoleChange = async (userId: string, newRole: UserRole) => {
+    setUpdatingRole(userId);
+    try {
+      // Remove existing admin/mayorista roles for this user
+      const { error: delError } = await supabase
+        .from("user_roles")
+        .delete()
+        .eq("user_id", userId)
+        .in("role", ["admin", "mayorista"]);
+      if (delError) throw delError;
+
+      // Insert the new role unless it's "cliente" (no row needed)
+      if (newRole !== "cliente") {
+        const { error: insError } = await supabase
+          .from("user_roles")
+          .insert({ user_id: userId, role: newRole as any });
+        if (insError) throw insError;
+      }
+
+      setUserRoles((prev) => ({ ...prev, [userId]: newRole }));
+      toast.success(`Rol actualizado a ${roleLabel[newRole]}`);
+    } catch (error: any) {
+      toast.error("Error al actualizar el rol");
+    } finally {
+      setUpdatingRole(null);
+    }
   };
 
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
@@ -207,6 +265,7 @@ const UsersTable = () => {
                       <TableHead>Nombre</TableHead>
                       <TableHead>Teléfono</TableHead>
                       <TableHead>Registro</TableHead>
+                      <TableHead>Rol</TableHead>
                       <TableHead>Estado</TableHead>
                       <TableHead className="text-right">Acciones</TableHead>
                     </TableRow>
@@ -223,6 +282,22 @@ const UsersTable = () => {
                         <TableCell>{user.phone || "-"}</TableCell>
                         <TableCell>
                           {format(new Date(user.created_at), "dd/MM/yyyy", { locale: es })}
+                        </TableCell>
+                        <TableCell>
+                          <Select
+                            value={userRoles[user.user_id] ?? "cliente"}
+                            onValueChange={(v) => handleRoleChange(user.user_id, v as UserRole)}
+                            disabled={updatingRole === user.user_id}
+                          >
+                            <SelectTrigger className="w-32 h-8">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="cliente">Cliente</SelectItem>
+                              <SelectItem value="mayorista">Mayorista</SelectItem>
+                              <SelectItem value="admin">Admin</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </TableCell>
                         <TableCell>
                           {user.is_blocked ? (
