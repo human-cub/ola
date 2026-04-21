@@ -21,6 +21,7 @@ import CompletarDatosColectiva from "./pages/CompletarDatosColectiva";
 import OrderDetail from "./pages/OrderDetail";
 import ComoComprar from "./pages/ComoComprar";
 import Mayoristas from "./pages/Mayoristas";
+import Contacto from "./pages/Contacto";
 import NotFound from "./pages/NotFound";
 import { FloatingWhatsApp } from "./components/FloatingWhatsApp";
 import { ScrollToTop } from "./components/ScrollToTop";
@@ -92,6 +93,7 @@ const App = () => {
           <Route path="/mi-cuenta/pedidos/:orderId" element={<OrderDetail />} />
           <Route path="/como-comprar" element={<ComoComprar />} />
           <Route path="/mayoristas" element={<Mayoristas />} />
+          <Route path="/contacto" element={<Contacto />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <FloatingWhatsApp />
