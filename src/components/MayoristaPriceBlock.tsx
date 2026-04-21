@@ -174,23 +174,26 @@ export const MayoristaPriceBlock = ({
                   </div>
                 </div>
 
-                {/* Bottom markers: 0, min/3, 2*min/3, min — symmetric layout */}
-                <div className="flex mt-3 text-[13px] font-bold text-muted-foreground">
-                  {progressMarkers.map((m, i) => (
-                    <span
-                      key={i}
-                      className={
-                        "flex-1 " +
-                        (i === 0
-                          ? "text-left"
-                          : i === progressMarkers.length - 1
-                          ? "text-right"
-                          : "text-center")
-                      }
-                    >
-                      {formatShortPrice(m)}
-                    </span>
-                  ))}
+                {/* Bottom markers aligned with bar tick positions: 0%, 33.33%, 66.67%, 100% */}
+                <div className="relative mt-3 h-5 text-[13px] font-bold text-muted-foreground">
+                  {progressMarkers.map((m, i) => {
+                    const positions = ["0%", "33.33%", "66.67%", "100%"];
+                    const transforms = [
+                      "translateX(0)",
+                      "translateX(-50%)",
+                      "translateX(-50%)",
+                      "translateX(-100%)",
+                    ];
+                    return (
+                      <span
+                        key={i}
+                        className="absolute top-0 whitespace-nowrap"
+                        style={{ left: positions[i], transform: transforms[i] }}
+                      >
+                        {formatShortPrice(m)}
+                      </span>
+                    );
+                  })}
                 </div>
               </div>
 
