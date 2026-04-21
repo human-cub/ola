@@ -13,7 +13,7 @@ const ComoComprar = () => {
     <div className="min-h-screen bg-background">
       <Header isVisible={isVisible} />
 
-      <main className="container mx-auto px-4 py-8 md:py-12 max-w-3xl">
+      <main className="container mx-auto px-4 pt-[120px] sm:pt-[104px] pb-12 max-w-3xl">
         <h1 className="text-3xl md:text-4xl font-bold text-foreground text-center mb-4">
           Cómo Comprar
         </h1>
