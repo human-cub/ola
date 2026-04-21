@@ -15,6 +15,7 @@ import { CartSummary } from "@/components/cart/CartSummary";
 import { PromoCodeInput } from "@/components/checkout/PromoCodeInput";
 import { useCheckoutPricing } from "@/hooks/useCheckoutPricing";
 import { usePromoCode } from "@/hooks/usePromoCode";
+import { useUserRole } from "@/hooks/useUserRole";
 
 const Cart = () => {
   const navigate = useNavigate();
