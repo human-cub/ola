@@ -19,11 +19,15 @@ const Contacto = () => {
         </h1>
         <div className="w-20 h-1 bg-gradient-primary mx-auto rounded-full mb-8" />
 
+        <p className="text-muted-foreground text-base md:text-lg text-center mb-6 max-w-2xl mx-auto">
+          Mejoramos todos los días para que la plataforma sea cada vez más fácil y cómoda de usar. Por eso, no dudes en escribirnos con tus preguntas, ideas o sugerencias. Además, si no sabés bien qué llevar, nuestros expertos siempre están listos para darte una mano y ayudarte a elegir los suplementos que mejor se adapten a tus objetivos.
+        </p>
+
         <p className="text-muted-foreground text-base md:text-lg text-center mb-8">
           Para una respuesta más rápida, escribinos por WhatsApp
         </p>
 
-        <section className="bg-muted/40 rounded-2xl p-6 md:p-8 border border-border/50 mb-8">
+        <section className="bg-muted/40 rounded-2xl p-6 md:p-8 border border-border/50 mb-8 max-w-md mx-auto">
           <div className="flex flex-col gap-4">
             <a
               href="http://wa.me/5491166650878"
@@ -66,7 +70,7 @@ const Contacto = () => {
           </div>
         </section>
 
-        <section className="bg-muted/40 rounded-2xl p-6 md:p-8 border border-border/50">
+        <section className="bg-muted/40 rounded-2xl p-6 md:p-8 border border-border/50 max-w-md mx-auto">
           <h2 className="text-xl md:text-2xl font-semibold text-foreground mb-4 flex items-center gap-2">
             <MapPin className="w-5 h-5 text-primary" />
             Dirección
