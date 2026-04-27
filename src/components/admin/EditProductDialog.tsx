@@ -440,6 +440,26 @@ const EditProductDialog = ({ product, open, onOpenChange, onProductUpdated }: Ed
             <p className="text-xs text-muted-foreground">
               Tiers actuales: {product?.prices?.map(p => p.people).join(" → ") || "—"}
             </p>
+            {product?.pending_prices && product.pending_prices.length > 0 && (
+              <p className="text-xs text-amber-600 dark:text-amber-400">
+                ⏳ Cambio programado: {product.pending_prices.map(p => p.price).join(" ")} (se aplicará el próximo lunes)
+              </p>
+            )}
+            <div className="flex items-start gap-2 pt-1">
+              <Checkbox
+                id="apply-prices-now"
+                checked={formData.applyPricesNow}
+                onCheckedChange={(checked) =>
+                  setFormData({ ...formData, applyPricesNow: checked === true })
+                }
+              />
+              <Label htmlFor="apply-prices-now" className="text-sm font-normal cursor-pointer">
+                Aplicar precios ahora
+                <span className="block text-xs text-muted-foreground font-normal">
+                  Sin marcar: los precios se guardan y se aplican el próximo lunes. No afectan a pedidos ya hechos.
+                </span>
+              </Label>
+            </div>
           </div>
 
           {/* Description */}
