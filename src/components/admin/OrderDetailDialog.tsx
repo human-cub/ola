@@ -116,26 +116,8 @@ export const OrderDetailDialog = ({ order, onClose, onNotesUpdated }: OrderDetai
 
     setApplyingPromo(true);
     try {
-      // Determine base tier from current item prices and apply bonus.
-      // We use first item as reference; tier bonus shifts within available tiers.
-      const productIds = [...new Set(order.items.map(i => i.product_id))];
-      const { data: productsData } = await supabase
-        .from("products")
-        .select("id, prices")
-        .in("id", productIds);
-      if (!productsData || productsData.length === 0) throw new Error("Productos no encontrados");
-
-      const firstItem = order.items[0];
-      const firstProduct = productsData.find((p: any) => p.id === firstItem.product_id);
-      const firstPrices = (firstProduct?.prices as any[]) || [];
-      let baseTierIndex = order.order_type === "immediate" ? 1 : 0;
-      if (order.order_type === "collective") {
-        const matchIndex = firstPrices.findIndex((t: any) => t.price === firstItem.price_per_unit);
-        baseTierIndex = matchIndex >= 0 ? matchIndex : 1;
-      }
-      const targetTier = Math.min(baseTierIndex + promo.tier_bonus, firstPrices.length - 1);
-
-      await applyPromoTier(order, targetTier);
+      // Apply tier bonus per-item: each product shifts from its own current tier.
+      await applyPromoTier(order, promo.tier_bonus, { bonus: promo.tier_bonus });
       toast.success(`Promo ${promo.code} aplicada`);
       onNotesUpdated();
     } catch (error: any) {
