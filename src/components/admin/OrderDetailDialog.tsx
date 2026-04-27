@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Save, Package } from "lucide-react";
+import { Save, Package, MessageSquare, Copy, Mail } from "lucide-react";
+import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import {
   Dialog,
   DialogContent,
@@ -62,6 +63,7 @@ export const OrderDetailDialog = ({ order, onClose, onNotesUpdated }: OrderDetai
   const [editingNotes, setEditingNotes] = useState(false);
   const [tempNotes, setTempNotes] = useState("");
   const [productCounters, setProductCounters] = useState<Record<string, number>>({});
+  const [messageOpen, setMessageOpen] = useState(false);
 
   useEffect(() => {
     if (!order) return;
@@ -98,15 +100,116 @@ export const OrderDetailDialog = ({ order, onClose, onNotesUpdated }: OrderDetai
     }
   };
 
+  const buildMessage = (o: DialogOrder): string => {
+    const firstName = o.profiles?.first_name?.trim();
+    const greeting = firstName
+      ? `Buenos Días, ${firstName}!`
+      : `Buenos Días!`;
+
+    const itemsText = o.items
+      .map((item, idx) => {
+        const lines = [`${idx + 1}. ${item.product_name}`];
+        if (item.flavor) lines.push(`Sabor: ${item.flavor}`);
+        lines.push(`${item.quantity} x ${formatPrice(item.price_per_unit)}`);
+        return lines.join("\n");
+      })
+      .join("\n\n");
+
+    const discountLine =
+      o.discount_amount > 0
+        ? `Descuento: -${formatPrice(o.discount_amount)}`
+        : "";
+
+    const shippingLine = `Envío: ${
+      o.delivery_cost === 0 ? "Gratis" : formatPrice(o.delivery_cost)
+    }`;
+
+    const total = o.subtotal + o.delivery_cost;
+
+    let addressText = "(Dirección de Entrega)";
+    if (o.delivery_address) {
+      const a = o.delivery_address;
+      const line1 = [a.street, a.number, a.floor].filter(Boolean).join(" ");
+      const line2 = [a.city, a.province].filter(Boolean).join(", ");
+      const postal = a.postalCode ? ` (${a.postalCode})` : "";
+      addressText = [line1, `${line2}${postal}`].filter(Boolean).join("\n");
+      if (a.references) addressText += `\nRef: ${a.references}`;
+    }
+
+    return [
+      greeting,
+      "",
+      "Soy Angelina de Ola! 🌊",
+      "",
+      "Ya tenemos los resultados de la colecta de la semana pasada.",
+      "",
+      "Esperaste:",
+      itemsText,
+      "",
+      discountLine,
+      shippingLine,
+      "",
+      `Precio final de la compra es: ${formatPrice(total)}`,
+      "",
+      "Confirmá tus datos de entrega para que te llevemos tu pedido hoy:",
+      "",
+      addressText,
+      "",
+      "Pago al recibir y revisar el producto en transferencia o efectivo",
+      "",
+      "Si tenés alguna duda, avisame☺️",
+    ]
+      .filter((line) => line !== null && line !== undefined)
+      .join("\n");
+  };
+
+  const message = order ? buildMessage(order) : "";
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(message);
+      toast.success("Mensaje copiado");
+    } catch {
+      toast.error("Error al copiar");
+    }
+  };
+
+  const handleWhatsApp = () => {
+    const phone = (order?.profiles?.phone || "").replace(/\D/g, "");
+    const url = phone
+      ? `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
+      : `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
+  const handleEmail = () => {
+    const email = order?.profiles?.email || "";
+    const subject = `Pedido ${order?.order_number || ""} - Ola!`;
+    const url = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
+    window.location.href = url;
+  };
+
 
   return (
     <Dialog open={!!order} onOpenChange={() => onClose()}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Package className="w-5 h-5" />
-            Pedido {order?.order_number}
-          </DialogTitle>
+          <div className="flex items-center justify-between gap-2 pr-8">
+            <DialogTitle className="flex items-center gap-2">
+              <Package className="w-5 h-5" />
+              Pedido {order?.order_number}
+            </DialogTitle>
+            {order?.order_type === "collective" && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setMessageOpen(true)}
+              >
+                <MessageSquare className="w-4 h-4 mr-2" />
+                Mensaje
+              </Button>
+            )}
+          </div>
         </DialogHeader>
 
         {order && (
@@ -318,6 +421,34 @@ export const OrderDetailDialog = ({ order, onClose, onNotesUpdated }: OrderDetai
           </div>
         )}
       </DialogContent>
+
+      <Dialog open={messageOpen} onOpenChange={setMessageOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Mensaje para el cliente</DialogTitle>
+          </DialogHeader>
+          <Textarea
+            value={message}
+            readOnly
+            rows={18}
+            className="font-mono text-xs resize-none"
+          />
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={handleCopy} variant="outline" className="flex-1 min-w-[120px]">
+              <Copy className="w-4 h-4 mr-2" />
+              Copiar
+            </Button>
+            <Button onClick={handleWhatsApp} variant="outline" className="flex-1 min-w-[120px]">
+              <WhatsAppIcon className="w-4 h-4 mr-2" />
+              WhatsApp
+            </Button>
+            <Button onClick={handleEmail} variant="outline" className="flex-1 min-w-[120px]">
+              <Mail className="w-4 h-4 mr-2" />
+              Email
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 };
