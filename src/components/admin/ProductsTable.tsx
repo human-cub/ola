@@ -26,6 +26,7 @@ interface Product {
   images: string[] | null;
   flavors: string[] | null;
   prices: ProductPrices[];
+  pending_prices: ProductPrices[] | null;
   link: string | null;
   is_manual: boolean | null;
   is_qa_only: boolean;
