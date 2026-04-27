@@ -152,7 +152,7 @@ Deno.serve(async (req) => {
     // Get all products with their current counts and prices
     const { data: products, error: productsError } = await supabase
       .from('products')
-      .select('id, total_orders_count, prices');
+      .select('id, total_orders_count, prices, pending_prices');
 
     if (productsError) {
       console.error('[reset-weekly-orders] Error fetching products:', productsError);
@@ -335,6 +335,30 @@ Deno.serve(async (req) => {
     }
 
     console.log(`[reset-weekly-orders] Successfully reset virtual counters for ${products?.length || 0} products`);
+
+    // ==========================================
+    // STEP 2.5: Apply pending_prices for the new week
+    // (after orders were already snapshotted with old prices in STEP 1)
+    // ==========================================
+    let appliedPendingCount = 0;
+    for (const product of products || []) {
+      const pending = (product as any).pending_prices as PriceTier[] | null;
+      if (pending && Array.isArray(pending) && pending.length > 0) {
+        const { error: pendingError } = await supabase
+          .from('products')
+          .update({
+            prices: pending,
+            pending_prices: null,
+          })
+          .eq('id', product.id);
+        if (pendingError) {
+          console.error(`[reset-weekly-orders] Error applying pending_prices for ${product.id}:`, pendingError);
+        } else {
+          appliedPendingCount++;
+        }
+      }
+    }
+    console.log(`[reset-weekly-orders] Applied pending_prices for ${appliedPendingCount} products`);
 
     // Recompute waiting_for_discount_count based on current week only
     const { error: recomputeError } = await supabase.rpc('recompute_waiting_for_discount_counts');
