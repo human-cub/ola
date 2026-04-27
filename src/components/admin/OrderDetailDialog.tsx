@@ -178,7 +178,21 @@ export const OrderDetailDialog = ({ order, onClose, onNotesUpdated }: OrderDetai
   };
 
   const handleWhatsApp = () => {
-    const phone = (order?.profiles?.phone || "").replace(/\D/g, "");
+    const rawPhone = (order?.profiles?.phone || "").replace(/\D/g, "");
+    // Convert Argentine number to WhatsApp format (11XXXXXXXX)
+    let phone = rawPhone;
+    if (rawPhone.startsWith("54911")) {
+      // Remove country code (+54) and mobile prefix (9)
+      phone = rawPhone.slice(3); // 54911XXXXXXX -> 11XXXXXXX
+    } else if (rawPhone.startsWith("5411")) {
+      phone = rawPhone.slice(2); // 5411XXXXXXX -> 11XXXXXXX
+    } else if (rawPhone.startsWith("54") && rawPhone.length > 10) {
+      // Fallback: remove 54 prefix
+      phone = rawPhone.slice(2);
+      if (phone.startsWith("9")) {
+        phone = phone.slice(1);
+      }
+    }
     const url = phone
       ? `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
       : `https://wa.me/?text=${encodeURIComponent(message)}`;
