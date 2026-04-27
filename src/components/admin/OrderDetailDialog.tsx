@@ -179,19 +179,17 @@ export const OrderDetailDialog = ({ order, onClose, onNotesUpdated }: OrderDetai
 
   const handleWhatsApp = () => {
     const rawPhone = (order?.profiles?.phone || "").replace(/\D/g, "");
-    // Convert Argentine number to WhatsApp format (11XXXXXXXX)
+    // Format Argentine number for WhatsApp (wa.me/549XXXXXXXXX)
     let phone = rawPhone;
-    if (rawPhone.startsWith("54911")) {
-      // Remove country code (+54) and mobile prefix (9)
-      phone = rawPhone.slice(3); // 54911XXXXXXX -> 11XXXXXXX
-    } else if (rawPhone.startsWith("5411")) {
-      phone = rawPhone.slice(2); // 5411XXXXXXX -> 11XXXXXXX
-    } else if (rawPhone.startsWith("54") && rawPhone.length > 10) {
-      // Fallback: remove 54 prefix
-      phone = rawPhone.slice(2);
-      if (phone.startsWith("9")) {
-        phone = phone.slice(1);
-      }
+    if (rawPhone.startsWith("549")) {
+      // Already in correct format: 54911XXXXXXX
+      phone = rawPhone;
+    } else if (rawPhone.startsWith("54") && rawPhone.length >= 11) {
+      // Has 54 but missing 9 after country code: 5411XXXXXXX -> 54911XXXXXXX
+      phone = "54" + "9" + rawPhone.slice(2);
+    } else if (rawPhone.startsWith("11") && rawPhone.length === 10) {
+      // Local format without country code: 11XXXXXXXX -> 54911XXXXXXXX
+      phone = "549" + rawPhone;
     }
     const url = phone
       ? `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
