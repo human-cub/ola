@@ -177,19 +177,31 @@ export const OrderDetailDialog = ({ order, onClose, onNotesUpdated }: OrderDetai
     }
   };
 
+  const getWhatsAppPhone = (phoneValue?: string | null) => {
+    const digits = (phoneValue || "").replace(/\D/g, "");
+    if (!digits) return "";
+
+    let localPhone = digits;
+    if (localPhone.startsWith("549")) {
+      localPhone = localPhone.slice(3);
+    } else if (localPhone.startsWith("54")) {
+      localPhone = localPhone.slice(2);
+      if (localPhone.startsWith("9")) localPhone = localPhone.slice(1);
+    }
+
+    while (localPhone.startsWith("0")) {
+      localPhone = localPhone.slice(1);
+    }
+
+    return localPhone.startsWith("11") && localPhone.length >= 9
+      ? `549${localPhone}`
+      : "";
+  };
+
   const handleWhatsApp = () => {
-    const rawPhone = (order?.profiles?.phone || "").replace(/\D/g, "");
-    // Format Argentine number for WhatsApp (wa.me/549XXXXXXXXX)
-    let phone = rawPhone;
-    if (rawPhone.startsWith("549")) {
-      // Already in correct format: 54911XXXXXXX
-      phone = rawPhone;
-    } else if (rawPhone.startsWith("54") && rawPhone.length >= 11) {
-      // Has 54 but missing 9 after country code: 5411XXXXXXX -> 54911XXXXXXX
-      phone = "54" + "9" + rawPhone.slice(2);
-    } else if (rawPhone.startsWith("11") && rawPhone.length === 10) {
-      // Local format without country code: 11XXXXXXXX -> 54911XXXXXXXX
-      phone = "549" + rawPhone;
+    const phone = getWhatsAppPhone(order?.profiles?.phone);
+    if (order?.profiles?.phone && !phone) {
+      toast.error("El teléfono no tiene formato válido para WhatsApp");
     }
     const url = phone
       ? `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
