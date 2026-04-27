@@ -62,6 +62,9 @@ const ProductsTable = () => {
       images: Array.isArray(p.images) ? p.images as string[] : [],
       flavors: Array.isArray(p.flavors) ? p.flavors as string[] : [],
       prices: Array.isArray(p.prices) ? (p.prices as unknown as ProductPrices[]) : [],
+      pending_prices: Array.isArray((p as any).pending_prices)
+        ? ((p as any).pending_prices as unknown as ProductPrices[])
+        : null,
     }));
 
     setProducts(parsedProducts as Product[]);
