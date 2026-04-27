@@ -278,6 +278,7 @@ export const applyPromoTier = async (
     delivery_cost: number;
   },
   tier: number | null,
+  options?: { bonus?: number },
 ): Promise<void> => {
   const productIds = [...new Set(order.items.map(item => item.product_id))];
   const { data: productsData } = await supabase
@@ -339,10 +340,23 @@ export const applyPromoTier = async (
     return;
   }
 
-  // Recalculate items with new prices based on tier (tier index maps directly to prices array)
+  const bonus = options?.bonus;
+
+  // Recalculate items with new prices.
+  // If `bonus` is provided, shift each item's CURRENT tier by `bonus` individually,
+  // capped at the last available tier per product. Otherwise apply the absolute `tier` to all.
   const updatedItems = order.items.map(item => {
     const prices = productPricesMap[item.product_id] || [];
-    const newPrice = prices[tier]?.price || item.price_per_unit;
+    let targetIdx = tier;
+    if (typeof bonus === "number") {
+      let baseIdx = order.order_type === "immediate" ? 1 : 0;
+      if (order.order_type === "collective") {
+        const matched = prices.findIndex((t: any) => Number(t.price) === Number(item.price_per_unit));
+        baseIdx = matched >= 0 ? matched : 1;
+      }
+      targetIdx = Math.min(baseIdx + bonus, Math.max(prices.length - 1, 0));
+    }
+    const newPrice = prices[targetIdx]?.price ?? item.price_per_unit;
     return { ...item, price_per_unit: newPrice };
   });
 
