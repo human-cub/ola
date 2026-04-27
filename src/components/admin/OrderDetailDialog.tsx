@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Save, Package, MessageSquare, Copy, Mail } from "lucide-react";
+import { Save, Package, MessageSquare, Copy, Mail, Tag, X } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import {
   Dialog,
@@ -12,6 +12,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   type OrderStatus,
   type OrderType,
@@ -22,6 +29,7 @@ import {
   ORDER_TYPE_LABELS,
 } from "@/lib/types";
 import { formatPrice, formatDateCompact } from "@/lib/formatting";
+import { applyPromoTier } from "@/services/orderService";
 
 interface OrderProfile {
   email: string | null;
@@ -45,6 +53,7 @@ export interface DialogOrder {
   admin_notes: string | null;
   participants_count: number | null;
   is_promo: boolean;
+  promo_tier?: number | null;
   created_at: string;
   profiles?: OrderProfile;
 }
@@ -64,10 +73,14 @@ export const OrderDetailDialog = ({ order, onClose, onNotesUpdated }: OrderDetai
   const [tempNotes, setTempNotes] = useState("");
   const [productCounters, setProductCounters] = useState<Record<string, number>>({});
   const [messageOpen, setMessageOpen] = useState(false);
+  const [promoCodes, setPromoCodes] = useState<Array<{ id: string; code: string; tier_bonus: number }>>([]);
+  const [selectedPromoId, setSelectedPromoId] = useState<string>("");
+  const [applyingPromo, setApplyingPromo] = useState(false);
 
   useEffect(() => {
     if (!order) return;
     setEditingNotes(false);
+    setSelectedPromoId("");
     const fetchCounters = async () => {
       const productIds = [...new Set(order.items.map(i => i.product_id))];
       if (productIds.length === 0) return;
@@ -83,6 +96,68 @@ export const OrderDetailDialog = ({ order, onClose, onNotesUpdated }: OrderDetai
     };
     fetchCounters();
   }, [order?.id]);
+
+  useEffect(() => {
+    const fetchPromos = async () => {
+      const { data } = await supabase
+        .from("promo_codes")
+        .select("id, code, tier_bonus")
+        .eq("is_active", true)
+        .order("code");
+      if (data) setPromoCodes(data);
+    };
+    fetchPromos();
+  }, []);
+
+  const handleApplyPromo = async () => {
+    if (!order || !selectedPromoId) return;
+    const promo = promoCodes.find(p => p.id === selectedPromoId);
+    if (!promo) return;
+
+    setApplyingPromo(true);
+    try {
+      // Determine base tier from current item prices and apply bonus.
+      // We use first item as reference; tier bonus shifts within available tiers.
+      const productIds = [...new Set(order.items.map(i => i.product_id))];
+      const { data: productsData } = await supabase
+        .from("products")
+        .select("id, prices")
+        .in("id", productIds);
+      if (!productsData || productsData.length === 0) throw new Error("Productos no encontrados");
+
+      const firstItem = order.items[0];
+      const firstProduct = productsData.find((p: any) => p.id === firstItem.product_id);
+      const firstPrices = (firstProduct?.prices as any[]) || [];
+      let baseTierIndex = order.order_type === "immediate" ? 1 : 0;
+      if (order.order_type === "collective") {
+        const matchIndex = firstPrices.findIndex((t: any) => t.price === firstItem.price_per_unit);
+        baseTierIndex = matchIndex >= 0 ? matchIndex : 1;
+      }
+      const targetTier = Math.min(baseTierIndex + promo.tier_bonus, firstPrices.length - 1);
+
+      await applyPromoTier(order, targetTier);
+      toast.success(`Promo ${promo.code} aplicada`);
+      onNotesUpdated();
+    } catch (error: any) {
+      toast.error(error?.message || "Error al aplicar promo");
+    } finally {
+      setApplyingPromo(false);
+    }
+  };
+
+  const handleRemovePromo = async () => {
+    if (!order) return;
+    setApplyingPromo(true);
+    try {
+      await applyPromoTier(order, null);
+      toast.success("Promo quitada");
+      onNotesUpdated();
+    } catch (error: any) {
+      toast.error(error?.message || "Error al quitar promo");
+    } finally {
+      setApplyingPromo(false);
+    }
+  };
 
   const handleSaveNotes = async () => {
     if (!order) return;
@@ -404,6 +479,57 @@ export const OrderDetailDialog = ({ order, onClose, onNotesUpdated }: OrderDetai
                 </p>
               </div>
             )}
+
+            {/* Promo code */}
+            <div>
+              <h4 className="font-semibold mb-2 flex items-center gap-2">
+                <Tag className="w-4 h-4" />
+                Código promocional
+              </h4>
+              {order.is_promo ? (
+                <div className="flex items-center justify-between bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-900 rounded-lg p-3">
+                  <span className="text-sm text-green-700 dark:text-green-400">
+                    PROMO aplicada (tier {order.promo_tier ?? "—"})
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleRemovePromo}
+                    disabled={applyingPromo}
+                  >
+                    <X className="w-4 h-4 mr-1" />
+                    Quitar
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <Select value={selectedPromoId} onValueChange={setSelectedPromoId}>
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Elegí un código activo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {promoCodes.length === 0 ? (
+                        <div className="px-3 py-2 text-sm text-muted-foreground">
+                          No hay códigos activos
+                        </div>
+                      ) : (
+                        promoCodes.map(pc => (
+                          <SelectItem key={pc.id} value={pc.id}>
+                            {pc.code} (+{pc.tier_bonus} tier{pc.tier_bonus > 1 ? "s" : ""})
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    onClick={handleApplyPromo}
+                    disabled={!selectedPromoId || applyingPromo}
+                  >
+                    Aplicar
+                  </Button>
+                </div>
+              )}
+            </div>
 
             {/* Admin Notes */}
             <div>

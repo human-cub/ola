@@ -15,6 +15,7 @@ import { AddressForm } from "@/components/AddressForm";
 import { isCABAProvince } from "@/data/argentinaLocations";
 import { useScrollHeader } from "@/hooks/useScrollHeader";
 import { formatPrice } from "@/lib/formatting";
+import { ensurePendingCollectiveOrder, syncWaitingListOrder } from "@/services/orderService";
 
 const addressSchema = z.object({
   street: z.string().min(1, "La calle es requerida").max(200),
@@ -212,88 +213,31 @@ const CompletarDatosColectiva = () => {
       if (waitingListError) throw waitingListError;
 
       if (waitingListItems && waitingListItems.length > 0) {
-        // Prepare order items
-        const orderItems = waitingListItems.map(item => ({
-          product_id: item.product_id,
-          product_name: item.product_name,
-          flavor: item.flavor,
-          quantity: item.quantity,
-          price_per_unit: item.current_price_per_unit,
-          product_image: item.product_image,
-        }));
-
-        const subtotal = waitingListItems.reduce(
-          (sum, item) => sum + item.current_price_per_unit * item.quantity,
-          0
-        );
-
-        // Check if pending collective order already exists
+        // Check if a pending collective order already exists
         const { data: existingOrder } = await supabase
           .from("user_orders")
-          .select("id, items, order_number")
+          .select("id")
           .eq("user_id", session.user.id)
           .eq("order_type", "collective")
           .eq("status", "pending")
           .maybeSingle();
 
-        let orderNumber = existingOrder?.order_number;
-        let orderId = existingOrder?.id;
-        let isNewOrder = false;
-
         if (existingOrder) {
-          // Update existing order - NO Telegram notification
+          // Existing order: update only delivery_address and notes (phone),
+          // and let syncWaitingListOrder handle items/prices preserving frozen snapshots.
           const { error: updateOrderError } = await supabase
             .from("user_orders")
             .update({
-              items: orderItems,
-              subtotal,
-              total_amount: subtotal,
               delivery_address: addressData,
               notes: phone,
             })
             .eq("id", existingOrder.id);
           if (updateOrderError) throw updateOrderError;
-        } else {
-          // Create new collective order - SEND Telegram notification
-          isNewOrder = true;
-          orderNumber = `OLA-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
-          
-          const { data: newOrder } = await supabase
-            .from("user_orders")
-            .insert({
-              user_id: session.user.id,
-              order_number: orderNumber,
-              order_type: "collective",
-              items: orderItems,
-              subtotal,
-              total_amount: subtotal,
-              delivery_address: addressData,
-              status: "pending",
-              notes: phone,
-            })
-            .select("id, order_number")
-            .single();
-          
-          orderId = newOrder?.id;
-          orderNumber = newOrder?.order_number;
-        }
 
-        // Send Telegram notification ONLY for new orders
-        if (isNewOrder && orderId && orderNumber) {
-          const orderUrl = `${window.location.origin}/mi-cuenta/pedidos/${orderId}`;
-          
-          await supabase.functions.invoke("notify-telegram", {
-            body: {
-              order_id: orderId,
-              order_number: orderNumber,
-              order_type: 'Compra Colectiva',
-              customer_name: customerName,
-              phone,
-              total: formatPrice(subtotal),
-              order_url: orderUrl,
-              waiting_for_discount: true,
-            },
-          });
+          await syncWaitingListOrder(session.user.id);
+        } else {
+          // New order: create through service (also fires Telegram notification)
+          await ensurePendingCollectiveOrder(session.user.id);
         }
       }
 

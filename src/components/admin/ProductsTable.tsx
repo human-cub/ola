@@ -26,6 +26,7 @@ interface Product {
   images: string[] | null;
   flavors: string[] | null;
   prices: ProductPrices[];
+  pending_prices: ProductPrices[] | null;
   link: string | null;
   is_manual: boolean | null;
   is_qa_only: boolean;
@@ -61,6 +62,9 @@ const ProductsTable = () => {
       images: Array.isArray(p.images) ? p.images as string[] : [],
       flavors: Array.isArray(p.flavors) ? p.flavors as string[] : [],
       prices: Array.isArray(p.prices) ? (p.prices as unknown as ProductPrices[]) : [],
+      pending_prices: Array.isArray((p as any).pending_prices)
+        ? ((p as any).pending_prices as unknown as ProductPrices[])
+        : null,
     }));
 
     setProducts(parsedProducts as Product[]);

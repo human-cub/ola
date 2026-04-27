@@ -173,6 +173,7 @@ export type Database = {
           link: string | null
           max_weekly_participants: number | null
           name: string
+          pending_prices: Json | null
           prices: Json
           pricing_participants_count: number | null
           real_orders_count: number
@@ -200,6 +201,7 @@ export type Database = {
           link?: string | null
           max_weekly_participants?: number | null
           name: string
+          pending_prices?: Json | null
           prices?: Json
           pricing_participants_count?: number | null
           real_orders_count?: number
@@ -227,6 +229,7 @@ export type Database = {
           link?: string | null
           max_weekly_participants?: number | null
           name?: string
+          pending_prices?: Json | null
           prices?: Json
           pricing_participants_count?: number | null
           real_orders_count?: number
