@@ -36,6 +36,7 @@ interface Product {
   images: string[] | null;
   flavors: string[] | null;
   prices: ProductPrices[];
+  pending_prices: ProductPrices[] | null;
   link: string | null;
   is_manual: boolean | null;
   is_qa_only: boolean;
@@ -69,11 +70,14 @@ const EditProductDialog = ({ product, open, onOpenChange, onProductUpdated }: Ed
     description: "",
     flavors: "",
     isQaOnly: false,
+    applyPricesNow: false,
   });
 
   useEffect(() => {
     if (product) {
-      const pricesStr = product.prices?.map(p => p.price).join(" ") || "";
+      // Prefer pending_prices in the input (so admin can keep editing them) when present
+      const sourcePrices = product.pending_prices?.length ? product.pending_prices : product.prices;
+      const pricesStr = sourcePrices?.map(p => p.price).join(" ") || "";
       const flavorsStr = Array.isArray(product.flavors) ? product.flavors.join(", ") : "";
       const images = Array.isArray(product.images) ? product.images : [];
       
@@ -85,6 +89,7 @@ const EditProductDialog = ({ product, open, onOpenChange, onProductUpdated }: Ed
         description: product.description || "",
         flavors: flavorsStr,
         isQaOnly: product.is_qa_only ?? false,
+        applyPricesNow: false,
       });
       setImageUrls(images);
     }
@@ -240,21 +245,45 @@ const EditProductDialog = ({ product, open, onOpenChange, onProductUpdated }: Ed
       const slug = generateSlug(formData.name, formData.weight);
       const link = `/${slug}`;
 
-      const { error } = await supabase.from("products").update({
+      // Detect if prices changed compared to current product.prices
+      const currentPricesStr = product.prices?.map(p => p.price).join(" ") || "";
+      const newPricesStr = priceSlider.map(p => p.price).join(" ");
+      const pricesChanged = currentPricesStr !== newPricesStr;
+
+      const updatePayload: any = {
         name: formData.name,
         category: formData.category || null,
         weight: formData.weight,
-        prices: JSON.parse(JSON.stringify(priceSlider)),
         images: imageUrls,
         description: formData.description || null,
         flavors: flavorsArray,
         is_qa_only: formData.isQaOnly,
         link: link,
-      } as any).eq("id", product.id);
+      };
+
+      if (pricesChanged) {
+        if (formData.applyPricesNow) {
+          // Apply immediately + clear any pending
+          updatePayload.prices = JSON.parse(JSON.stringify(priceSlider));
+          updatePayload.pending_prices = null;
+        } else {
+          // Schedule for next weekly reset; do NOT touch current prices
+          updatePayload.pending_prices = JSON.parse(JSON.stringify(priceSlider));
+        }
+      } else {
+        // No price change — also clear stale pending if it matches
+        // (no-op otherwise)
+      }
+
+      const { error } = await supabase.from("products").update(updatePayload).eq("id", product.id);
 
       if (error) throw error;
 
-      toast.success("Producto actualizado correctamente");
+      if (pricesChanged && !formData.applyPricesNow) {
+        toast.success("Producto guardado. Los nuevos precios se aplicarán el próximo lunes");
+      } else {
+        toast.success("Producto actualizado correctamente");
+      }
       onOpenChange(false);
       onProductUpdated();
     } catch (error: any) {
