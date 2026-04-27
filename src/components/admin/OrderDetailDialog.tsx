@@ -101,7 +101,10 @@ export const OrderDetailDialog = ({ order, onClose, onNotesUpdated }: OrderDetai
   };
 
   const buildMessage = (o: DialogOrder): string => {
-    const firstName = o.profiles?.first_name?.trim();
+    const rawFirstName = o.profiles?.first_name?.trim();
+    const firstName = rawFirstName
+      ? rawFirstName.charAt(0).toUpperCase() + rawFirstName.slice(1)
+      : "";
     const greeting = firstName
       ? `Buenos Días, ${firstName}!`
       : `Buenos Días!`;
@@ -126,7 +129,7 @@ export const OrderDetailDialog = ({ order, onClose, onNotesUpdated }: OrderDetai
 
     const total = o.subtotal + o.delivery_cost;
 
-    let addressText = "(Dirección de Entrega)";
+    let addressText = "https://alaola.com.ar/completar-datos-colectiva";
     if (o.delivery_address) {
       const a = o.delivery_address;
       const line1 = [a.street, a.number, a.floor].filter(Boolean).join(" ");
