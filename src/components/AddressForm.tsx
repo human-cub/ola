@@ -77,6 +77,7 @@ export const AddressForm = ({
   const [cityQuery, setCityQuery] = useState(city);
   const [cityComboboxOpen, setCityComboboxOpen] = useState(false);
   const [citySuggestions, setCitySuggestions] = useState<string[]>([]);
+  const cityInputRef = useRef<HTMLInputElement>(null);
 
   // Check if current province is CABA (hide city field)
   const isCABA = isCABAProvince(province);
@@ -155,11 +156,13 @@ export const AddressForm = ({
   };
 
   const handleProvinceChange = (newProvince: string) => {
+    if (!newProvince) return;
+    const provinceChanged = province && newProvince !== province;
     setProvince(newProvince);
+    if (!provinceChanged) return;
     
     // If CABA is selected, clear city (not needed)
     if (isCABAProvince(newProvince)) {
-      setCity("");
       setCityQuery("");
       setCityComboboxOpen(false);
       setDeliveryZone('caba');
@@ -269,9 +272,19 @@ export const AddressForm = ({
                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+            <PopoverContent
+              className="w-[var(--radix-popover-trigger-width)] p-0"
+              align="start"
+              onOpenAutoFocus={(event) => {
+                event.preventDefault();
+                requestAnimationFrame(() => {
+                  cityInputRef.current?.focus();
+                });
+              }}
+            >
               <Command shouldFilter={false}>
                 <CommandInput
+                  ref={cityInputRef}
                   value={cityQuery}
                   onValueChange={(value) => {
                     setCityQuery(value);
