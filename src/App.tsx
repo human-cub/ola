@@ -20,6 +20,7 @@ import Checkout from "./pages/Checkout";
 import CompletarDatosColectiva from "./pages/CompletarDatosColectiva";
 import OrderDetail from "./pages/OrderDetail";
 import ComoComprar from "./pages/ComoComprar";
+import EnviosYDevoluciones from "./pages/EnviosYDevoluciones";
 import Mayoristas from "./pages/Mayoristas";
 import Contacto from "./pages/Contacto";
 import QuienesSomos from "./pages/QuienesSomos";
@@ -93,6 +94,7 @@ const App = () => {
           <Route path="/pedido/:orderId" element={<OrderDetail />} />
           <Route path="/mi-cuenta/pedidos/:orderId" element={<OrderDetail />} />
           <Route path="/como-comprar" element={<ComoComprar />} />
+          <Route path="/envios-y-devoluciones" element={<EnviosYDevoluciones />} />
           <Route path="/mayoristas" element={<Mayoristas />} />
           <Route path="/contacto" element={<Contacto />} />
           <Route path="/quienes-somos" element={<QuienesSomos />} />

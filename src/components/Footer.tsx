@@ -11,6 +11,7 @@ const navItems = [
   { to: "/", label: "Inicio" },
   { to: "/catalogo", label: "Catálogo" },
   { to: "/como-comprar", label: "Cómo Comprar" },
+  { to: "/envios-y-devoluciones", label: "Envíos y Devoluciones" },
   { to: "/mayoristas", label: "Ventas Mayoristas" },
   { to: "/quienes-somos", label: "Quiénes Somos" },
   { to: "/contacto", label: "Contacto" },
