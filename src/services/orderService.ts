@@ -190,6 +190,25 @@ export const syncWaitingListOrder = async (userId: string) => {
       productCountsMap.set(p.id, p.total_orders_count || 0);
     });
 
+    // Defensive snapshot: if order is in a closed cycle but a product has no
+    // frozen price/participants yet (e.g. cron didn't process it, or user
+    // completed data after the close), freeze it now using existing item data.
+    if (isFrozenCycle && existingOrder.items) {
+      (existingOrder.items as any[]).forEach((item: any) => {
+        if (!frozenParticipantsMap.has(item.product_id)) {
+          // Best available snapshot: use the price already on the item to
+          // back-derive the participants tier, otherwise fall back to current count.
+          const prices = productPricesMap.get(item.product_id) || [];
+          const matchedTier = prices.find((t: any) => Number(t.price) === Number(item.price_per_unit));
+          const snapshotCount = matchedTier?.people ?? productCountsMap.get(item.product_id) ?? 1;
+          frozenParticipantsMap.set(item.product_id, snapshotCount);
+          if (!frozenPriceMap.has(item.product_id)) {
+            frozenPriceMap.set(item.product_id, item.price_per_unit);
+          }
+        }
+      });
+    }
+
     const calcTierPrice = (productId: string, participants: number): number | null => {
       const prices = productPricesMap.get(productId);
       return getCollectiveTierPrice(prices, participants);
