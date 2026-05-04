@@ -241,6 +241,23 @@ Deno.serve(async (req) => {
     console.log(`[reset-weekly-orders] Successfully snapshot ${snapshotCount} pending orders`);
 
     // ==========================================
+    // STEP 1.6: Clear waiting_list_items for users whose orders were just frozen
+    // After snapshot, the waiting list must represent the NEW cycle (empty).
+    // Frozen items live exclusively in user_orders.items from now on.
+    // ==========================================
+    if (userIdsForEmail.length > 0) {
+      const { error: clearWLError } = await supabase
+        .from('waiting_list_items')
+        .delete()
+        .in('user_id', userIdsForEmail);
+      if (clearWLError) {
+        console.error('[reset-weekly-orders] Error clearing waiting_list_items:', clearWLError);
+      } else {
+        console.log(`[reset-weekly-orders] Cleared waiting_list_items for ${userIdsForEmail.length} users`);
+      }
+    }
+
+    // ==========================================
     // STEP 1.5: Send email notifications to users with pending orders
     // ==========================================
     if (userIdsForEmail.length > 0) {

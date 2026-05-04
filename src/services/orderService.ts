@@ -1,24 +1,35 @@
 import { supabase } from "@/integrations/supabase/client";
-import { getCollectiveTierPrice, getFirstTierPrice, isCollectiveOrderClosed, getLastSundayClose } from "@/lib/collectivePricing";
+import { getCollectiveTierPrice, getFirstTierPrice, isCollectiveOrderClosed } from "@/lib/collectivePricing";
 import { formatPrice, formatFullName } from "@/lib/formatting";
 import { parseAddress } from "@/lib/address";
 import { fetchServerTime } from "@/lib/serverClock";
 import type { OrderItem, OrderType, OrderStatus } from "@/lib/types";
 
 /**
- * Creates a new pending collective order if none exists, or syncs existing one.
- * Pure async function — no React dependency.
+ * Creates a new pending collective order for the CURRENT cycle if none exists,
+ * or syncs the current-cycle order. Closed-cycle pending orders are left untouched.
  */
 export const ensurePendingCollectiveOrder = async (userId: string) => {
-  const { data: existingOrder } = await supabase
+  const { data: pendingOrders } = await supabase
     .from("user_orders")
-    .select("id, order_number")
+    .select("id, order_number, created_at, collective_close_date, items")
     .eq("user_id", userId)
     .eq("order_type", "collective")
     .eq("status", "pending")
-    .maybeSingle();
+    .order("created_at", { ascending: false });
 
-  if (existingOrder) {
+  const serverNow = await fetchServerTime().catch(() => new Date());
+
+  // Find a CURRENT-cycle pending order (not closed)
+  const currentCycleOrder = (pendingOrders || []).find((o) => {
+    return !isCollectiveOrderClosed({
+      createdAt: o.created_at,
+      collectiveCloseDate: o.collective_close_date,
+      now: serverNow,
+    });
+  });
+
+  if (currentCycleOrder) {
     await syncWaitingListOrder(userId);
     return;
   }
@@ -120,8 +131,9 @@ export const ensurePendingCollectiveOrder = async (userId: string) => {
 };
 
 /**
- * Syncs waiting list items with the existing pending collective order.
- * Handles frozen-cycle logic and dynamic price recalculation.
+ * Syncs waiting list items with the CURRENT-cycle pending collective order.
+ * Closed-cycle orders are NOT touched here — their items are managed via
+ * `updateClosedOrderItemQuantity` / `removeClosedOrderItem` instead.
  */
 export const syncWaitingListOrder = async (userId: string) => {
   try {
@@ -130,13 +142,24 @@ export const syncWaitingListOrder = async (userId: string) => {
       .select("*")
       .eq("user_id", userId);
 
-    const { data: existingOrder } = await supabase
+    const { data: pendingOrders } = await supabase
       .from("user_orders")
       .select("id, items, created_at, collective_close_date")
       .eq("user_id", userId)
       .eq("order_type", "collective")
       .eq("status", "pending")
-      .maybeSingle();
+      .order("created_at", { ascending: false });
+
+    const serverNow = await fetchServerTime().catch(() => new Date());
+
+    // Operate ONLY on the current-cycle pending order. Skip closed ones.
+    const existingOrder = (pendingOrders || []).find((o) => {
+      return !isCollectiveOrderClosed({
+        createdAt: o.created_at,
+        collectiveCloseDate: o.collective_close_date,
+        now: serverNow,
+      });
+    });
 
     if (!existingOrder) return;
 
@@ -148,34 +171,8 @@ export const syncWaitingListOrder = async (userId: string) => {
       return;
     }
 
-    const serverNow = await fetchServerTime().catch(() => new Date());
-    const orderCreatedAt = new Date(existingOrder.created_at);
-    const hasManuallyFrozenItems = existingOrder.items && (existingOrder.items as any[]).some(
-      (item: any) => item.participants_count != null && Number(item.participants_count) > 0
-    );
-    const isFrozenCycle = hasManuallyFrozenItems || isCollectiveOrderClosed({
-      createdAt: existingOrder.created_at,
-      collectiveCloseDate: existingOrder.collective_close_date,
-      now: serverNow,
-    });
-
-    const frozenPriceMap = new Map<string, number>();
-    const frozenParticipantsMap = new Map<string, number>();
-    if (isFrozenCycle && existingOrder.items) {
-      (existingOrder.items as any[]).forEach((item: any) => {
-        const key = `${item.product_id}||${item.flavor || ''}`;
-        frozenPriceMap.set(key, item.price_per_unit);
-        if (item.participants_count != null) {
-          frozenParticipantsMap.set(key, item.participants_count);
-        }
-        if (!frozenPriceMap.has(item.product_id)) {
-          frozenPriceMap.set(item.product_id, item.price_per_unit);
-        }
-        if (item.participants_count != null && !frozenParticipantsMap.has(item.product_id)) {
-          frozenParticipantsMap.set(item.product_id, item.participants_count);
-        }
-      });
-    }
+    // Current cycle: always recalculate dynamically.
+    const isFrozenCycle = false;
 
     const productIds = [...new Set(waitingListData.map(i => i.product_id))];
     const { data: productsData } = await supabase
@@ -190,25 +187,6 @@ export const syncWaitingListOrder = async (userId: string) => {
       productCountsMap.set(p.id, p.total_orders_count || 0);
     });
 
-    // Defensive snapshot: if order is in a closed cycle but a product has no
-    // frozen price/participants yet (e.g. cron didn't process it, or user
-    // completed data after the close), freeze it now using existing item data.
-    if (isFrozenCycle && existingOrder.items) {
-      (existingOrder.items as any[]).forEach((item: any) => {
-        if (!frozenParticipantsMap.has(item.product_id)) {
-          // Best available snapshot: use the price already on the item to
-          // back-derive the participants tier, otherwise fall back to current count.
-          const prices = productPricesMap.get(item.product_id) || [];
-          const matchedTier = prices.find((t: any) => Number(t.price) === Number(item.price_per_unit));
-          const snapshotCount = matchedTier?.people ?? productCountsMap.get(item.product_id) ?? 1;
-          frozenParticipantsMap.set(item.product_id, snapshotCount);
-          if (!frozenPriceMap.has(item.product_id)) {
-            frozenPriceMap.set(item.product_id, item.price_per_unit);
-          }
-        }
-      });
-    }
-
     const calcTierPrice = (productId: string, participants: number): number | null => {
       const prices = productPricesMap.get(productId);
       return getCollectiveTierPrice(prices, participants);
@@ -216,17 +194,10 @@ export const syncWaitingListOrder = async (userId: string) => {
 
     const orderItems = waitingListData.map(item => {
       let unitPrice = item.current_price_per_unit;
-      let participantsCount: number | undefined;
-      if (isFrozenCycle) {
-        const key = `${item.product_id}||${item.flavor || ''}`;
-        unitPrice = frozenPriceMap.get(key) ?? frozenPriceMap.get(item.product_id) ?? item.current_price_per_unit;
-        participantsCount = frozenParticipantsMap.get(key) ?? frozenParticipantsMap.get(item.product_id);
-      } else {
-        const totalCount = productCountsMap.get(item.product_id) || 0;
-        const recalcPrice = calcTierPrice(item.product_id, totalCount);
-        if (recalcPrice !== null) {
-          unitPrice = recalcPrice;
-        }
+      const totalCount = productCountsMap.get(item.product_id) || 0;
+      const recalcPrice = calcTierPrice(item.product_id, totalCount);
+      if (recalcPrice !== null) {
+        unitPrice = recalcPrice;
       }
       const result: any = {
         product_id: item.product_id,
@@ -236,22 +207,17 @@ export const syncWaitingListOrder = async (userId: string) => {
         price_per_unit: unitPrice,
         product_image: item.product_image,
       };
-      if (participantsCount != null) {
-        result.participants_count = participantsCount;
-      }
       return result;
     });
 
-    if (!isFrozenCycle) {
-      for (const item of waitingListData) {
-        const totalCount = productCountsMap.get(item.product_id) || 0;
-        const newPrice = calcTierPrice(item.product_id, totalCount);
-        if (newPrice !== null && newPrice !== item.current_price_per_unit) {
-          await supabase
-            .from("waiting_list_items")
-            .update({ current_price_per_unit: newPrice })
-            .eq("id", item.id);
-        }
+    for (const item of waitingListData) {
+      const totalCount = productCountsMap.get(item.product_id) || 0;
+      const newPrice = calcTierPrice(item.product_id, totalCount);
+      if (newPrice !== null && newPrice !== item.current_price_per_unit) {
+        await supabase
+          .from("waiting_list_items")
+          .update({ current_price_per_unit: newPrice })
+          .eq("id", item.id);
       }
     }
 
@@ -281,6 +247,149 @@ export const syncWaitingListOrder = async (userId: string) => {
   } catch (error) {
     console.error("Error syncing waiting list order:", error);
   }
+};
+
+/**
+ * Update quantity of a single item inside a CLOSED-cycle pending order.
+ * Only modifies that user's snapshot — global counters are untouched
+ * (the DB trigger filters by `created_at >= week_start`, so old orders
+ * don't affect `waiting_for_discount_count`).
+ *
+ * The user's individual `participants_count` snapshot grows by the qty delta,
+ * which can move them into a lower tier and reduce their personal price.
+ */
+export const updateClosedOrderItem = async (
+  orderId: string,
+  itemMatch: { product_id: string; flavor: string | null },
+  newQuantity: number
+): Promise<void> => {
+  if (newQuantity < 1 || newQuantity > 99) return;
+
+  const { data: order } = await supabase
+    .from("user_orders")
+    .select("id, items, delivery_cost, status")
+    .eq("id", orderId)
+    .maybeSingle();
+
+  if (!order || order.status !== "pending") return;
+
+  const items = (order.items as any[]) || [];
+  const idx = items.findIndex(
+    (i) => i.product_id === itemMatch.product_id && (i.flavor || null) === itemMatch.flavor
+  );
+  if (idx === -1) return;
+
+  const current = items[idx];
+  const oldQty = Number(current.quantity || 0);
+  const delta = newQuantity - oldQty;
+
+  // Recalculate this user's personal tier price using their personal snapshot
+  // bumped by the qty delta. Global counters stay frozen.
+  const baseSnapshot = Number(current.participants_count || 0);
+  const personalSnapshot = Math.max(1, baseSnapshot + delta);
+
+  const { data: product } = await supabase
+    .from("products")
+    .select("prices")
+    .eq("id", current.product_id)
+    .maybeSingle();
+
+  let newPrice = current.price_per_unit;
+  if (product?.prices) {
+    const tierPrice = getCollectiveTierPrice(product.prices, personalSnapshot);
+    if (tierPrice !== null) newPrice = tierPrice;
+  }
+
+  const updatedItems = items.map((i, k) =>
+    k === idx
+      ? {
+          ...i,
+          quantity: newQuantity,
+          price_per_unit: newPrice,
+          participants_count: personalSnapshot,
+        }
+      : i
+  );
+
+  const subtotal = updatedItems.reduce(
+    (s, i) => s + Number(i.price_per_unit) * Number(i.quantity),
+    0
+  );
+  const productIds = [...new Set(updatedItems.map((i) => i.product_id))];
+  const { data: productsData } = await supabase
+    .from("products")
+    .select("id, prices")
+    .in("id", productIds);
+  let fullPrice = 0;
+  updatedItems.forEach((i) => {
+    const prod = productsData?.find((p) => p.id === i.product_id);
+    const firstTier = getFirstTierPrice(prod?.prices, Number(i.price_per_unit));
+    fullPrice += firstTier * Number(i.quantity);
+  });
+
+  await supabase
+    .from("user_orders")
+    .update({
+      items: updatedItems,
+      subtotal,
+      total_amount: subtotal + Number(order.delivery_cost || 0),
+      discount_amount: fullPrice - subtotal,
+    })
+    .eq("id", orderId);
+};
+
+/**
+ * Remove an item from a CLOSED-cycle pending order.
+ * Global counters stay frozen (trigger filter on `created_at`).
+ * If the order becomes empty, it is deleted.
+ */
+export const removeClosedOrderItem = async (
+  orderId: string,
+  itemMatch: { product_id: string; flavor: string | null }
+): Promise<void> => {
+  const { data: order } = await supabase
+    .from("user_orders")
+    .select("id, items, delivery_cost, status")
+    .eq("id", orderId)
+    .maybeSingle();
+
+  if (!order || order.status !== "pending") return;
+
+  const items = (order.items as any[]) || [];
+  const updatedItems = items.filter(
+    (i) => !(i.product_id === itemMatch.product_id && (i.flavor || null) === itemMatch.flavor)
+  );
+
+  if (updatedItems.length === 0) {
+    await supabase.from("user_orders").delete().eq("id", orderId);
+    return;
+  }
+
+  const subtotal = updatedItems.reduce(
+    (s, i) => s + Number(i.price_per_unit) * Number(i.quantity),
+    0
+  );
+  const productIds = [...new Set(updatedItems.map((i) => i.product_id))];
+  const { data: productsData } = await supabase
+    .from("products")
+    .select("id, prices")
+    .in("id", productIds);
+  let fullPrice = 0;
+  updatedItems.forEach((i) => {
+    const prod = productsData?.find((p) => p.id === i.product_id);
+    const firstTier = getFirstTierPrice(prod?.prices, Number(i.price_per_unit));
+    fullPrice += firstTier * Number(i.quantity);
+  });
+
+  await supabase
+    .from("user_orders")
+    .update({
+      items: updatedItems,
+      subtotal,
+      total_amount: subtotal + Number(order.delivery_cost || 0),
+      discount_amount: fullPrice - subtotal,
+    })
+    .eq("id", orderId);
 };
 
 /**
