@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { getCollectiveTierPrice, getFirstTierPrice, isCollectiveOrderClosed, getLastSundayClose } from "@/lib/collectivePricing";
+import { getCollectiveTierPrice, getFirstTierPrice, isCollectiveOrderClosed } from "@/lib/collectivePricing";
 import { formatPrice, formatFullName } from "@/lib/formatting";
 import { parseAddress } from "@/lib/address";
 import { fetchServerTime } from "@/lib/serverClock";
