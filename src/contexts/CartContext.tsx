@@ -159,13 +159,34 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Move waiting list items to cart
   const moveWaitingListToCart = async () => {
     try {
+      // Fetch buy-now (tier 1) prices for all products in the waiting list
+      // so items move to cart at the "Comprar ahora" price, not at the
+      // collective tier price they have currently reached.
+      const productIds = [...new Set(waitingListItems.map(i => i.product_id))];
+      const buyNowPriceMap = new Map<string, number>();
+      if (productIds.length > 0) {
+        const { data: products } = await supabase
+          .from('products')
+          .select('id, prices')
+          .in('id', productIds);
+        products?.forEach((p) => {
+          const tiers = (p.prices as unknown as Array<{ people: number; price: number }>) || [];
+          if (tiers.length > 1) {
+            buyNowPriceMap.set(p.id, tiers[1].price);
+          } else if (tiers.length === 1) {
+            buyNowPriceMap.set(p.id, tiers[0].price);
+          }
+        });
+      }
+
       for (const item of waitingListItems) {
+        const buyNowPrice = buyNowPriceMap.get(item.product_id) ?? item.current_price_per_unit;
         await addToCart({
           product_id: item.product_id,
           product_name: item.product_name,
           flavor: item.flavor,
           quantity: item.quantity,
-          price_per_unit: item.current_price_per_unit,
+          price_per_unit: buyNowPrice,
           product_image: item.product_image,
         });
       }
