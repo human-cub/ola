@@ -117,6 +117,36 @@ export const OrderDetailDialog = ({ order, onClose, onNotesUpdated }: OrderDetai
 
     setApplyingPromo(true);
     try {
+      // Enforce one promo code per user
+      const { data: existing } = await supabase
+        .from("user_orders")
+        .select("id, order_number")
+        .eq("promo_code", promo.code)
+        .neq("id", order.id)
+        .neq("status", "cancelled");
+      // Need user_id of current order
+      const { data: thisOrder } = await supabase
+        .from("user_orders")
+        .select("user_id")
+        .eq("id", order.id)
+        .single();
+      if (thisOrder && existing && existing.length > 0) {
+        const { data: dup } = await supabase
+          .from("user_orders")
+          .select("order_number")
+          .eq("user_id", thisOrder.user_id)
+          .eq("promo_code", promo.code)
+          .neq("id", order.id)
+          .neq("status", "cancelled")
+          .limit(1)
+          .maybeSingle();
+        if (dup) {
+          toast.error(`El cliente ya usó ${promo.code} en ${dup.order_number}`);
+          setApplyingPromo(false);
+          return;
+        }
+      }
+
       // Apply tier bonus per-item: each product shifts from its own current tier.
       await applyPromoTier(order, promo.tier_bonus, { bonus: promo.tier_bonus, code: promo.code });
       toast.success(`Promo ${promo.code} aplicada`);
