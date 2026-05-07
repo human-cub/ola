@@ -347,6 +347,7 @@ export type Database = {
           order_type: Database["public"]["Enums"]["order_type"]
           participants_count: number | null
           payment_method: string | null
+          promo_code: string | null
           promo_tier: number | null
           status: Database["public"]["Enums"]["extended_order_status"]
           subtotal: number
@@ -370,6 +371,7 @@ export type Database = {
           order_type?: Database["public"]["Enums"]["order_type"]
           participants_count?: number | null
           payment_method?: string | null
+          promo_code?: string | null
           promo_tier?: number | null
           status?: Database["public"]["Enums"]["extended_order_status"]
           subtotal?: number
@@ -393,6 +395,7 @@ export type Database = {
           order_type?: Database["public"]["Enums"]["order_type"]
           participants_count?: number | null
           payment_method?: string | null
+          promo_code?: string | null
           promo_tier?: number | null
           status?: Database["public"]["Enums"]["extended_order_status"]
           subtotal?: number

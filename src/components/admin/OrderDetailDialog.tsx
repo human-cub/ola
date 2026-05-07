@@ -54,6 +54,7 @@ export interface DialogOrder {
   participants_count: number | null;
   is_promo: boolean;
   promo_tier?: number | null;
+  promo_code?: string | null;
   created_at: string;
   profiles?: OrderProfile;
 }
@@ -116,8 +117,38 @@ export const OrderDetailDialog = ({ order, onClose, onNotesUpdated }: OrderDetai
 
     setApplyingPromo(true);
     try {
+      // Enforce one promo code per user
+      const { data: existing } = await supabase
+        .from("user_orders")
+        .select("id, order_number")
+        .eq("promo_code", promo.code)
+        .neq("id", order.id)
+        .neq("status", "cancelled");
+      // Need user_id of current order
+      const { data: thisOrder } = await supabase
+        .from("user_orders")
+        .select("user_id")
+        .eq("id", order.id)
+        .single();
+      if (thisOrder && existing && existing.length > 0) {
+        const { data: dup } = await supabase
+          .from("user_orders")
+          .select("order_number")
+          .eq("user_id", thisOrder.user_id)
+          .eq("promo_code", promo.code)
+          .neq("id", order.id)
+          .neq("status", "cancelled")
+          .limit(1)
+          .maybeSingle();
+        if (dup) {
+          toast.error(`El cliente ya usó ${promo.code} en ${dup.order_number}`);
+          setApplyingPromo(false);
+          return;
+        }
+      }
+
       // Apply tier bonus per-item: each product shifts from its own current tier.
-      await applyPromoTier(order, promo.tier_bonus, { bonus: promo.tier_bonus });
+      await applyPromoTier(order, promo.tier_bonus, { bonus: promo.tier_bonus, code: promo.code });
       toast.success(`Promo ${promo.code} aplicada`);
       onNotesUpdated();
     } catch (error: any) {
@@ -471,7 +502,7 @@ export const OrderDetailDialog = ({ order, onClose, onNotesUpdated }: OrderDetai
               {order.is_promo ? (
                 <div className="flex items-center justify-between bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-900 rounded-lg p-3">
                   <span className="text-sm text-green-700 dark:text-green-400">
-                    PROMO aplicada (tier {order.promo_tier ?? "—"})
+                    PROMO <strong>{order.promo_code ?? "—"}</strong> aplicada (+{order.promo_tier ?? "—"} tier)
                   </span>
                   <Button
                     size="sm"

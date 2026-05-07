@@ -98,6 +98,8 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
     deliveryCost,
     total,
     items,
+    promoCode: appliedPromo?.code ?? null,
+    promoTierBonus: appliedPromo?.tier_bonus ?? null,
     clearItems: isCollective ? clearWaitingList : clearCart,
     onSuccess: (data) => {
       amplitude.track('Checkout Complete', {

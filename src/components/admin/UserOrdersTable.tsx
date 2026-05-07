@@ -72,6 +72,7 @@ interface UserOrder {
   updated_at: string;
   is_promo: boolean;
   promo_tier: number | null;
+  promo_code: string | null;
   profiles?: {
     email: string | null;
     phone: string | null;
@@ -376,7 +377,11 @@ const UserOrdersTable = () => {
                         <Clock className="w-3 h-3" />
                       )}
                       {orderTypeLabels[order.order_type]}
-                      {order.is_promo && <span className="text-green-600 font-semibold">(PROMO)</span>}
+                      {order.is_promo && (
+                        <span className="text-green-600 font-semibold">
+                          (PROMO{order.promo_code ? `: ${order.promo_code}` : ""})
+                        </span>
+                      )}
                     </Badge>
                   </TableCell>
                   <TableCell>

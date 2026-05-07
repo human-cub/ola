@@ -406,7 +406,7 @@ export const applyPromoTier = async (
     delivery_cost: number;
   },
   tier: number | null,
-  options?: { bonus?: number },
+  options?: { bonus?: number; code?: string | null },
 ): Promise<void> => {
   const productIds = [...new Set(order.items.map(item => item.product_id))];
   const { data: productsData } = await supabase
@@ -461,7 +461,8 @@ export const applyPromoTier = async (
         total_amount: restoredTotal,
         is_promo: false,
         promo_tier: null,
-      })
+        promo_code: null,
+      } as any)
       .eq("id", order.id);
 
     if (error) throw error;
@@ -506,7 +507,8 @@ export const applyPromoTier = async (
       total_amount: newTotal,
       is_promo: true,
       promo_tier: tier,
-    })
+      promo_code: options?.code ?? null,
+    } as any)
     .eq("id", order.id);
 
   if (error) throw error;
