@@ -41,6 +41,23 @@ export const PromoCodeInput = ({ appliedPromo, onApply, onRemove }: PromoCodeInp
         return;
       }
 
+      // Enforce one-time use per user
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const { data: existing } = await supabase
+          .from("user_orders")
+          .select("id")
+          .eq("user_id", session.user.id)
+          .eq("promo_code", data.code)
+          .neq("status", "cancelled")
+          .limit(1)
+          .maybeSingle();
+        if (existing) {
+          setError("Ya usaste este código en otro pedido");
+          return;
+        }
+      }
+
       onApply({ code: data.code, tier_bonus: data.tier_bonus });
       setCode("");
       setError("");
