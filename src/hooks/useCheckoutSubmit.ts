@@ -10,6 +10,8 @@ interface SubmitOptions {
   deliveryCost: number;
   total: number;
   items: any[];
+  promoCode?: string | null;
+  promoTierBonus?: number | null;
   onSuccess: (data: { orderNumber: string; orderId: string; total: number }) => void;
   clearItems: () => Promise<void>;
 }
@@ -37,6 +39,23 @@ export function useCheckoutSubmit(options: SubmitOptions) {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("No session");
+
+      // Validate promo uniqueness per user (one-time use per user per code)
+      if (options.promoCode) {
+        const { data: existingPromo } = await supabase
+          .from("user_orders")
+          .select("id")
+          .eq("user_id", session.user.id)
+          .eq("promo_code", options.promoCode)
+          .neq("status", "cancelled")
+          .limit(1)
+          .maybeSingle();
+        if (existingPromo) {
+          toast.error(`Ya usaste el código ${options.promoCode} en otro pedido`);
+          setLoading(false);
+          return;
+        }
+      }
 
       const addressData = {
         street: formData.street,
@@ -80,7 +99,10 @@ export function useCheckoutSubmit(options: SubmitOptions) {
             delivery_cost: options.deliveryCost || 0,
             total_amount: collectiveTotal,
             payment_method: formData.paymentMethod,
-          })
+            ...(options.promoCode
+              ? { is_promo: true, promo_code: options.promoCode, promo_tier: options.promoTierBonus ?? null }
+              : {}),
+          } as any)
           .eq("id", pendingOrder.id);
 
         if (updateError) throw updateError;
@@ -112,7 +134,10 @@ export function useCheckoutSubmit(options: SubmitOptions) {
             delivery_address: addressData as any,
             payment_method: formData.paymentMethod,
             status: 'pending' as const,
-          }])
+            ...(options.promoCode
+              ? { is_promo: true, promo_code: options.promoCode, promo_tier: options.promoTierBonus ?? null }
+              : {}),
+          } as any])
           .select('id, order_number')
           .single();
 
