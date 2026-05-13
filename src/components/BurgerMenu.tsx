@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Menu, ChevronRight, ChevronLeft, Home, BookOpen, HelpCircle, Briefcase, Users, MessageCircle } from "lucide-react";
+import { Menu, ChevronRight, ChevronLeft, Home, BookOpen, HelpCircle, Briefcase, Users, MessageCircle, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -39,6 +39,7 @@ const mainMenu: MenuItem[] = [
     children: catalogCategories,
   },
   { name: "Cómo Comprar", to: "/como-comprar", icon: HelpCircle },
+  { name: "Envíos y Devoluciones", to: "/envios-y-devoluciones", icon: Truck },
   { name: "Ventas Mayoristas", to: "/mayoristas", icon: Briefcase },
   { name: "Quiénes Somos", to: "/quienes-somos", icon: Users },
   { name: "Contacto", to: "/contacto", icon: MessageCircle },
