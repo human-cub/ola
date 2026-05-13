@@ -121,8 +121,9 @@ export const RelatedProducts = ({ currentProduct = "" }: RelatedProductsProps) =
                       decoding="async"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                        target.parentElement!.innerHTML = '<div class="w-12 h-12 bg-primary/20 rounded"></div>';
+                        const placeholder = document.createElement('div');
+                        placeholder.className = 'w-12 h-12 bg-primary/20 rounded';
+                        target.replaceWith(placeholder);
                       }}
                     />
                   </div>
