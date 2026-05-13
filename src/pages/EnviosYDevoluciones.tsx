@@ -3,6 +3,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { useScrollHeader } from "@/hooks/useScrollHeader";
 import { Truck, Package, MapPin, RefreshCw } from "lucide-react";
+import zonasEnvio from "@/assets/zonas-envio.png";
 
 const EnviosYDevoluciones = () => {
   const isVisible = useScrollHeader();
@@ -18,6 +19,17 @@ const EnviosYDevoluciones = () => {
         <div className="w-20 h-1 bg-gradient-primary mx-auto rounded-full mb-10" />
 
         <div className="space-y-10">
+          {/* Mapa de zonas de envío */}
+          <section>
+            <img
+              src={zonasEnvio}
+              alt="Mapa de zonas de envío: CABA gratis, GBA $3000"
+              className="w-full max-w-md mx-auto h-auto"
+              loading="eager"
+              decoding="async"
+            />
+          </section>
+
           {/* Logística y Envíos */}
           <section>
             <h2 className="text-xl md:text-2xl font-semibold text-foreground mb-4 flex items-center gap-3">
@@ -27,7 +39,7 @@ const EnviosYDevoluciones = () => {
               Logística y Envíos
             </h2>
             <p className="text-foreground font-medium mb-3">
-              Llega hoy a CABA y GBA (comprando antes de las 14 hs)
+              ¡Recibilo hoy mismo en CABA y GBA! Hacé tu pedido antes de las 14 hs
             </p>
             <ul className="space-y-2 ml-2 mb-4 text-muted-foreground">
               <li><span className="font-semibold text-foreground">Envío gratis</span> en CABA</li>
