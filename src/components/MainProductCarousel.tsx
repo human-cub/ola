@@ -144,8 +144,9 @@ export const MainProductCarousel = () => {
                                   height={400}
                                   onError={(e) => {
                                     const target = e.target as HTMLImageElement;
-                                    target.style.display = 'none';
-                                    target.parentElement!.innerHTML = '<div class="w-32 h-32 bg-primary/20 rounded-xl"></div>';
+                                    const placeholder = document.createElement('div');
+                                    placeholder.className = 'w-32 h-32 bg-primary/20 rounded-xl';
+                                    target.replaceWith(placeholder);
                                   }}
                                 />
                               </div>
