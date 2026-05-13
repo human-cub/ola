@@ -39,7 +39,7 @@ const EnviosYDevoluciones = () => {
               Logística y Envíos
             </h2>
             <p className="text-foreground font-medium mb-3">
-              ¡Recibilo hoy mismo en CABA y GBA! Hacé tu pedido antes de las 14 hs
+              ¡Llega hoy a CABA y GBA! (comprando antes de las 14 hs)
             </p>
             <ul className="space-y-2 ml-2 mb-4 text-muted-foreground">
               <li><span className="font-semibold text-foreground">Envío gratis</span> en CABA</li>
@@ -48,7 +48,7 @@ const EnviosYDevoluciones = () => {
               <li><span className="font-semibold text-foreground">Envío gratis</span> a todo el país en compras superiores a $100.000</li>
             </ul>
             <p className="text-muted-foreground mb-3">
-              ¡Queremos que tus productos lleguen volando! Contamos con logística propia para asegurarnos de que tu pedido te llegue rápido y en perfectas condiciones.
+              Queremos que tus productos lleguen volando. Tenemos logística propia para que tu pedido te llegue rápido y en perfectas condiciones.
             </p>
             <p className="text-muted-foreground">
               Si estás lejos, ¡no te preocupes! También hacemos envíos a todo el país a través de Andreani y Correo Argentino.
