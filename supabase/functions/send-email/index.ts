@@ -8,6 +8,15 @@ const corsHeaders = {
 
 const SENDER = 'Ola! Marketplace <hola@alaola.com.ar>';
 
+function esc(v: unknown): string {
+  return String(v ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 interface EmailRequest {
   type: 'welcome' | 'order_confirmation' | 'collective_cycle_closed' | 'collective_order_confirmed' | 'password_reset';
   to: string;
@@ -49,7 +58,7 @@ function getOrderConfirmationEmail(to: string, data: Record<string, any>) {
   const items = data.items || [];
   const itemsHtml = items.map((item: any) =>
     `<tr>
-      <td style="padding:8px 0;border-bottom:1px solid #eee;">${item.quantity}x ${item.product_name}${item.flavor ? ` (${item.flavor})` : ''}</td>
+      <td style="padding:8px 0;border-bottom:1px solid #eee;">${esc(item.quantity)}x ${esc(item.product_name)}${item.flavor ? ` (${esc(item.flavor)})` : ''}</td>
       <td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right;">$${Math.round(item.price_per_unit * item.quantity).toLocaleString('es-AR')}</td>
     </tr>`
   ).join('');
@@ -57,7 +66,7 @@ function getOrderConfirmationEmail(to: string, data: Record<string, any>) {
   return {
     from: SENDER,
     to,
-    subject: `Pedido confirmado #${data.order_number} ✅`,
+    subject: `Pedido confirmado #${String(data.order_number ?? '').slice(0, 64)} ✅`,
     html: `
 <!DOCTYPE html>
 <html>
@@ -69,7 +78,7 @@ function getOrderConfirmationEmail(to: string, data: Record<string, any>) {
       <img src="https://alaola.com.ar/lovable-uploads/f61342f0-4c86-4d5f-8e4a-6f6380460a50.png" alt="Ola" width="48" height="48" />
     </div>
     <h1 style="font-size:22px;color:#1a1a1a;margin:0 0 4px;text-align:center;">¡Pedido confirmado! ✅</h1>
-    <p style="color:#666;text-align:center;margin:0 0 24px;">Pedido <strong>#${data.order_number}</strong></p>
+    <p style="color:#666;text-align:center;margin:0 0 24px;">Pedido <strong>#${esc(data.order_number)}</strong></p>
 
     <table style="width:100%;border-collapse:collapse;margin-bottom:16px;">
       <thead>
@@ -86,12 +95,12 @@ function getOrderConfirmationEmail(to: string, data: Record<string, any>) {
     </div>
 
     <div style="background:#f8f9fa;border-radius:8px;padding:16px;margin-top:16px;font-size:14px;">
-      <p style="margin:0 0 4px;"><strong>Pago:</strong> ${data.payment_method || 'No especificado'}</p>
-      ${data.address ? `<p style="margin:0;"><strong>Dirección:</strong> ${data.address}</p>` : ''}
+      <p style="margin:0 0 4px;"><strong>Pago:</strong> ${esc(data.payment_method || 'No especificado')}</p>
+      ${data.address ? `<p style="margin:0;"><strong>Dirección:</strong> ${esc(data.address)}</p>` : ''}
     </div>
 
     <div style="text-align:center;margin-top:24px;">
-      <a href="https://alaola.com.ar/mi-cuenta/pedidos/${data.order_id}" style="display:inline-block;background:#1a1a1a;color:white;text-decoration:none;padding:12px 32px;border-radius:8px;font-weight:600;font-size:15px;">
+      <a href="https://alaola.com.ar/mi-cuenta/pedidos/${encodeURIComponent(String(data.order_id ?? ''))}" style="display:inline-block;background:#1a1a1a;color:white;text-decoration:none;padding:12px 32px;border-radius:8px;font-weight:600;font-size:15px;">
         Ver comprobante
       </a>
     </div>
@@ -109,7 +118,7 @@ function getOrderConfirmationEmail(to: string, data: Record<string, any>) {
 function getCollectiveCycleClosedEmail(to: string, data: Record<string, any>) {
   const items = data.items || [];
   const itemsHtml = items.map((item: any) =>
-    `<li style="padding:4px 0;">${item.quantity}x ${item.product_name}${item.flavor ? ` (${item.flavor})` : ''} — $${Math.round(item.price_per_unit * item.quantity).toLocaleString('es-AR')}</li>`
+    `<li style="padding:4px 0;">${esc(item.quantity)}x ${esc(item.product_name)}${item.flavor ? ` (${esc(item.flavor)})` : ''} — $${Math.round(item.price_per_unit * item.quantity).toLocaleString('es-AR')}</li>`
   ).join('');
 
   return {
@@ -190,11 +199,20 @@ serve(async (req) => {
       throw new Error('RESEND_API_KEY is not configured');
     }
 
-    // Allow both authenticated users and cron jobs
+    // Allow both authenticated users and cron jobs.
+    // Authentication model:
+    //   - cron jobs: x-cron-secret header
+    //   - password_reset: public (the user is by definition not signed in)
+    //   - all other types: require a valid Supabase JWT and the recipient
+    //     must match the authenticated user's email.
     const cronSecret = req.headers.get('x-cron-secret');
     const expectedCronSecret = Deno.env.get('CRON_SECRET');
     const isCronAuth = cronSecret && cronSecret === expectedCronSecret;
 
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+
+    let authedEmail: string | null = null;
     if (!isCronAuth) {
       const authHeader = req.headers.get('Authorization');
       if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -203,6 +221,15 @@ serve(async (req) => {
           { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
+      const token = authHeader.replace('Bearer ', '');
+      const supabaseAuthClient = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: claims, error: claimsErr } = await supabaseAuthClient.auth.getClaims(token);
+      if (!claimsErr && claims?.claims) {
+        authedEmail = (claims.claims as any).email ?? null;
+      }
+      // We don't reject here yet — password_reset is allowed without a valid JWT.
     }
 
     const body: EmailRequest | EmailRequest[] = await req.json();
@@ -211,6 +238,19 @@ serve(async (req) => {
     const results = [];
 
     for (const emailReq of emails) {
+      // Authorization per email type
+      if (emailReq.type !== 'password_reset' && !isCronAuth) {
+        if (!authedEmail) {
+          results.push({ to: emailReq.to, success: false, error: 'Unauthorized' });
+          continue;
+        }
+        // Recipient must match the authenticated caller for non-password-reset types
+        if (String(emailReq.to).toLowerCase() !== authedEmail.toLowerCase()) {
+          results.push({ to: emailReq.to, success: false, error: 'Forbidden: recipient mismatch' });
+          continue;
+        }
+      }
+
       let emailPayload;
 
       switch (emailReq.type) {
@@ -226,7 +266,6 @@ serve(async (req) => {
           break;
         case 'password_reset': {
           // Generate reset link using admin API
-          const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
           const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
           const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
