@@ -29,12 +29,10 @@ export const PromoCodeInput = ({ appliedPromo, onApply, onRemove }: PromoCodeInp
     setError("");
 
     try {
-      const { data, error: fetchError } = await supabase
-        .from("promo_codes")
-        .select("code, tier_bonus, is_active")
-        .eq("code", trimmed)
-        .eq("is_active", true)
-        .single();
+      const { data: rows, error: fetchError } = await supabase
+        .rpc("validate_promo_code", { _code: trimmed });
+
+      const data = Array.isArray(rows) ? rows[0] : rows;
 
       if (fetchError || !data) {
         setError("Código inválido o inactivo");
