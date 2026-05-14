@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -40,6 +41,37 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: 'Missing required fields' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Verify a matching wholesale_leads record was actually inserted recently.
+    // This prevents abuse of the open Telegram notification endpoint by tying
+    // every notification to a real DB row (which is the actual lead submission).
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
+
+    const sinceIso = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+    const { data: matching, error: matchErr } = await supabaseAdmin
+      .from('wholesale_leads')
+      .select('id')
+      .eq('full_name', body.full_name)
+      .eq('phone', body.phone)
+      .gte('created_at', sinceIso)
+      .limit(1);
+
+    if (matchErr) {
+      console.error('Lead lookup failed:', matchErr);
+      return new Response(
+        JSON.stringify({ error: 'Verification failed' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!matching || matching.length === 0) {
+      return new Response(
+        JSON.stringify({ error: 'No matching recent lead found' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
