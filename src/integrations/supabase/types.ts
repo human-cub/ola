@@ -551,6 +551,13 @@ export type Database = {
         Args: { _complete: boolean; _product_id: string }
         Returns: number
       }
+      validate_promo_code: {
+        Args: { _code: string }
+        Returns: {
+          code: string
+          tier_bonus: number
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "user" | "mayorista"
