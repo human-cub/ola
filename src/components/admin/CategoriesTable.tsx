@@ -1,247 +1,202 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
-
-interface Category {
-  id: string;
-  name: string;
-  slug: string;
-  emoji: string | null;
-  sort_order: number;
-  is_active: boolean;
-}
-
-const slugify = (s: string) =>
-  s
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
+import { Loader2, RefreshCw } from "lucide-react";
+import { useCategories, type Category } from "@/hooks/useCategories";
+import { useQueryClient } from "@tanstack/react-query";
 
 const CategoriesTable = () => {
-  const [rows, setRows] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editing, setEditing] = useState<Category | null>(null);
-  const [formName, setFormName] = useState("");
-  const [formSlug, setFormSlug] = useState("");
-  const [formEmoji, setFormEmoji] = useState("");
-  const [formOrder, setFormOrder] = useState("0");
-  const [formActive, setFormActive] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const qc = useQueryClient();
+  const { data: categories = [], isLoading, refetch, isFetching, error } =
+    useCategories({ includeInactive: true });
+  const [drafts, setDrafts] = useState<
+    Record<string, { emoji: string; sort_order: string }>
+  >({});
+  const [savingSlug, setSavingSlug] = useState<string | null>(null);
 
-  const fetchRows = async () => {
-    const { data, error } = await supabase
-      .from("categories")
-      .select("*")
-      .order("sort_order", { ascending: true });
-    if (error) {
-      toast.error("Error al cargar las categorías");
-      return;
-    }
-    setRows(data || []);
-    setLoading(false);
+  const getDraft = (c: Category) =>
+    drafts[c.slug] ?? {
+      emoji: c.emoji ?? "",
+      sort_order: String(c.sort_order ?? 0),
+    };
+
+  const setDraft = (slug: string, patch: Partial<{ emoji: string; sort_order: string }>) => {
+    setDrafts((prev) => ({
+      ...prev,
+      [slug]: { ...(prev[slug] ?? { emoji: "", sort_order: "0" }), ...patch },
+    }));
   };
 
-  useEffect(() => {
-    fetchRows();
-  }, []);
-
-  const openAdd = () => {
-    setEditing(null);
-    setFormName("");
-    setFormSlug("");
-    setFormEmoji("");
-    setFormOrder(String((rows[rows.length - 1]?.sort_order ?? 0) + 10));
-    setFormActive(true);
-    setDialogOpen(true);
+  const upsertOverride = async (
+    c: Category,
+    patch: { emoji?: string | null; sort_order?: number; is_active?: boolean },
+  ) => {
+    const payload = {
+      slug: c.slug,
+      emoji: patch.emoji !== undefined ? patch.emoji : c.emoji,
+      sort_order: patch.sort_order !== undefined ? patch.sort_order : c.sort_order,
+      is_active: patch.is_active !== undefined ? patch.is_active : c.is_active,
+    };
+    const { error: upErr } = await supabase
+      .from("category_overrides")
+      .upsert(payload, { onConflict: "slug" });
+    if (upErr) throw upErr;
   };
 
-  const openEdit = (row: Category) => {
-    setEditing(row);
-    setFormName(row.name);
-    setFormSlug(row.slug);
-    setFormEmoji(row.emoji || "");
-    setFormOrder(String(row.sort_order));
-    setFormActive(row.is_active);
-    setDialogOpen(true);
-  };
-
-  const handleNameChange = (v: string) => {
-    setFormName(v);
-    if (!editing) setFormSlug(slugify(v));
-  };
-
-  const handleSave = async () => {
-    const name = formName.trim();
-    const slug = slugify(formSlug.trim());
-    if (!name || !slug) {
-      toast.error("Nombre y slug son requeridos");
-      return;
-    }
-    if (!/^[a-z0-9-]+$/.test(slug)) {
-      toast.error("Slug solo puede contener letras, números y guiones");
-      return;
-    }
-    setSaving(true);
+  const handleSaveRow = async (c: Category) => {
+    const d = getDraft(c);
+    setSavingSlug(c.slug);
     try {
-      const payload = {
-        name,
-        slug,
-        emoji: formEmoji.trim() || null,
-        sort_order: parseInt(formOrder) || 0,
-        is_active: formActive,
-      };
-      if (editing) {
-        const { error } = await supabase.from("categories").update(payload).eq("id", editing.id);
-        if (error) throw error;
-        toast.success("Categoría actualizada");
-      } else {
-        const { error } = await supabase.from("categories").insert(payload);
-        if (error) {
-          if (error.code === "23505") {
-            toast.error("Ya existe una categoría con ese slug");
-            return;
-          }
-          throw error;
-        }
-        toast.success("Categoría creada");
-      }
-      setDialogOpen(false);
-      fetchRows();
-    } catch (e: any) {
-      toast.error(e.message || "Error al guardar");
+      await upsertOverride(c, {
+        emoji: d.emoji.trim() || null,
+        sort_order: parseInt(d.sort_order) || 0,
+      });
+      toast.success("Guardado");
+      setDrafts((prev) => {
+        const next = { ...prev };
+        delete next[c.slug];
+        return next;
+      });
+      qc.invalidateQueries({ queryKey: ["categories"] });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Error al guardar";
+      toast.error(msg);
     } finally {
-      setSaving(false);
+      setSavingSlug(null);
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("¿Eliminar esta categoría? Los productos quedarán sin categoría")) return;
-    const { error } = await supabase.from("categories").delete().eq("id", id);
-    if (error) {
-      toast.error("Error al eliminar");
-      return;
+  const handleToggleActive = async (c: Category, isActive: boolean) => {
+    setSavingSlug(c.slug);
+    try {
+      await upsertOverride(c, { is_active: isActive });
+      qc.invalidateQueries({ queryKey: ["categories"] });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Error";
+      toast.error(msg);
+    } finally {
+      setSavingSlug(null);
     }
-    toast.success("Categoría eliminada");
-    fetchRows();
   };
 
-  const handleToggle = async (id: string, isActive: boolean) => {
-    const { error } = await supabase.from("categories").update({ is_active: isActive }).eq("id", id);
-    if (error) {
-      toast.error("Error al actualizar");
-      return;
-    }
-    setRows((prev) => prev.map((r) => (r.id === id ? { ...r, is_active: isActive } : r)));
-  };
-
-  if (loading) {
-    return <div className="flex justify-center py-8"><Loader2 className="animate-spin" /></div>;
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-8">
+        <Loader2 className="animate-spin" />
+      </div>
+    );
   }
 
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Categorías</h2>
-        <Button onClick={openAdd} size="sm">
-          <Plus className="w-4 h-4 mr-1" /> Agregar
+        <div>
+          <h2 className="text-xl font-semibold">Categorías</h2>
+          <p className="text-xs text-muted-foreground">
+            Nombre y slug se importan desde la base externa. Acá editás emoji,
+            orden y visibilidad
+          </p>
+        </div>
+        <Button
+          onClick={() => refetch()}
+          size="sm"
+          variant="outline"
+          disabled={isFetching}
+        >
+          <RefreshCw
+            className={`w-4 h-4 mr-1 ${isFetching ? "animate-spin" : ""}`}
+          />
+          Sincronizar
         </Button>
       </div>
+
+      {error ? (
+        <div className="text-sm text-destructive border border-destructive/30 rounded p-3">
+          {(error as Error).message}
+        </div>
+      ) : null}
 
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-12">#</TableHead>
-            <TableHead>Emoji</TableHead>
+            <TableHead className="w-20">Orden</TableHead>
+            <TableHead className="w-20">Emoji</TableHead>
             <TableHead>Nombre</TableHead>
             <TableHead>Slug</TableHead>
-            <TableHead>Activo</TableHead>
-            <TableHead className="text-right">Acciones</TableHead>
+            <TableHead className="w-20">Activa</TableHead>
+            <TableHead className="text-right w-28">Acción</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {rows.length === 0 ? (
+          {categories.length === 0 ? (
             <TableRow>
               <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                No hay categorías
+                No se encontraron categorías en la base externa
               </TableCell>
             </TableRow>
           ) : (
-            rows.map((row) => (
-              <TableRow key={row.id}>
-                <TableCell>{row.sort_order}</TableCell>
-                <TableCell className="text-xl">{row.emoji || "—"}</TableCell>
-                <TableCell className="font-medium">{row.name}</TableCell>
-                <TableCell className="font-mono text-xs">{row.slug}</TableCell>
-                <TableCell>
-                  <Switch
-                    checked={row.is_active}
-                    onCheckedChange={(checked) => handleToggle(row.id, checked)}
-                  />
-                </TableCell>
-                <TableCell className="text-right space-x-1">
-                  <Button variant="ghost" size="icon" onClick={() => openEdit(row)}>
-                    <Pencil className="w-4 h-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => handleDelete(row.id)}>
-                    <Trash2 className="w-4 h-4 text-destructive" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))
+            categories.map((c) => {
+              const d = getDraft(c);
+              const dirty =
+                d.emoji !== (c.emoji ?? "") ||
+                d.sort_order !== String(c.sort_order ?? 0);
+              return (
+                <TableRow key={c.slug}>
+                  <TableCell>
+                    <Input
+                      type="number"
+                      value={d.sort_order}
+                      onChange={(e) => setDraft(c.slug, { sort_order: e.target.value })}
+                      className="w-16 h-8"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Input
+                      value={d.emoji}
+                      onChange={(e) => setDraft(c.slug, { emoji: e.target.value })}
+                      placeholder="💪"
+                      className="w-16 h-8 text-center"
+                    />
+                  </TableCell>
+                  <TableCell className="font-medium">{c.name}</TableCell>
+                  <TableCell className="font-mono text-xs">{c.slug}</TableCell>
+                  <TableCell>
+                    <Switch
+                      checked={c.is_active}
+                      onCheckedChange={(checked) => handleToggleActive(c, checked)}
+                      disabled={savingSlug === c.slug}
+                    />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      size="sm"
+                      onClick={() => handleSaveRow(c)}
+                      disabled={!dirty || savingSlug === c.slug}
+                    >
+                      {savingSlug === c.slug ? (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                      ) : (
+                        "Guardar"
+                      )}
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              );
+            })
           )}
         </TableBody>
       </Table>
-
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{editing ? "Editar Categoría" : "Nueva Categoría"}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label>Nombre</Label>
-              <Input value={formName} onChange={(e) => handleNameChange(e.target.value)} placeholder="Proteínas" />
-            </div>
-            <div>
-              <Label>Slug (URL)</Label>
-              <Input
-                value={formSlug}
-                onChange={(e) => setFormSlug(e.target.value)}
-                placeholder="proteinas"
-                className="font-mono"
-              />
-              <p className="text-xs text-muted-foreground mt-1">URL: /categoria/{formSlug || "..."}</p>
-            </div>
-            <div>
-              <Label>Emoji</Label>
-              <Input value={formEmoji} onChange={(e) => setFormEmoji(e.target.value)} placeholder="💪" />
-            </div>
-            <div>
-              <Label>Orden</Label>
-              <Input type="number" value={formOrder} onChange={(e) => setFormOrder(e.target.value)} />
-              <p className="text-xs text-muted-foreground mt-1">Menor número = más arriba en el menú</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <Switch checked={formActive} onCheckedChange={setFormActive} />
-              <Label>{formActive ? "Activa" : "Inactiva"}</Label>
-            </div>
-            <Button onClick={handleSave} disabled={saving} className="w-full">
-              {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
-              {editing ? "Guardar cambios" : "Crear categoría"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
