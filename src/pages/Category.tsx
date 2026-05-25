@@ -8,7 +8,6 @@ import { Spinner } from "@/components/ui/spinner";
 import { useScrollHeader } from "@/hooks/useScrollHeader";
 import { formatPrice } from "@/lib/formatting";
 
-
 interface Product {
   id: string;
   name: string;
@@ -18,16 +17,12 @@ interface Product {
   link: string | null;
 }
 
-const categoryLabels: Record<string, string> = {
-  proteinas: "Proteínas",
-  creatinas: "Creatinas",
-  aminoacidos: "Aminoácidos",
-  aumentadores: "Ganadores de masa",
-  barras: "Barras y snacks",
-  "pre-entrenos": "Pre-entrenos",
-  colageno: "Colágeno",
-  vitaminas: "Vitaminas y minerales",
-};
+interface CategoryRow {
+  id: string;
+  name: string;
+  slug: string;
+  emoji: string | null;
+}
 
 const DEFAULT_TITLE = "Ola! - Suplementos Deportivos | Precio Mayorista en Argentina";
 const DEFAULT_DESCRIPTION = "Comprá suplementos deportivos al precio mayorista en Argentina. Proteínas whey, creatina, aminoácidos y más. Envío el mismo día en CABA y GBA. ¡Sin riesgos, pagás al recibir!";
@@ -70,6 +65,7 @@ const CATEGORY_META: Record<string, { title: string; description: string }> = {
 const Category = () => {
   const { category } = useParams<{ category: string }>();
   const [products, setProducts] = useState<Product[]>([]);
+  const [categoryRow, setCategoryRow] = useState<CategoryRow | null>(null);
   const [loading, setLoading] = useState(true);
   const headerVisible = useScrollHeader();
 
@@ -105,25 +101,40 @@ const Category = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       if (!category) return;
+      setLoading(true);
 
-      const { data, error } = await supabase
+      const { data: catData } = await supabase
+        .from("categories")
+        .select("id, name, slug, emoji")
+        .eq("slug", category)
+        .eq("is_active", true)
+        .maybeSingle();
+
+      setCategoryRow((catData as CategoryRow) || null);
+
+      // Query by category_id if found, otherwise fallback to legacy text column
+      const query = supabase
         .from("products")
         .select("id, name, weight, images, prices, link")
-        .eq("category", category)
         .order("name");
+
+      const { data, error } = catData
+        ? await query.eq("category_id", catData.id)
+        : await query.eq("category", category);
 
       if (error) {
         console.error("Error fetching products:", error);
       } else {
-        const formattedProducts: Product[] = (data || []).map((p) => ({
-          id: p.id,
-          name: p.name,
-          weight: p.weight,
-          images: p.images as string[] | null,
-          prices: p.prices as { people: number; price: number }[] | null,
-          link: p.link,
-        }));
-        setProducts(formattedProducts);
+        setProducts(
+          (data || []).map((p) => ({
+            id: p.id,
+            name: p.name,
+            weight: p.weight,
+            images: p.images as string[] | null,
+            prices: p.prices as { people: number; price: number }[] | null,
+            link: p.link,
+          }))
+        );
       }
       setLoading(false);
     };
@@ -131,7 +142,7 @@ const Category = () => {
     fetchProducts();
   }, [category]);
 
-  const categoryName = category ? categoryLabels[category] || category : "Categoría";
+  const categoryName = categoryRow?.name || category || "Categoría";
 
   return (
     <div className="min-h-screen bg-background">
@@ -141,7 +152,8 @@ const Category = () => {
         <Breadcrumb items={[{ label: "Catálogo", href: "/catalogo" }, { label: categoryName }]} />
         
         <div className="container mx-auto px-4 py-8">
-          <h1 className="text-2xl font-bold text-center mb-8 bg-gradient-primary bg-clip-text text-transparent">
+          <h1 className="text-2xl font-bold text-center mb-8 bg-gradient-primary bg-clip-text text-transparent flex items-center justify-center gap-2">
+            {categoryRow?.emoji && <span className="text-3xl">{categoryRow.emoji}</span>}
             {categoryName}
           </h1>
 
