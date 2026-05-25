@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import DynamicProduct from "./pages/DynamicProduct";
 import Category from "./pages/Category";
 import Catalog from "./pages/Catalog";
+import Brand from "./pages/Brand";
 import AuthPage from "./pages/AuthPage";
 import Profile from "./pages/Profile";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -78,6 +79,7 @@ const App = () => {
           <Route path="/" element={<Index />} />
           <Route path="/catalogo" element={<Catalog />} />
           <Route path="/categoria/:category" element={<Category />} />
+          <Route path="/marca/:slug" element={<Brand />} />
           <Route path="/producto/:slug" element={<DynamicProduct />} />
           <Route path="/:slug" element={<DynamicProductGuard />} />
           <Route path="/ingresar" element={<AuthPage />} />
