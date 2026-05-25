@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Breadcrumb } from "@/components/Breadcrumb";
@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Spinner } from "@/components/ui/spinner";
 import { useScrollHeader } from "@/hooks/useScrollHeader";
 import { formatPrice } from "@/lib/formatting";
+import { useCategories } from "@/hooks/useCategories";
 
 interface Product {
   id: string;
@@ -65,9 +66,14 @@ const CATEGORY_META: Record<string, { title: string; description: string }> = {
 const Category = () => {
   const { category } = useParams<{ category: string }>();
   const [products, setProducts] = useState<Product[]>([]);
-  const [categoryRow, setCategoryRow] = useState<CategoryRow | null>(null);
   const [loading, setLoading] = useState(true);
   const headerVisible = useScrollHeader();
+  const { data: categories = [] } = useCategories();
+  const categoryRow = useMemo<CategoryRow | null>(() => {
+    const found = categories.find((c) => c.slug === category);
+    if (!found) return null;
+    return { id: found.id, name: found.name, slug: found.slug, emoji: found.emoji };
+  }, [categories, category]);
 
   useEffect(() => {
     if (!category) return;
@@ -103,24 +109,11 @@ const Category = () => {
       if (!category) return;
       setLoading(true);
 
-      const { data: catData } = await supabase
-        .from("categories")
-        .select("id, name, slug, emoji")
-        .eq("slug", category)
-        .eq("is_active", true)
-        .maybeSingle();
-
-      setCategoryRow((catData as CategoryRow) || null);
-
-      // Query by category_id if found, otherwise fallback to legacy text column
-      const query = supabase
+      const { data, error } = await supabase
         .from("products")
         .select("id, name, weight, images, prices, link")
+        .eq("category", category)
         .order("name");
-
-      const { data, error } = catData
-        ? await query.eq("category_id", catData.id)
-        : await query.eq("category", category);
 
       if (error) {
         console.error("Error fetching products:", error);
