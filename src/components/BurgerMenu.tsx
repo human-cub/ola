@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Menu, ChevronRight, ChevronLeft, Home, BookOpen, HelpCircle, Briefcase, Users, MessageCircle, Truck } from "lucide-react";
+import { Menu, ChevronRight, ChevronLeft, Home, BookOpen, HelpCircle, Briefcase, Users, MessageCircle, Truck, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -10,40 +10,19 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useCategories } from "@/hooks/useCategories";
+import { useBrands } from "@/hooks/useBrands";
+
+type MenuChild = { name: string; slug: string; emoji?: string | null; basePath: string };
 
 type MenuItem = {
   name: string;
-  slug?: string;
   to?: string;
   icon?: React.ComponentType<{ className?: string }>;
-  children?: { name: string; slug: string }[];
+  children?: MenuChild[];
+  allHref?: string;
+  allLabel?: string;
 };
-
-const catalogCategories = [
-  { name: "Proteínas", slug: "proteinas" },
-  { name: "Creatinas", slug: "creatinas" },
-  { name: "Aminoácidos", slug: "aminoacidos" },
-  { name: "Ganadores de masa", slug: "aumentadores" },
-  { name: "Barras y snacks", slug: "barras" },
-  { name: "Pre-entrenos", slug: "pre-entrenos" },
-  { name: "Colágeno", slug: "colageno" },
-  { name: "Vitaminas y minerales", slug: "vitaminas" },
-];
-
-const mainMenu: MenuItem[] = [
-  { name: "Inicio", to: "/", icon: Home },
-  {
-    name: "Catálogo",
-    to: "/catalogo",
-    icon: BookOpen,
-    children: catalogCategories,
-  },
-  { name: "Cómo Comprar", to: "/como-comprar", icon: HelpCircle },
-  { name: "Envíos y Devoluciones", to: "/envios-y-devoluciones", icon: Truck },
-  { name: "Ventas Mayoristas", to: "/mayoristas", icon: Briefcase },
-  { name: "Quiénes Somos", to: "/quienes-somos", icon: Users },
-  { name: "Contacto", to: "/contacto", icon: MessageCircle },
-];
 
 export const BurgerMenu = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -51,6 +30,50 @@ export const BurgerMenu = () => {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { data: categories = [] } = useCategories();
+  const { data: brands = [] } = useBrands();
+
+  const categoryChildren: MenuChild[] = categories.map((c) => ({
+    name: c.name,
+    slug: c.slug,
+    emoji: c.emoji,
+    basePath: "/categoria",
+  }));
+
+  const brandChildren: MenuChild[] = brands.map((b) => ({
+    name: b.name,
+    slug: b.slug,
+    emoji: b.emoji,
+    basePath: "/marca",
+  }));
+
+  const mainMenu: MenuItem[] = [
+    { name: "Inicio", to: "/", icon: Home },
+    {
+      name: "Catálogo",
+      to: "/catalogo",
+      icon: BookOpen,
+      children: categoryChildren,
+      allHref: "/catalogo",
+      allLabel: "Ver todo el catálogo",
+    },
+    ...(brandChildren.length
+      ? [
+          {
+            name: "Marcas",
+            to: "/catalogo",
+            icon: Tag,
+            children: brandChildren,
+            allLabel: "Todas las marcas",
+          } as MenuItem,
+        ]
+      : []),
+    { name: "Cómo Comprar", to: "/como-comprar", icon: HelpCircle },
+    { name: "Envíos y Devoluciones", to: "/envios-y-devoluciones", icon: Truck },
+    { name: "Ventas Mayoristas", to: "/mayoristas", icon: Briefcase },
+    { name: "Quiénes Somos", to: "/quienes-somos", icon: Users },
+    { name: "Contacto", to: "/contacto", icon: MessageCircle },
+  ];
 
   const close = () => {
     setIsOpen(false);
@@ -62,6 +85,8 @@ export const BurgerMenu = () => {
     close();
     navigate(path);
   };
+
+  const activeMenuItem = mainMenu.find((m) => m.name === activeSubmenu);
 
   // ============ MOBILE: Multi-level push menu ============
   const renderMobile = () => (
@@ -139,27 +164,30 @@ export const BurgerMenu = () => {
             activeSubmenu ? "translate-x-0" : "translate-x-full"
           }`}
         >
-          {activeSubmenu === "Catálogo" && (
+          {activeMenuItem?.children && (
             <ul className="space-y-1">
-              <li>
-                <button
-                  onClick={() => handleNav("/catalogo")}
-                  className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-primary/10 transition-colors text-left group border-b border-border/50 mb-2"
-                >
-                  <span className="font-semibold text-foreground group-hover:text-primary transition-colors">
-                    Ver todo el catálogo
-                  </span>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                </button>
-              </li>
-              {catalogCategories.map((category) => (
-                <li key={category.slug}>
+              {activeMenuItem.allHref && (
+                <li>
                   <button
-                    onClick={() => handleNav(`/categoria/${category.slug}`)}
+                    onClick={() => handleNav(activeMenuItem.allHref!)}
+                    className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-primary/10 transition-colors text-left group border-b border-border/50 mb-2"
+                  >
+                    <span className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                      {activeMenuItem.allLabel || "Ver todo"}
+                    </span>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                  </button>
+                </li>
+              )}
+              {activeMenuItem.children.map((child) => (
+                <li key={`${child.basePath}-${child.slug}`}>
+                  <button
+                    onClick={() => handleNav(`${child.basePath}/${child.slug}`)}
                     className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-primary/10 transition-colors text-left group"
                   >
-                    <span className="font-medium text-foreground group-hover:text-primary transition-colors">
-                      {category.name}
+                    <span className="font-medium text-foreground group-hover:text-primary transition-colors flex items-center gap-2">
+                      {child.emoji && <span className="text-lg">{child.emoji}</span>}
+                      {child.name}
                     </span>
                     <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
                   </button>
@@ -217,23 +245,26 @@ export const BurgerMenu = () => {
                     className="absolute left-full top-0 ml-1 w-[260px] bg-background border rounded-lg shadow-elegant p-2 z-50 animate-in fade-in slide-in-from-left-2 duration-150"
                   >
                     <ul className="space-y-1">
-                      <li>
-                        <button
-                          onClick={() => handleNav("/catalogo")}
-                          className="w-full flex items-center justify-between p-2.5 rounded-md hover:bg-primary/10 transition-colors text-left group border-b border-border/50 mb-1"
-                        >
-                          <span className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors">
-                            Ver todo el catálogo
-                          </span>
-                        </button>
-                      </li>
-                      {item.children!.map((child) => (
-                        <li key={child.slug}>
+                      {item.allHref && (
+                        <li>
                           <button
-                            onClick={() => handleNav(`/categoria/${child.slug}`)}
+                            onClick={() => handleNav(item.allHref!)}
+                            className="w-full flex items-center justify-between p-2.5 rounded-md hover:bg-primary/10 transition-colors text-left group border-b border-border/50 mb-1"
+                          >
+                            <span className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors">
+                              {item.allLabel || "Ver todo"}
+                            </span>
+                          </button>
+                        </li>
+                      )}
+                      {item.children!.map((child) => (
+                        <li key={`${child.basePath}-${child.slug}`}>
+                          <button
+                            onClick={() => handleNav(`${child.basePath}/${child.slug}`)}
                             className="w-full flex items-center justify-between p-2.5 rounded-md hover:bg-primary/10 transition-colors text-left group"
                           >
-                            <span className="text-sm text-foreground group-hover:text-primary transition-colors">
+                            <span className="text-sm text-foreground group-hover:text-primary transition-colors flex items-center gap-2">
+                              {child.emoji && <span>{child.emoji}</span>}
                               {child.name}
                             </span>
                             <ChevronRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors" />

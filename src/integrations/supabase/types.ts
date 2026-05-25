@@ -32,6 +32,42 @@ export type Database = {
         }
         Relationships: []
       }
+      brands: {
+        Row: {
+          created_at: string
+          emoji: string | null
+          id: string
+          is_active: boolean
+          logo_url: string | null
+          name: string
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          emoji?: string | null
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          name: string
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          emoji?: string | null
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          name?: string
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cart_items: {
         Row: {
           created_at: string
@@ -81,6 +117,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      categories: {
+        Row: {
+          created_at: string
+          emoji: string | null
+          id: string
+          is_active: boolean
+          name: string
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          emoji?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          emoji?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       login_history: {
         Row: {
@@ -159,8 +228,10 @@ export type Database = {
       products: {
         Row: {
           base_probability: number | null
+          brand_id: string | null
           buynow_count: number
           category: string | null
+          category_id: string | null
           cooldown_minutes: number | null
           created_at: string | null
           description: string | null
@@ -187,8 +258,10 @@ export type Database = {
         }
         Insert: {
           base_probability?: number | null
+          brand_id?: string | null
           buynow_count?: number
           category?: string | null
+          category_id?: string | null
           cooldown_minutes?: number | null
           created_at?: string | null
           description?: string | null
@@ -215,8 +288,10 @@ export type Database = {
         }
         Update: {
           base_probability?: number | null
+          brand_id?: string | null
           buynow_count?: number
           category?: string | null
+          category_id?: string | null
           cooldown_minutes?: number | null
           created_at?: string | null
           description?: string | null
@@ -241,7 +316,22 @@ export type Database = {
           week_start_date?: string | null
           weight?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "products_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {

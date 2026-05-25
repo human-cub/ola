@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Breadcrumb } from "@/components/Breadcrumb";
@@ -17,68 +17,37 @@ interface Product {
   link: string | null;
 }
 
-interface CategoryRow {
+interface BrandRow {
   id: string;
   name: string;
   slug: string;
-  emoji: string | null;
+  logo_url: string | null;
 }
 
 const DEFAULT_TITLE = "Ola! - Suplementos Deportivos | Precio Mayorista en Argentina";
-const DEFAULT_DESCRIPTION = "Comprá suplementos deportivos al precio mayorista en Argentina. Proteínas whey, creatina, aminoácidos y más. Envío el mismo día en CABA y GBA. ¡Sin riesgos, pagás al recibir!";
+const DEFAULT_DESCRIPTION =
+  "Comprá suplementos deportivos al precio mayorista en Argentina. Envío el mismo día en CABA y GBA. ¡Sin riesgos, pagás al recibir!";
 
-const CATEGORY_META: Record<string, { title: string; description: string }> = {
-  proteinas: {
-    title: "Proteínas Whey al Precio Mayorista | Ola! Argentina",
-    description: "Compra proteínas whey, isolate y concentrado al precio de mayorista en Argentina. ENA, Mervick, Gold Nutrition. Envío en CABA y GBA el mismo día.",
-  },
-  creatinas: {
-    title: "Creatina al Precio Mayorista | Ola! Suplementos Argentina",
-    description: "Creatina monohidratada y micronizada al precio mayorista. Mejor precio garantizado. Entrega en CABA y GBA.",
-  },
-  aminoacidos: {
-    title: "Aminoácidos al Precio Mayorista | Ola! Argentina",
-    description: "BCAAs, glutamina y aminoácidos esenciales al precio de mayorista. Marcas líderes con envío express en Buenos Aires.",
-  },
-  aumentadores: {
-    title: "Ganadores de Masa al Precio Mayorista | Ola! Argentina",
-    description: "Mass gainers y aumentadores de masa muscular al precio mayorista. Hasta 50% de descuento vs precio minorista.",
-  },
-  barras: {
-    title: "Barras y Snacks Proteicos Mayorista | Ola! Argentina",
-    description: "Barras proteicas y snacks saludables al precio mayorista. Mervick Protein Bar y más. Envío en CABA y GBA.",
-  },
-  "pre-entrenos": {
-    title: "Pre-Entrenos al Precio Mayorista | Ola! Argentina",
-    description: "Pre-workout y pre-entrenos al precio mayorista en Argentina. Beta alanina, cafeína y complejos energéticos.",
-  },
-  colageno: {
-    title: "Colágeno Hidrolizado al Precio Mayorista | Ola! Argentina",
-    description: "Colágeno hidrolizado y peptídico al precio mayorista. Gold Nutrition y más marcas. Envío el mismo día en CABA.",
-  },
-  vitaminas: {
-    title: "Vitaminas y Minerales al Precio Mayorista | Ola! Argentina",
-    description: "ZMA, vitamina C, magnesio y multivitamínicos al precio mayorista. Star Nutrition y más marcas en Argentina.",
-  },
-};
-
-const Category = () => {
-  const { category } = useParams<{ category: string }>();
+const Brand = () => {
+  const { slug } = useParams<{ slug: string }>();
+  const [brand, setBrand] = useState<BrandRow | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
-  const [categoryRow, setCategoryRow] = useState<CategoryRow | null>(null);
   const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
   const headerVisible = useScrollHeader();
 
   useEffect(() => {
-    if (!category) return;
-    const meta = CATEGORY_META[category];
-    const title = meta?.title || DEFAULT_TITLE;
-    const description = meta?.description || DEFAULT_DESCRIPTION;
-    const canonical = `https://alaola.com.ar/categoria/${category}`;
+    if (!slug) return;
+    const title = brand
+      ? `${brand.name} al Precio Mayorista | Ola! Argentina`
+      : DEFAULT_TITLE;
+    const description = brand
+      ? `Comprá productos ${brand.name} al precio mayorista en Argentina. Envío el mismo día en CABA y GBA.`
+      : DEFAULT_DESCRIPTION;
+    const canonical = `https://alaola.com.ar/marca/${slug}`;
 
     document.title = title;
-
-    let descTag = document.querySelector('meta[name="description"]');
+    const descTag = document.querySelector('meta[name="description"]');
     if (descTag) descTag.setAttribute("content", description);
 
     let canonicalTag = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
@@ -96,37 +65,36 @@ const Category = () => {
       if (descTag) descTag.setAttribute("content", DEFAULT_DESCRIPTION);
       if (canonicalTag) canonicalTag.href = "https://alaola.com.ar/";
     };
-  }, [category]);
+  }, [slug, brand]);
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      if (!category) return;
+    const load = async () => {
+      if (!slug) return;
       setLoading(true);
 
-      const { data: catData } = await supabase
-        .from("categories")
-        .select("id, name, slug, emoji")
-        .eq("slug", category)
+      const { data: brandData, error: brandErr } = await supabase
+        .from("brands")
+        .select("id, name, slug, logo_url")
+        .eq("slug", slug)
         .eq("is_active", true)
         .maybeSingle();
 
-      setCategoryRow((catData as CategoryRow) || null);
+      if (brandErr || !brandData) {
+        setNotFound(true);
+        setLoading(false);
+        return;
+      }
+      setBrand(brandData as BrandRow);
 
-      // Query by category_id if found, otherwise fallback to legacy text column
-      const query = supabase
+      const { data: prodData, error: prodErr } = await supabase
         .from("products")
         .select("id, name, weight, images, prices, link")
+        .eq("brand_id", brandData.id)
         .order("name");
 
-      const { data, error } = catData
-        ? await query.eq("category_id", catData.id)
-        : await query.eq("category", category);
-
-      if (error) {
-        console.error("Error fetching products:", error);
-      } else {
+      if (!prodErr) {
         setProducts(
-          (data || []).map((p) => ({
+          (prodData || []).map((p) => ({
             id: p.id,
             name: p.name,
             weight: p.weight,
@@ -138,32 +106,49 @@ const Category = () => {
       }
       setLoading(false);
     };
-
-    fetchProducts();
-  }, [category]);
-
-  const categoryName = categoryRow?.name || category || "Categoría";
+    load();
+  }, [slug]);
 
   return (
     <div className="min-h-screen bg-background">
       <Header isVisible={headerVisible} />
-      
+
       <main className="pb-[24px] pt-[120px] sm:pt-[104px]">
-        <Breadcrumb items={[{ label: "Catálogo", href: "/catalogo" }, { label: categoryName }]} />
-        
+        <Breadcrumb
+          items={[
+            { label: "Catálogo", href: "/catalogo" },
+            { label: brand?.name || "Marca" },
+          ]}
+        />
+
         <div className="container mx-auto px-4 py-8">
-          <h1 className="text-2xl font-bold text-center mb-8 bg-gradient-primary bg-clip-text text-transparent flex items-center justify-center gap-2">
-            {categoryRow?.emoji && <span className="text-3xl">{categoryRow.emoji}</span>}
-            {categoryName}
-          </h1>
+          <div className="flex flex-col items-center mb-8 gap-3">
+            {brand?.logo_url && (
+              <img
+                src={brand.logo_url}
+                alt={`Logo ${brand.name}`}
+                className="h-20 w-auto object-contain"
+                loading="eager"
+                width={200}
+                height={80}
+              />
+            )}
+            <h1 className="text-2xl font-bold text-center bg-gradient-primary bg-clip-text text-transparent">
+              {brand?.name || "Marca"}
+            </h1>
+          </div>
 
           {loading ? (
             <div className="flex justify-center py-12">
               <Spinner />
             </div>
+          ) : notFound ? (
+            <div className="flex justify-center py-12">
+              <p className="text-muted-foreground">Marca no encontrada</p>
+            </div>
           ) : products.length === 0 ? (
             <div className="flex justify-center py-12">
-              <p className="text-muted-foreground">No hay productos en esta categoría</p>
+              <p className="text-muted-foreground">No hay productos de esta marca</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -173,7 +158,6 @@ const Category = () => {
                 const firstImage = images[0] || "/placeholder.svg";
                 const firstPrice = prices[0]?.price || 0;
                 const lastPrice = prices[prices.length - 1]?.price || 0;
-
                 return (
                   <Link
                     key={product.id}
@@ -221,4 +205,4 @@ const Category = () => {
   );
 };
 
-export default Category;
+export default Brand;
