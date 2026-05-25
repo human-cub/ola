@@ -75,16 +75,42 @@ Deno.serve(async (req) => {
     const slugify = (s: string) =>
       s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
         .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-    const extData: Array<{ id?: string; name: string; slug: string }> = rows
+    const pickBool = (r: Record<string, unknown>, keys: string[]) => {
+      for (const k of keys) {
+        if (k in r) {
+          const v = r[k];
+          if (typeof v === "boolean") return v;
+          if (typeof v === "number") return v !== 0;
+          if (typeof v === "string") {
+            const s = v.toLowerCase().trim();
+            if (["true", "t", "1", "yes", "si", "sí", "y"].includes(s)) return true;
+            if (["false", "f", "0", "no", "n", ""].includes(s)) return false;
+          }
+          if (v === null) return undefined;
+        }
+      }
+      return undefined;
+    };
+    const ACTIVE_KEYS = [
+      "active", "is_active", "activo", "is_activo", "enabled", "is_enabled",
+      "visible", "is_visible", "published", "is_published", "status",
+      "Active", "IsActive", "Activo", "Enabled", "Visible", "Published",
+    ];
+    if (rows.length > 0) {
+      console.log("external category columns:", Object.keys(rows[0]));
+    }
+    const extData: Array<{ id?: string; name: string; slug: string; externalActive: boolean }> = rows
       .map((r) => {
         const name = pickStr(r, ["name", "Name", "title", "Title", "nombre", "Nombre"]);
         let slug = pickStr(r, ["slug", "Slug", "handle", "Handle"]);
         if (!name) return null;
         if (!slug) slug = slugify(name);
         const id = pickStr(r, ["id", "Id", "ID", "uuid"]);
-        return { id, name, slug };
+        const activeRaw = pickBool(r, ACTIVE_KEYS);
+        const externalActive = activeRaw ?? true; // default true if no such column
+        return { id, name, slug, externalActive };
       })
-      .filter((x): x is { id?: string; name: string; slug: string } => x !== null);
+      .filter((x): x is { id?: string; name: string; slug: string; externalActive: boolean } => x !== null);
 
     const { data: overrides, error: ovErr } = await local
       .from("category_overrides")
@@ -114,7 +140,8 @@ Deno.serve(async (req) => {
         slug: c.slug,
         emoji: ov?.emoji ?? null,
         sort_order: ov?.sort_order ?? i,
-        is_active: ov?.is_active ?? true,
+        // Hide if either external DB OR local override marks inactive
+        is_active: c.externalActive && (ov?.is_active ?? true),
       };
     });
 
