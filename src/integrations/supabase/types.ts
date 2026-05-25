@@ -118,13 +118,11 @@ export type Database = {
           },
         ]
       }
-      categories: {
+      category_overrides: {
         Row: {
           created_at: string
           emoji: string | null
-          id: string
           is_active: boolean
-          name: string
           slug: string
           sort_order: number
           updated_at: string
@@ -132,9 +130,7 @@ export type Database = {
         Insert: {
           created_at?: string
           emoji?: string | null
-          id?: string
           is_active?: boolean
-          name: string
           slug: string
           sort_order?: number
           updated_at?: string
@@ -142,9 +138,7 @@ export type Database = {
         Update: {
           created_at?: string
           emoji?: string | null
-          id?: string
           is_active?: boolean
-          name?: string
           slug?: string
           sort_order?: number
           updated_at?: string
@@ -322,13 +316,6 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "products_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "categories"
             referencedColumns: ["id"]
           },
         ]

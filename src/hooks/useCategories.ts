@@ -12,30 +12,32 @@ export interface Category {
 }
 
 const fetchCategories = async (): Promise<Category[]> => {
-  const { data, error } = await supabase
-    .from("categories")
-    .select("id, name, slug, emoji, sort_order, is_active")
-    .eq("is_active", true)
-    .order("sort_order", { ascending: true });
+  const { data, error } = await supabase.functions.invoke(
+    "fetch-external-categories",
+    { body: {} },
+  );
   if (error) throw error;
-  return (data || []) as Category[];
+  const list = ((data as { categories?: Category[] })?.categories ?? []);
+  return list;
 };
 
-export const useCategories = () => {
+export const useCategories = (options?: { includeInactive?: boolean }) => {
   const qc = useQueryClient();
   const query = useQuery({
-    queryKey: ["categories", "active"],
+    queryKey: ["categories", "external"],
     queryFn: fetchCategories,
     staleTime: 1000 * 60 * 5,
+    select: (rows) =>
+      options?.includeInactive ? rows : rows.filter((r) => r.is_active),
   });
 
   useEffect(() => {
     const channel = supabase
-      .channel("categories-changes")
+      .channel("category-overrides-changes")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "categories" },
-        () => qc.invalidateQueries({ queryKey: ["categories"] })
+        { event: "*", schema: "public", table: "category_overrides" },
+        () => qc.invalidateQueries({ queryKey: ["categories"] }),
       )
       .subscribe();
     return () => {
