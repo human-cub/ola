@@ -40,27 +40,51 @@ Deno.serve(async (req) => {
       auth: { persistSession: false },
     });
 
-    // Try lowercase first, then capitalized
-    let extData: Array<{ id?: string; name: string; slug: string }> | null = null;
-    let extError: unknown = null;
-    for (const tableName of ["categories", "Categories"]) {
-      const { data, error } = await external
-        .from(tableName)
-        .select("id, name, slug")
-        .order("name", { ascending: true });
-      if (!error) {
-        extData = (data ?? []) as Array<{ id?: string; name: string; slug: string }>;
-        break;
-      }
-      extError = error;
+    // Discover the categories table from the REST OpenAPI spec
+    const specRes = await fetch(`${EXTERNAL_URL}/rest/v1/`, {
+      headers: { apikey: EXTERNAL_KEY, Authorization: `Bearer ${EXTERNAL_KEY}` },
+    });
+    if (!specRes.ok) {
+      throw new Error(`Cannot read external REST spec: ${specRes.status}`);
     }
-    if (!extData) {
+    const spec = await specRes.json() as { definitions?: Record<string, unknown> };
+    const allTables = Object.keys(spec.definitions ?? {});
+    const candidate = allTables.find((t) => /^categor(y|ies|ias|i[ae])$/i.test(t))
+      ?? allTables.find((t) => /categor/i.test(t));
+    if (!candidate) {
       throw new Error(
-        `Cannot read external categories: ${
-          (extError as { message?: string })?.message ?? "unknown error"
-        }`,
+        `No categories table found in external DB. Available tables: ${allTables.join(", ")}`,
       );
     }
+
+    const { data, error } = await external
+      .from(candidate)
+      .select("*");
+    if (error) {
+      throw new Error(`Cannot read external categories from "${candidate}": ${error.message}`);
+    }
+    const rows = (data ?? []) as Record<string, unknown>[];
+    // Normalize: find best name + slug columns
+    const pickStr = (r: Record<string, unknown>, keys: string[]) => {
+      for (const k of keys) {
+        const v = r[k];
+        if (typeof v === "string" && v.length > 0) return v;
+      }
+      return undefined;
+    };
+    const slugify = (s: string) =>
+      s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    const extData: Array<{ id?: string; name: string; slug: string }> = rows
+      .map((r) => {
+        const name = pickStr(r, ["name", "Name", "title", "Title", "nombre", "Nombre"]);
+        let slug = pickStr(r, ["slug", "Slug", "handle", "Handle"]);
+        if (!name) return null;
+        if (!slug) slug = slugify(name);
+        const id = pickStr(r, ["id", "Id", "ID", "uuid"]);
+        return { id, name, slug };
+      })
+      .filter((x): x is { id?: string; name: string; slug: string } => x !== null);
 
     const { data: overrides, error: ovErr } = await local
       .from("category_overrides")
