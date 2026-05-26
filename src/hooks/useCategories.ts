@@ -9,6 +9,8 @@ export interface Category {
   emoji: string | null;
   sort_order: number;
   is_active: boolean;
+  seo_title?: string | null;
+  seo_description?: string | null;
 }
 
 const fetchCategories = async (): Promise<Category[]> => {
