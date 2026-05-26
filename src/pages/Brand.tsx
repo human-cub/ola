@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Breadcrumb } from "@/components/Breadcrumb";
@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Spinner } from "@/components/ui/spinner";
 import { useScrollHeader } from "@/hooks/useScrollHeader";
 import { formatPrice } from "@/lib/formatting";
+import { useBrands } from "@/hooks/useBrands";
 
 interface Product {
   id: string;
@@ -17,33 +18,33 @@ interface Product {
   link: string | null;
 }
 
-interface BrandRow {
-  id: string;
-  name: string;
-  slug: string;
-  logo_url: string | null;
-}
-
 const DEFAULT_TITLE = "Ola! - Suplementos Deportivos | Precio Mayorista en Argentina";
 const DEFAULT_DESCRIPTION =
   "Comprá suplementos deportivos al precio mayorista en Argentina. Envío el mismo día en CABA y GBA. ¡Sin riesgos, pagás al recibir!";
 
 const Brand = () => {
   const { slug } = useParams<{ slug: string }>();
-  const [brand, setBrand] = useState<BrandRow | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const headerVisible = useScrollHeader();
+  const { data: brands = [], isLoading: brandsLoading } = useBrands({ includeInactive: true });
+
+  const brand = useMemo(
+    () => brands.find((b) => b.slug === slug) ?? null,
+    [brands, slug],
+  );
 
   useEffect(() => {
     if (!slug) return;
-    const title = brand
+    const fallbackTitle = brand
       ? `${brand.name} al Precio Mayorista | Ola! Argentina`
       : DEFAULT_TITLE;
-    const description = brand
+    const fallbackDescription = brand
       ? `Comprá productos ${brand.name} al precio mayorista en Argentina. Envío el mismo día en CABA y GBA.`
       : DEFAULT_DESCRIPTION;
+    const title = brand?.seo_title || fallbackTitle;
+    const description = brand?.seo_description || fallbackDescription;
     const canonical = `https://alaola.com.ar/marca/${slug}`;
 
     document.title = title;
@@ -69,27 +70,20 @@ const Brand = () => {
 
   useEffect(() => {
     const load = async () => {
-      if (!slug) return;
+      if (!slug || brandsLoading) return;
       setLoading(true);
 
-      const { data: brandData, error: brandErr } = await supabase
-        .from("brands")
-        .select("id, name, slug, logo_url")
-        .eq("slug", slug)
-        .eq("is_active", true)
-        .maybeSingle();
-
-      if (brandErr || !brandData) {
+      if (!brand || !brand.is_active) {
         setNotFound(true);
         setLoading(false);
         return;
       }
-      setBrand(brandData as BrandRow);
+      setNotFound(false);
 
       const { data: prodData, error: prodErr } = await supabase
         .from("products")
         .select("id, name, weight, images, prices, link")
-        .eq("brand_id", brandData.id)
+        .eq("brand_id", brand.id)
         .order("name");
 
       if (!prodErr) {
@@ -107,7 +101,7 @@ const Brand = () => {
       setLoading(false);
     };
     load();
-  }, [slug]);
+  }, [slug, brand, brandsLoading]);
 
   return (
     <div className="min-h-screen bg-background">

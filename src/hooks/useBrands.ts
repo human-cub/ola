@@ -10,33 +10,37 @@ export interface Brand {
   logo_url: string | null;
   sort_order: number;
   is_active: boolean;
+  seo_title?: string | null;
+  seo_description?: string | null;
+  products_count?: number;
 }
 
 const fetchBrands = async (): Promise<Brand[]> => {
-  const { data, error } = await supabase
-    .from("brands")
-    .select("id, name, slug, emoji, logo_url, sort_order, is_active")
-    .eq("is_active", true)
-    .order("sort_order", { ascending: true });
+  const { data, error } = await supabase.functions.invoke(
+    "fetch-external-brands",
+    { body: {} },
+  );
   if (error) throw error;
-  return (data || []) as Brand[];
+  return ((data as { brands?: Brand[] })?.brands ?? []);
 };
 
-export const useBrands = () => {
+export const useBrands = (options?: { includeInactive?: boolean }) => {
   const qc = useQueryClient();
   const query = useQuery({
-    queryKey: ["brands", "active"],
+    queryKey: ["brands", "external"],
     queryFn: fetchBrands,
     staleTime: 1000 * 60 * 5,
+    select: (rows) =>
+      options?.includeInactive ? rows : rows.filter((r) => r.is_active),
   });
 
   useEffect(() => {
     const channel = supabase
-      .channel("brands-changes")
+      .channel("brand-overrides-changes")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "brands" },
-        () => qc.invalidateQueries({ queryKey: ["brands"] })
+        { event: "*", schema: "public", table: "brand_overrides" },
+        () => qc.invalidateQueries({ queryKey: ["brands"] }),
       )
       .subscribe();
     return () => {
