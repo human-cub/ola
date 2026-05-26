@@ -13,6 +13,8 @@ interface MergedCategory {
   emoji: string | null;
   sort_order: number;
   is_active: boolean;
+  seo_title: string | null;
+  seo_description: string | null;
 }
 
 Deno.serve(async (req) => {
@@ -99,7 +101,7 @@ Deno.serve(async (req) => {
     if (rows.length > 0) {
       console.log("external category columns:", Object.keys(rows[0]));
     }
-    const extData: Array<{ id?: string; name: string; slug: string; externalActive: boolean }> = rows
+    const extData: Array<{ id?: string; name: string; slug: string; externalActive: boolean; seo_title: string | null; seo_description: string | null }> = rows
       .map((r) => {
         const name = pickStr(r, ["name", "Name", "title", "Title", "nombre", "Nombre"]);
         let slug = pickStr(r, ["slug", "Slug", "handle", "Handle"]);
@@ -108,9 +110,11 @@ Deno.serve(async (req) => {
         const id = pickStr(r, ["id", "Id", "ID", "uuid"]);
         const activeRaw = pickBool(r, ACTIVE_KEYS);
         const externalActive = activeRaw ?? true; // default true if no such column
-        return { id, name, slug, externalActive };
+        const seo_title = pickStr(r, ["seo_title", "SeoTitle", "seoTitle", "meta_title"]) ?? null;
+        const seo_description = pickStr(r, ["seo_description", "SeoDescription", "seoDescription", "meta_description"]) ?? null;
+        return { id, name, slug, externalActive, seo_title, seo_description };
       })
-      .filter((x): x is { id?: string; name: string; slug: string; externalActive: boolean } => x !== null);
+      .filter((x): x is { id?: string; name: string; slug: string; externalActive: boolean; seo_title: string | null; seo_description: string | null } => x !== null);
 
     const { data: overrides, error: ovErr } = await local
       .from("category_overrides")
@@ -142,6 +146,8 @@ Deno.serve(async (req) => {
         sort_order: ov?.sort_order ?? i,
         // Hide if either external DB OR local override marks inactive
         is_active: c.externalActive && (ov?.is_active ?? true),
+        seo_title: c.seo_title,
+        seo_description: c.seo_description,
       };
     });
 
