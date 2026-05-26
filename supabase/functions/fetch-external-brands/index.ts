@@ -166,8 +166,7 @@ Deno.serve(async (req) => {
         slug: b.slug,
         emoji: null,
         logo_url: b.logo_url,
-        sort_order: i,
-        // Inactive if no products OR admin manually disabled
+        sort_order: ov?.sort_order ?? i,
         is_active: hasProducts && (ov?.is_active ?? true),
         seo_title: b.seo_title,
         seo_description: b.seo_description,
@@ -175,7 +174,7 @@ Deno.serve(async (req) => {
       };
     });
 
-    // Preserve external DB order
+    merged.sort((a, b) => a.sort_order - b.sort_order);
 
     return new Response(JSON.stringify({ brands: merged }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
