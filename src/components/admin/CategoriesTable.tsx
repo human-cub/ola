@@ -120,6 +120,12 @@ const SortableRow = ({
       </TableCell>
       <TableCell className="font-medium">{c.name}</TableCell>
       <TableCell className="font-mono text-xs text-muted-foreground">{c.slug}</TableCell>
+      <TableCell className="text-xs max-w-[220px] truncate" title={c.seo_title ?? ""}>
+        {c.seo_title || <span className="text-muted-foreground">—</span>}
+      </TableCell>
+      <TableCell className="text-xs max-w-[280px] truncate" title={c.seo_description ?? ""}>
+        {c.seo_description || <span className="text-muted-foreground">—</span>}
+      </TableCell>
       <TableCell className="w-20">
         <Switch
           checked={c.is_active}
@@ -373,6 +379,8 @@ const CategoriesTable = () => {
               <TableHead className="w-24">Emoji</TableHead>
               <TableHead>Nombre</TableHead>
               <TableHead>Slug</TableHead>
+              <TableHead>SEO Title</TableHead>
+              <TableHead>SEO Description</TableHead>
               <TableHead className="w-20">Activa</TableHead>
               <TableHead className="text-right w-28">Acción</TableHead>
             </TableRow>
@@ -380,7 +388,7 @@ const CategoriesTable = () => {
           <TableBody>
             {orderedCategories.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                   No se encontraron categorías en la base externa
                 </TableCell>
               </TableRow>
