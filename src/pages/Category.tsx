@@ -23,6 +23,8 @@ interface CategoryRow {
   name: string;
   slug: string;
   emoji: string | null;
+  seo_title?: string | null;
+  seo_description?: string | null;
 }
 
 const DEFAULT_TITLE = "Ola! - Suplementos Deportivos | Precio Mayorista en Argentina";
@@ -72,14 +74,21 @@ const Category = () => {
   const categoryRow = useMemo<CategoryRow | null>(() => {
     const found = categories.find((c) => c.slug === category);
     if (!found) return null;
-    return { id: found.id, name: found.name, slug: found.slug, emoji: found.emoji };
+    return {
+      id: found.id,
+      name: found.name,
+      slug: found.slug,
+      emoji: found.emoji,
+      seo_title: found.seo_title ?? null,
+      seo_description: found.seo_description ?? null,
+    };
   }, [categories, category]);
 
   useEffect(() => {
     if (!category) return;
     const meta = CATEGORY_META[category];
-    const title = meta?.title || DEFAULT_TITLE;
-    const description = meta?.description || DEFAULT_DESCRIPTION;
+    const title = categoryRow?.seo_title || meta?.title || DEFAULT_TITLE;
+    const description = categoryRow?.seo_description || meta?.description || DEFAULT_DESCRIPTION;
     const canonical = `https://alaola.com.ar/categoria/${category}`;
 
     document.title = title;
@@ -102,7 +111,7 @@ const Category = () => {
       if (descTag) descTag.setAttribute("content", DEFAULT_DESCRIPTION);
       if (canonicalTag) canonicalTag.href = "https://alaola.com.ar/";
     };
-  }, [category]);
+  }, [category, categoryRow?.seo_title, categoryRow?.seo_description]);
 
   useEffect(() => {
     const fetchProducts = async () => {
