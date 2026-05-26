@@ -164,9 +164,9 @@ Deno.serve(async (req) => {
         id: b.id ?? b.slug,
         name: b.name,
         slug: b.slug,
-        emoji: ov?.emoji ?? null,
+        emoji: null,
         logo_url: b.logo_url,
-        sort_order: ov?.sort_order ?? i,
+        sort_order: i,
         // Inactive if no products OR admin manually disabled
         is_active: hasProducts && (ov?.is_active ?? true),
         seo_title: b.seo_title,
@@ -175,10 +175,7 @@ Deno.serve(async (req) => {
       };
     });
 
-    merged.sort((a, b) => {
-      if (a.sort_order !== b.sort_order) return a.sort_order - b.sort_order;
-      return a.name.localeCompare(b.name);
-    });
+    // Preserve external DB order
 
     return new Response(JSON.stringify({ brands: merged }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
