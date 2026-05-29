@@ -12,12 +12,15 @@ const Catalogo = () => {
   const { items, addItem, setQuantity, findLine } = useSociosCartCtx();
   const [search, setSearch] = useState("");
   const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
-  const [flavorByProduct, setFlavorByProduct] = useState<Record<string, string | null>>({});
 
   const filtered = useMemo(() => {
     return products.filter((p) => {
       if (selectedBrandId && p.brand_id !== selectedBrandId) return false;
-      if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false;
+      if (search) {
+        const q = search.toLowerCase();
+        const hay = `${p.name} ${p.name_short ?? ""} ${p.flavor ?? ""} ${p.brand_name ?? ""}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
       return true;
     });
   }, [products, selectedBrandId, search]);
@@ -41,26 +44,21 @@ const Catalogo = () => {
           ) : (
             <div className="space-y-2">
               {filtered.map((p) => {
-                const selectedFlavor =
-                  flavorByProduct[p.id] !== undefined
-                    ? flavorByProduct[p.id]
-                    : p.flavors[0]?.name ?? null;
-                const line = findLine(p.id, selectedFlavor);
+                const line = findLine(p.sku);
                 const qty = line?.quantity ?? 0;
-                const flavorImage =
-                  selectedFlavor && p.flavors.find((f) => f.name === selectedFlavor)?.image;
-                const displayImage = flavorImage || p.images[0] || "";
+                const displayImage = p.images[0] || "";
+                const displayName = p.name_short || p.name;
 
                 return (
                   <div
-                    key={p.id}
+                    key={p.sku}
                     className="flex items-center gap-3 bg-card border rounded-lg p-2 sm:p-3"
                   >
                     <div className="w-16 h-16 shrink-0 bg-muted/30 rounded-md overflow-hidden flex items-center justify-center">
                       {displayImage ? (
                         <img
                           src={displayImage}
-                          alt={p.name}
+                          alt={displayName}
                           width={64}
                           height={64}
                           loading="lazy"
@@ -71,27 +69,15 @@ const Catalogo = () => {
 
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium leading-tight line-clamp-2">
-                        {p.name}
-                        {p.weight ? <span className="text-muted-foreground"> · {p.weight}</span> : null}
+                        {displayName}
+                        {p.size ? <span className="text-muted-foreground"> · {p.size}</span> : null}
                       </div>
-                      {p.flavors.length > 1 && (
-                        <div className="flex flex-wrap gap-1 mt-1.5">
-                          {p.flavors.map((f) => (
-                            <button
-                              key={f.name}
-                              type="button"
-                              onClick={() =>
-                                setFlavorByProduct((prev) => ({ ...prev, [p.id]: f.name }))
-                              }
-                              className={`text-[10px] px-1.5 py-0.5 rounded border ${
-                                selectedFlavor === f.name
-                                  ? "border-primary bg-primary/5 text-primary"
-                                  : "border-border text-muted-foreground"
-                              }`}
-                            >
-                              {f.name}
-                            </button>
-                          ))}
+                      {p.flavor && (
+                        <div className="text-xs text-muted-foreground mt-0.5">{p.flavor}</div>
+                      )}
+                      {p.brand_name && (
+                        <div className="text-[10px] uppercase tracking-wide text-muted-foreground mt-0.5">
+                          {p.brand_name}
                         </div>
                       )}
                     </div>
@@ -102,9 +88,9 @@ const Catalogo = () => {
                           size="sm"
                           onClick={() =>
                             void addItem({
-                              product_id: p.id,
-                              product_name: p.name,
-                              flavor: selectedFlavor,
+                              external_sku: p.sku,
+                              product_name: displayName,
+                              flavor: p.flavor,
                               price_per_unit: p.buy_price,
                               product_image: displayImage,
                               quantity: 1,
