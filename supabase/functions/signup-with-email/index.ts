@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
   }
 
   const supabase = createClient(supabaseUrl, serviceRoleKey)
-  const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+  let { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
     type: 'signup',
     email,
     password,
@@ -81,10 +81,24 @@ Deno.serve(async (req) => {
   })
 
   if (linkError) {
-    const message = linkError.message.includes('already been registered') || linkError.message.includes('already registered')
-      ? 'Este email ya está registrado'
-      : linkError.message
-    return json({ error: message }, 400)
+    const alreadyRegistered = linkError.message.includes('already been registered') || linkError.message.includes('already registered')
+
+    if (!alreadyRegistered) {
+      return json({ error: linkError.message }, 400)
+    }
+
+    const fallback = await supabase.auth.admin.generateLink({
+      type: 'magiclink',
+      email,
+      options: { redirectTo },
+    })
+
+    linkData = fallback.data
+    linkError = fallback.error
+
+    if (linkError) {
+      return json({ error: 'Este email ya está registrado' }, 400)
+    }
   }
 
   const confirmationUrl = linkData.properties?.action_link
