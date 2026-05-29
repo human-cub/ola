@@ -106,7 +106,13 @@ const Registro = () => {
       },
     });
     if (error) {
-      const message = error.context?.error || error.message;
+      let message = error.message;
+      if (error.context instanceof Response) {
+        const payload = await error.context.json().catch(() => null);
+        message = payload?.error || message;
+      } else {
+        message = error.context?.error || message;
+      }
       toast.error(message);
       setLoading(false);
       return;
