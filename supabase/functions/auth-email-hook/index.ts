@@ -17,12 +17,12 @@ const corsHeaders = {
 }
 
 const EMAIL_SUBJECTS: Record<string, string> = {
-  signup: 'Confirm your email',
-  invite: "You've been invited",
-  magiclink: 'Your login link',
-  recovery: 'Reset your password',
-  email_change: 'Confirm your new email',
-  reauthentication: 'Your verification code',
+  signup: 'Confirmá tu cuenta de Ola',
+  invite: 'Tu invitación a Ola',
+  magiclink: 'Tu enlace para ingresar a Ola',
+  recovery: 'Restablecé tu contraseña de Ola',
+  email_change: 'Confirmá tu nuevo email',
+  reauthentication: 'Tu código de verificación',
 }
 
 // Template mapping
@@ -36,7 +36,7 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 }
 
 // Configuration
-const SITE_NAME = "ola"
+const SITE_NAME = "Ola"
 const SENDER_DOMAIN = "notify.alaola.com.ar"
 const ROOT_DOMAIN = "alaola.com.ar"
 const FROM_DOMAIN = "alaola.com.ar" // Domain shown in From address (may be root or sender subdomain)
@@ -46,7 +46,7 @@ const FROM_DOMAIN = "alaola.com.ar" // Domain shown in From address (may be root
 // The sample email uses a fixed placeholder (RFC 6761 .test TLD) so the Go backend
 // can always find-and-replace it with the actual recipient when sending test emails,
 // even if the project's domain has changed since the template was scaffolded.
-const SAMPLE_PROJECT_URL = "https://ola.lovable.app"
+const SAMPLE_PROJECT_URL = "https://alaola.com.ar"
 const SAMPLE_EMAIL = "user@example.test"
 const SAMPLE_DATA: Record<string, object> = {
   signup: {
@@ -258,7 +258,7 @@ async function handleWebhook(req: Request): Promise<Response> {
       run_id,
       message_id: messageId,
       to: payload.data.email,
-      from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
+      from: `${SITE_NAME} <no-reply@${FROM_DOMAIN}>`,
       sender_domain: SENDER_DOMAIN,
       subject: EMAIL_SUBJECTS[emailType] || 'Notification',
       html,
