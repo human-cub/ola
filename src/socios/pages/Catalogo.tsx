@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Loader2, Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useBrands } from "@/hooks/useBrands";
+import { useCategories } from "@/hooks/useCategories";
 import { useSociosProducts } from "../hooks/useSociosProducts";
 import { useSociosCartCtx } from "../SociosCartProvider";
 import { formatARS } from "../lib/format";
@@ -11,6 +12,7 @@ import { BrandBar } from "../BrandBar";
 const Catalogo = () => {
   const { data: products = [], isLoading } = useSociosProducts();
   const { data: brands = [] } = useBrands({ includeInactive: true });
+  const { data: categories = [] } = useCategories({ includeInactive: true });
   const { items, addItem, setQuantity, findLine } = useSociosCartCtx();
   const [search, setSearch] = useState("");
   const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
@@ -22,6 +24,15 @@ const Catalogo = () => {
   }, [brands, selectedBrandId]);
 
   const filtered = useMemo(() => {
+    const categoryOrder = new Map<string, number>();
+    categories.forEach((category, index) => {
+      if (category.id) categoryOrder.set(category.id.toLowerCase().trim(), index);
+      if (category.slug) categoryOrder.set(category.slug.toLowerCase().trim(), index);
+      if (category.name) categoryOrder.set(category.name.toLowerCase().trim(), index);
+    });
+
+    const categoryKey = (value: string | null | undefined) => value?.toLowerCase().trim() ?? "";
+
     return products.filter((p) => {
       if (selectedBrandId && p.brand_id !== selectedBrandId) return false;
       if (search) {
@@ -30,8 +41,18 @@ const Catalogo = () => {
         if (!hay.includes(q)) return false;
       }
       return true;
+    }).sort((a, b) => {
+      const ak = categoryKey(a.category_slug);
+      const bk = categoryKey(b.category_slug);
+      const ai = categoryOrder.get(ak) ?? Number.MAX_SAFE_INTEGER;
+      const bi = categoryOrder.get(bk) ?? Number.MAX_SAFE_INTEGER;
+      if (ai !== bi) return ai - bi;
+      if (ak !== bk) return ak.localeCompare(bk, "es-AR");
+      const an = (a.name_short || a.name).trim();
+      const bn = (b.name_short || b.name).trim();
+      return an.localeCompare(bn, "es-AR");
     });
-  }, [products, selectedBrandId, search]);
+  }, [products, selectedBrandId, search, categories]);
 
   void items; // ensure rerender on cart change
 
