@@ -96,17 +96,21 @@ const ProductsV2Table = () => {
       arr.sort((a, b) => a.label.localeCompare(b.label));
     }
     const catOrder = new Map<string, number>();
-    categories.forEach((c, i) => catOrder.set(c.slug, i));
+    categories.forEach((c, i) => {
+      if (c.slug) catOrder.set(c.slug.toLowerCase().trim(), i);
+      if (c.name) catOrder.set(c.name.toLowerCase().trim(), i);
+    });
+    const catKey = (s: string | null | undefined) =>
+      s ? s.toLowerCase().trim() : "";
     for (const g of arr) {
       if (sortMode === "brand") {
         g.items.sort((a, b) => {
-          const ai = a.category_slug && catOrder.has(a.category_slug)
-            ? catOrder.get(a.category_slug)!
-            : Number.MAX_SAFE_INTEGER;
-          const bi = b.category_slug && catOrder.has(b.category_slug)
-            ? catOrder.get(b.category_slug)!
-            : Number.MAX_SAFE_INTEGER;
+          const ak = catKey(a.category_slug);
+          const bk = catKey(b.category_slug);
+          const ai = catOrder.has(ak) ? catOrder.get(ak)! : Number.MAX_SAFE_INTEGER;
+          const bi = catOrder.has(bk) ? catOrder.get(bk)! : Number.MAX_SAFE_INTEGER;
           if (ai !== bi) return ai - bi;
+          if (ak !== bk) return ak.localeCompare(bk);
           return a.name.localeCompare(b.name);
         });
       } else {

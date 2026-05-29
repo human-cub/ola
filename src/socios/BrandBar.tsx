@@ -12,17 +12,6 @@ export const BrandBar = ({ selectedBrandId, onSelect }: Props) => {
     <div className="fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur border-t shadow-soft">
       <div className="container mx-auto px-2 py-2 overflow-x-auto">
         <div className="flex items-center gap-2 min-w-max">
-          <button
-            type="button"
-            onClick={() => onSelect(null)}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium border whitespace-nowrap transition ${
-              selectedBrandId === null
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-muted/30 text-muted-foreground border-transparent hover:border-primary/30"
-            }`}
-          >
-            Todos
-          </button>
           {brands.map((b) => (
             <button
               key={b.id}
@@ -47,6 +36,17 @@ export const BrandBar = ({ selectedBrandId, onSelect }: Props) => {
               )}
             </button>
           ))}
+          <button
+            type="button"
+            onClick={() => onSelect(null)}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium border whitespace-nowrap transition ${
+              selectedBrandId === null
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-muted/30 text-muted-foreground border-transparent hover:border-primary/30"
+            }`}
+          >
+            Todos
+          </button>
         </div>
       </div>
     </div>
