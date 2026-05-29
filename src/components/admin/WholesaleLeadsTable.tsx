@@ -10,8 +10,9 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Trash2, Phone } from "lucide-react";
+import { Loader2, Trash2, Phone, Link2, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
+import { buildSociosInviteUrl } from "@/socios/lib/host";
 import {
   Select,
   SelectContent,
@@ -46,6 +47,9 @@ const statusVariant = (s: string): "default" | "secondary" | "outline" | "destru
 export const WholesaleLeadsTable = () => {
   const [leads, setLeads] = useState<WholesaleLead[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tokens, setTokens] = useState<Record<string, string>>({});
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [generatingId, setGeneratingId] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -59,8 +63,40 @@ export const WholesaleLeadsTable = () => {
       toast.error("Error al cargar las solicitudes");
     } else {
       setLeads((data ?? []) as WholesaleLead[]);
+      // Load existing unused tokens
+      const { data: tk } = await supabase
+        .from("wholesale_invite_tokens")
+        .select("lead_id, token, used_at")
+        .is("used_at", null);
+      const map: Record<string, string> = {};
+      (tk ?? []).forEach((t: any) => { map[t.lead_id] = t.token; });
+      setTokens(map);
     }
     setLoading(false);
+  };
+
+  const generateInvite = async (leadId: string) => {
+    setGeneratingId(leadId);
+    const { data, error } = await supabase.rpc("generate_wholesale_invite", { _lead_id: leadId });
+    setGeneratingId(null);
+    if (error || !data) {
+      toast.error("Error al generar el enlace");
+      return;
+    }
+    setTokens((prev) => ({ ...prev, [leadId]: data as string }));
+    await copyToClipboard(leadId, data as string);
+  };
+
+  const copyToClipboard = async (leadId: string, token: string) => {
+    const url = buildSociosInviteUrl(token);
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedId(leadId);
+      toast.success("Enlace copiado");
+      setTimeout(() => setCopiedId((c) => (c === leadId ? null : c)), 2000);
+    } catch {
+      toast.error("No se pudo copiar");
+    }
   };
 
   useEffect(() => {
@@ -171,6 +207,36 @@ export const WholesaleLeadsTable = () => {
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
+                    {tokens[lead.id] ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="mr-2"
+                        onClick={() => void copyToClipboard(lead.id, tokens[lead.id])}
+                      >
+                        {copiedId === lead.id ? (
+                          <Check className="w-4 h-4 mr-1" />
+                        ) : (
+                          <Copy className="w-4 h-4 mr-1" />
+                        )}
+                        Copiar enlace
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="mr-2"
+                        disabled={generatingId === lead.id}
+                        onClick={() => void generateInvite(lead.id)}
+                      >
+                        {generatingId === lead.id ? (
+                          <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                        ) : (
+                          <Link2 className="w-4 h-4 mr-1" />
+                        )}
+                        Generar enlace
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="icon"
