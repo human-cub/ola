@@ -102,6 +102,7 @@ Deno.serve(async (req) => {
       text,
       purpose: 'transactional',
       label: 'signup',
+      idempotency_key: `signup:${messageId}`,
       queued_at: new Date().toISOString(),
     },
   })
