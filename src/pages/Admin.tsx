@@ -65,13 +65,14 @@ const Admin = () => {
       }
 
       // Check if user is admin
-      const { data: roles } = await supabase
+      const { data: roles, error: rolesError } = await supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", session.user.id)
         .eq("role", "admin")
-        .single();
+        .maybeSingle();
 
+      if (rolesError) console.error("[Admin] role query error:", rolesError);
       if (!roles) {
         toast.error("No tenés permisos de administrador");
         // Don't sign out - just redirect to home
