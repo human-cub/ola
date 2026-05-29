@@ -9,6 +9,7 @@ import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import OrdersTab from "@/components/profile/OrdersTab";
 import { ProfileEditForm } from "@/components/profile/ProfileEditForm";
 import { SecurityForm } from "@/components/profile/SecurityForm";
+import { useUserRole } from "@/hooks/useUserRole";
 import type { AddressData } from "@/lib/address";
 
 const fetchProfile = async () => {
@@ -87,6 +88,7 @@ const profileDefaults = {
 
 const Profile = () => {
   const navigate = useNavigate();
+  const { isMayorista } = useUserRole();
 
   const { data, isLoading } = useQuery({
     queryKey: ['profile'],
@@ -101,7 +103,7 @@ const Profile = () => {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    navigate("/");
+    window.location.href = isMayorista ? "/socios" : "/";
   };
 
   if (isLoading) {
@@ -115,16 +117,18 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-accent/20 p-4">
       <div className="container mx-auto max-w-2xl">
-        <Link
-          to="/"
+        <a
+          href={isMayorista ? "/socios" : "/"}
           className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          Volver al inicio
-        </Link>
+          {isMayorista ? "Volver al catálogo" : "Volver al inicio"}
+        </a>
 
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold">Mi cuenta</h1>
+          <h1 className="text-2xl font-bold">
+            {isMayorista ? "Mi cuenta Mayorista" : "Mi cuenta"}
+          </h1>
           <Button variant="outline" onClick={handleLogout} className="mx-0">
             <LogOut className="w-4 h-4 mr-2" />
             Cerrar sesión

@@ -87,7 +87,14 @@ export const SociosHeader = ({ search, onSearchChange }: Props) => {
             variant="outline"
             size="sm"
             className="border-primary/20 hover:border-primary hover:bg-primary/5 gap-2"
-            onClick={() => navigate(user ? "/mi-cuenta" : "/login")}
+            onClick={() => {
+              if (user) {
+                // Exit /socios basename to reach the shared profile page
+                window.location.href = "/mi-cuenta";
+              } else {
+                navigate("/login");
+              }
+            }}
           >
             {user ? <User className="w-4 h-4" /> : <LogIn className="w-4 h-4" />}
             <span className="hidden sm:inline">{user ? "Mi cuenta" : "Ingresar"}</span>
