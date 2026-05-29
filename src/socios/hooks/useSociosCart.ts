@@ -4,7 +4,7 @@ import { toast } from "sonner";
 
 export interface SociosCartItem {
   id: string;
-  product_id: string;
+  external_sku: string;
   product_name: string;
   flavor: string | null;
   quantity: number;
@@ -35,7 +35,7 @@ export const useSociosCart = () => {
     setItems(
       (data || []).map((row: any) => ({
         id: row.id,
-        product_id: row.product_id,
+        external_sku: row.external_sku ?? "",
         product_name: row.product_name,
         flavor: row.flavor,
         quantity: row.quantity,
@@ -77,7 +77,7 @@ export const useSociosCart = () => {
 
   const addItem = useCallback(
     async (input: {
-      product_id: string;
+      external_sku: string;
       product_name: string;
       flavor: string | null;
       price_per_unit: number;
@@ -89,13 +89,11 @@ export const useSociosCart = () => {
         return;
       }
       const qty = Math.max(1, input.quantity ?? 1);
-      // Look up existing line
-      let existingQ: any = (supabase.from("cart_items") as any)
+      const existingQ: any = (supabase.from("cart_items") as any)
         .select("id, quantity")
         .eq("user_id", userId)
         .eq("mode", "mayorista")
-        .eq("product_id", input.product_id);
-      existingQ = input.flavor ? existingQ.eq("flavor", input.flavor) : existingQ.is("flavor", null);
+        .eq("external_sku", input.external_sku);
       const { data: existing } = await existingQ.maybeSingle();
 
       if (existing) {
@@ -107,7 +105,7 @@ export const useSociosCart = () => {
         await (supabase.from("cart_items") as any).insert({
           user_id: userId,
           mode: "mayorista",
-          product_id: input.product_id,
+          external_sku: input.external_sku,
           product_name: input.product_name,
           flavor: input.flavor,
           quantity: qty,
@@ -156,18 +154,16 @@ export const useSociosCart = () => {
 
   // Helper to get quantity of a (product_id, flavor) combo currently in cart
   const getLineQuantity = useCallback(
-    (productId: string, flavor: string | null): number => {
-      const line = items.find(
-        (i) => i.product_id === productId && (i.flavor ?? null) === (flavor ?? null),
-      );
+    (sku: string): number => {
+      const line = items.find((i) => i.external_sku === sku);
       return line?.quantity ?? 0;
     },
     [items],
   );
 
   const findLine = useCallback(
-    (productId: string, flavor: string | null): SociosCartItem | undefined =>
-      items.find((i) => i.product_id === productId && (i.flavor ?? null) === (flavor ?? null)),
+    (sku: string): SociosCartItem | undefined =>
+      items.find((i) => i.external_sku === sku),
     [items],
   );
 

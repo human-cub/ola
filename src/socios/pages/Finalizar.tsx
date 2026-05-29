@@ -112,7 +112,7 @@ const Finalizar = () => {
         references: data.references || null,
       };
       const orderItems = items.map((it) => ({
-        product_id: it.product_id,
+        external_sku: it.external_sku,
         product_name: it.product_name,
         flavor: it.flavor,
         quantity: it.quantity,
