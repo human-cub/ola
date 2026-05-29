@@ -17,7 +17,33 @@ export interface SociosProduct {
   buy_price: number;
   discount_pct: number;
   sort_order: number;
+  tags?: string[];
 }
+
+const CACHE_KEY = "socios:products:v1";
+const CACHE_TTL = 1000 * 60 * 60 * 24; // 24h — siempre revalidamos en background
+
+const readCache = (): SociosProduct[] | undefined => {
+  if (typeof window === "undefined") return undefined;
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return undefined;
+    const parsed = JSON.parse(raw) as { at: number; data: SociosProduct[] };
+    if (!parsed?.data || Date.now() - parsed.at > CACHE_TTL) return undefined;
+    return parsed.data;
+  } catch {
+    return undefined;
+  }
+};
+
+const writeCache = (data: SociosProduct[]) => {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ at: Date.now(), data }));
+  } catch {
+    /* quota — ignorar */
+  }
+};
 
 const fetchSociosProducts = async (): Promise<SociosProduct[]> => {
   const [productsRes, overridesRes] = await Promise.all([
@@ -31,7 +57,9 @@ const fetchSociosProducts = async (): Promise<SociosProduct[]> => {
       .filter((o) => o.is_active === false)
       .map((o) => o.sku),
   );
-  return products.filter((p) => !inactive.has(p.sku));
+  const filtered = products.filter((p) => !inactive.has(p.sku));
+  writeCache(filtered);
+  return filtered;
 };
 
 export const useSociosProducts = () =>
@@ -39,4 +67,6 @@ export const useSociosProducts = () =>
     queryKey: ["socios", "products"],
     queryFn: fetchSociosProducts,
     staleTime: 1000 * 60 * 5,
+    initialData: readCache,
+    initialDataUpdatedAt: 0, // forzar refetch en background
   });
