@@ -70,12 +70,14 @@ const App = () => {
   }, []);
 
   if (isSociosHost()) {
+    const pathname = typeof window !== "undefined" ? window.location.pathname : "/";
+    const useBasename = pathname === "/socios" || pathname.startsWith("/socios/");
     return (
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <BrowserRouter>
+          <BrowserRouter basename={useBasename ? "/socios" : undefined}>
             <ScrollToTop />
             <SociosApp />
           </BrowserRouter>
