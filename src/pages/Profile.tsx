@@ -120,8 +120,8 @@ const Profile = () => {
     <div className="min-h-screen bg-gradient-to-br from-background to-accent/20 p-4">
       <div className="container mx-auto max-w-2xl">
         {isMayorista || isAdmin ? (
-          <div className={`grid gap-3 mb-6 ${isAdmin && isMayorista ? "grid-cols-3" : "grid-cols-2"}`}>
-            {isMayorista && (
+          <div className={`grid gap-3 mb-6 ${isAdmin ? "grid-cols-3" : "grid-cols-2"}`}>
+            {(isMayorista || isAdmin) && (
               <a
                 href="/socios"
                 className="flex items-center justify-center h-11 rounded-lg border border-border bg-card hover:bg-muted transition-colors text-sm font-medium"
