@@ -32,7 +32,7 @@ const RevisarEmail = () => {
             <p>Después de confirmar el email, el portal va a activar tu cuenta Socios automáticamente</p>
           </div>
           <Button asChild className="w-full">
-            <Link to="/login">Ir a iniciar sesión</Link>
+            <Link to="/ingresar?redirect=/socios">Ir a iniciar sesión</Link>
           </Button>
         </CardContent>
       </Card>

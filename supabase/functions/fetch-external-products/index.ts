@@ -22,6 +22,7 @@ interface SociosProduct {
   brand_name: string | null;
   brand_slug: string | null;
   sort_order: number;
+  tags: string[];
 }
 
 const slugify = (s: string) =>
@@ -45,6 +46,25 @@ const toImages = (v: unknown): string[] => {
       if (Array.isArray(p)) return p.filter((x) => typeof x === "string");
     } catch {
       return v.split(",").map((s) => s.trim()).filter(Boolean);
+    }
+  }
+  return [];
+};
+
+const toTags = (v: unknown): string[] => {
+  if (Array.isArray(v)) {
+    return v.filter((x) => typeof x === "string" && x.trim().length > 0)
+      .map((x) => (x as string).trim());
+  }
+  if (typeof v === "string" && v.length > 0) {
+    try {
+      const p = JSON.parse(v);
+      if (Array.isArray(p)) {
+        return p.filter((x) => typeof x === "string" && x.trim().length > 0)
+          .map((x) => (x as string).trim());
+      }
+    } catch {
+      return v.split(/[,;|]/).map((s) => s.trim()).filter(Boolean);
     }
   }
   return [];
@@ -129,6 +149,7 @@ Deno.serve(async (req) => {
           brand_name: brand?.name ?? null,
           brand_slug: brand?.slug ?? null,
           sort_order: toNum(p.sort_order),
+          tags: toTags(p.tags ?? p.keywords ?? p.search_terms),
         };
       })
       .filter((p) => p.sku && p.name && p.buy_price > 0);
@@ -138,7 +159,11 @@ Deno.serve(async (req) => {
     );
 
     return new Response(JSON.stringify({ products }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "application/json",
+        "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+      },
       status: 200,
     });
   } catch (e) {
