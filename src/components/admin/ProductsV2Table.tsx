@@ -97,6 +97,7 @@ const ProductsV2Table = () => {
     }
     const catOrder = new Map<string, number>();
     categories.forEach((c, i) => {
+      if (c.id) catOrder.set(c.id.toLowerCase().trim(), i);
       if (c.slug) catOrder.set(c.slug.toLowerCase().trim(), i);
       if (c.name) catOrder.set(c.name.toLowerCase().trim(), i);
     });
