@@ -32,14 +32,14 @@ export const EmailChangeEmail = ({
   newEmail,
   confirmationUrl,
 }: EmailChangeEmailProps) => (
-  <Html lang="en" dir="ltr">
+  <Html lang="es" dir="ltr">
     <Head />
-    <Preview>Confirm your email change for {siteName}</Preview>
+    <Preview>Confirmá tu cambio de email en {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>Confirm your email change</Heading>
+        <Heading style={h1}>Confirmá tu cambio de email</Heading>
         <Text style={text}>
-          You requested to change your email address for {siteName} from{' '}
+          Pediste cambiar el email de tu cuenta de {siteName} de{' '}
           <Link href={`mailto:${oldEmail}`} style={link}>
             {oldEmail}
           </Link>{' '}
@@ -47,17 +47,15 @@ export const EmailChangeEmail = ({
           <Link href={`mailto:${newEmail}`} style={link}>
             {newEmail}
           </Link>
-          .
         </Text>
         <Text style={text}>
-          Click the button below to confirm this change:
+          Tocá el botón de abajo para confirmar este cambio
         </Text>
         <Button style={button} href={confirmationUrl}>
-          Confirm Email Change
+          Confirmar cambio
         </Button>
         <Text style={footer}>
-          If you didn't request this change, please secure your account
-          immediately.
+          Si no pediste este cambio, revisá la seguridad de tu cuenta
         </Text>
       </Container>
     </Body>
@@ -66,23 +64,23 @@ export const EmailChangeEmail = ({
 
 export default EmailChangeEmail
 
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
-const container = { padding: '20px 25px' }
+const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, Helvetica, sans-serif' }
+const container = { padding: '28px 25px' }
 const h1 = {
   fontSize: '22px',
   fontWeight: 'bold' as const,
-  color: '#000000',
+  color: '#1d3340',
   margin: '0 0 20px',
 }
 const text = {
   fontSize: '14px',
-  color: '#55575d',
+  color: '#58707c',
   lineHeight: '1.5',
   margin: '0 0 25px',
 }
 const link = { color: 'inherit', textDecoration: 'underline' }
 const button = {
-  backgroundColor: '#000000',
+  backgroundColor: '#00bfff',
   color: '#ffffff',
   fontSize: '14px',
   borderRadius: '8px',
