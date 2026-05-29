@@ -10,9 +10,16 @@ import { BrandBar } from "../BrandBar";
 
 const Catalogo = () => {
   const { data: products = [], isLoading } = useSociosProducts();
+  const { data: brands = [] } = useBrands({ includeInactive: true });
   const { items, addItem, setQuantity, findLine } = useSociosCartCtx();
   const [search, setSearch] = useState("");
   const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (brands.length > 0 && selectedBrandId === null) {
+      setSelectedBrandId(brands[0].id);
+    }
+  }, [brands, selectedBrandId]);
 
   const filtered = useMemo(() => {
     return products.filter((p) => {
