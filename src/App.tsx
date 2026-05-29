@@ -13,6 +13,7 @@ import Brand from "./pages/Brand";
 import AuthPage from "./pages/AuthPage";
 import Profile from "./pages/Profile";
 import ReviewEmail from "./pages/ReviewEmail";
+import ProfileComplete from "./pages/ProfileComplete";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Admin from "./pages/Admin";
