@@ -8,8 +8,6 @@ import Carrito from "./pages/Carrito";
 import Finalizar from "./pages/Finalizar";
 import Login from "./pages/Login";
 import Registro from "./pages/Registro";
-import Profile from "@/pages/Profile";
-import OrderDetail from "@/pages/OrderDetail";
 
 const PUBLIC_PATHS = ["/login", "/registro"];
 
@@ -70,8 +68,6 @@ export const SociosApp = () => {
           <Route path="/registro" element={<Registro />} />
           <Route path="/carrito" element={<Carrito />} />
           <Route path="/finalizar" element={<Finalizar />} />
-          <Route path="/mi-cuenta" element={<Profile />} />
-          <Route path="/mi-cuenta/pedidos/:orderId" element={<OrderDetail />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Guard>
