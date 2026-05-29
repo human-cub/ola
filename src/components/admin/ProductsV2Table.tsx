@@ -117,12 +117,12 @@ const ProductsV2Table = () => {
           <p className="text-sm text-muted-foreground">
             {totalActive} activos · {products.length} candidatos · los inactivos se ocultan en{" "}
             <a
-              href="https://socios.alaola.com.ar/"
+              href="https://alaola.com.ar/socios"
               target="_blank"
               rel="noreferrer"
               className="underline"
             >
-              socios.alaola.com.ar
+              alaola.com.ar/socios
             </a>
           </p>
         </div>
