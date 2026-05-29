@@ -11,7 +11,7 @@ export const useCartItems = (
 
   const fetchCartItems = useCallback(async (userId: string | null): Promise<CartItem[]> => {
     try {
-      let query = supabase.from('cart_items').select('*');
+      let query = supabase.from('cart_items').select('*').eq('mode' as any, 'retail');
 
       if (userId) {
         query = query.eq('user_id', userId);
@@ -49,6 +49,7 @@ export const useCartItems = (
         quantity: item.quantity,
         price_per_unit: item.price_per_unit,
         product_image: item.product_image,
+        mode: 'retail',
       };
 
       if (session?.user) {
@@ -61,6 +62,7 @@ export const useCartItems = (
       let existingQuery = supabase
         .from('cart_items')
         .select('id, quantity')
+        .eq('mode' as any, 'retail')
         .eq('product_id', item.product_id);
 
       if (item.flavor) {
