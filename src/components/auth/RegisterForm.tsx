@@ -55,20 +55,23 @@ export const RegisterForm = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/completar-perfil`,
+      const { error } = await supabase.functions.invoke("signup-with-email", {
+        body: {
+          email,
+          password,
+          redirectTo: `${window.location.origin}/completar-perfil`,
         },
       });
 
       if (error) {
-        if (error.message.includes("already registered")) {
-          toast.error("Este email ya está registrado");
+        let message = error.message;
+        if (error.context instanceof Response) {
+          const payload = await error.context.json().catch(() => null);
+          message = payload?.error || message;
         } else {
-          toast.error(error.message);
+          message = error.context?.error || message;
         }
+        toast.error(message);
         return;
       }
 
