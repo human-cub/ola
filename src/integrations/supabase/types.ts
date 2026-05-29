@@ -98,11 +98,12 @@ export type Database = {
       cart_items: {
         Row: {
           created_at: string
+          external_sku: string | null
           flavor: string | null
           id: string
           mode: string
           price_per_unit: number
-          product_id: string
+          product_id: string | null
           product_image: string | null
           product_name: string
           quantity: number
@@ -112,11 +113,12 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          external_sku?: string | null
           flavor?: string | null
           id?: string
           mode?: string
           price_per_unit: number
-          product_id: string
+          product_id?: string | null
           product_image?: string | null
           product_name: string
           quantity?: number
@@ -126,11 +128,12 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          external_sku?: string | null
           flavor?: string | null
           id?: string
           mode?: string
           price_per_unit?: number
-          product_id?: string
+          product_id?: string | null
           product_image?: string | null
           product_name?: string
           quantity?: number
