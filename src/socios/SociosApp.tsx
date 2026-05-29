@@ -6,11 +6,10 @@ import { SociosCartProvider } from "./SociosCartProvider";
 import Catalogo from "./pages/Catalogo";
 import Carrito from "./pages/Carrito";
 import Finalizar from "./pages/Finalizar";
-import Login from "./pages/Login";
 import Registro from "./pages/Registro";
 import RevisarEmail from "./pages/RevisarEmail";
 
-const PUBLIC_PATHS = ["/login", "/registro", "/registro/revisar-email"];
+const PUBLIC_PATHS = ["/registro", "/registro/revisar-email"];
 
 const Guard = ({ children }: { children: React.ReactNode }) => {
   const [status, setStatus] = useState<"loading" | "anon" | "authed" | "denied">("loading");
@@ -45,7 +44,7 @@ const Guard = ({ children }: { children: React.ReactNode }) => {
   if (status === "loading") {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
   }
-  if (status === "anon") return <Navigate to="/login" replace />;
+  if (status === "anon") return <Navigate to="/ingresar?redirect=/socios" replace />;
   if (status === "denied") {
     return (
       <div className="min-h-screen flex items-center justify-center px-4 text-center">
@@ -65,7 +64,7 @@ export const SociosApp = () => {
       <Guard>
         <Routes>
           <Route path="/" element={<Catalogo />} />
-          <Route path="/login" element={<Login />} />
+          <Route path="/login" element={<Navigate to="/ingresar?redirect=/socios" replace />} />
           <Route path="/registro" element={<Registro />} />
           <Route path="/registro/revisar-email" element={<RevisarEmail />} />
           <Route path="/carrito" element={<Carrito />} />

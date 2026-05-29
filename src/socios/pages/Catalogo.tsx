@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, Minus, Plus } from "lucide-react";
+import { Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useBrands } from "@/hooks/useBrands";
 import { useCategories } from "@/hooks/useCategories";
 import { useSociosProducts } from "../hooks/useSociosProducts";
@@ -8,6 +9,10 @@ import { useSociosCartCtx } from "../SociosCartProvider";
 import { formatARS } from "../lib/format";
 import { SociosHeader } from "../SociosHeader";
 import { BrandBar } from "../BrandBar";
+
+// Normaliza string para búsqueda: minúsculas, sin acentos, trim
+const norm = (s: string) =>
+  s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 
 const Catalogo = () => {
   const { data: products = [], isLoading } = useSociosProducts();
@@ -23,6 +28,26 @@ const Catalogo = () => {
     }
   }, [brands, selectedBrandId]);
 
+  // Indexamos categorías y marcas por id/slug para enriquecer el haystack del buscador
+  const categoryById = useMemo(() => {
+    const m = new Map<string, { name: string; seo: string }>();
+    categories.forEach((c: any) => {
+      const seo = `${c.seo_title ?? ""} ${c.seo_description ?? ""}`;
+      if (c.slug) m.set(String(c.slug).toLowerCase(), { name: c.name ?? "", seo });
+      if (c.id) m.set(String(c.id).toLowerCase(), { name: c.name ?? "", seo });
+    });
+    return m;
+  }, [categories]);
+
+  const brandById = useMemo(() => {
+    const m = new Map<string, { name: string; seo: string }>();
+    brands.forEach((b: any) => {
+      const seo = `${b.seo_title ?? ""} ${b.seo_description ?? ""}`;
+      if (b.id) m.set(String(b.id), { name: b.name ?? "", seo });
+    });
+    return m;
+  }, [brands]);
+
   const filtered = useMemo(() => {
     const categoryOrder = new Map<string, number>();
     categories.forEach((category, index) => {
@@ -33,12 +58,34 @@ const Catalogo = () => {
 
     const categoryKey = (value: string | null | undefined) => value?.toLowerCase().trim() ?? "";
 
+    const tokens = norm(search).split(/\s+/).filter(Boolean);
+    const searchActive = tokens.length > 0;
+
     return products.filter((p) => {
-      if (selectedBrandId && p.brand_id !== selectedBrandId) return false;
-      if (search) {
-        const q = search.toLowerCase();
-        const hay = `${p.name} ${p.name_short ?? ""} ${p.flavor ?? ""} ${p.brand_name ?? ""}`.toLowerCase();
-        if (!hay.includes(q)) return false;
+      // Cuando hay búsqueda, ignoramos el filtro de marca para buscar en todo el catálogo
+      if (!searchActive && selectedBrandId && p.brand_id !== selectedBrandId) return false;
+      if (searchActive) {
+        const catKey = (p.category_slug ?? "").toLowerCase();
+        const cat = categoryById.get(catKey);
+        const brand = p.brand_id ? brandById.get(p.brand_id) : undefined;
+        const tagsStr = Array.isArray(p.tags) ? p.tags.join(" ") : "";
+        const hay = norm(
+          [
+            p.name,
+            p.name_short ?? "",
+            p.flavor ?? "",
+            p.size ?? "",
+            p.sku,
+            p.brand_name ?? brand?.name ?? "",
+            brand?.seo ?? "",
+            p.category_slug ?? "",
+            cat?.name ?? "",
+            cat?.seo ?? "",
+            tagsStr,
+          ].join(" "),
+        );
+        // Todos los tokens deben aparecer en alguna parte (AND multipalabra)
+        if (!tokens.every((t) => hay.includes(t))) return false;
       }
       return true;
     }).sort((a, b) => {
@@ -52,7 +99,7 @@ const Catalogo = () => {
       const bn = (b.name_short || b.name).trim();
       return an.localeCompare(bn, "es-AR");
     });
-  }, [products, selectedBrandId, search, categories]);
+  }, [products, selectedBrandId, search, categories, categoryById, brandById]);
 
   void items; // ensure rerender on cart change
 
@@ -66,9 +113,18 @@ const Catalogo = () => {
             <span className="text-xs text-muted-foreground">{filtered.length} productos</span>
           </div>
 
-          {isLoading ? (
-            <div className="flex justify-center py-12">
-              <Loader2 className="w-6 h-6 animate-spin text-primary" />
+          {isLoading && products.length === 0 ? (
+            <div className="space-y-2">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-3 bg-card border rounded-lg p-2 sm:p-3">
+                  <Skeleton className="w-16 h-16 shrink-0 rounded-md" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-1/3" />
+                  </div>
+                  <Skeleton className="h-8 w-20" />
+                </div>
+              ))}
             </div>
           ) : (
             <div className="space-y-2">
