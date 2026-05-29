@@ -11,7 +11,7 @@ export const useCartItems = (
 
   const fetchCartItems = useCallback(async (userId: string | null): Promise<CartItem[]> => {
     try {
-      let query = supabase.from('cart_items').select('*');
+      let query: any = supabase.from('cart_items').select('*').eq('mode', 'retail');
 
       if (userId) {
         query = query.eq('user_id', userId);
@@ -49,6 +49,7 @@ export const useCartItems = (
         quantity: item.quantity,
         price_per_unit: item.price_per_unit,
         product_image: item.product_image,
+        mode: 'retail',
       };
 
       if (session?.user) {
@@ -58,9 +59,10 @@ export const useCartItems = (
       }
 
       // Check if same product+flavor exists
-      let existingQuery = supabase
+      let existingQuery: any = supabase
         .from('cart_items')
         .select('id, quantity')
+        .eq('mode', 'retail')
         .eq('product_id', item.product_id);
 
       if (item.flavor) {
