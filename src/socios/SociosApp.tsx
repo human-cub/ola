@@ -24,12 +24,21 @@ const Guard = ({ children }: { children: React.ReactNode }) => {
         if (mounted) setStatus("anon");
         return;
       }
-      const { data } = await supabase.from("user_roles").select("role").eq("user_id", uid);
-      const roles = (data ?? []).map((r: any) => r.role);
-      if (mounted) setStatus(roles.includes("mayorista") || roles.includes("admin") ? "authed" : "denied");
+      try {
+        const { data, error } = await supabase.from("user_roles").select("role").eq("user_id", uid);
+        if (error) console.error("[Socios Guard] role query error:", error);
+        const roles = (data ?? []).map((r: any) => r.role);
+        if (mounted) setStatus(roles.includes("mayorista") || roles.includes("admin") ? "authed" : "denied");
+      } catch (e) {
+        console.error("[Socios Guard] role query exception:", e);
+        if (mounted) setStatus("denied");
+      }
     };
     supabase.auth.getSession().then(({ data: { session } }) => check(session?.user?.id ?? null));
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => check(s?.user?.id ?? null));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => {
+      // Defer supabase calls to avoid deadlock inside onAuthStateChange
+      setTimeout(() => check(s?.user?.id ?? null), 0);
+    });
     return () => { mounted = false; subscription.unsubscribe(); };
   }, []);
 
