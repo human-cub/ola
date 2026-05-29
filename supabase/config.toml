@@ -17,5 +17,7 @@ project_id = "vczrkqwnokjuxehvbrbx"
     verify_jwt = false
   [functions.send-email]
     verify_jwt = false
+  [functions.signup-with-email]
+    verify_jwt = false
   [functions.sync-products]
     verify_jwt = false
