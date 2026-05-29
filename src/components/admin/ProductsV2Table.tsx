@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSociosProducts, type SociosProduct } from "@/socios/hooks/useSociosProducts";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useBrands } from "@/hooks/useBrands";
+import { useCategories } from "@/hooks/useCategories";
 import { Switch } from "@/components/ui/switch";
 import {
   Select,
@@ -47,6 +48,7 @@ const ProductsV2Table = () => {
     queryFn: fetchOverrides,
   });
   const { data: brands = [] } = useBrands({ includeInactive: true });
+  const { data: categories = [] } = useCategories({ includeInactive: true });
 
   const [sortMode, setSortMode] = useState<SortMode>("brand");
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
@@ -93,11 +95,26 @@ const ProductsV2Table = () => {
     } else {
       arr.sort((a, b) => a.label.localeCompare(b.label));
     }
+    const catOrder = new Map<string, number>();
+    categories.forEach((c, i) => catOrder.set(c.slug, i));
     for (const g of arr) {
-      g.items.sort((a, b) => a.name.localeCompare(b.name));
+      if (sortMode === "brand") {
+        g.items.sort((a, b) => {
+          const ai = a.category_slug && catOrder.has(a.category_slug)
+            ? catOrder.get(a.category_slug)!
+            : Number.MAX_SAFE_INTEGER;
+          const bi = b.category_slug && catOrder.has(b.category_slug)
+            ? catOrder.get(b.category_slug)!
+            : Number.MAX_SAFE_INTEGER;
+          if (ai !== bi) return ai - bi;
+          return a.name.localeCompare(b.name);
+        });
+      } else {
+        g.items.sort((a, b) => a.name.localeCompare(b.name));
+      }
     }
     return arr;
-  }, [products, sortMode, brands]);
+  }, [products, sortMode, brands, categories]);
 
   useEffect(() => {
     // Collapsed by default when sort mode changes
