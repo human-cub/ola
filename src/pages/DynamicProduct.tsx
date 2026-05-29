@@ -5,7 +5,6 @@ import { Breadcrumb } from "@/components/Breadcrumb";
 import { Footer } from "@/components/Footer";
 import { RelatedProducts } from "@/components/RelatedProducts";
 import { GroupBuyPriceBlock } from "@/components/GroupBuyPriceBlock";
-import { MayoristaPriceBlock } from "@/components/MayoristaPriceBlock";
 import { useUserRole } from "@/hooks/useUserRole";
 import { supabase } from "@/integrations/supabase/client";
 import { DynamicProductCarousel } from "@/components/DynamicProductCarousel";
