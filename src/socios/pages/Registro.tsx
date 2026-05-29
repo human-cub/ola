@@ -98,15 +98,16 @@ const Registro = () => {
     setLoading(true);
     storeInviteToken(token);
     storePendingProfile({ firstName: firstName.trim(), phone: phone.trim() });
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/socios/registro?token=${encodeURIComponent(token)}`,
+    const { data, error } = await supabase.functions.invoke("signup-with-email", {
+      body: {
+        email,
+        password,
+        redirectTo: `${window.location.origin}/socios/registro?token=${encodeURIComponent(token)}`,
       },
     });
     if (error) {
-      toast.error(error.message);
+      const message = error.context?.error || error.message;
+      toast.error(message);
       setLoading(false);
       return;
     }
