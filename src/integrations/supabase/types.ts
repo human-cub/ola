@@ -440,6 +440,27 @@ export type Database = {
         }
         Relationships: []
       }
+      socios_product_overrides: {
+        Row: {
+          created_at: string
+          is_active: boolean
+          sku: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          is_active?: boolean
+          sku: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          is_active?: boolean
+          sku?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_orders: {
         Row: {
           admin_notes: string | null
