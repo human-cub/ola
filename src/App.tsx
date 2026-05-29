@@ -12,6 +12,7 @@ import Catalog from "./pages/Catalog";
 import Brand from "./pages/Brand";
 import AuthPage from "./pages/AuthPage";
 import Profile from "./pages/Profile";
+import ReviewEmail from "./pages/ReviewEmail";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Admin from "./pages/Admin";
@@ -102,7 +103,9 @@ const App = () => {
           <Route path="/producto/:slug" element={<DynamicProduct />} />
           <Route path="/:slug" element={<DynamicProductGuard />} />
           <Route path="/ingresar" element={<AuthPage />} />
+          <Route path="/revisar-email" element={<ReviewEmail />} />
           <Route path="/mi-cuenta" element={<Profile />} />
+          <Route path="/completar-perfil" element={<ProfileComplete />} />
           <Route path="/recuperar-clave" element={<ForgotPassword />} />
           <Route path="/restablecer-clave" element={<ResetPassword />} />
           <Route path="/auth" element={<AuthPage />} />
