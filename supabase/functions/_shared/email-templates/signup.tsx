@@ -27,31 +27,30 @@ export const SignupEmail = ({
   recipient,
   confirmationUrl,
 }: SignupEmailProps) => (
-  <Html lang="en" dir="ltr">
+  <Html lang="es" dir="ltr">
     <Head />
-    <Preview>Confirm your email for {siteName}</Preview>
+    <Preview>Confirmá tu cuenta de {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>Confirm your email</Heading>
+        <Heading style={h1}>Confirmá tu cuenta</Heading>
         <Text style={text}>
-          Thanks for signing up for{' '}
+          Gracias por registrarte en{' '}
           <Link href={siteUrl} style={link}>
             <strong>{siteName}</strong>
           </Link>
-          !
         </Text>
         <Text style={text}>
-          Please confirm your email address (
+          Confirmá tu email (
           <Link href={`mailto:${recipient}`} style={link}>
             {recipient}
           </Link>
-          ) by clicking the button below:
+          ) tocando el botón de abajo
         </Text>
         <Button style={button} href={confirmationUrl}>
-          Verify Email
+          Confirmar cuenta
         </Button>
         <Text style={footer}>
-          If you didn't create an account, you can safely ignore this email.
+          Si no creaste una cuenta, podés ignorar este email
         </Text>
       </Container>
     </Body>
@@ -60,23 +59,23 @@ export const SignupEmail = ({
 
 export default SignupEmail
 
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
-const container = { padding: '20px 25px' }
+const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, Helvetica, sans-serif' }
+const container = { padding: '28px 25px' }
 const h1 = {
   fontSize: '22px',
   fontWeight: 'bold' as const,
-  color: '#000000',
+  color: '#1d3340',
   margin: '0 0 20px',
 }
 const text = {
   fontSize: '14px',
-  color: '#55575d',
+  color: '#58707c',
   lineHeight: '1.5',
   margin: '0 0 25px',
 }
 const link = { color: 'inherit', textDecoration: 'underline' }
 const button = {
-  backgroundColor: '#000000',
+  backgroundColor: '#00bfff',
   color: '#ffffff',
   fontSize: '14px',
   borderRadius: '8px',
