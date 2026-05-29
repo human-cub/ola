@@ -29,6 +29,8 @@ import NotFound from "./pages/NotFound";
 import { FloatingWhatsApp } from "./components/FloatingWhatsApp";
 import { ScrollToTop } from "./components/ScrollToTop";
 import { CartProvider } from "./contexts/CartContext";
+import { isSociosHost } from "./socios/lib/host";
+import SociosApp from "./socios/SociosApp";
 
 const SHORT_LINK_REDIRECTS: Record<string, string> = {
   s1: "https://alaola.com.ar/?utm_source=offline&utm_medium=sticker&utm_campaign=gym&utm_term=12-4&utm_content=v1",
@@ -66,6 +68,21 @@ const App = () => {
       });
     }
   }, []);
+
+  if (isSociosHost()) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <ScrollToTop />
+            <SociosApp />
+          </BrowserRouter>
+        </TooltipProvider>
+      </QueryClientProvider>
+    );
+  }
 
   return (
   <QueryClientProvider client={queryClient}>
