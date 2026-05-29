@@ -6,7 +6,7 @@ interface Props {
 }
 
 export const BrandBar = ({ selectedBrandId, onSelect }: Props) => {
-  const { data: brands = [] } = useBrands();
+  const { data: brands = [] } = useBrands({ includeInactive: true });
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur border-t shadow-soft">
