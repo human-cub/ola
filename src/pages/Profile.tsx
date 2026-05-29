@@ -117,13 +117,30 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-accent/20 p-4">
       <div className="container mx-auto max-w-2xl">
-        <a
-          href={isMayorista ? "/socios" : "/"}
-          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          {isMayorista ? "Volver al catálogo" : "Volver al inicio"}
-        </a>
+        {isMayorista ? (
+          <div className="flex items-center gap-2 mb-6">
+            <a
+              href="/socios"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-border bg-card text-sm hover:bg-muted transition-colors"
+            >
+              Ola Socios
+            </a>
+            <a
+              href="/"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-border bg-card text-sm hover:bg-muted transition-colors"
+            >
+              Ola
+            </a>
+          </div>
+        ) : (
+          <a
+            href="/"
+            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Volver al inicio
+          </a>
+        )}
 
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold">
