@@ -3,6 +3,7 @@ import { ChevronDown, ChevronRight, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSociosProducts, type SociosProduct } from "@/socios/hooks/useSociosProducts";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useBrands } from "@/hooks/useBrands";
 import { Switch } from "@/components/ui/switch";
 import {
   Select,
@@ -45,6 +46,7 @@ const ProductsV2Table = () => {
     queryKey: ["admin", "socios-overrides"],
     queryFn: fetchOverrides,
   });
+  const { data: brands = [] } = useBrands({ includeInactive: true });
 
   const [sortMode, setSortMode] = useState<SortMode>("brand");
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
@@ -79,18 +81,27 @@ const ProductsV2Table = () => {
       map.get(key)!.items.push(p);
     }
     const arr = Array.from(map.values());
-    arr.sort((a, b) => a.label.localeCompare(b.label));
+    if (sortMode === "brand") {
+      const order = new Map<string, number>();
+      brands.forEach((b, i) => order.set(b.id, i));
+      arr.sort((a, b) => {
+        const ai = order.has(a.key) ? order.get(a.key)! : Number.MAX_SAFE_INTEGER;
+        const bi = order.has(b.key) ? order.get(b.key)! : Number.MAX_SAFE_INTEGER;
+        if (ai !== bi) return ai - bi;
+        return a.label.localeCompare(b.label);
+      });
+    } else {
+      arr.sort((a, b) => a.label.localeCompare(b.label));
+    }
     for (const g of arr) {
       g.items.sort((a, b) => a.name.localeCompare(b.name));
     }
     return arr;
-  }, [products, sortMode]);
+  }, [products, sortMode, brands]);
 
   useEffect(() => {
-    // expand all groups by default when sort mode or data changes
-    const next: Record<string, boolean> = {};
-    for (const g of groups) next[g.key] = true;
-    setExpanded(next);
+    // Collapsed by default when sort mode changes
+    setExpanded({});
   }, [sortMode, products.length]);
 
   const toggleGroup = (key: string) =>
@@ -136,7 +147,7 @@ const ProductsV2Table = () => {
       ) : (
         <div className="space-y-3">
           {groups.map((g) => {
-            const open = expanded[g.key] ?? true;
+            const open = expanded[g.key] ?? false;
             const activeCount = g.items.filter((p) => isActive(p.sku)).length;
             return (
               <div key={g.key} className="border rounded-lg overflow-hidden">
