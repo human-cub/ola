@@ -1,78 +1,77 @@
-## План: Бренды и категории в боковом меню
+## Архитектура
 
-### 1. База данных (миграция)
+- Поддомен `socios.alaola.com.ar` подключается к существующему Vercel-проекту вторым доменом (CNAME `cname.vercel-dns.com`). DNS вы настраиваете руками после деплоя.
+- В `App.tsx` детектим `window.location.hostname.startsWith('socios.')` → рендерим отдельный роутер `SociosApp` со своими страницами, хедером и футером. Обычные роуты не пересекаются.
+- На локалке для разработки работает префикс `/socios/*` (без поддомена), чтобы можно было превьюить.
 
-Создаём две таблицы с одинаковой структурой:
+## База данных (миграция)
 
-**`categories`**
-- `id` uuid PK
-- `name` text — отображаемое имя
-- `slug` text unique — для URL `/categoria/:slug`
-- `emoji` text — настраивается в админке
-- `sort_order` int — порядок в меню
-- `is_active` boolean default true
-- `created_at`, `updated_at`
+1. Новая роль: `ALTER TYPE app_role ADD VALUE 'mayorista'`.
+2. `wholesale_invite_tokens` — таблица токенов приглашений:
+   - `token` (uuid, PK), `lead_id` (uuid → wholesale_leads.id), `created_at`, `used_at`, `used_by_user_id`.
+   - RLS: только admin SELECT/INSERT/UPDATE. Анонимная валидация — через SECURITY DEFINER функцию `validate_wholesale_invite(_token uuid)` возвращающую `{valid, lead_id, phone, full_name}`.
+3. `app_settings` уже содержит конфиг минимума (ключ из текущей «Configuración Mayorista» — посмотрю в коде и переиспользую).
+4. Триггер `handle_new_user`: если пользователь регистрируется с meta `{registration_method: 'mayorista', invite_token: xxx}` → автоматически вставить `user_roles(role='mayorista')` и пометить токен использованным. Реализую через RPC `claim_wholesale_invite(_token, _user_id)` вызываемую из фронта сразу после signUp.
 
-**`brands`**
-- те же поля + `logo_url` text (опционально)
-- slug используется в `/marca/:slug`
+## Каталог /socios
 
-**Изменения в `products`:**
-- добавляем `brand_id uuid` (FK → brands, ON DELETE SET NULL, индекс)
-- существующее текстовое поле `category` мигрируем: создаём `category_id uuid` (FK → categories), заполняем по совпадению slug, старое `category` оставляем для обратной совместимости (можно удалить позже)
+Источник: та же таблица `products`. Цены берём из `prices` JSONB:
+- «display retail» — Tier 0 (зачёркнутая).
+- «T4 buy price» — Tier 4 (последний tier, оптовая).
+- Скидка % = `(t0 - t4) / t0 * 100`.
 
-**RLS:**
-- SELECT для `public` (анонимы видят активные бренды/категории)
-- INSERT/UPDATE/DELETE только для admin (`has_role(auth.uid(), 'admin')`)
+Компонент `SociosProductRow`: фото (с переключателем по вкусу), название, счётчик +/- (как в обычной корзине), справа три цены.
 
-**Сидинг categories:** мигрируем 8 текущих категорий из хардкода (`proteinas`, `creatinas`, `aminoacidos`, `aumentadores`, `barras`, `pre-entrenos`, `colageno`, `vitaminas`) с их emoji и текущим порядком.
+## Хедер Socios
 
-### 2. Хуки (фронт)
+- Лого слева (тот же), поиск по центру (фильтр по name/brand), справа корзина и аватар-меню.
+- Под ними строка: `Hola, {firstName} • Mínimo: $200.000` или, если в корзине что-то есть и сумма < минимума: `Faltan: $XX.XXX`.
+- Внизу sticky-бар с брендами: горизонтальный скролл логотипов из `brands` (только `is_active=true && products_count>0`), клик — фильтр каталога по бренду.
 
-- `src/hooks/useCategories.ts` — React Query + realtime subscription к `categories`, возвращает активные отсортированные по `sort_order`
-- `src/hooks/useBrands.ts` — то же для `brands`
+## Корзина /socios/carrito
 
-### 3. Боковое меню (`BurgerMenu.tsx`)
+Отдельная страница (не путать с обычной `/cart`, чтобы не смешивать tier 1 и tier 4). Использует те же `cart_items` с новым полем `mode='mayorista'`:
 
-- Удалить хардкод `catalogCategories`
-- Использовать `useCategories()` и `useBrands()`
-- Добавить новый раздел "Marcas" рядом с "Catálogo", разворачиваемый аккордеоном
-- Клик по бренду → `/marca/:slug`
-- Скелетон во время загрузки
+- Миграция: `ALTER TABLE cart_items ADD COLUMN mode TEXT NOT NULL DEFAULT 'retail'`.
+- При добавлении в Socios → `mode='mayorista'`, `price_per_unit` = Tier 4.
+- В обычной корзине фильтруем `mode='retail'`, в оптовой — `mode='mayorista'`.
 
-### 4. Страница бренда
+Sticky-блок снизу: `Faltan: $X` (или пусто если ≥ минимума), `Confirmar pedido` (disabled пока < минимума), `Total: $Y`.
 
-- Новый роут `/marca/:slug` в `src/App.tsx`
-- Новый компонент `src/pages/Brand.tsx` (по образцу `Category.tsx`): хедер, хлебные крошки, сетка товаров, фильтрующая по `brand_id`
-- Динамические SEO-теги (title/description/canonical) по es-AR стандарту проекта
-- Добавить в `sitemap.xml` записи `/marca/<slug>` для каждого активного бренда
+## Чекаут /socios/finalizar
 
-### 5. Админка
+Копия `Checkout.tsx` без блока промокода и без расчёта tier-сюрпризов. `order_type = 'mayorista'` (новое значение enum), `participants_count = 1`, цены сразу финальные.
 
-**Новая вкладка "Marcas y categorías"** в `src/pages/Admin.tsx`:
-- Две таблицы (`BrandsTable`, `CategoriesTable`) по образцу `PromoCodesTable`
-- Диалоги создания/редактирования с полями: nombre, slug (авто из имени, редактируемый), emoji (picker или текст), sort_order (drag-and-drop или число), is_active, logo_url (только бренды)
-- Удаление с подтверждением (`ConfirmDeleteDialog`)
+- Миграция: `ALTER TYPE order_type ADD VALUE 'mayorista'`.
+- Заказ падает в `user_orders` → отображается в существующем «Mis Pedidos» автоматически.
 
-**В `EditProductDialog` / `AddProductDialog`:**
-- Селект `brand_id` со списком всех брендов
-- Селект `category_id` со списком всех категорий (заменяет текущее текстовое `category`)
+## ЛК
 
-### 6. Карточка товара
+Полное переиспользование текущего `Profile.tsx` под `/socios/perfil` — данные те же.
 
-- При наличии `brand`: показывать имя бренда на карточке/странице товара со ссылкой на `/marca/:slug` (мелкая опциональная правка — подтвердить визуально позже)
+## Admin: Solicitudes Mayoristas
 
-### Технические детали
+В `WholesaleLeadsTable.tsx` к каждой строке добавляю кнопку **«Generar enlace»** (если токена ещё нет) и **«Copiar enlace»** (если есть). Линк: `https://socios.alaola.com.ar/registro?token=UUID`.
 
-- Все цены текстов на испанском (Rioplatense): "Marcas", "Sumate", без точек в конце пунктов меню
-- Realtime подписка на обе таблицы, чтобы изменения в БД сразу появлялись в меню
-- Slug-валидация: `^[a-z0-9-]+$`
-- Миграция: один файл с обеими таблицами, FK, индексами, RLS, триггерами `updated_at` и сидингом категорий
+## Технические детали
 
-### Что НЕ входит
+- Файлы:
+  - `src/socios/SociosApp.tsx`, `src/socios/SociosHeader.tsx`, `src/socios/BrandBar.tsx`
+  - `src/socios/pages/Catalogo.tsx`, `Carrito.tsx`, `Finalizar.tsx`, `Registro.tsx`, `Login.tsx`
+  - `src/socios/hooks/useSociosCart.ts`, `useMayoristaMinOrder.ts`
+  - Edge function `claim-wholesale-invite` для серверной выдачи роли (SECURITY DEFINER миграция тоже подойдёт; выберу RPC).
+- В `App.tsx` ранний switch: `if (isSociosHost) return <SociosApp />`.
+- Защита: все `/socios/*` (кроме `/registro?token=`, `/login`) требуют `mayorista` или `admin` роль. Обычные пользователи без роли → редирект на лендинг с сообщением.
 
-- Фильтр по бренду внутри страницы категории (можно добавить позже)
-- Подкатегории/иерархия
-- Многобрендовые товары (один товар = один бренд)
+## Очерёдность работ
 
-Подтверди — и иду делать миграцию первым шагом.
+1. Миграция (роль, токены, cart_items.mode, order_type enum, RPC).
+2. Edge-функция/RPC `claim_wholesale_invite`.
+3. Каркас `SociosApp` + хост-роутинг.
+4. Регистрация по токену + Login.
+5. Каталог + корзина + закреплённый брендбар.
+6. Чекаут + создание заказа.
+7. Кнопка генерации/копирования ссылки в админке.
+8. Vercel: добавление домена `socios.alaola.com.ar`.
+
+После approve начну с миграции БД.
