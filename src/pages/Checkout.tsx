@@ -194,17 +194,13 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
 
               <CheckoutPaymentForm form={form} />
 
-              {!isMayorista && (
-                <>
-                  <Separator className="mb-6" />
+              <Separator className="mb-6" />
 
-                  <PromoCodeInput
-                    appliedPromo={appliedPromo}
-                    onApply={setAppliedPromo}
-                    onRemove={removePromo}
-                  />
-                </>
-              )}
+              <PromoCodeInput
+                appliedPromo={appliedPromo}
+                onApply={setAppliedPromo}
+                onRemove={removePromo}
+              />
 
               <CheckoutPriceSummary
                 fullPrice={fullPrice}

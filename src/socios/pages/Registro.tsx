@@ -6,7 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
-import { storeInviteToken, clearInviteToken } from "../lib/format";
+import {
+  storeInviteToken,
+  clearInviteToken,
+  storePendingProfile,
+  readPendingProfile,
+  clearPendingProfile,
+} from "../lib/format";
 
 const Registro = () => {
   const [params] = useSearchParams();
@@ -20,7 +26,32 @@ const Registro = () => {
   const [firstName, setFirstName] = useState("");
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
+  const [finalizing, setFinalizing] = useState(false);
   const navigate = useNavigate();
+
+  // Finalize the wholesale signup after email verification or immediate session
+  const finalizeSignup = async (userId: string, _token: string) => {
+    const { error: rpcErr } = await (supabase.rpc as any)("claim_wholesale_invite", { _token });
+    if (rpcErr) {
+      // Token may already be claimed — that's OK if the user already has the role
+      console.warn("claim_wholesale_invite:", rpcErr.message);
+    } else {
+      clearInviteToken();
+    }
+    const pending = readPendingProfile();
+    if (pending) {
+      await supabase
+        .from("profiles")
+        .update({
+          first_name: pending.firstName,
+          phone: pending.phone,
+          profile_completed: true,
+        })
+        .eq("user_id", userId);
+      clearPendingProfile();
+    }
+    window.location.href = "/socios";
+  };
 
   useEffect(() => {
     const run = async () => {
@@ -28,6 +59,15 @@ const Registro = () => {
         setValidating(false);
         return;
       }
+
+      // If a session already exists (came back from email confirmation), finalize.
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.id) {
+        setFinalizing(true);
+        await finalizeSignup(session.user.id, token);
+        return;
+      }
+
       const { data, error } = await (supabase.rpc as any)("validate_wholesale_invite", { _token: token });
       const row = Array.isArray(data) ? data[0] : data;
       if (!error && row?.valid) {
@@ -40,6 +80,16 @@ const Registro = () => {
       setValidating(false);
     };
     void run();
+
+    // Also listen for SIGNED_IN coming from email confirmation redirect
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session?.user?.id && token) {
+        setFinalizing(true);
+        void finalizeSignup(session.user.id, token);
+      }
+    });
+    return () => subscription.unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -47,39 +97,35 @@ const Registro = () => {
     if (!valid) return;
     setLoading(true);
     storeInviteToken(token);
+    storePendingProfile({ firstName: firstName.trim(), phone: phone.trim() });
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: `${window.location.origin}/login` },
+      options: {
+        emailRedirectTo: `${window.location.origin}/socios/registro?token=${encodeURIComponent(token)}`,
+      },
     });
     if (error) {
       toast.error(error.message);
       setLoading(false);
       return;
     }
-    // If session created immediately (autoconfirm) — claim role and write profile
+    // If session created immediately (autoconfirm) — finalize now
     if (data.session) {
-      const { error: rpcErr } = await (supabase.rpc as any)("claim_wholesale_invite", { _token: token });
-      if (rpcErr) {
-        toast.error("No se pudo activar la cuenta mayorista: " + rpcErr.message);
-      } else {
-        clearInviteToken();
-      }
-      await supabase
-        .from("profiles")
-        .update({ first_name: firstName, phone, profile_completed: true })
-        .eq("user_id", data.user!.id);
-      navigate("/");
+      await finalizeSignup(data.user!.id, token);
     } else {
-      toast.success("Revisá tu email para confirmar la cuenta");
+      toast.success("Revisá tu email para confirmar la cuenta y activar tu acceso");
     }
     setLoading(false);
   };
 
-  if (validating) {
+  if (validating || finalizing) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex flex-col items-center justify-center gap-3">
         <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        {finalizing && (
+          <p className="text-sm text-muted-foreground">Activando tu cuenta mayorista…</p>
+        )}
       </div>
     );
   }
