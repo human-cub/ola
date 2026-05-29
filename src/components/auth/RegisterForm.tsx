@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import * as amplitude from "@amplitude/analytics-browser";
 import { Button } from "@/components/ui/button";
@@ -6,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { z } from "zod";
-import { Eye, EyeOff, Loader2, CheckCircle } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 const registerSchema = z.object({
   email: z.string().email("Email inválido"),
@@ -22,13 +23,13 @@ const registerSchema = z.object({
 });
 
 export const RegisterForm = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -72,7 +73,7 @@ export const RegisterForm = () => {
       }
 
       amplitude.track('Sign Up', { button_label: 'Crear Cuenta', method: 'email' });
-      setEmailSent(true);
+      navigate("/revisar-email", { state: { email } });
 
       // Send welcome email (fire and forget)
       try {

@@ -114,7 +114,7 @@ const Registro = () => {
     if (data.session) {
       await finalizeSignup(data.user!.id, token);
     } else {
-      toast.success("Revisá tu email para confirmar la cuenta y activar tu acceso");
+      navigate("/registro/revisar-email", { state: { email } });
     }
     setLoading(false);
   };

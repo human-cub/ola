@@ -8,8 +8,9 @@ import Carrito from "./pages/Carrito";
 import Finalizar from "./pages/Finalizar";
 import Login from "./pages/Login";
 import Registro from "./pages/Registro";
+import RevisarEmail from "./pages/RevisarEmail";
 
-const PUBLIC_PATHS = ["/login", "/registro"];
+const PUBLIC_PATHS = ["/login", "/registro", "/registro/revisar-email"];
 
 const Guard = ({ children }: { children: React.ReactNode }) => {
   const [status, setStatus] = useState<"loading" | "anon" | "authed" | "denied">("loading");
@@ -66,6 +67,7 @@ export const SociosApp = () => {
           <Route path="/" element={<Catalogo />} />
           <Route path="/login" element={<Login />} />
           <Route path="/registro" element={<Registro />} />
+          <Route path="/registro/revisar-email" element={<RevisarEmail />} />
           <Route path="/carrito" element={<Carrito />} />
           <Route path="/finalizar" element={<Finalizar />} />
           <Route path="*" element={<Navigate to="/" replace />} />
