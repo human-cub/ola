@@ -123,15 +123,15 @@ const Profile = () => {
           <div className="grid grid-cols-2 gap-3 mb-6">
             <a
               href="/socios"
-              className="flex items-center justify-center h-20 rounded-lg bg-card hover:bg-muted transition-colors overflow-hidden"
+              className="flex items-center justify-center h-11 rounded-lg border border-border bg-card hover:bg-muted transition-colors text-sm font-medium"
             >
-              <img src={logoOlaSocios} alt="Ola Socios" className="h-24 w-auto object-contain" />
+              Ola Socios
             </a>
             <a
               href="/"
-              className="flex items-center justify-center h-20 rounded-lg bg-card hover:bg-muted transition-colors overflow-hidden"
+              className="flex items-center justify-center h-11 rounded-lg border border-border bg-card hover:bg-muted transition-colors text-sm font-medium"
             >
-              <img src={logoOla} alt="Ola" className="h-24 w-auto object-contain" />
+              Ola
             </a>
           </div>
         ) : (
