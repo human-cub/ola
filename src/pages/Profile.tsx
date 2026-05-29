@@ -90,7 +90,7 @@ const profileDefaults = {
 
 const Profile = () => {
   const navigate = useNavigate();
-  const { isMayorista } = useUserRole();
+  const { isMayorista, isAdmin } = useUserRole();
 
   const { data, isLoading } = useQuery({
     queryKey: ['profile'],
@@ -119,20 +119,30 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-accent/20 p-4">
       <div className="container mx-auto max-w-2xl">
-        {isMayorista ? (
-          <div className="grid grid-cols-2 gap-3 mb-6">
-            <a
-              href="/socios"
-              className="flex items-center justify-center h-11 rounded-lg border border-border bg-card hover:bg-muted transition-colors text-sm font-medium"
-            >
-              Ola Socios
-            </a>
+        {isMayorista || isAdmin ? (
+          <div className={`grid gap-3 mb-6 ${isAdmin && isMayorista ? "grid-cols-3" : "grid-cols-2"}`}>
+            {isMayorista && (
+              <a
+                href="/socios"
+                className="flex items-center justify-center h-11 rounded-lg border border-border bg-card hover:bg-muted transition-colors text-sm font-medium"
+              >
+                Ola Socios
+              </a>
+            )}
             <a
               href="/"
               className="flex items-center justify-center h-11 rounded-lg border border-border bg-card hover:bg-muted transition-colors text-sm font-medium"
             >
               Ola
             </a>
+            {isAdmin && (
+              <a
+                href="/admin"
+                className="flex items-center justify-center h-11 rounded-lg border border-border bg-card hover:bg-muted transition-colors text-sm font-medium"
+              >
+                Admin
+              </a>
+            )}
           </div>
         ) : (
           <a
