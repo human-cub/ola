@@ -100,6 +100,7 @@ export type Database = {
           created_at: string
           flavor: string | null
           id: string
+          mode: string
           price_per_unit: number
           product_id: string
           product_image: string | null
@@ -113,6 +114,7 @@ export type Database = {
           created_at?: string
           flavor?: string | null
           id?: string
+          mode?: string
           price_per_unit: number
           product_id: string
           product_image?: string | null
@@ -126,6 +128,7 @@ export type Database = {
           created_at?: string
           flavor?: string | null
           id?: string
+          mode?: string
           price_per_unit?: number
           product_id?: string
           product_image?: string | null
@@ -580,6 +583,38 @@ export type Database = {
           },
         ]
       }
+      wholesale_invite_tokens: {
+        Row: {
+          created_at: string
+          lead_id: string
+          token: string
+          used_at: string | null
+          used_by_user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          lead_id: string
+          token?: string
+          used_at?: string | null
+          used_by_user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          lead_id?: string
+          token?: string
+          used_at?: string | null
+          used_by_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wholesale_invite_tokens_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "wholesale_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wholesale_leads: {
         Row: {
           admin_notes: string | null
@@ -616,6 +651,8 @@ export type Database = {
     }
     Functions: {
       assign_admin_role: { Args: { user_email: string }; Returns: string }
+      claim_wholesale_invite: { Args: { _token: string }; Returns: boolean }
+      generate_wholesale_invite: { Args: { _lead_id: string }; Returns: string }
       get_collective_clock: {
         Args: never
         Returns: {
@@ -662,6 +699,15 @@ export type Database = {
           tier_bonus: number
         }[]
       }
+      validate_wholesale_invite: {
+        Args: { _token: string }
+        Returns: {
+          full_name: string
+          lead_id: string
+          phone: string
+          valid: boolean
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "user" | "mayorista"
@@ -673,7 +719,7 @@ export type Database = {
         | "delivered"
         | "cancelled"
       order_status: "new" | "processing" | "completed"
-      order_type: "immediate" | "collective"
+      order_type: "immediate" | "collective" | "mayorista"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -811,7 +857,7 @@ export const Constants = {
         "cancelled",
       ],
       order_status: ["new", "processing", "completed"],
-      order_type: ["immediate", "collective"],
+      order_type: ["immediate", "collective", "mayorista"],
     },
   },
 } as const
