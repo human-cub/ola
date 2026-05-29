@@ -11,6 +11,8 @@ import { ProfileEditForm } from "@/components/profile/ProfileEditForm";
 import { SecurityForm } from "@/components/profile/SecurityForm";
 import { useUserRole } from "@/hooks/useUserRole";
 import type { AddressData } from "@/lib/address";
+import logoOlaSocios from "@/assets/logo-ola-socios.png";
+import logoOla from "@/assets/logo-ola.png";
 
 const fetchProfile = async () => {
   const { data: { session } } = await supabase.auth.getSession();
@@ -118,18 +120,18 @@ const Profile = () => {
     <div className="min-h-screen bg-gradient-to-br from-background to-accent/20 p-4">
       <div className="container mx-auto max-w-2xl">
         {isMayorista ? (
-          <div className="flex items-center gap-2 mb-6">
+          <div className="grid grid-cols-2 gap-3 mb-6">
             <a
               href="/socios"
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-border bg-card text-sm hover:bg-muted transition-colors"
+              className="flex items-center justify-center h-16 rounded-lg border border-border bg-card hover:bg-muted transition-colors"
             >
-              Ola Socios
+              <img src={logoOlaSocios} alt="Ola Socios" className="h-10 w-auto object-contain" />
             </a>
             <a
               href="/"
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-border bg-card text-sm hover:bg-muted transition-colors"
+              className="flex items-center justify-center h-16 rounded-lg border border-border bg-card hover:bg-muted transition-colors"
             >
-              Ola
+              <img src={logoOla} alt="Ola" className="h-10 w-auto object-contain" />
             </a>
           </div>
         ) : (
