@@ -20,9 +20,18 @@ export interface SociosProduct {
 }
 
 const fetchSociosProducts = async (): Promise<SociosProduct[]> => {
-  const { data, error } = await supabase.functions.invoke("fetch-external-products");
-  if (error) throw error;
-  return ((data as any)?.products ?? []) as SociosProduct[];
+  const [productsRes, overridesRes] = await Promise.all([
+    supabase.functions.invoke("fetch-external-products"),
+    supabase.from("socios_product_overrides").select("sku,is_active"),
+  ]);
+  if (productsRes.error) throw productsRes.error;
+  const products = ((productsRes.data as any)?.products ?? []) as SociosProduct[];
+  const inactive = new Set(
+    ((overridesRes.data ?? []) as { sku: string; is_active: boolean }[])
+      .filter((o) => o.is_active === false)
+      .map((o) => o.sku),
+  );
+  return products.filter((p) => !inactive.has(p.sku));
 };
 
 export const useSociosProducts = () =>

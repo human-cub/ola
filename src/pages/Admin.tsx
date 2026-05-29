@@ -12,6 +12,7 @@ import PromoCodesTable from "@/components/admin/PromoCodesTable";
 import CategoriesTable from "@/components/admin/CategoriesTable";
 import BrandsTable from "@/components/admin/BrandsTable";
 import AdminSettings from "@/components/admin/AdminSettings";
+import ProductsV2Table from "@/components/admin/ProductsV2Table";
 import { getAllProducts } from "@/data/products";
 import { ExternalLink } from "lucide-react";
 
@@ -125,9 +126,10 @@ const Admin = () => {
         </div>
 
         <Tabs defaultValue="userorders" className="w-full">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="userorders">Pedidos</TabsTrigger>
             <TabsTrigger value="products">Productos</TabsTrigger>
+            <TabsTrigger value="productsv2">Productos V2</TabsTrigger>
             <TabsTrigger value="taxonomy">Cat. y Marcas</TabsTrigger>
             <TabsTrigger value="users">Usuarios</TabsTrigger>
             <TabsTrigger value="promos">Promos</TabsTrigger>
@@ -138,6 +140,9 @@ const Admin = () => {
           </TabsContent>
           <TabsContent value="products">
             <ProductsTable />
+          </TabsContent>
+          <TabsContent value="productsv2">
+            <ProductsV2Table />
           </TabsContent>
           <TabsContent value="taxonomy">
             <div className="space-y-10">
