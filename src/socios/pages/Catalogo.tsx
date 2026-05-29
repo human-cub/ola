@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Loader2, Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useBrands } from "@/hooks/useBrands";
 import { useSociosProducts } from "../hooks/useSociosProducts";
 import { useSociosCartCtx } from "../SociosCartProvider";
 import { formatARS } from "../lib/format";
