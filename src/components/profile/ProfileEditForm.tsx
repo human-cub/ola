@@ -22,7 +22,7 @@ import { toast } from "sonner";
 import { AddressForm } from "@/components/AddressForm";
 import { isCABAProvince } from "@/data/argentinaLocations";
 import { parseAddressOrEmpty } from "@/lib/address";
-import { formatFullName } from "@/lib/formatting";
+
 
 const profileSchema = z.object({
   firstName: z.string().min(1, "El nombre es requerido").max(50),
@@ -84,10 +84,6 @@ export const ProfileEditForm = ({ profile, email }: ProfileEditFormProps) => {
     });
   }, [profile, form]);
 
-  const tempName = profile
-    ? formatFullName(profile.first_name, profile.last_name)
-    : "";
-
   const saveProfileMutation = useMutation({
     mutationFn: async (data: ProfileFormValues) => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -130,7 +126,6 @@ export const ProfileEditForm = ({ profile, email }: ProfileEditFormProps) => {
       <form onSubmit={form.handleSubmit((data) => saveProfileMutation.mutate(data))}>
         <Card>
           <CardHeader>
-            <h2>Hola {tempName}!</h2>
             <CardTitle>Información personal</CardTitle>
             <CardDescription>
               Actualizá tus datos de contacto

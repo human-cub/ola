@@ -199,24 +199,14 @@ const DynamicProduct = () => {
           <div className="sticky-viewport lg:contents order-3">
             <div className="contents lg:block">
               <div className="sm:flex sm:justify-center lg:justify-start sm:gap-6 lg:sticky top-[72px]">
-                {isMayorista ? (
-                  <MayoristaPriceBlock
-                    productName={product.name}
-                    productId={product.id}
-                    productImage={product.images.length > 0 ? product.images[0] : null}
-                    flavors={product.flavors}
-                    priceData={product.prices}
-                  />
-                ) : (
-                  <GroupBuyPriceBlock
-                    productName={product.name}
-                    productId={product.id}
-                    productImage={product.images.length > 0 ? product.images[0] : null}
-                    flavors={product.flavors}
-                    priceData={product.prices}
-                    waitingCount={waitingCount}
-                  />
-                )}
+                <GroupBuyPriceBlock
+                  productName={product.name}
+                  productId={product.id}
+                  productImage={product.images.length > 0 ? product.images[0] : null}
+                  flavors={product.flavors}
+                  priceData={product.prices}
+                  waitingCount={waitingCount}
+                />
               </div>
             </div>
           </div>

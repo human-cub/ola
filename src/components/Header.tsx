@@ -65,8 +65,7 @@ export const Header = ({ isVisible }: HeaderProps) => {
 
         <div className="flex items-center gap-2">
           {/* Waiting List Icon — hidden for mayorista (no waiting list flow) */}
-          {!isMayorista && (
-            <Link to="/lista-espera">
+          <Link to="/lista-espera">
               <Button
                 variant="ghost"
                 size="icon"
@@ -79,8 +78,7 @@ export const Header = ({ isVisible }: HeaderProps) => {
                   </Badge>
                 )}
               </Button>
-            </Link>
-          )}
+          </Link>
 
           {/* Cart Icon */}
           <Link to="/carrito">
