@@ -30,20 +30,18 @@ const Catalogo = () => {
 
   // Indexamos categorías y marcas por id/slug para enriquecer el haystack del buscador
   const categoryById = useMemo(() => {
-    const m = new Map<string, { name: string; seo: string }>();
+    const m = new Map<string, { name: string }>();
     categories.forEach((c: any) => {
-      const seo = `${c.seo_title ?? ""} ${c.seo_description ?? ""}`;
-      if (c.slug) m.set(String(c.slug).toLowerCase(), { name: c.name ?? "", seo });
-      if (c.id) m.set(String(c.id).toLowerCase(), { name: c.name ?? "", seo });
+      if (c.slug) m.set(String(c.slug).toLowerCase(), { name: c.name ?? "" });
+      if (c.id) m.set(String(c.id).toLowerCase(), { name: c.name ?? "" });
     });
     return m;
   }, [categories]);
 
   const brandById = useMemo(() => {
-    const m = new Map<string, { name: string; seo: string }>();
+    const m = new Map<string, { name: string }>();
     brands.forEach((b: any) => {
-      const seo = `${b.seo_title ?? ""} ${b.seo_description ?? ""}`;
-      if (b.id) m.set(String(b.id), { name: b.name ?? "", seo });
+      if (b.id) m.set(String(b.id), { name: b.name ?? "" });
     });
     return m;
   }, [brands]);
@@ -77,10 +75,8 @@ const Catalogo = () => {
             p.size ?? "",
             p.sku,
             p.brand_name ?? brand?.name ?? "",
-            brand?.seo ?? "",
             p.category_slug ?? "",
             cat?.name ?? "",
-            cat?.seo ?? "",
             tagsStr,
           ].join(" "),
         );
