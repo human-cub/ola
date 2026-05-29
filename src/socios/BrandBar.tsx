@@ -25,14 +25,17 @@ export const BrandBar = ({ selectedBrandId, onSelect }: Props) => {
               title={b.name}
             >
               {b.logo_url ? (
-                <img
-                  src={b.logo_url}
-                  alt={b.name}
-                  className="h-8 w-auto max-w-[60px] object-contain"
-                  loading="lazy"
-                />
+                <>
+                  <img
+                    src={b.logo_url}
+                    alt={b.name}
+                    className="h-8 w-auto max-w-[60px] object-contain"
+                    loading="lazy"
+                  />
+                  <span className="text-[10px] font-semibold uppercase text-center leading-tight">{b.name}</span>
+                </>
               ) : (
-                <span className="text-[10px] font-semibold uppercase">{b.name}</span>
+                <span className="text-[10px] font-semibold uppercase text-center leading-tight">{b.name}</span>
               )}
             </button>
           ))}
