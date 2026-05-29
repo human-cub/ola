@@ -46,7 +46,8 @@ const Catalogo = () => {
               {filtered.map((p) => {
                 const line = findLine(p.sku);
                 const qty = line?.quantity ?? 0;
-                const displayImage = p.images[0] || "";
+                const rawFirst = p.images?.[0] || "";
+                const displayImage = rawFirst.includes("|") ? rawFirst.split("|")[0] : rawFirst;
                 const displayName = p.name_short || p.name;
 
                 return (
