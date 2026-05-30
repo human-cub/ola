@@ -5,14 +5,14 @@ import { Button } from "@/components/ui/button";
 import { CarouselArrowButton } from "@/components/ui/carousel-arrow-button";
 import { useNavigate } from "react-router-dom";
 import useEmblaCarousel from 'embla-carousel-react';
-import { useProducts } from "@/hooks/useProducts";
+import { useCatalogProducts } from "@/hooks/useCatalogProducts";
 import { cn } from "@/lib/utils";
 
 export const MainProductCarousel = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const navigate = useNavigate();
-  const { data: allProducts = [], isLoading, isError, refetch } = useProducts();
+  const { data: allProducts = [], isLoading, isError, refetch } = useCatalogProducts();
   
   // Shuffle and limit to 10 random products
   const products = useMemo(() => {
@@ -122,9 +122,9 @@ export const MainProductCarousel = () => {
               <div className="overflow-hidden  md:py-10" ref={emblaRef}>
                 <div className="flex [--slides:1] md:[--slides:3] lg:[--slides:4] min-[1920px]:[--slides:5]">
                   {products.map((product) => (
-                    <div key={product.id} className="grow-0 shrink-0 basis-[calc(100%/var(--slides))]">
+                    <div key={product.urlSlug} className="grow-0 shrink-0 basis-[calc(100%/var(--slides))]">
                       <div className="flex justify-center px-3 h-full">
-                        <a href={product.link} onClick={() => amplitude.track('Product Viewed', { product_name: product.name, product_id: product.id, source: 'main_carousel' })}>
+                        <a href={`/v2/p/${product.urlSlug}`} onClick={() => amplitude.track('Product Viewed', { product_name: product.name, product_id: product.urlSlug, source: 'main_carousel' })}>
                           <Card
                             className={cn(
                               "p-6 shadow-soft border border-1 border-transparent bg-gradient-card w-full max-w-sm cursor-pointer transition-all duration-300 ease-out h-full min-w-[280px]",
@@ -135,7 +135,7 @@ export const MainProductCarousel = () => {
                             <div className="text-center flex flex-col h-full">
                               <div className="w-48 h-48 mx-auto mb-4 rounded-xl bg-white/5 flex items-center justify-center overflow-hidden">
                                 <img
-                                  src={product.image}
+                                  src={product.images[0] || ''}
                                   alt={product.name}
                                   className="w-full h-full object-contain rounded-xl"
                                   loading="lazy"
@@ -156,16 +156,16 @@ export const MainProductCarousel = () => {
                               </h3>
 
                               <p className="text-primary font-semibold mb-4">
-                                Peso neto: {product.weight}
+                                Peso neto: {product.size || '-'}
                               </p>
 
                               <div className="space-y-2 mt-auto">
                                 <div className="flex items-center justify-center gap-3">
                                   <span className="text-lg text-muted-foreground line-through">
-                                    {product.originalPrice}
+                                    ${product.priceRetailDisplay.toLocaleString('es-AR')}
                                   </span>
                                   <span className="text-2xl font-bold text-primary">
-                                    {product.discountPrice}
+                                    ${product.priceT1.toLocaleString('es-AR')}
                                   </span>
                                 </div>
                                 <p className="text-sm text-muted-foreground italic">
@@ -204,7 +204,7 @@ export const MainProductCarousel = () => {
 
             <div className="flex justify-center mt-6">
               <Button
-                onClick={() => navigate('/catalogo')}
+                onClick={() => navigate('/v2/catalogo')}
                 className="bg-gradient-primary hover:opacity-90 text-white font-semibold px-8 py-3 rounded-full shadow-elegant transition-all duration-300 hover:shadow-glow"
               >
                 Ver catálogo
