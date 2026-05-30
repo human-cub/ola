@@ -95,15 +95,26 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Get mayorista per slug (real)
-    const { data: products } = await admin.from("products").select("id, brand_id");
+    // Get mayorista per slug (real) + collect product prices per slug for realistic chunks
+    const { data: products } = await admin.from("products").select("id, brand_id, prices");
     const { data: brands } = await admin.from("brands").select("id, slug");
     const slugByBrandId = new Map<string, string>();
     for (const b of brands ?? []) if (b.id && b.slug) slugByBrandId.set(b.id, b.slug);
     const slugByProductId = new Map<string, string>();
+    const pricesBySlug = new Map<string, number[]>();
     for (const p of products ?? []) {
       const s = p.brand_id ? slugByBrandId.get(p.brand_id) : undefined;
-      if (s) slugByProductId.set(p.id, s);
+      if (!s) continue;
+      slugByProductId.set(p.id, s);
+      const tiers = Array.isArray(p.prices) ? p.prices : [];
+      // Use T1 (buy-now) when available, otherwise T0
+      const tier = (tiers[1] ?? tiers[0]) as { price?: number } | undefined;
+      const price = Number(tier?.price ?? 0);
+      if (price > 0) {
+        const list = pricesBySlug.get(s) ?? [];
+        list.push(price);
+        pricesBySlug.set(s, list);
+      }
     }
     const { data: orders } = await admin
       .from("user_orders")
@@ -153,8 +164,21 @@ Deno.serve(async (req) => {
       }
 
       if (current < expectedAmt) {
-        const delta = expectedAmt - current;
-        virtual += delta;
+        // Add realistic "purchase" chunks: pick random product price for this brand,
+        // fallback to random 10_000..70_000 range. Keep adding until we reach expectedAmt.
+        const brandPrices = pricesBySlug.get(ov.slug) ?? [];
+        const randomChunk = () => {
+          if (brandPrices.length > 0) {
+            return brandPrices[Math.floor(Math.random() * brandPrices.length)];
+          }
+          return Math.floor(10_000 + Math.random() * 60_000);
+        };
+        let added = 0;
+        // Safety cap to avoid runaway loops
+        for (let i = 0; i < 200 && current + added < expectedAmt; i++) {
+          added += randomChunk();
+        }
+        virtual += added;
         await admin
           .from("brand_overrides")
           .update({ virtual_score: virtual })
