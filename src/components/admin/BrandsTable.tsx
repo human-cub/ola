@@ -104,7 +104,7 @@ const SortableBrandRow = ({ brand: b, savingSlug, onToggleActive, scoreData, onS
         )}
       </TableCell>
       <TableCell className="font-medium">{b.name}</TableCell>
-      <TableCell className="w-36">
+      <TableCell className="w-44">
         <Input
           type="number"
           min={0}
@@ -116,16 +116,16 @@ const SortableBrandRow = ({ brand: b, savingSlug, onToggleActive, scoreData, onS
             if (n !== target) onSaveTarget(b.slug, n);
           }}
           placeholder="0"
-          className="h-8 text-xs"
+          className="h-8 text-sm w-full px-2 tabular-nums"
         />
       </TableCell>
-      <TableCell className="w-40 text-xs">
-        <div className="font-medium">{fmtMoney(score)}</div>
-        <div className="text-muted-foreground">
+      <TableCell className="w-44 text-xs whitespace-nowrap">
+        <div className="font-medium tabular-nums">{fmtMoney(score)}</div>
+        <div className="text-muted-foreground tabular-nums">
           {target > 0 ? `${pct}% de ${fmtMoney(target)}` : "—"}
         </div>
       </TableCell>
-      <TableCell className="w-32 text-xs">{fmtMoney(mayorista)}</TableCell>
+      <TableCell className="w-36 text-xs whitespace-nowrap tabular-nums">{fmtMoney(mayorista)}</TableCell>
       <TableCell className="w-44">
         <Select
           value={(b.booster_mode ?? "off") as BoosterMode}
@@ -342,9 +342,9 @@ const BrandsTable = () => {
               <TableHead className="w-10"></TableHead>
               <TableHead className="w-16">Logo</TableHead>
               <TableHead>Nombre</TableHead>
-              <TableHead className="w-36">Target</TableHead>
-              <TableHead className="w-40">Score</TableHead>
-              <TableHead className="w-32">Mayorista</TableHead>
+              <TableHead className="w-44">Target</TableHead>
+              <TableHead className="w-44">Score</TableHead>
+              <TableHead className="w-36">Mayorista</TableHead>
               <TableHead className="w-44">Booster</TableHead>
               <TableHead className="w-20 text-center">Productos</TableHead>
               <TableHead className="w-20">Activa</TableHead>
