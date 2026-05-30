@@ -13,6 +13,10 @@ export interface Brand {
   seo_title?: string | null;
   seo_description?: string | null;
   products_count?: number;
+  target_amount?: number;
+  booster_mode?: 'off' | 'active' | 'first_24h';
+  booster_started_at?: string | null;
+  virtual_score?: number;
 }
 
 const fetchBrands = async (): Promise<Brand[]> => {
