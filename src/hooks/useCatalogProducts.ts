@@ -26,6 +26,8 @@ export interface CatalogProduct {
   size: string | null;
   description: string | null;
   images: string[];
+  /** Union of every variant's images, deduplicated, used as shared gallery. */
+  galleryImages: string[];
   brandId: string | null;
   brandName: string | null;
   brandSlug: string | null;
@@ -97,15 +99,30 @@ const groupByUrlSlug = (
 
   const out: CatalogProduct[] = [];
   for (const [urlSlug, variants] of groups) {
-    variants.sort((a, b) => a.sort_order - b.sort_order);
+    // Preserve DB order of variants (flavors) — do NOT sort.
     const first = variants[0];
+    // Build a shared gallery: union of every variant's images, in order, deduped.
+    const seen = new Set<string>();
+    const galleryImages: string[] = [];
+    for (const v of variants) {
+      for (const img of v.images) {
+        if (!seen.has(img)) {
+          seen.add(img);
+          galleryImages.push(img);
+        }
+      }
+    }
+    // Fallback primary image for product card listings: first non-empty.
+    const primaryImages =
+      first.images.length > 0 ? first.images : galleryImages;
     out.push({
       urlSlug,
       name: first.name_short || first.name,
       nameShort: first.name_short,
       size: first.size,
       description: first.description_html,
-      images: first.images,
+      images: primaryImages,
+      galleryImages,
       brandId: first.brand_id,
       brandName: first.brand_name,
       brandSlug: first.brand_slug,
@@ -123,7 +140,9 @@ const groupByUrlSlug = (
         sku: v.sku,
         productId: skuToUuid(v.sku),
         flavor: v.flavor,
-        images: v.images.length > 0 ? v.images : first.images,
+        // Per-variant images stay raw (may be empty). Fallback is handled in UI
+        // using the shared galleryImages so we know which is "own" vs "shared".
+        images: v.images,
         priceT1: v.price_t1,
         priceT2: v.price_t2,
         priceT3: v.price_t3,
