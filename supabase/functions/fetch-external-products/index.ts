@@ -50,14 +50,21 @@ const toNum = (v: unknown): number => {
 };
 
 const toImages = (v: unknown): string[] => {
-  if (Array.isArray(v)) return v.filter((x) => typeof x === "string");
+  const flatten = (arr: unknown[]): string[] =>
+    arr.flatMap((x) =>
+      typeof x === "string"
+        ? x.split("|").map((s) => s.trim()).filter(Boolean)
+        : [],
+    );
+  if (Array.isArray(v)) return flatten(v);
   if (typeof v === "string" && v.length > 0) {
     try {
       const p = JSON.parse(v);
-      if (Array.isArray(p)) return p.filter((x) => typeof x === "string");
+      if (Array.isArray(p)) return flatten(p);
     } catch {
-      return v.split(",").map((s) => s.trim()).filter(Boolean);
+      // not JSON
     }
+    return v.split(/[|,]/).map((s) => s.trim()).filter(Boolean);
   }
   return [];
 };

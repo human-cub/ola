@@ -10,7 +10,7 @@ import { useCatalogProducts } from "@/hooks/useCatalogProducts";
 
 const CatalogoV2 = () => {
   const headerVisible = useScrollHeader();
-  const { data: categories = [] } = useCategories();
+  const { data: categories = [] } = useCategories({ includeInactive: true });
   const { data: products = [] } = useCatalogProducts();
 
   // Only show categories that have at least one active product (active brand)

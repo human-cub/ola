@@ -63,21 +63,23 @@ const MarcaV2 = () => {
       <main className="pb-[24px] pt-[120px] sm:pt-[104px]">
         <Breadcrumb items={[{ label: brand?.name || "Marca" }]} />
         <div className="container mx-auto px-4 py-8">
-          <div className="flex flex-col items-center mb-8 gap-3">
-            {brand?.logo_url && (
-              <img
-                src={brand.logo_url}
-                alt={`Logo ${brand.name}`}
-                className="h-20 w-auto object-contain"
-                loading="eager"
-                width={200}
-                height={80}
-              />
-            )}
-            <h1 className="text-2xl font-bold text-center bg-gradient-primary bg-clip-text text-transparent">
-              {brand?.name || "Marca"}
-            </h1>
-          </div>
+          {!notFound && (
+            <div className="flex flex-col items-center mb-8 gap-3">
+              {brand?.logo_url && (
+                <img
+                  src={brand.logo_url}
+                  alt={`Logo ${brand.name}`}
+                  className="h-20 w-auto object-contain"
+                  loading="eager"
+                  width={200}
+                  height={80}
+                />
+              )}
+              <h1 className="text-2xl font-bold text-center bg-gradient-primary bg-clip-text text-transparent">
+                {brand?.name || "Marca"}
+              </h1>
+            </div>
+          )}
 
           {loading ? (
             <div className="flex justify-center py-12"><Spinner /></div>
