@@ -25,6 +25,17 @@ interface SociosProduct {
   tags: string[];
 }
 
+interface CatalogProduct extends SociosProduct {
+  description_html: string | null;
+  seo_title: string | null;
+  seo_description: string | null;
+  price_retail_display: number;
+  price_t1: number;
+  price_t2: number;
+  price_t3: number;
+  price_t4: number;
+}
+
 const slugify = (s: string) =>
   s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -122,7 +133,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    const products: SociosProduct[] = ((prodRows ?? []) as Record<string, unknown>[])
+    const products: CatalogProduct[] = ((prodRows ?? []) as Record<string, unknown>[])
       .filter((p) => p.active !== false && p.active !== 0)
       .map((p) => {
         const retail = toNum(p.price_retail);
@@ -133,6 +144,10 @@ Deno.serve(async (req) => {
           : 0;
         const brandId = p.brand_id ? String(p.brand_id) : null;
         const brand = brandId ? brandsById.get(brandId) : undefined;
+        const t1 = toNum(p.price_t1);
+        const t2 = toNum(p.price_t2);
+        const t3 = toNum(p.price_t3);
+        const retailDisplay = toNum(p.price_retail_display) || retail;
         return {
           sku: String(p.sku ?? ""),
           name: String(p.name ?? ""),
@@ -150,6 +165,14 @@ Deno.serve(async (req) => {
           brand_slug: brand?.slug ?? null,
           sort_order: toNum(p.sort_order),
           tags: toTags(p.tags ?? p.keywords ?? p.search_terms),
+          description_html: (p.description_html as string) ?? null,
+          seo_title: (p.seo_title as string) ?? null,
+          seo_description: (p.seo_description as string) ?? null,
+          price_retail_display: retailDisplay,
+          price_t1: t1,
+          price_t2: t2,
+          price_t3: t3,
+          price_t4: t4,
         };
       })
       .filter((p) => p.sku && p.name && p.buy_price > 0);

@@ -1,0 +1,191 @@
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useMemo } from "react";
+import { v5 as uuidv5 } from "uuid";
+import { supabase } from "@/integrations/supabase/client";
+
+// Stable namespace used to derive deterministic UUIDs from external SKUs.
+const SKU_NAMESPACE = "8c3e6e5e-1234-4abc-8def-000000000001";
+export const skuToUuid = (sku: string) => uuidv5(sku, SKU_NAMESPACE);
+
+export interface CatalogVariant {
+  sku: string;
+  productId: string; // deterministic UUID per SKU (used for cart/waiting list)
+  flavor: string | null;
+  images: string[];
+  priceT1: number;
+  priceT2: number;
+  priceT3: number;
+  priceT4: number;
+  priceRetailDisplay: number;
+}
+
+export interface CatalogProduct {
+  urlSlug: string;
+  name: string;
+  nameShort: string | null;
+  size: string | null;
+  description: string | null;
+  images: string[];
+  brandId: string | null;
+  brandName: string | null;
+  brandSlug: string | null;
+  categorySlug: string | null;
+  seoTitle: string | null;
+  seoDescription: string | null;
+  tags: string[];
+  sortOrder: number;
+  // Display prices (taken from first variant; assumed equal across flavors)
+  priceT1: number;
+  priceT2: number;
+  priceT3: number;
+  priceT4: number;
+  priceRetailDisplay: number;
+  variants: CatalogVariant[];
+}
+
+interface RawExternalProduct {
+  sku: string;
+  name: string;
+  name_short: string | null;
+  flavor: string | null;
+  size: string | null;
+  category_slug: string | null;
+  url_slug: string | null;
+  images: string[];
+  brand_id: string | null;
+  brand_name: string | null;
+  brand_slug: string | null;
+  description_html: string | null;
+  seo_title: string | null;
+  seo_description: string | null;
+  sort_order: number;
+  tags: string[];
+  price_retail_display: number;
+  price_t1: number;
+  price_t2: number;
+  price_t3: number;
+  price_t4: number;
+}
+
+const fetchExternal = async (): Promise<RawExternalProduct[]> => {
+  const { data, error } = await supabase.functions.invoke("fetch-external-products");
+  if (error) throw error;
+  return ((data as { products?: RawExternalProduct[] })?.products ?? []);
+};
+
+const fetchInactiveBrandSlugs = async (): Promise<Set<string>> => {
+  const { data } = await supabase
+    .from("brand_overrides")
+    .select("slug, is_active");
+  return new Set(
+    (data ?? []).filter((b) => b.is_active === false).map((b) => b.slug),
+  );
+};
+
+const groupByUrlSlug = (
+  rows: RawExternalProduct[],
+  inactiveBrandSlugs: Set<string>,
+): CatalogProduct[] => {
+  const groups = new Map<string, RawExternalProduct[]>();
+  for (const r of rows) {
+    if (!r.url_slug) continue;
+    if (r.brand_slug && inactiveBrandSlugs.has(r.brand_slug)) continue;
+    const arr = groups.get(r.url_slug) ?? [];
+    arr.push(r);
+    groups.set(r.url_slug, arr);
+  }
+
+  const out: CatalogProduct[] = [];
+  for (const [urlSlug, variants] of groups) {
+    variants.sort((a, b) => a.sort_order - b.sort_order);
+    const first = variants[0];
+    out.push({
+      urlSlug,
+      name: first.name_short || first.name,
+      nameShort: first.name_short,
+      size: first.size,
+      description: first.description_html,
+      images: first.images,
+      brandId: first.brand_id,
+      brandName: first.brand_name,
+      brandSlug: first.brand_slug,
+      categorySlug: first.category_slug,
+      seoTitle: first.seo_title,
+      seoDescription: first.seo_description,
+      tags: first.tags,
+      sortOrder: first.sort_order,
+      priceT1: first.price_t1,
+      priceT2: first.price_t2,
+      priceT3: first.price_t3,
+      priceT4: first.price_t4,
+      priceRetailDisplay: first.price_retail_display,
+      variants: variants.map((v) => ({
+        sku: v.sku,
+        productId: skuToUuid(v.sku),
+        flavor: v.flavor,
+        images: v.images.length > 0 ? v.images : first.images,
+        priceT1: v.price_t1,
+        priceT2: v.price_t2,
+        priceT3: v.price_t3,
+        priceT4: v.price_t4,
+        priceRetailDisplay: v.price_retail_display,
+      })),
+    });
+  }
+  out.sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name));
+  return out;
+};
+
+export const useCatalogProducts = () => {
+  const qc = useQueryClient();
+  const query = useQuery({
+    queryKey: ["catalog-products", "v2"],
+    queryFn: async () => {
+      const [rows, inactive] = await Promise.all([
+        fetchExternal(),
+        fetchInactiveBrandSlugs(),
+      ]);
+      return groupByUrlSlug(rows, inactive);
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("brand-overrides-catalog")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "brand_overrides" },
+        () => qc.invalidateQueries({ queryKey: ["catalog-products"] }),
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [qc]);
+
+  return query;
+};
+
+export const useCatalogProduct = (urlSlug: string | undefined) => {
+  const { data, ...rest } = useCatalogProducts();
+  const product = useMemo(
+    () => (urlSlug ? data?.find((p) => p.urlSlug === urlSlug) ?? null : null),
+    [data, urlSlug],
+  );
+  return { product, ...rest };
+};
+
+/**
+ * Builds the legacy `prices` tier array expected by GroupBuyPriceBlock and
+ * AddToCartDialog from the external T0-T4 prices. The `people` thresholds
+ * are synthetic (1/25/50/75/100) and unused in v2 — the brand-level money
+ * progress drives all UI in the new system.
+ */
+export const buildLegacyPriceTiers = (v: CatalogVariant) => [
+  { people: 1, price: v.priceRetailDisplay },
+  { people: 25, price: v.priceT1 },
+  { people: 50, price: v.priceT2 },
+  { people: 75, price: v.priceT3 },
+  { people: 100, price: v.priceT4 || v.priceT3 },
+];

@@ -42,6 +42,7 @@ interface AddToCartDialogProps {
   isWaitingList: boolean;
   currentParticipants?: number;
   onWaitingListAdded?: () => Promise<void> | void;
+  preselectedFlavor?: string | null;
 }
 
 export const AddToCartDialog = ({
@@ -55,6 +56,7 @@ export const AddToCartDialog = ({
   isWaitingList,
   currentParticipants = 0,
   onWaitingListAdded,
+  preselectedFlavor = null,
 }: AddToCartDialogProps) => {
   const { addToCart, addToWaitingList } = useCart();
   const navigate = useNavigate();
@@ -68,12 +70,14 @@ export const AddToCartDialog = ({
   // Reset state when dialog opens
   useEffect(() => {
     if (open) {
-      setSelectedFlavor(flavors.length === 1 ? flavors[0] : "");
+      setSelectedFlavor(
+        preselectedFlavor ?? (flavors.length === 1 ? flavors[0] : ""),
+      );
       setQuantity(1);
       setError("");
       setSuccess(false);
     }
-  }, [open, flavors]);
+  }, [open, flavors, preselectedFlavor]);
 
   // Calculate price based on quantity for waiting list
   const calculatePrice = (qty: number) => {
@@ -312,8 +316,8 @@ export const AddToCartDialog = ({
               </div>
             </div>
 
-            {/* Flavor Selection */}
-            {flavors.length > 0 && (
+            {/* Flavor Selection (hidden when preselected on product page) */}
+            {flavors.length > 0 && !preselectedFlavor && (
               <div className="space-y-2">
                 <Label htmlFor="flavor">
                   Sabor <span className="text-destructive">*</span>
