@@ -86,7 +86,7 @@ export const Header = ({ isVisible }: HeaderProps) => {
 
         <form
           onSubmit={(e) => { e.preventDefault(); submitSearch(searchValue); }}
-          className="flex-1 max-w-md mx-3 hidden sm:block"
+          className="flex-1 max-w-md mx-2 sm:mx-3"
         >
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
