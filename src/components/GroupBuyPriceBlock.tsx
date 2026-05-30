@@ -209,8 +209,14 @@ export const GroupBuyPriceBlock = ({
   flavors = [],
   priceData = [],
   waitingCount = 0,
+  brandName = null,
+  brandSlug = null,
 }: GroupBuyPriceBlockProps) => {
   const [displayWaitingCount, setDisplayWaitingCount] = useState(waitingCount);
+  const [brandStats, setBrandStats] = useState<{ collected: number; target: number }>({
+    collected: 0,
+    target: 0,
+  });
   const {
     timeLeft,
     dialogOpen,
@@ -227,6 +233,36 @@ export const GroupBuyPriceBlock = ({
     setDisplayWaitingCount(waitingCount);
   }, [waitingCount]);
 
+  useEffect(() => {
+    if (!brandSlug) return;
+    let cancelled = false;
+    const load = async () => {
+      const { data } = await supabase
+        .from("brand_overrides")
+        .select("virtual_score, target_amount")
+        .eq("slug", brandSlug)
+        .maybeSingle();
+      if (cancelled) return;
+      setBrandStats({
+        collected: Number(data?.virtual_score ?? 0),
+        target: Number(data?.target_amount ?? 0),
+      });
+    };
+    load();
+    const channel = supabase
+      .channel(`brand-override-${brandSlug}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "brand_overrides", filter: `slug=eq.${brandSlug}` },
+        () => load(),
+      )
+      .subscribe();
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(channel);
+    };
+  }, [brandSlug]);
+
   const refreshWaitingCount = async () => {
     const { data, error } = await supabase
       .from("products")
@@ -240,8 +276,8 @@ export const GroupBuyPriceBlock = ({
   };
 
   const retailPrice = getRetailPrice(priceData);
-  const currentPrice = getCurrentTierPrice(priceData, displayWaitingCount);
-  const superPrice = getMaxDiscountPrice(priceData);
+  const guaranteedPrice = getTierPrice(priceData, 2);
+  const superPrice = getTierPrice(priceData, 3);
   const buyNowPrice = getBuyNowPrice(priceData);
   const groupBuyAccentStyle = { color: "hsl(var(--group-buy-accent))" } satisfies CSSProperties;
   const groupBuyAccentBackgroundStyle = {
