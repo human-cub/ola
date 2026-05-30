@@ -1,19 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { Footer } from "@/components/Footer";
 import { DynamicProductCarousel } from "@/components/DynamicProductCarousel";
-import { DynamicProductDescription } from "@/components/DynamicProductDescription";
 import { GroupBuyPriceBlock } from "@/components/GroupBuyPriceBlock";
 import { Spinner } from "@/components/ui/spinner";
 import { useScrollHeader } from "@/hooks/useScrollHeader";
 import {
   useCatalogProduct,
+  useCatalogProducts,
   buildLegacyPriceTiers,
   type CatalogVariant,
 } from "@/hooks/useCatalogProducts";
 import { useCategories } from "@/hooks/useCategories";
+import { formatPrice } from "@/lib/formatting";
 
 const DEFAULT_TITLE = "Ola! - Suplementos Deportivos | Precio Mayorista en Argentina";
 const DEFAULT_DESCRIPTION =
@@ -108,10 +109,24 @@ const ProductoV2 = () => {
               <DynamicProductCarousel images={images} productName={product.name} />
             </div>
 
-            <div className="order-2 mt-4 space-y-3">
+            <div className="order-2 mt-4 space-y-3 px-2 sm:px-4">
+              {product.brandName && (
+                product.brandSlug ? (
+                  <Link
+                    to={`/v2/marca/${product.brandSlug}`}
+                    className="inline-block text-xs sm:text-sm font-semibold uppercase tracking-wider text-primary hover:underline"
+                  >
+                    {product.brandName}
+                  </Link>
+                ) : (
+                  <p className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-primary">
+                    {product.brandName}
+                  </p>
+                )
+              )}
               <h1 className="text-2xl font-bold leading-tight">{product.name}</h1>
               {product.size && (
-                <p className="text-sm text-muted-foreground">{product.size}</p>
+                <p className="text-lg font-semibold text-blue-500">{product.size}</p>
               )}
 
               {hasFlavors && (
@@ -140,8 +155,20 @@ const ProductoV2 = () => {
               )}
             </div>
 
-            <div className="order-4">
-              <DynamicProductDescription description={product.description || ""} />
+            <div className="order-4 px-2 sm:px-4">
+              {product.description && (
+                <section className="flex justify-center mt-8">
+                  <div className="max-w-[72ch] w-full">
+                    <h3 className="text-xl font-semibold text-foreground mb-4">
+                      Descripción del Producto
+                    </h3>
+                    <div
+                      className="prose-product space-y-3 text-muted-foreground leading-relaxed [&_strong]:text-foreground [&_h1]:text-xl [&_h2]:text-lg [&_h3]:text-base [&_h1]:font-semibold [&_h2]:font-semibold [&_h3]:font-semibold [&_h1]:text-foreground [&_h2]:text-foreground [&_h3]:text-foreground [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_a]:text-primary [&_a]:underline"
+                      dangerouslySetInnerHTML={{ __html: product.description }}
+                    />
+                  </div>
+                </section>
+              )}
             </div>
           </div>
 
@@ -162,6 +189,8 @@ const ProductoV2 = () => {
             </div>
           </div>
         </div>
+
+        <RelatedV2Products currentSlug={product.urlSlug} categorySlug={product.categorySlug} />
       </main>
 
       <Footer />
@@ -170,3 +199,65 @@ const ProductoV2 = () => {
 };
 
 export default ProductoV2;
+
+const RelatedV2Products = ({
+  currentSlug,
+  categorySlug,
+}: {
+  currentSlug: string;
+  categorySlug: string | null;
+}) => {
+  const { data: all = [] } = useCatalogProducts();
+  const items = useMemo(() => {
+    const pool = all.filter(
+      (p) => p.urlSlug !== currentSlug && (!categorySlug || p.categorySlug === categorySlug),
+    );
+    const shuffled = [...pool].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, 3);
+  }, [all, currentSlug, categorySlug]);
+
+  if (items.length === 0) return null;
+
+  return (
+    <section className="max-w-[1088px] mx-auto px-4 mt-12">
+      <div className="text-center mb-6">
+        <h3 className="text-2xl font-bold text-foreground mb-2">Otros Productos</h3>
+        <p className="text-sm text-muted-foreground">Explorá más opciones de suplementos</p>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {items.map((p) => (
+          <Link
+            key={p.urlSlug}
+            to={`/v2/p/${p.urlSlug}`}
+            className="group bg-card rounded-xl border overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
+          >
+            <div className="aspect-square bg-muted/30 p-4 flex items-center justify-center">
+              <img
+                src={p.images[0] || "/placeholder.svg"}
+                alt={p.name}
+                className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
+                loading="lazy"
+                decoding="async"
+                width={400}
+                height={400}
+              />
+            </div>
+            <div className="p-4 space-y-1">
+              {p.brandName && (
+                <p className="text-[10px] uppercase tracking-wider text-primary font-semibold">
+                  {p.brandName}
+                </p>
+              )}
+              <h4 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors">
+                {p.name}
+              </h4>
+              {p.size && <p className="text-xs text-blue-500 font-medium">{p.size}</p>}
+              <p className="text-lg font-bold text-primary pt-1">{formatPrice(p.priceT3)}</p>
+              <p className="text-[10px] text-muted-foreground">(Súper-Precio)</p>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+};

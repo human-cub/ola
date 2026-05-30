@@ -61,12 +61,7 @@ const MarcaV2 = () => {
     <div className="min-h-screen bg-background">
       <Header isVisible={headerVisible} />
       <main className="pb-[24px] pt-[120px] sm:pt-[104px]">
-        <Breadcrumb
-          items={[
-            { label: "Catálogo", href: "/v2/catalogo" },
-            { label: brand?.name || "Marca" },
-          ]}
-        />
+        <Breadcrumb items={[{ label: brand?.name || "Marca" }]} />
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col items-center mb-8 gap-3">
             {brand?.logo_url && (
