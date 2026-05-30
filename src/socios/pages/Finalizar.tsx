@@ -142,6 +142,23 @@ const Finalizar = () => {
         address: JSON.stringify(addressData),
         profile_completed: true,
       }).eq("user_id", session.user.id);
+      try {
+        const orderUrl = `${window.location.origin}/mi-cuenta/pedidos/${order.id}`;
+        await supabase.functions.invoke("notify-telegram", {
+          body: {
+            order_id: order.id,
+            order_number: order.order_number,
+            order_type: "Mayorista",
+            customer_name: `${data.firstName} ${data.lastName || ""}`.trim(),
+            phone: data.phone,
+            total: formatARS(subtotal),
+            order_url: orderUrl,
+            waiting_for_discount: false,
+          },
+        });
+      } catch (err) {
+        console.error("notify-telegram failed", err);
+      }
       await clear();
       toast.success(`Pedido ${order.order_number} creado`);
       navigate(`/mi-cuenta`);
