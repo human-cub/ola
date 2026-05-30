@@ -124,7 +124,7 @@ const ProductoV2 = () => {
               {product.brandName && (
                 product.brandSlug ? (
                   <Link
-                    to={`/v2/marca/${product.brandSlug}`}
+                    to={`/v2/marcas/${product.brandSlug}`}
                     className="inline-block text-xs sm:text-sm font-semibold uppercase tracking-wider text-primary hover:underline"
                   >
                     {product.brandName}
