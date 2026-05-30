@@ -27,6 +27,8 @@ interface GroupBuyPriceBlockProps {
   flavors?: string[];
   priceData: PriceData[];
   waitingCount?: number;
+  brandName?: string | null;
+  brandSlug?: string | null;
 }
 
 interface PriceComparisonItem {
@@ -44,31 +46,15 @@ function getBuyNowPrice(prices: PriceData[]): number | null {
   return prices.length > 1 ? prices[1].price : prices[0].price;
 }
 
-function getMaxDiscountPrice(prices: PriceData[]): number | null {
-  if (prices.length === 0) return null;
-  return prices[prices.length - 1].price;
-}
-
 function getRetailPrice(prices: PriceData[]): number | null {
   if (prices.length === 0) return null;
   return prices[0].price;
 }
 
-function getCurrentTierPrice(prices: PriceData[], count: number): number | null {
+function getTierPrice(prices: PriceData[], index: number): number | null {
   if (prices.length === 0) return null;
-  const secondTierThreshold = prices.length > 1 ? prices[1].people : 0;
-  const secondTierPrice = prices.length > 1 ? prices[1].price : prices[0].price;
-
-  if (count < secondTierThreshold) {
-    return secondTierPrice;
-  }
-
-  for (let i = prices.length - 1; i >= 0; i--) {
-    if (count >= prices[i].people) {
-      return prices[i].price;
-    }
-  }
-  return secondTierPrice;
+  if (index < prices.length) return prices[index].price;
+  return prices[prices.length - 1].price;
 }
 
 async function hasPendingConflict(
