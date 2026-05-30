@@ -161,9 +161,9 @@ const Category = () => {
         <Breadcrumb items={[{ label: "Catálogo", href: "/catalogo" }, { label: categoryName }]} />
         
         <div className="container mx-auto px-4 py-8">
-          <h1 className="text-2xl font-bold text-center mb-8 bg-gradient-primary bg-clip-text text-transparent flex items-center justify-center gap-2">
+          <h1 className="text-2xl font-bold text-center mb-8 flex items-center justify-center gap-2">
             {categoryRow?.emoji && <span className="text-3xl">{categoryRow.emoji}</span>}
-            {categoryName}
+            <span className="bg-gradient-primary bg-clip-text text-transparent">{categoryName}</span>
           </h1>
 
           {loading ? (
