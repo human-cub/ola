@@ -345,14 +345,14 @@ const BrandsTable = () => {
           <TableHeader>
             <TableRow>
               <TableHead className="w-10"></TableHead>
-              <TableHead className="w-16">Logo</TableHead>
-              <TableHead>Nombre</TableHead>
-              <TableHead className="w-44">Target</TableHead>
-              <TableHead className="w-44">Score</TableHead>
-              <TableHead className="w-36">Mayorista</TableHead>
-              <TableHead className="w-44">Booster</TableHead>
-              <TableHead className="w-20 text-center">Productos</TableHead>
-              <TableHead className="w-20">Activa</TableHead>
+              <TableHead className="w-12">Logo</TableHead>
+              <TableHead className="max-w-[140px]">Nombre</TableHead>
+              <TableHead className="w-32">Target</TableHead>
+              <TableHead className="w-40">Score</TableHead>
+              <TableHead className="w-32">Mayorista</TableHead>
+              <TableHead className="w-28">Booster</TableHead>
+              <TableHead className="w-14 text-center">Items</TableHead>
+              <TableHead className="w-16">Activa</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
