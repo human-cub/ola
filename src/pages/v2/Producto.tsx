@@ -95,7 +95,14 @@ const ProductoV2 = () => {
   const hasFlavors = flavors.length > 0;
 
   const legacyPrices = buildLegacyPriceTiers(selectedVariant);
-  const images = selectedVariant.images.length > 0 ? selectedVariant.images : product.images;
+  // Main image: variant's own first image if it has one, else first gallery image.
+  const variantPrimary =
+    selectedVariant.images[0] || product.galleryImages[0] || product.images[0] || null;
+  // Shared gallery (other photos common to all flavors): all gallery images
+  // except the one currently shown as main. Always show at least the variant
+  // primary so the carousel is never empty.
+  const otherImages = product.galleryImages.filter((img) => img !== variantPrimary);
+  const images = variantPrimary ? [variantPrimary, ...otherImages] : product.galleryImages;
 
   return (
     <div className="min-h-screen bg-background">
@@ -106,7 +113,11 @@ const ProductoV2 = () => {
         <div className="max-w-[1088px] px-4 mx-auto gap-4 grid grid-cols-1 lg:grid-cols-[20fr_12fr] lg:justify-center lg:pt-10">
           <div className="contents lg:block">
             <div className="order-1">
-              <DynamicProductCarousel images={images} productName={product.name} />
+              <DynamicProductCarousel
+                key={selectedVariant.sku}
+                images={images}
+                productName={product.name}
+              />
             </div>
 
             <div className="order-2 mt-4 space-y-3 px-2 sm:px-4">
@@ -126,11 +137,7 @@ const ProductoV2 = () => {
               )}
               <h1 className="text-2xl font-bold leading-tight">
                 {product.name}
-                {product.size && (
-                  <span className="ml-2 text-lg font-semibold text-blue-500 align-middle">
-                    {product.size}
-                  </span>
-                )}
+                {product.size && <span className="ml-2">{product.size}</span>}
               </h1>
 
               {hasFlavors && (
