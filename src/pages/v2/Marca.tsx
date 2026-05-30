@@ -8,6 +8,7 @@ import { useScrollHeader } from "@/hooks/useScrollHeader";
 import { formatPrice } from "@/lib/formatting";
 import { useBrands } from "@/hooks/useBrands";
 import { useCatalogProducts } from "@/hooks/useCatalogProducts";
+import { useCategories } from "@/hooks/useCategories";
 
 const DEFAULT_TITLE = "Ola! - Suplementos Deportivos | Precio Mayorista en Argentina";
 const DEFAULT_DESCRIPTION =
@@ -18,12 +19,20 @@ const MarcaV2 = () => {
   const headerVisible = useScrollHeader();
   const { data: brands = [], isLoading: brandsLoading } = useBrands({ includeInactive: true });
   const { data: products = [], isLoading: prodLoading } = useCatalogProducts();
+  const { data: categories = [] } = useCategories({ includeInactive: true });
 
   const brand = useMemo(() => brands.find((b) => b.slug === slug) ?? null, [brands, slug]);
-  const filtered = useMemo(
-    () => products.filter((p) => p.brandSlug === slug),
-    [products, slug],
-  );
+  const filtered = useMemo(() => {
+    const catOrder = new Map<string, number>();
+    categories.forEach((c, i) => catOrder.set(c.slug, c.sort_order ?? i));
+    const list = products.filter((p) => p.brandSlug === slug);
+    return list.sort((a, b) => {
+      const ai = a.categorySlug ? catOrder.get(a.categorySlug) ?? 9999 : 9999;
+      const bi = b.categorySlug ? catOrder.get(b.categorySlug) ?? 9999 : 9999;
+      if (ai !== bi) return ai - bi;
+      return a.sortOrder - b.sortOrder || a.name.localeCompare(b.name);
+    });
+  }, [products, slug, categories]);
 
   useEffect(() => {
     if (!slug) return;
