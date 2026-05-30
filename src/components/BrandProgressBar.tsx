@@ -1,0 +1,83 @@
+import { useEffect, useState, type CSSProperties } from "react";
+import { supabase } from "@/integrations/supabase/client";
+
+interface Props {
+  brandSlug: string;
+  /** Show "Meta: $X" and collected amount labels around the bar. */
+  showLabels?: boolean;
+  /** Bar height class (default h-2.5). */
+  heightClass?: string;
+}
+
+const formatARS = (n: number) =>
+  `$${new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 }).format(n)}`;
+
+export const BrandProgressBar = ({
+  brandSlug,
+  showLabels = true,
+  heightClass = "h-2.5",
+}: Props) => {
+  const [stats, setStats] = useState<{ collected: number; target: number }>({
+    collected: 0,
+    target: 0,
+  });
+
+  useEffect(() => {
+    if (!brandSlug) return;
+    let cancelled = false;
+    const load = async () => {
+      const { data } = await supabase
+        .from("brand_overrides")
+        .select("virtual_score, target_amount")
+        .eq("slug", brandSlug)
+        .maybeSingle();
+      if (cancelled) return;
+      setStats({
+        collected: Number(data?.virtual_score ?? 0),
+        target: Number(data?.target_amount ?? 0),
+      });
+    };
+    load();
+    const channel = supabase
+      .channel(`brand-progress-${brandSlug}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "brand_overrides", filter: `slug=eq.${brandSlug}` },
+        () => load(),
+      )
+      .subscribe();
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(channel);
+    };
+  }, [brandSlug]);
+
+  const pct =
+    stats.target > 0 ? Math.min(100, Math.max(0, (stats.collected / stats.target) * 100)) : 0;
+
+  const fillStyle: CSSProperties = {
+    width: `${pct}%`,
+    background:
+      "linear-gradient(90deg, hsl(36 100% 50%), hsl(var(--group-buy-accent)), hsl(48 100% 60%))",
+  };
+
+  return (
+    <div className="w-full">
+      {showLabels && (
+        <div className="flex justify-start mb-1 text-xs font-bold min-h-[1rem]">
+          {stats.collected > 0 && <span className="text-foreground">{formatARS(stats.collected)}</span>}
+        </div>
+      )}
+      <div className={`relative ${heightClass} bg-muted rounded-full overflow-hidden shadow-inner`}>
+        <div className="absolute top-0 left-0 h-full rounded-full transition-all duration-1000" style={fillStyle} />
+      </div>
+      {showLabels && stats.target > 0 && (
+        <div className="flex justify-end mt-1 text-xs font-bold">
+          <span className="text-muted-foreground">Meta: {formatARS(stats.target)}</span>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default BrandProgressBar;
