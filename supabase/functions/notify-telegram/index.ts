@@ -86,6 +86,7 @@ serve(async (req) => {
     const message = `
 🔔 <b>Nueva Orden Recibida</b>
 
+🏷️ <b>Tipo:</b> ${orderData.order_type}
 👤 <b>Cliente:</b> ${orderData.customer_name}
 📱 <b>Teléfono:</b> ${orderData.phone}
 ⏳ <b>Espera Descuento:</b> ${waitingStatus}

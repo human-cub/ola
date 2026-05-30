@@ -49,6 +49,7 @@ export const SociosHeader = ({ search, onSearchChange }: Props) => {
   const cartCount = items.length;
   const missing = Math.max(0, min - subtotal);
   const showFaltan = subtotal > 0 && missing > 0;
+  const minReached = subtotal > 0 && missing === 0;
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background border-b shadow-soft">
@@ -111,6 +112,10 @@ export const SociosHeader = ({ search, onSearchChange }: Props) => {
             {showFaltan ? (
               <span className="text-destructive font-medium">
                 Faltan: {formatARS(missing)}
+              </span>
+            ) : minReached ? (
+              <span className="text-primary font-medium">
+                Total: {formatARS(subtotal)}
               </span>
             ) : (
               <span className="text-muted-foreground">

@@ -4,7 +4,7 @@ export type { PriceTier } from "./collectivePricing";
 export type PriceData = { people: number; price: number };
 
 export type OrderStatus = "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled";
-export type OrderType = "immediate" | "collective";
+export type OrderType = "immediate" | "collective" | "mayorista";
 
 export interface OrderItem {
   product_id: string;
@@ -47,4 +47,5 @@ export const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
 export const ORDER_TYPE_LABELS: Record<OrderType, string> = {
   immediate: "Inmediato",
   collective: "Colectivo",
+  mayorista: "Mayorista",
 };
