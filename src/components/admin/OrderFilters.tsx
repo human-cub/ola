@@ -67,6 +67,7 @@ export const OrderFilters = ({
             <SelectItem value="all">Todos los tipos</SelectItem>
             <SelectItem value="immediate">Inmediato</SelectItem>
             <SelectItem value="collective">Colectivo</SelectItem>
+            <SelectItem value="mayorista">Mayorista</SelectItem>
           </SelectContent>
         </Select>
         <Select value={statusFilter} onValueChange={onStatusFilterChange}>
