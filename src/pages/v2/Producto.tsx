@@ -113,7 +113,11 @@ const ProductoV2 = () => {
         <div className="max-w-[1088px] px-4 mx-auto gap-4 grid grid-cols-1 lg:grid-cols-[20fr_12fr] lg:justify-center lg:pt-10">
           <div className="contents lg:block">
             <div className="order-1">
-              <DynamicProductCarousel images={images} productName={product.name} />
+              <DynamicProductCarousel
+                key={selectedVariant.sku}
+                images={images}
+                productName={product.name}
+              />
             </div>
 
             <div className="order-2 mt-4 space-y-3 px-2 sm:px-4">
