@@ -26,14 +26,22 @@ export const RelatedProducts = ({ currentProduct = "" }: RelatedProductsProps) =
     const fetchProducts = async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("id, name, description, weight, link, images, prices");
+        .select("id, name, description, weight, link, images, prices, brand_id");
 
       if (error || !data) {
         console.error("Error fetching products:", error);
         return;
       }
 
-      const formatted = data.map((p) => {
+      const { data: inactiveBrands } = await supabase
+        .from("brands")
+        .select("id")
+        .eq("is_active", false);
+      const inactiveSet = new Set((inactiveBrands ?? []).map((b) => b.id));
+
+      const formatted = data
+        .filter((p) => !p.brand_id || !inactiveSet.has(p.brand_id))
+        .map((p) => {
         const images = (p.images as string[]) || [];
         const prices = (p.prices as { people: number; price: number }[]) || [];
         const firstPrice = prices[0]?.price || 0;
