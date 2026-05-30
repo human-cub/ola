@@ -28,6 +28,10 @@ import Mayoristas from "./pages/Mayoristas";
 import Contacto from "./pages/Contacto";
 import QuienesSomos from "./pages/QuienesSomos";
 import NotFound from "./pages/NotFound";
+import CatalogoV2 from "./pages/v2/Catalogo";
+import CategoriaV2 from "./pages/v2/Categoria";
+import MarcaV2 from "./pages/v2/Marca";
+import ProductoV2 from "./pages/v2/Producto";
 import { FloatingWhatsApp } from "./components/FloatingWhatsApp";
 import { ScrollToTop } from "./components/ScrollToTop";
 import { CartProvider } from "./contexts/CartContext";
@@ -123,6 +127,11 @@ const App = () => {
           <Route path="/mayoristas" element={<Mayoristas />} />
           <Route path="/contacto" element={<Contacto />} />
           <Route path="/quienes-somos" element={<QuienesSomos />} />
+          {/* v2 — new catalog sourced from external DB. Will replace legacy routes on Monday. */}
+          <Route path="/v2/catalogo" element={<CatalogoV2 />} />
+          <Route path="/v2/categoria/:category" element={<CategoriaV2 />} />
+          <Route path="/v2/marca/:slug" element={<MarcaV2 />} />
+          <Route path="/v2/p/:urlSlug" element={<ProductoV2 />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <FloatingWhatsApp />
