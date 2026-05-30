@@ -377,10 +377,11 @@ export const GroupBuyPriceBlock = ({
             {/* Progress Bar Section */}
             <div className="px-6 py-8 bg-card">
               <div className="relative">
-                {/* Amount collected (left) */}
-                <div className="flex justify-between mb-2 text-sm font-bold">
-                  <span className="text-foreground">{formatPrice(brandStats.collected)}</span>
-                  <span className="text-muted-foreground">{formatPrice(brandStats.target)}</span>
+                {/* Amount collected (only when > 0) */}
+                <div className="flex justify-start mb-2 text-sm font-bold min-h-[1.25rem]">
+                  {brandStats.collected > 0 && (
+                    <span className="text-foreground">{formatPrice(brandStats.collected)}</span>
+                  )}
                 </div>
 
                 {/* Progress bar — slim, no segments */}
@@ -390,17 +391,16 @@ export const GroupBuyPriceBlock = ({
                     style={groupBuyProgressStyle}
                   />
                 </div>
-              </div>
 
-              {/* Next threshold message */}
-              {superTier && remaining > 0 && (
-                <div className="mt-6 text-center">
-                  <p className="text-[15px] font-semibold text-foreground">
-                    Faltan <span className="font-bold" style={groupBuyAccentStyle}>{remaining} unidades</span> para Súper-Precio:{' '}
-                    <span className="font-bold" style={groupBuyAccentStyle}>{formatPrice(superTier.price)}</span>
-                  </p>
-                </div>
-              )}
+                {/* Target amount under the bar */}
+                {brandStats.target > 0 && (
+                  <div className="flex justify-end mt-2 text-sm font-bold">
+                    <span className="text-muted-foreground">
+                      Meta: {formatPrice(brandStats.target)}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* CTA Buttons */}
