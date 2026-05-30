@@ -4,20 +4,11 @@ import { Footer } from "@/components/Footer";
 import { ChevronRight } from "lucide-react";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { useScrollHeader } from "@/hooks/useScrollHeader";
-
-const catalogCategories = [
-  { name: "Proteínas", slug: "proteinas", emoji: "💪" },
-  { name: "Creatinas", slug: "creatinas", emoji: "⚡" },
-  { name: "Aminoácidos", slug: "aminoacidos", emoji: "🧬" },
-  { name: "Ganadores de masa", slug: "aumentadores", emoji: "🚀" },
-  { name: "Barras y snacks", slug: "barras", emoji: "🍫" },
-  { name: "Pre-entrenos", slug: "pre-entrenos", emoji: "🔥" },
-  { name: "Colágeno", slug: "colageno", emoji: "✨" },
-  { name: "Vitaminas y minerales", slug: "vitaminas", emoji: "💊" },
-];
+import { useCategories } from "@/hooks/useCategories";
 
 const Catalog = () => {
   const headerVisible = useScrollHeader();
+  const { data: catalogCategories = [] } = useCategories();
 
   return (
     <div className="min-h-screen bg-background">
@@ -35,14 +26,16 @@ const Catalog = () => {
           <div className="w-20 h-1 bg-gradient-primary mx-auto rounded-full mt-2 mb-8"></div>
 
           <div className="max-w-md mx-auto space-y-3">
-            {catalogCategories.map((category) => (
+            {[...catalogCategories]
+              .sort((a, b) => a.sort_order - b.sort_order)
+              .map((category) => (
               <Link
                 key={category.slug}
                 to={`/categoria/${category.slug}`}
                 className="flex items-center justify-between p-4 rounded-xl bg-gradient-card shadow-soft hover:shadow-elegant transition-all duration-300 group"
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl">{category.emoji}</span>
+                  {category.emoji && <span className="text-2xl">{category.emoji}</span>}
                   <span className="font-semibold text-foreground group-hover:text-primary transition-colors">
                     {category.name}
                   </span>
