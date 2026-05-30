@@ -19,7 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
-import { Loader2, RefreshCw, GripVertical, Check, X } from "lucide-react";
+import { Loader2, RefreshCw, GripVertical } from "lucide-react";
 import { useBrands, type Brand } from "@/hooks/useBrands";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -80,7 +80,7 @@ const SortableBrandRow = ({ brand: b, savingSlug, onToggleActive, scoreData, onS
   const pct = target > 0 ? Math.min(100, Math.round((score / target) * 100)) : 0;
   return (
     <TableRow ref={setNodeRef} style={style}>
-      <TableCell className="w-10">
+      <TableCell className="w-8 px-1 py-2">
         <button
           type="button"
           className="cursor-grab active:cursor-grabbing touch-none text-muted-foreground hover:text-foreground"
@@ -91,7 +91,7 @@ const SortableBrandRow = ({ brand: b, savingSlug, onToggleActive, scoreData, onS
           <GripVertical className="w-4 h-4" />
         </button>
       </TableCell>
-      <TableCell className="w-12">
+      <TableCell className="w-12 px-1 py-2">
         {b.logo_url ? (
           <img
             src={b.logo_url}
@@ -103,8 +103,8 @@ const SortableBrandRow = ({ brand: b, savingSlug, onToggleActive, scoreData, onS
           <span className="text-muted-foreground text-xs">—</span>
         )}
       </TableCell>
-      <TableCell className="font-medium text-sm max-w-[140px] truncate">{b.name}</TableCell>
-      <TableCell className="w-32">
+      <TableCell className="font-medium text-sm px-2 py-2 truncate max-w-[160px]">{b.name}</TableCell>
+      <TableCell className="w-36 px-1 py-2">
         <Input
           type="number"
           min={0}
@@ -119,7 +119,7 @@ const SortableBrandRow = ({ brand: b, savingSlug, onToggleActive, scoreData, onS
           className="h-8 text-sm w-full px-2 tabular-nums text-right"
         />
       </TableCell>
-      <TableCell className="w-40 text-xs whitespace-nowrap">
+      <TableCell className="w-40 px-2 py-2 text-xs whitespace-nowrap">
         <div className="font-medium tabular-nums text-sm">{fmtMoney(score)}</div>
         {target > 0 ? (
           <div className="text-muted-foreground tabular-nums text-[11px]">
@@ -127,31 +127,30 @@ const SortableBrandRow = ({ brand: b, savingSlug, onToggleActive, scoreData, onS
           </div>
         ) : null}
       </TableCell>
-      <TableCell className="w-32 text-xs whitespace-nowrap tabular-nums text-sm">{fmtMoney(mayorista)}</TableCell>
-      <TableCell className="w-28">
-        <div className="inline-flex rounded-md border overflow-hidden">
-          {(["off","active","first_24h"] as BoosterMode[]).map((m) => {
-            const active = (b.booster_mode ?? "off") === m;
-            return (
-              <button
-                key={m}
-                type="button"
-                onClick={() => onChangeBooster(b.slug, m)}
-                className={`h-7 w-8 flex items-center justify-center text-xs font-medium transition-colors ${active ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted"}`}
-                title={m === "off" ? "Inactivo" : m === "active" ? "Activo" : "Activo 24h"}
-              >
-                {m === "off" ? <X className="w-3.5 h-3.5" /> : m === "active" ? <Check className="w-3.5 h-3.5" /> : "24"}
-              </button>
-            );
-          })}
-        </div>
+      <TableCell className="w-32 px-2 py-2 whitespace-nowrap tabular-nums text-sm">{fmtMoney(mayorista)}</TableCell>
+      <TableCell className="w-20 px-1 py-2">
+        <Select
+          value={(b.booster_mode ?? "off") as BoosterMode}
+          onValueChange={(v) => onChangeBooster(b.slug, v as BoosterMode)}
+        >
+          <SelectTrigger className="h-8 px-2 text-sm w-full [&>svg]:ml-0">
+            <SelectValue>
+              {(b.booster_mode ?? "off") === "off" ? "✕" : (b.booster_mode === "first_24h" ? "24" : "✓")}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="off">✕ Inactivo</SelectItem>
+            <SelectItem value="active">✓ Activo</SelectItem>
+            <SelectItem value="first_24h">24 Activo 24h</SelectItem>
+          </SelectContent>
+        </Select>
       </TableCell>
-      <TableCell className="w-14 text-center text-sm">
+      <TableCell className="w-12 px-1 py-2 text-center text-sm">
         <span className={hasProducts ? "text-foreground" : "text-muted-foreground"}>
           {b.products_count ?? 0}
         </span>
       </TableCell>
-      <TableCell className="w-16">
+      <TableCell className="w-12 px-1 py-2">
         <Switch
           checked={b.is_active}
           onCheckedChange={(checked) => onToggleActive(b, checked)}
@@ -344,15 +343,15 @@ const BrandsTable = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-10"></TableHead>
-              <TableHead className="w-12">Logo</TableHead>
-              <TableHead className="max-w-[140px]">Nombre</TableHead>
-              <TableHead className="w-32">Target</TableHead>
-              <TableHead className="w-40">Score</TableHead>
-              <TableHead className="w-32">Mayorista</TableHead>
-              <TableHead className="w-28">Booster</TableHead>
-              <TableHead className="w-14 text-center">Items</TableHead>
-              <TableHead className="w-16">Activa</TableHead>
+              <TableHead className="w-8 px-1"></TableHead>
+              <TableHead className="w-12 px-1">Logo</TableHead>
+              <TableHead className="px-2">Nombre</TableHead>
+              <TableHead className="w-36 px-1">Target</TableHead>
+              <TableHead className="w-40 px-2">Score</TableHead>
+              <TableHead className="w-32 px-2">Mayorista</TableHead>
+              <TableHead className="w-20 px-1">Booster</TableHead>
+              <TableHead className="w-12 px-1 text-center">Items</TableHead>
+              <TableHead className="w-12 px-1">Activa</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
