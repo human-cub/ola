@@ -179,6 +179,15 @@ All colors MUST be HSL.
   .animate-border-pulse {
     animation: border-pulse 2s ease-in-out infinite;
   }
+
+  .animate-marquee {
+    animation: marquee 40s linear infinite;
+  }
+
+  @keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
   
   @keyframes fade-in {
     from {

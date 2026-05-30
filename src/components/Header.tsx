@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { User, LogIn, ShoppingCart, Clock } from "lucide-react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { User, LogIn, ShoppingCart, Clock, Search } from "lucide-react";
 import olaLogo from "@/assets/ola-logo-new.webp";
 import { TopBar } from "@/components/TopBar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { BurgerMenu } from "@/components/BurgerMenu";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
@@ -18,6 +19,20 @@ export const Header = ({ isVisible }: HeaderProps) => {
   const [user, setUser] = useState<any>(null);
   const { cartItems, waitingListItems } = useCart();
   const { isMayorista } = useUserRole();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const initialQ =
+    location.pathname === "/v2/catalogo"
+      ? new URLSearchParams(location.search).get("q") ?? ""
+      : "";
+  const [searchValue, setSearchValue] = useState(initialQ);
+
+  useEffect(() => {
+    if (location.pathname === "/v2/catalogo") {
+      const q = new URLSearchParams(location.search).get("q") ?? "";
+      setSearchValue(q);
+    }
+  }, [location.pathname, location.search]);
 
   // Show number of unique items (positions), not total quantities
   const cartCount = cartItems.length;
@@ -41,6 +56,12 @@ export const Header = ({ isVisible }: HeaderProps) => {
     window.location.href = "/";
   };
 
+  const submitSearch = (value: string) => {
+    const trimmed = value.trim();
+    const target = trimmed ? `/v2/catalogo?q=${encodeURIComponent(trimmed)}` : "/v2/catalogo";
+    navigate(target);
+  };
+
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b shadow-soft transition-transform duration-300 ${isVisible ? "translate-y-0" : "-translate-y-full"
@@ -62,6 +83,22 @@ export const Header = ({ isVisible }: HeaderProps) => {
             </span>
           </div>
         </div>
+
+        <form
+          onSubmit={(e) => { e.preventDefault(); submitSearch(searchValue); }}
+          className="flex-1 max-w-md mx-2 sm:mx-3"
+        >
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              placeholder="Buscar productos…"
+              className="pl-9 h-9 rounded-full bg-muted/40"
+              aria-label="Buscar productos"
+            />
+          </div>
+        </form>
 
         <div className="flex items-center gap-2">
           {/* Waiting List Icon — hidden for mayorista (no waiting list flow) */}

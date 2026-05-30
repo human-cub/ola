@@ -31,6 +31,7 @@ import NotFound from "./pages/NotFound";
 import CatalogoV2 from "./pages/v2/Catalogo";
 import CategoriaV2 from "./pages/v2/Categoria";
 import MarcaV2 from "./pages/v2/Marca";
+import MarcasV2 from "./pages/v2/Marcas";
 import ProductoV2 from "./pages/v2/Producto";
 import { FloatingWhatsApp } from "./components/FloatingWhatsApp";
 import { ScrollToTop } from "./components/ScrollToTop";
@@ -130,6 +131,8 @@ const App = () => {
           {/* v2 — new catalog sourced from external DB. Will replace legacy routes on Monday. */}
           <Route path="/v2/catalogo" element={<CatalogoV2 />} />
           <Route path="/v2/categoria/:category" element={<CategoriaV2 />} />
+          <Route path="/v2/marcas" element={<MarcasV2 />} />
+          <Route path="/v2/marcas/:slug" element={<MarcaV2 />} />
           <Route path="/v2/marca/:slug" element={<MarcaV2 />} />
           <Route path="/v2/p/:urlSlug" element={<ProductoV2 />} />
           <Route path="*" element={<NotFound />} />

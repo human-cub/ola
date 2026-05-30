@@ -9,6 +9,7 @@ import { formatPrice } from "@/lib/formatting";
 import { useBrands } from "@/hooks/useBrands";
 import { useCatalogProducts } from "@/hooks/useCatalogProducts";
 import { useCategories } from "@/hooks/useCategories";
+import { BrandProgressBar } from "@/components/BrandProgressBar";
 
 const DEFAULT_TITLE = "Ola! - Suplementos Deportivos | Precio Mayorista en Argentina";
 const DEFAULT_DESCRIPTION =
@@ -44,7 +45,7 @@ const MarcaV2 = () => {
       : DEFAULT_DESCRIPTION;
     const title = brand?.seo_title || fallbackTitle;
     const description = brand?.seo_description || fallbackDescription;
-    const canonical = `https://alaola.com.ar/marca/${slug}`;
+    const canonical = `https://alaola.com.ar/marcas/${slug}`;
     document.title = title;
     const descTag = document.querySelector('meta[name="description"]');
     if (descTag) descTag.setAttribute("content", description);
@@ -70,7 +71,12 @@ const MarcaV2 = () => {
     <div className="min-h-screen bg-background">
       <Header isVisible={headerVisible} />
       <main className="pb-[24px] pt-[120px] sm:pt-[104px]">
-        <Breadcrumb items={[{ label: brand?.name || "Marca" }]} />
+        <Breadcrumb
+          items={[
+            { label: "Marcas", href: "/v2/marcas" },
+            { label: brand?.name || "Marca" },
+          ]}
+        />
         <div className="container mx-auto px-4 py-8">
           {!notFound && (
             <div className="flex flex-col items-center mb-8 gap-3">
@@ -87,6 +93,11 @@ const MarcaV2 = () => {
               <h1 className="text-2xl font-bold text-center bg-gradient-primary bg-clip-text text-transparent">
                 {brand?.name || "Marca"}
               </h1>
+              {brand?.slug && (
+                <div className="w-full max-w-md mt-2">
+                  <BrandProgressBar brandSlug={brand.slug} />
+                </div>
+              )}
             </div>
           )}
 
