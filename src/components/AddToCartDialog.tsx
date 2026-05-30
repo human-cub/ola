@@ -365,11 +365,11 @@ export const AddToCartDialog = ({
             {/* Price Summary */}
             <div className="bg-muted rounded-lg p-4 space-y-2">
               <div className="flex justify-between text-sm">
-                <span>{isWaitingList ? "Precio unitario ahora:" : "Precio unitario:"}</span>
+                <span>{isWaitingList ? "Precio Garantizado:" : "Precio unitario:"}</span>
                 <span>{formatPrice(pricePerUnit)}</span>
               </div>
               <div className="flex justify-between font-semibold text-lg">
-                <span>{isWaitingList ? "Precio estimado:" : "Total:"}</span>
+                <span>{isWaitingList ? "Súper-Precio:" : "Total:"}</span>
                 <span className="text-primary">
                   {isWaitingList
                     ? formatPrice((prices[prices.length - 1]?.price ?? pricePerUnit) * quantity)
@@ -378,7 +378,7 @@ export const AddToCartDialog = ({
               </div>
               {isWaitingList && (
                 <p className="text-xs text-muted-foreground">
-                  * El precio puede variar según la cantidad de participantes al cierre
+                  * El Precio Garantizado está asegurado en todos los casos. Para alcanzar el Súper-Precio, compartí en redes sociales e invitá a tus amigos
                 </p>
               )}
             </div>
