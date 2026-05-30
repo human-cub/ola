@@ -401,6 +401,22 @@ export const GroupBuyPriceBlock = ({
                   </div>
                 )}
               </div>
+
+              {/* Next threshold message (brand-level money) */}
+              {superPrice !== null && brandStats.target > 0 && brandStats.collected < brandStats.target && (
+                <div className="mt-6 text-center">
+                  <p className="text-[15px] font-semibold text-foreground">
+                    Faltan{' '}
+                    <span className="font-bold" style={groupBuyAccentStyle}>
+                      {formatPrice(brandStats.target - brandStats.collected)}
+                    </span>{' '}
+                    para Súper-Precio:{' '}
+                    <span className="font-bold" style={groupBuyAccentStyle}>
+                      {formatPrice(superPrice)}
+                    </span>
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* CTA Buttons */}
