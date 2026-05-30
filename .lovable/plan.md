@@ -1,77 +1,62 @@
-## Архитектура
+## Цель
+Добавить в админку механику «целей сбора» по маркам и алгоритм виртуальной накрутки. Пользователям ничего не показываем, существующую логику цен/корзин/заказов не трогаем.
 
-- Поддомен `socios.alaola.com.ar` подключается к существующему Vercel-проекту вторым доменом (CNAME `cname.vercel-dns.com`). DNS вы настраиваете руками после деплоя.
-- В `App.tsx` детектим `window.location.hostname.startsWith('socios.')` → рендерим отдельный роутер `SociosApp` со своими страницами, хедером и футером. Обычные роуты не пересекаются.
-- На локалке для разработки работает префикс `/socios/*` (без поддомена), чтобы можно было превьюить.
+## 1. UI админки (BrandsTable)
+Скрываю колонки **Slug**, **SEO Title**, **SEO Description**. Вместо них добавляю:
 
-## База данных (миграция)
+| Колонка | Что внутри |
+|---|---|
+| Target | Поле ввода суммы в ARS (целевая сумма сбора по марке). Сохраняется при потере фокуса |
+| Score | Текущая сумма сбора = реальные + виртуальные (read-only, в формате `$X / $Target` + %) |
+| Mayorista | Сумма заказов реальных людей по продуктам марки (read-only) |
+| Boost | Select из 3 режимов: `Inactivo`, `Activo`, `Activo primeras 24h` |
 
-1. Новая роль: `ALTER TYPE app_role ADD VALUE 'mayorista'`.
-2. `wholesale_invite_tokens` — таблица токенов приглашений:
-   - `token` (uuid, PK), `lead_id` (uuid → wholesale_leads.id), `created_at`, `used_at`, `used_by_user_id`.
-   - RLS: только admin SELECT/INSERT/UPDATE. Анонимная валидация — через SECURITY DEFINER функцию `validate_wholesale_invite(_token uuid)` возвращающую `{valid, lead_id, phone, full_name}`.
-3. `app_settings` уже содержит конфиг минимума (ключ из текущей «Configuración Mayorista» — посмотрю в коде и переиспользую).
-4. Триггер `handle_new_user`: если пользователь регистрируется с meta `{registration_method: 'mayorista', invite_token: xxx}` → автоматически вставить `user_roles(role='mayorista')` и пометить токен использованным. Реализую через RPC `claim_wholesale_invite(_token, _user_id)` вызываемую из фронта сразу после signUp.
+Drag-handle, Logo, Nombre, Productos, Activa — остаются.
 
-## Каталог /socios
+## 2. Хранилище
+Расширяю существующую таблицу `brand_overrides` (она уже привязана к slug):
+- `target_amount numeric default 0`
+- `booster_mode text default 'off'` (`off` | `active` | `first_24h`)
+- `booster_started_at timestamptz` — момент включения буста (для расчёта окна 24h и недельных фаз)
+- `virtual_score numeric default 0` — накрученная сумма (сбрасывается при смене режима/новом цикле)
 
-Источник: та же таблица `products`. Цены берём из `prices` JSONB:
-- «display retail» — Tier 0 (зачёркнутая).
-- «T4 buy price» — Tier 4 (последний tier, оптовая).
-- Скидка % = `(t0 - t4) / t0 * 100`.
+`mayorista_score` не храним — считаем по запросу: сумма `total_amount` по `user_orders` со статусом `pending` за текущую неделю, где есть item с `product_id` принадлежащим марке (через локальную таблицу `products.brand_id`).
 
-Компонент `SociosProductRow`: фото (с переключателем по вкусу), название, счётчик +/- (как в обычной корзине), справа три цены.
+## 3. Edge-функция `brand-scores`
+Новая read-only функция (вызывается из админки) — возвращает по каждому slug:
+- `mayorista` (реальная сумма по неделе)
+- `virtual` (из `brand_overrides.virtual_score`)
+- `score = mayorista + virtual`
 
-## Хедер Socios
+## 4. Алгоритм накрутки `boost-brand-targets`
+Cron каждые 15 минут (pg_cron + pg_net). Для каждой марки с `booster_mode != 'off'`:
 
-- Лого слева (тот же), поиск по центру (фильтр по name/brand), справа корзина и аватар-меню.
-- Под ними строка: `Hola, {firstName} • Mínimo: $200.000` или, если в корзине что-то есть и сумма < минимума: `Faltan: $XX.XXX`.
-- Внизу sticky-бар с брендами: горизонтальный скролл логотипов из `brands` (только `is_active=true && products_count>0`), клик — фильтр каталога по бренду.
+**Фазы недели (ART, Buenos Aires):**
+```
+Пн 10:00 – Вт 10:00   → цель прогресса 25–30% target
+Вт 10:00 – Пт 22:00   → плавно до 70–80%
+Сб 10:00 – Вс 22:00   → дотягиваем до 100% (с вероятностью ~90%)
+```
 
-## Корзина /socios/carrito
+Логика тика:
+1. Считаем `expected_progress(now)` по фазе (с небольшим рандомом ±2%)
+2. `current_progress = (mayorista + virtual) / target`
+3. Если `current < expected` → добавляем к `virtual_score` инкремент, чтобы догнать до `expected` (но не больше)
+4. Для финальной фазы: на каждом тике с вероятностью, рассчитанной так, чтобы суммарно за фазу было ~90% шанс достичь 100% — толкаем к 100%
+5. Режим `first_24h` работает только первые 24ч от `booster_started_at`, потом стоп
+6. Цикл сбрасывается понедельник 10:00 ART (`virtual_score = 0`, `booster_started_at = now()` если режим `active`)
 
-Отдельная страница (не путать с обычной `/cart`, чтобы не смешивать tier 1 и tier 4). Использует те же `cart_items` с новым полем `mode='mayorista'`:
-
-- Миграция: `ALTER TABLE cart_items ADD COLUMN mode TEXT NOT NULL DEFAULT 'retail'`.
-- При добавлении в Socios → `mode='mayorista'`, `price_per_unit` = Tier 4.
-- В обычной корзине фильтруем `mode='retail'`, в оптовой — `mode='mayorista'`.
-
-Sticky-блок снизу: `Faltan: $X` (или пусто если ≥ минимума), `Confirmar pedido` (disabled пока < минимума), `Total: $Y`.
-
-## Чекаут /socios/finalizar
-
-Копия `Checkout.tsx` без блока промокода и без расчёта tier-сюрпризов. `order_type = 'mayorista'` (новое значение enum), `participants_count = 1`, цены сразу финальные.
-
-- Миграция: `ALTER TYPE order_type ADD VALUE 'mayorista'`.
-- Заказ падает в `user_orders` → отображается в существующем «Mis Pedidos» автоматически.
-
-## ЛК
-
-Полное переиспользование текущего `Profile.tsx` под `/socios/perfil` — данные те же.
-
-## Admin: Solicitudes Mayoristas
-
-В `WholesaleLeadsTable.tsx` к каждой строке добавляю кнопку **«Generar enlace»** (если токена ещё нет) и **«Copiar enlace»** (если есть). Линк: `https://socios.alaola.com.ar/registro?token=UUID`.
+## 5. Что НЕ трогаем
+- Существующие цены, тиры, `collectivePricing.ts`, корзина, чекаут, публичные страницы марок — без изменений
+- Никаких новых публичных компонентов
+- Никаких изменений в `fetch-external-brands` для пользовательского сайта
 
 ## Технические детали
+- Миграция: `ALTER TABLE brand_overrides ADD COLUMN ...`
+- `fetch-external-brands` дополняется чтением новых полей из `brand_overrides` и отдачей в `MergedBrand` (только для админки)
+- `hooks/useBrands.ts` — добавить новые поля в интерфейс `Brand`
+- Новые edge functions: `brand-scores` (GET-like, admin-only через JWT + has_role), `boost-brand-targets` (cron, защищена `CRON_SECRET`)
+- Cron job настраивается через `supabase--insert` (SQL c pg_cron)
 
-- Файлы:
-  - `src/socios/SociosApp.tsx`, `src/socios/SociosHeader.tsx`, `src/socios/BrandBar.tsx`
-  - `src/socios/pages/Catalogo.tsx`, `Carrito.tsx`, `Finalizar.tsx`, `Registro.tsx`, `Login.tsx`
-  - `src/socios/hooks/useSociosCart.ts`, `useMayoristaMinOrder.ts`
-  - Edge function `claim-wholesale-invite` для серверной выдачи роли (SECURITY DEFINER миграция тоже подойдёт; выберу RPC).
-- В `App.tsx` ранний switch: `if (isSociosHost) return <SociosApp />`.
-- Защита: все `/socios/*` (кроме `/registro?token=`, `/login`) требуют `mayorista` или `admin` роль. Обычные пользователи без роли → редирект на лендинг с сообщением.
-
-## Очерёдность работ
-
-1. Миграция (роль, токены, cart_items.mode, order_type enum, RPC).
-2. Edge-функция/RPC `claim_wholesale_invite`.
-3. Каркас `SociosApp` + хост-роутинг.
-4. Регистрация по токену + Login.
-5. Каталог + корзина + закреплённый брендбар.
-6. Чекаут + создание заказа.
-7. Кнопка генерации/копирования ссылки в админке.
-8. Vercel: добавление домена `socios.alaola.com.ar`.
-
-После approve начну с миграции БД.
+## Открытый вопрос
+Считать `mayorista` как **сумму заказов** (`total_amount`) или **сумму по позициям именно этой марки** (точнее, но дороже)? По умолчанию беру второй вариант — сумма `quantity * price_per_unit` по items, чей `product_id` принадлежит марке.

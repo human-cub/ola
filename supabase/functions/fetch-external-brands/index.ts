@@ -17,6 +17,10 @@ interface MergedBrand {
   seo_title: string | null;
   seo_description: string | null;
   products_count: number;
+  target_amount: number;
+  booster_mode: 'off' | 'active' | 'first_24h';
+  booster_started_at: string | null;
+  virtual_score: number;
 }
 
 const slugify = (s: string) =>
@@ -144,16 +148,24 @@ Deno.serve(async (req) => {
 
     const { data: overrides, error: ovErr } = await local
       .from("brand_overrides")
-      .select("slug, emoji, sort_order, is_active");
+      .select("slug, emoji, sort_order, is_active, target_amount, booster_mode, booster_started_at, virtual_score");
     if (ovErr) {
       throw new Error(`Cannot read local brand overrides: ${ovErr.message}`);
     }
-    const ovMap = new Map<string, { emoji: string | null; sort_order: number; is_active: boolean }>();
+    const ovMap = new Map<string, {
+      emoji: string | null; sort_order: number; is_active: boolean;
+      target_amount: number; booster_mode: 'off' | 'active' | 'first_24h';
+      booster_started_at: string | null; virtual_score: number;
+    }>();
     for (const o of overrides ?? []) {
       ovMap.set(o.slug, {
         emoji: o.emoji ?? null,
         sort_order: o.sort_order ?? 0,
         is_active: o.is_active ?? true,
+        target_amount: Number(o.target_amount ?? 0),
+        booster_mode: (o.booster_mode ?? 'off') as 'off' | 'active' | 'first_24h',
+        booster_started_at: o.booster_started_at ?? null,
+        virtual_score: Number(o.virtual_score ?? 0),
       });
     }
 
@@ -171,6 +183,10 @@ Deno.serve(async (req) => {
         seo_title: b.seo_title,
         seo_description: b.seo_description,
         products_count: b.productsCount,
+        target_amount: ov?.target_amount ?? 0,
+        booster_mode: ov?.booster_mode ?? 'off',
+        booster_started_at: ov?.booster_started_at ?? null,
+        virtual_score: ov?.virtual_score ?? 0,
       };
     });
 

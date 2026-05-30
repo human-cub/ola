@@ -2,6 +2,14 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -32,13 +40,27 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
+type BoosterMode = 'off' | 'active' | 'first_24h';
+
+interface BrandScore {
+  mayorista: number;
+  virtual: number;
+  score: number;
+}
+
+const fmtMoney = (n: number) =>
+  new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(n || 0);
+
 interface SortableBrandRowProps {
   brand: Brand;
   savingSlug: string | null;
   onToggleActive: (b: Brand, active: boolean) => void;
+  scoreData: BrandScore | undefined;
+  onSaveTarget: (slug: string, amount: number) => Promise<void>;
+  onChangeBooster: (slug: string, mode: BoosterMode) => Promise<void>;
 }
 
-const SortableBrandRow = ({ brand: b, savingSlug, onToggleActive }: SortableBrandRowProps) => {
+const SortableBrandRow = ({ brand: b, savingSlug, onToggleActive, scoreData, onSaveTarget, onChangeBooster }: SortableBrandRowProps) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: b.slug });
   const style = {
@@ -47,6 +69,15 @@ const SortableBrandRow = ({ brand: b, savingSlug, onToggleActive }: SortableBran
     opacity: isDragging ? 0.6 : 1,
   };
   const hasProducts = (b.products_count ?? 0) > 0;
+  const target = Number(b.target_amount ?? 0);
+  const [targetInput, setTargetInput] = useState<string>(target ? String(target) : "");
+  useEffect(() => {
+    setTargetInput(target ? String(target) : "");
+  }, [target]);
+  const mayorista = scoreData?.mayorista ?? 0;
+  const virtual = scoreData?.virtual ?? Number(b.virtual_score ?? 0);
+  const score = mayorista + virtual;
+  const pct = target > 0 ? Math.min(100, Math.round((score / target) * 100)) : 0;
   return (
     <TableRow ref={setNodeRef} style={style}>
       <TableCell className="w-10">
@@ -73,12 +104,42 @@ const SortableBrandRow = ({ brand: b, savingSlug, onToggleActive }: SortableBran
         )}
       </TableCell>
       <TableCell className="font-medium">{b.name}</TableCell>
-      <TableCell className="font-mono text-xs text-muted-foreground">{b.slug}</TableCell>
-      <TableCell className="text-xs max-w-[200px] truncate" title={b.seo_title ?? ""}>
-        {b.seo_title ?? <span className="text-muted-foreground">—</span>}
+      <TableCell className="w-36">
+        <Input
+          type="number"
+          min={0}
+          step={1000}
+          value={targetInput}
+          onChange={(e) => setTargetInput(e.target.value)}
+          onBlur={() => {
+            const n = Number(targetInput) || 0;
+            if (n !== target) onSaveTarget(b.slug, n);
+          }}
+          placeholder="0"
+          className="h-8 text-xs"
+        />
       </TableCell>
-      <TableCell className="text-xs max-w-[280px] truncate" title={b.seo_description ?? ""}>
-        {b.seo_description ?? <span className="text-muted-foreground">—</span>}
+      <TableCell className="w-40 text-xs">
+        <div className="font-medium">{fmtMoney(score)}</div>
+        <div className="text-muted-foreground">
+          {target > 0 ? `${pct}% de ${fmtMoney(target)}` : "—"}
+        </div>
+      </TableCell>
+      <TableCell className="w-32 text-xs">{fmtMoney(mayorista)}</TableCell>
+      <TableCell className="w-44">
+        <Select
+          value={(b.booster_mode ?? "off") as BoosterMode}
+          onValueChange={(v) => onChangeBooster(b.slug, v as BoosterMode)}
+        >
+          <SelectTrigger className="h-8 text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="off">Inactivo</SelectItem>
+            <SelectItem value="active">Activo</SelectItem>
+            <SelectItem value="first_24h">Activo 24h</SelectItem>
+          </SelectContent>
+        </Select>
       </TableCell>
       <TableCell className="w-20 text-center">
         <span className={hasProducts ? "text-foreground" : "text-muted-foreground"}>
@@ -104,10 +165,36 @@ const BrandsTable = () => {
   const [savingSlug, setSavingSlug] = useState<string | null>(null);
   const [orderedSlugs, setOrderedSlugs] = useState<string[]>([]);
   const [savingOrder, setSavingOrder] = useState(false);
+  const [scores, setScores] = useState<Map<string, BrandScore>>(new Map());
 
   useEffect(() => {
     setOrderedSlugs(brands.map((b) => b.slug));
   }, [brands]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const { data, error: e } = await supabase.functions.invoke("brand-scores", { body: {} });
+        if (e) throw e;
+        if (cancelled) return;
+        const map = new Map<string, BrandScore>();
+        for (const s of (data as { scores?: BrandScore[] & { slug: string }[] })?.scores ?? []) {
+          map.set((s as { slug: string }).slug, {
+            mayorista: (s as BrandScore).mayorista,
+            virtual: (s as BrandScore).virtual,
+            score: (s as BrandScore).score,
+          });
+        }
+        setScores(map);
+      } catch (err) {
+        console.warn("brand-scores load failed", err);
+      }
+    };
+    load();
+    const t = setInterval(load, 60_000);
+    return () => { cancelled = true; clearInterval(t); };
+  }, [brands.length]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -133,6 +220,51 @@ const BrandsTable = () => {
       toast.error(e instanceof Error ? e.message : "Error");
     } finally {
       setSavingSlug(null);
+    }
+  };
+
+  const handleSaveTarget = async (slug: string, amount: number) => {
+    try {
+      const b = brands.find((x) => x.slug === slug);
+      const { error: upErr } = await supabase
+        .from("brand_overrides")
+        .upsert(
+          { slug, target_amount: amount, sort_order: b?.sort_order ?? 0, is_active: b?.is_active ?? true },
+          { onConflict: "slug" },
+        );
+      if (upErr) throw upErr;
+      qc.invalidateQueries({ queryKey: ["brands"] });
+      toast.success("Target guardado");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Error");
+    }
+  };
+
+  const handleChangeBooster = async (slug: string, mode: BoosterMode) => {
+    try {
+      const b = brands.find((x) => x.slug === slug);
+      const patch: {
+        slug: string;
+        booster_mode: BoosterMode;
+        sort_order: number;
+        is_active: boolean;
+        booster_started_at?: string;
+      } = {
+        slug,
+        booster_mode: mode,
+        sort_order: b?.sort_order ?? 0,
+        is_active: b?.is_active ?? true,
+      };
+      if (mode !== "off") {
+        patch.booster_started_at = new Date().toISOString();
+      }
+      const { error: upErr } = await supabase
+        .from("brand_overrides")
+        .upsert(patch, { onConflict: "slug" });
+      if (upErr) throw upErr;
+      qc.invalidateQueries({ queryKey: ["brands"] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Error");
     }
   };
 
@@ -177,8 +309,7 @@ const BrandsTable = () => {
         <div>
           <h2 className="text-xl font-semibold">Marcas</h2>
           <p className="text-xs text-muted-foreground">
-            Nombre, slug, logo y SEO se importan desde la base externa. Arrastrá
-            para reordenar. Las marcas sin productos quedan inactivas automáticamente
+            Definí un Target por marca y activá el booster para acumular Score (real + virtual). Arrastrá para reordenar
           </p>
         </div>
         <Button
@@ -211,9 +342,10 @@ const BrandsTable = () => {
               <TableHead className="w-10"></TableHead>
               <TableHead className="w-16">Logo</TableHead>
               <TableHead>Nombre</TableHead>
-              <TableHead>Slug</TableHead>
-              <TableHead>SEO Title</TableHead>
-              <TableHead>SEO Description</TableHead>
+              <TableHead className="w-36">Target</TableHead>
+              <TableHead className="w-40">Score</TableHead>
+              <TableHead className="w-32">Mayorista</TableHead>
+              <TableHead className="w-44">Booster</TableHead>
               <TableHead className="w-20 text-center">Productos</TableHead>
               <TableHead className="w-20">Activa</TableHead>
             </TableRow>
@@ -221,7 +353,7 @@ const BrandsTable = () => {
           <TableBody>
             {orderedBrands.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
                   No se encontraron marcas en la base externa
                 </TableCell>
               </TableRow>
@@ -233,6 +365,9 @@ const BrandsTable = () => {
                     brand={b}
                     savingSlug={savingSlug}
                     onToggleActive={handleToggleActive}
+                    scoreData={scores.get(b.slug)}
+                    onSaveTarget={handleSaveTarget}
+                    onChangeBooster={handleChangeBooster}
                   />
                 ))}
               </SortableContext>
