@@ -1,62 +1,61 @@
-## Цель
-Добавить в админку механику «целей сбора» по маркам и алгоритм виртуальной накрутки. Пользователям ничего не показываем, существующую логику цен/корзин/заказов не трогаем.
+## Что я обнаружил во внешней БД
 
-## 1. UI админки (BrandsTable)
-Скрываю колонки **Slug**, **SEO Title**, **SEO Description**. Вместо них добавляю:
+Таблица `products`:
+- `sku`, `name`, `name_short`, `flavor`, `size`, `category_slug`, `url_slug`, `brand_id`
+- `image_urls`, `description_html`, `tags`, `seo_title`, `seo_description`
+- `price_retail`, `price_retail_display`, `price_t1`, `price_t2`, `price_t3`, `price_t4`
+- `active`, `sort_order`
 
-| Колонка | Что внутри |
-|---|---|
-| Target | Поле ввода суммы в ARS (целевая сумма сбора по марке). Сохраняется при потере фокуса |
-| Score | Текущая сумма сбора = реальные + виртуальные (read-only, в формате `$X / $Target` + %) |
-| Mayorista | Сумма заказов реальных людей по продуктам марки (read-only) |
-| Boost | Select из 3 режимов: `Inactivo`, `Activo`, `Activo primeras 24h` |
+Таблица `brands`: `id`, `name`, `seo_title`, `seo_description`, `logo_url`
+Таблица `categories`: `slug`, `name`, `active`, `seo_title`, `seo_description`
 
-Drag-handle, Logo, Nombre, Productos, Activa — остаются.
+Варианты вкусов = строки с одинаковым `url_slug` и разными `flavor` (так же продукт собирается в опте).
 
-## 2. Хранилище
-Расширяю существующую таблицу `brand_overrides` (она уже привязана к slug):
-- `target_amount numeric default 0`
-- `booster_mode text default 'off'` (`off` | `active` | `first_24h`)
-- `booster_started_at timestamptz` — момент включения буста (для расчёта окна 24h и недельных фаз)
-- `virtual_score numeric default 0` — накрученная сумма (сбрасывается при смене режима/новом цикле)
+## Стратегия — параллельные роуты (старый сайт работает до понедельника)
 
-`mayorista_score` не храним — считаем по запросу: сумма `total_amount` по `user_orders` со статусом `pending` за текущую неделю, где есть item с `product_id` принадлежащим марке (через локальную таблицу `products.brand_id`).
+Новый каталог поднимается на префиксе `/v2/*`, старый код (`/catalogo`, `/marca/:slug`, `/categoria/:slug`, `/producto/:slug`, `/:slug`) не трогается. В понедельник вы просто переключите роуты (одна правка в `App.tsx`) — старые файлы и таблица `products` удалятся отдельной миграцией позже.
 
-## 3. Edge-функция `brand-scores`
-Новая read-only функция (вызывается из админки) — возвращает по каждому slug:
-- `mayorista` (реальная сумма по неделе)
-- `virtual` (из `brand_overrides.virtual_score`)
-- `score = mayorista + virtual`
+### Новые роуты
+- `/v2/catalogo` — список активных категорий
+- `/v2/categoria/:slug` — активные продукты активных марок в категории
+- `/v2/marca/:slug` — продукты марки + блок группового сбора
+- `/v2/p/:urlSlug` — страница продукта (вкусы переключаются прямо на странице)
 
-## 4. Алгоритм накрутки `boost-brand-targets`
-Cron каждые 15 минут (pg_cron + pg_net). Для каждой марки с `booster_mode != 'off'`:
+### Бэкенд
 
-**Фазы недели (ART, Buenos Aires):**
-```
-Пн 10:00 – Вт 10:00   → цель прогресса 25–30% target
-Вт 10:00 – Пт 22:00   → плавно до 70–80%
-Сб 10:00 – Вс 22:00   → дотягиваем до 100% (с вероятностью ~90%)
-```
+1. **`fetch-external-products` (обновить)** — отдаёт все нужные поля: `t1/t2/t3/t4`, `price_retail_display`, `description_html`, `seo_title`, `seo_description`, `url_slug`, `name_short`, `tags`, `flavor`, `size`, `brand_slug` (резолвится из `brands.name → slugify`). Фильтр `active = true`.
+2. **`fetch-external-categories`** — без изменений (уже отдаёт `seo_title/seo_description` и `active`).
+3. **`fetch-external-brands`** — без изменений (то же).
+4. **Активность категорий** — на фронте: категория видна, только если в ней есть ≥1 активный продукт активной марки (брак из `brand_overrides.is_active`).
 
-Логика тика:
-1. Считаем `expected_progress(now)` по фазе (с небольшим рандомом ±2%)
-2. `current_progress = (mayorista + virtual) / target`
-3. Если `current < expected` → добавляем к `virtual_score` инкремент, чтобы догнать до `expected` (но не больше)
-4. Для финальной фазы: на каждом тике с вероятностью, рассчитанной так, чтобы суммарно за фазу было ~90% шанс достичь 100% — толкаем к 100%
-5. Режим `first_24h` работает только первые 24ч от `booster_started_at`, потом стоп
-6. Цикл сбрасывается понедельник 10:00 ART (`virtual_score = 0`, `booster_started_at = now()` если режим `active`)
+### Фронтенд
 
-## 5. Что НЕ трогаем
-- Существующие цены, тиры, `collectivePricing.ts`, корзина, чекаут, публичные страницы марок — без изменений
-- Никаких новых публичных компонентов
-- Никаких изменений в `fetch-external-brands` для пользовательского сайта
+1. **`src/hooks/useCatalogProducts.ts`** — новый хук:
+   - вызывает `fetch-external-products`, фильтрует по активным маркам (`brand_overrides.is_active`),
+   - группирует по `url_slug` в объект `CatalogProduct`:
+     ```ts
+     { urlSlug, name, nameShort, size, description, images, brandSlug, brandName,
+       categorySlug, seoTitle, seoDescription, tags,
+       priceRetailDisplay, priceT1, priceT2, priceT3, priceT4,
+       variants: [{ sku, flavor, images, t1..t4 }] }
+     ```
+2. **`src/hooks/useActiveCategories.ts`** — обёртка над `useCategories` + `useCatalogProducts`, скрывает категории без активных продуктов.
 
-## Технические детали
-- Миграция: `ALTER TABLE brand_overrides ADD COLUMN ...`
-- `fetch-external-brands` дополняется чтением новых полей из `brand_overrides` и отдачей в `MergedBrand` (только для админки)
-- `hooks/useBrands.ts` — добавить новые поля в интерфейс `Brand`
-- Новые edge functions: `brand-scores` (GET-like, admin-only через JWT + has_role), `boost-brand-targets` (cron, защищена `CRON_SECRET`)
-- Cron job настраивается через `supabase--insert` (SQL c pg_cron)
+3. **Страницы**:
+   - `src/pages/v2/Catalogo.tsx` — копирует разметку текущего `Catalog.tsx`, кормится из `useActiveCategories` + `useBrands` (только активные).
+   - `src/pages/v2/Categoria.tsx` — список продуктов категории.
+   - `src/pages/v2/Marca.tsx` — продукты марки + переиспользуем `GroupBuyPriceBlock` (как сейчас).
+   - `src/pages/v2/Producto.tsx` — фото-карусель, переключатель вкусов (segmented chips, обновляет `selectedVariant`), цена-блок (Retail = `price_retail_display`, Precio Garantizado = `t2`, Súper-Precio = `t3`), кнопка «Comprar Ahora» с ценой `t1`, кнопка «Sumate al grupo» (открывает `AddToCartDialog`).
+   - SEO: `<Helmet>` берёт `seoTitle`/`seoDescription` из продукта/категории/марки.
 
-## Открытый вопрос
-Считать `mayorista` как **сумму заказов** (`total_amount`) или **сумму по позициям именно этой марки** (точнее, но дороже)? По умолчанию беру второй вариант — сумма `quantity * price_per_unit` по items, чей `product_id` принадлежит марке.
+4. **`AddToCartDialog`** — добавляю prop `preselectedFlavor`, скрываю внутренний переключатель вкусов когда он пришёл с страницы продукта. Логика цен/таймера/сбора без изменений.
+
+### Что НЕ трогаем сейчас
+- Старые `Catalog.tsx`, `Category.tsx`, `Brand.tsx`, `DynamicProduct.tsx`, `useProducts`, таблица `products`, триггеры `waiting_for_discount_count`, `boost-brand-targets`, `reset-weekly-orders` — всё остаётся в проде до понедельника.
+- Удаление старых таблиц и cron-логики — отдельная миграция «cleanup-legacy», запускаем после переключения роутов в понедельник.
+
+### Открытые вопросы
+- Цена «Súper-Precio» = `price_t3` или `price_t4`? Вы сказали T3, но во внешней БД есть и t3 и t4 — подтвердите. По умолчанию беру **T3**.
+- Категория автоматически становится активной если в ней есть активный продукт активной марки — это уже работает в админке через `category_overrides.is_active` дефолт `true`, плюс фильтр на фронте «есть активные продукты». Так?
+
+Если ОК — стартую с обновления `fetch-external-products`, потом хук, потом 4 страницы и роуты.
