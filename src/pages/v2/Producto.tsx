@@ -124,10 +124,14 @@ const ProductoV2 = () => {
                   </p>
                 )
               )}
-              <h1 className="text-2xl font-bold leading-tight">{product.name}</h1>
-              {product.size && (
-                <p className="text-lg font-semibold text-blue-500">{product.size}</p>
-              )}
+              <h1 className="text-2xl font-bold leading-tight">
+                {product.name}
+                {product.size && (
+                  <span className="ml-2 text-lg font-semibold text-blue-500 align-middle">
+                    {product.size}
+                  </span>
+                )}
+              </h1>
 
               {hasFlavors && (
                 <div className="space-y-2">
