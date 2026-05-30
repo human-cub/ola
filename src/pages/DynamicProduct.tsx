@@ -36,6 +36,8 @@ interface ProductData {
   variants: string[];
   waiting_for_discount_count: number;
   virtual_orders_count: number;
+  brand_name?: string | null;
+  brand_slug?: string | null;
 }
 
 const DynamicProduct = () => {
@@ -81,10 +83,12 @@ const DynamicProduct = () => {
       }
 
       // Hide products whose brand is inactive on the public site
+      let brandName: string | null = null;
+      let brandSlug: string | null = null;
       if (data.brand_id) {
         const { data: brandRow } = await supabase
           .from("brands")
-          .select("is_active")
+          .select("is_active, name, slug")
           .eq("id", data.brand_id)
           .maybeSingle();
         if (brandRow && brandRow.is_active === false) {
@@ -92,6 +96,8 @@ const DynamicProduct = () => {
           setLoading(false);
           return;
         }
+        brandName = brandRow?.name ?? null;
+        brandSlug = brandRow?.slug ?? null;
       }
 
       const productData: ProductData = {
@@ -106,6 +112,8 @@ const DynamicProduct = () => {
         variants: (data.variants as string[]) || [],
         waiting_for_discount_count: data.waiting_for_discount_count,
         virtual_orders_count: data.virtual_orders_count,
+        brand_name: brandName,
+        brand_slug: brandSlug,
       };
 
       setProduct(productData);
@@ -219,6 +227,8 @@ const DynamicProduct = () => {
                   flavors={product.flavors}
                   priceData={product.prices}
                   waitingCount={waitingCount}
+                  brandName={product.brand_name ?? null}
+                  brandSlug={product.brand_slug ?? null}
                 />
               </div>
             </div>
