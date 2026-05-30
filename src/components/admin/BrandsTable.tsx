@@ -243,7 +243,13 @@ const BrandsTable = () => {
   const handleChangeBooster = async (slug: string, mode: BoosterMode) => {
     try {
       const b = brands.find((x) => x.slug === slug);
-      const patch: Record<string, unknown> = {
+      const patch: {
+        slug: string;
+        booster_mode: BoosterMode;
+        sort_order: number;
+        is_active: boolean;
+        booster_started_at?: string;
+      } = {
         slug,
         booster_mode: mode,
         sort_order: b?.sort_order ?? 0,
