@@ -292,59 +292,19 @@ export const GroupBuyPriceBlock = ({
     }).format(price)}`;
   };
 
-  // Progress bar: 4 markers (tiers 2-5) with 3 symmetric segments
-  const progressTiers = priceData.slice(1); // people: [1, 6, 18, 42]
-  let visualProgress = 0;
-  if (progressTiers.length >= 4) {
-    const t0 = progressTiers[0].people; // 1
-    const t1 = progressTiers[1].people; // 6
-    const t2 = progressTiers[2].people; // 18
-    const t3 = progressTiers[3].people; // 42
-    const segWidth = 100 / 3;
-
-    if (displayWaitingCount <= t1) {
-      visualProgress = ((displayWaitingCount - t0) / Math.max(1, t1 - t0)) * segWidth;
-    } else if (displayWaitingCount <= t2) {
-      visualProgress = segWidth + ((displayWaitingCount - t1) / Math.max(1, t2 - t1)) * segWidth;
-    } else if (displayWaitingCount <= t3) {
-      visualProgress = segWidth * 2 + ((displayWaitingCount - t2) / Math.max(1, t3 - t2)) * segWidth;
-    } else {
-      visualProgress = 100;
-    }
-  } else if (progressTiers.length >= 3) {
-    const t0 = progressTiers[0].people;
-    const t1 = progressTiers[1].people;
-    const t2 = progressTiers[2].people;
-    const segWidth = 100 / 3;
-    if (displayWaitingCount <= t0) visualProgress = (displayWaitingCount / Math.max(1, t0)) * segWidth;
-    else if (displayWaitingCount <= t1) visualProgress = segWidth + ((displayWaitingCount - t0) / Math.max(1, t1 - t0)) * segWidth;
-    else if (displayWaitingCount <= t2) visualProgress = segWidth * 2 + ((displayWaitingCount - t1) / Math.max(1, t2 - t1)) * segWidth;
-    else visualProgress = 100;
-  }
-  visualProgress = Math.min(100, Math.max(0, visualProgress));
+  // Brand-level money progress
+  const visualProgress = brandStats.target > 0
+    ? Math.min(100, Math.max(0, (brandStats.collected / brandStats.target) * 100))
+    : 0;
   const groupBuyProgressStyle = {
     width: `${visualProgress}%`,
     background:
       "linear-gradient(90deg, hsl(36 100% 50%), hsl(var(--group-buy-accent)), hsl(48 100% 60%))",
   } satisfies CSSProperties;
 
-  // Get next threshold
-  const getNextThreshold = () => {
-    // Message should point to the next meaningful drop tier (skip retail + first discount tier)
-    const messageTiers = priceData.slice(2);
-
-    if (messageTiers.length === 0) return null;
-
-    for (const tier of messageTiers) {
-      if (tier.people > displayWaitingCount) {
-        return tier;
-      }
-    }
-
-    return null;
-  };
-  const nextThreshold = getNextThreshold();
-  const remaining = nextThreshold ? nextThreshold.people - displayWaitingCount : 0;
+  // Remaining units to reach Súper-Precio (tier index 3)
+  const superTier = priceData.length > 3 ? priceData[3] : null;
+  const remaining = superTier ? Math.max(0, superTier.people - displayWaitingCount) : 0;
   const priceComparisonItems: PriceComparisonItem[] = [
     {
       label: "Retail",
@@ -353,8 +313,8 @@ export const GroupBuyPriceBlock = ({
       priceClassName: "text-muted-foreground line-through",
     },
     {
-      label: "Ya bajó a",
-      price: currentPrice,
+      label: "Precio Garantizado",
+      price: guaranteedPrice,
       labelClassName: "text-primary",
       priceClassName: "text-primary",
     },
@@ -380,15 +340,15 @@ export const GroupBuyPriceBlock = ({
                 <div className="flex items-center gap-1.5 min-w-0 flex-shrink">
                   <Sparkles className="w-5 h-5 text-white animate-pulse flex-shrink-0" />
                   <span className="text-white font-bold text-base whitespace-nowrap">
-                    Ya se sumaron {displayWaitingCount}
+                    {brandName ? `Grupo ${brandName}` : "Grupo"}
                   </span>
                 </div>
                 <div
-                  className="px-2.5 py-1.5 rounded-full shadow-md flex items-center gap-1 flex-shrink-0 squircle"
+                  className="px-3 py-1.5 rounded-full shadow-md flex items-center gap-1.5 flex-shrink-0 squircle"
                   style={groupBuyAccentBackgroundStyle}
                 >
-                  <Timer className="w-3.5 h-3.5 text-white" />
-                  <div className="text-white font-mono font-bold text-xs tracking-wide whitespace-nowrap">
+                  <Timer className="w-4 h-4 text-white" />
+                  <div className="text-white font-mono font-bold text-sm tracking-wide whitespace-nowrap">
                     {timeLeft.days}d {timeLeft.hours}h {timeLeft.minutes}m
                   </div>
                 </div>
@@ -417,44 +377,27 @@ export const GroupBuyPriceBlock = ({
             {/* Progress Bar Section */}
             <div className="px-6 py-8 bg-card">
               <div className="relative">
-                {/* Tier people counts (top) — from progressTiers */}
-                <div className="flex justify-between mb-3 text-sm font-bold text-foreground -mx-3">
-                  {progressTiers.map((tier, i) => (
-                    <span key={i} className="w-8 text-center">
-                      {tier.people}
-                    </span>
-                  ))}
+                {/* Amount collected (left) */}
+                <div className="flex justify-between mb-2 text-sm font-bold">
+                  <span className="text-foreground">{formatPrice(brandStats.collected)}</span>
+                  <span className="text-muted-foreground">{formatPrice(brandStats.target)}</span>
                 </div>
 
-                {/* Progress bar — 3 symmetric segments */}
-                <div className="relative h-5 bg-muted rounded-full overflow-hidden shadow-inner">
+                {/* Progress bar — slim, no segments */}
+                <div className="relative h-2.5 bg-muted rounded-full overflow-hidden shadow-inner">
                   <div
-                    className="absolute top-0 left-0 h-full rounded-full transition-all duration-1000 z-10"
+                    className="absolute top-0 left-0 h-full rounded-full transition-all duration-1000"
                     style={groupBuyProgressStyle}
                   />
-                  {/* 2 divider lines at 33.33% and 66.67% */}
-                  <div className="absolute top-0 left-0 w-full h-full z-20">
-                    <div className="absolute top-0 w-0.5 h-full bg-white opacity-70" style={{ left: '33.33%' }} />
-                    <div className="absolute top-0 w-0.5 h-full bg-white opacity-70" style={{ left: '66.67%' }} />
-                  </div>
-                </div>                
-
-                {/* Tier prices (bottom) */}
-                <div className="flex justify-between mt-3 text-[13px] font-bold text-muted-foreground -mx-3">
-                  {progressTiers.map((tier, i) => (
-                    <span key={i} className="w-14 text-center first:text-left last:text-right">
-                      {formatPrice(tier.price)}
-                    </span>
-                  ))}
                 </div>
               </div>
 
               {/* Next threshold message */}
-              {nextThreshold && remaining > 0 && (
-                <div className="mt-8 text-center">
+              {superTier && remaining > 0 && (
+                <div className="mt-6 text-center">
                   <p className="text-[15px] font-semibold text-foreground">
-                    Faltan <span className="font-bold" style={groupBuyAccentStyle}>{remaining} unidades</span> para{' '}
-                    <span className="font-bold text-primary">{formatPrice(nextThreshold.price)}</span>
+                    Faltan <span className="font-bold" style={groupBuyAccentStyle}>{remaining} unidades</span> para Súper-Precio:{' '}
+                    <span className="font-bold" style={groupBuyAccentStyle}>{formatPrice(superTier.price)}</span>
                   </p>
                 </div>
               )}
