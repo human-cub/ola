@@ -242,8 +242,9 @@ export const BurgerMenu = () => {
                 {/* Flyout submenu */}
                 {hasChildren && isHovered && (
                   <div
-                    className="absolute left-full top-0 ml-1 w-[260px] bg-background border rounded-lg shadow-elegant p-2 z-50 animate-in fade-in slide-in-from-left-2 duration-150"
+                    className="absolute left-full top-0 pl-2 -ml-px w-[268px] z-50 animate-in fade-in slide-in-from-left-2 duration-150"
                   >
+                    <div className="w-[260px] bg-background border rounded-lg shadow-elegant p-2">
                     <ul className="space-y-1">
                       {item.allHref && (
                         <li>
@@ -272,6 +273,7 @@ export const BurgerMenu = () => {
                         </li>
                       ))}
                     </ul>
+                    </div>
                   </div>
                 )}
               </li>
