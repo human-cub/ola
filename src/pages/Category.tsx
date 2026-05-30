@@ -120,15 +120,22 @@ const Category = () => {
 
       const { data, error } = await supabase
         .from("products")
-        .select("id, name, weight, images, prices, link")
+        .select("id, name, weight, images, prices, link, brand_id")
         .eq("category", category)
         .order("name");
 
       if (error) {
         console.error("Error fetching products:", error);
       } else {
+        const { data: inactiveBrands } = await supabase
+          .from("brands")
+          .select("id")
+          .eq("is_active", false);
+        const inactiveSet = new Set((inactiveBrands ?? []).map((b) => b.id));
         setProducts(
-          (data || []).map((p) => ({
+          (data || [])
+            .filter((p) => !p.brand_id || !inactiveSet.has(p.brand_id))
+            .map((p) => ({
             id: p.id,
             name: p.name,
             weight: p.weight,

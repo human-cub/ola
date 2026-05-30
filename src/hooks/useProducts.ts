@@ -15,7 +15,7 @@ export interface ProductDisplay {
 const fetchProducts = async (): Promise<ProductDisplay[]> => {
   const { data, error } = await supabase
     .from('products')
-    .select('id, name, weight, link, images, prices')
+    .select('id, name, weight, link, images, prices, brand_id')
     .order('name');
 
   if (error) {
@@ -23,7 +23,16 @@ const fetchProducts = async (): Promise<ProductDisplay[]> => {
     throw error;
   }
 
-  return (data || []).map(product => {
+  // Fetch inactive brand ids to hide their products on the public site
+  const { data: inactiveBrands } = await supabase
+    .from('brands')
+    .select('id')
+    .eq('is_active', false);
+  const inactiveSet = new Set((inactiveBrands ?? []).map((b) => b.id));
+
+  return (data || [])
+    .filter((p) => !p.brand_id || !inactiveSet.has(p.brand_id))
+    .map(product => {
     const images = product.images as string[] | null;
     const prices = product.prices as { people: number; price: number }[] | null;
 

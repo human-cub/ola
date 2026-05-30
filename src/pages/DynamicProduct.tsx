@@ -80,6 +80,20 @@ const DynamicProduct = () => {
         return;
       }
 
+      // Hide products whose brand is inactive on the public site
+      if (data.brand_id) {
+        const { data: brandRow } = await supabase
+          .from("brands")
+          .select("is_active")
+          .eq("id", data.brand_id)
+          .maybeSingle();
+        if (brandRow && brandRow.is_active === false) {
+          setProduct(null);
+          setLoading(false);
+          return;
+        }
+      }
+
       const productData: ProductData = {
         id: data.id,
         name: data.name,
