@@ -19,7 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
-import { Loader2, RefreshCw, GripVertical } from "lucide-react";
+import { Loader2, RefreshCw, GripVertical, Check, X } from "lucide-react";
 import { useBrands, type Brand } from "@/hooks/useBrands";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -91,20 +91,20 @@ const SortableBrandRow = ({ brand: b, savingSlug, onToggleActive, scoreData, onS
           <GripVertical className="w-4 h-4" />
         </button>
       </TableCell>
-      <TableCell className="w-16">
+      <TableCell className="w-12">
         {b.logo_url ? (
           <img
             src={b.logo_url}
             alt={b.name}
-            className="h-8 w-auto max-w-[60px] object-contain"
+            className="h-7 w-auto max-w-[44px] object-contain"
             loading="lazy"
           />
         ) : (
           <span className="text-muted-foreground text-xs">—</span>
         )}
       </TableCell>
-      <TableCell className="font-medium">{b.name}</TableCell>
-      <TableCell className="w-44">
+      <TableCell className="font-medium text-sm max-w-[140px] truncate">{b.name}</TableCell>
+      <TableCell className="w-32">
         <Input
           type="number"
           min={0}
@@ -116,37 +116,42 @@ const SortableBrandRow = ({ brand: b, savingSlug, onToggleActive, scoreData, onS
             if (n !== target) onSaveTarget(b.slug, n);
           }}
           placeholder="0"
-          className="h-8 text-sm w-full px-2 tabular-nums"
+          className="h-8 text-sm w-full px-2 tabular-nums text-right"
         />
       </TableCell>
-      <TableCell className="w-44 text-xs whitespace-nowrap">
-        <div className="font-medium tabular-nums">{fmtMoney(score)}</div>
-        <div className="text-muted-foreground tabular-nums">
-          {target > 0 ? `${pct}% de ${fmtMoney(target)}` : "—"}
+      <TableCell className="w-40 text-xs whitespace-nowrap">
+        <div className="font-medium tabular-nums text-sm">{fmtMoney(score)}</div>
+        {target > 0 ? (
+          <div className="text-muted-foreground tabular-nums text-[11px]">
+            {pct}% · {fmtMoney(target)}
+          </div>
+        ) : null}
+      </TableCell>
+      <TableCell className="w-32 text-xs whitespace-nowrap tabular-nums text-sm">{fmtMoney(mayorista)}</TableCell>
+      <TableCell className="w-28">
+        <div className="inline-flex rounded-md border overflow-hidden">
+          {(["off","active","first_24h"] as BoosterMode[]).map((m) => {
+            const active = (b.booster_mode ?? "off") === m;
+            return (
+              <button
+                key={m}
+                type="button"
+                onClick={() => onChangeBooster(b.slug, m)}
+                className={`h-7 w-8 flex items-center justify-center text-xs font-medium transition-colors ${active ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted"}`}
+                title={m === "off" ? "Inactivo" : m === "active" ? "Activo" : "Activo 24h"}
+              >
+                {m === "off" ? <X className="w-3.5 h-3.5" /> : m === "active" ? <Check className="w-3.5 h-3.5" /> : "24"}
+              </button>
+            );
+          })}
         </div>
       </TableCell>
-      <TableCell className="w-36 text-xs whitespace-nowrap tabular-nums">{fmtMoney(mayorista)}</TableCell>
-      <TableCell className="w-44">
-        <Select
-          value={(b.booster_mode ?? "off") as BoosterMode}
-          onValueChange={(v) => onChangeBooster(b.slug, v as BoosterMode)}
-        >
-          <SelectTrigger className="h-8 text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="off">Inactivo</SelectItem>
-            <SelectItem value="active">Activo</SelectItem>
-            <SelectItem value="first_24h">Activo 24h</SelectItem>
-          </SelectContent>
-        </Select>
-      </TableCell>
-      <TableCell className="w-20 text-center">
+      <TableCell className="w-14 text-center text-sm">
         <span className={hasProducts ? "text-foreground" : "text-muted-foreground"}>
           {b.products_count ?? 0}
         </span>
       </TableCell>
-      <TableCell className="w-20">
+      <TableCell className="w-16">
         <Switch
           checked={b.is_active}
           onCheckedChange={(checked) => onToggleActive(b, checked)}
