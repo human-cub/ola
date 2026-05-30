@@ -34,28 +34,40 @@ export type Database = {
       }
       brand_overrides: {
         Row: {
+          booster_mode: string
+          booster_started_at: string | null
           created_at: string
           emoji: string | null
           is_active: boolean
           slug: string
           sort_order: number
+          target_amount: number
           updated_at: string
+          virtual_score: number
         }
         Insert: {
+          booster_mode?: string
+          booster_started_at?: string | null
           created_at?: string
           emoji?: string | null
           is_active?: boolean
           slug: string
           sort_order?: number
+          target_amount?: number
           updated_at?: string
+          virtual_score?: number
         }
         Update: {
+          booster_mode?: string
+          booster_started_at?: string | null
           created_at?: string
           emoji?: string | null
           is_active?: boolean
           slug?: string
           sort_order?: number
+          target_amount?: number
           updated_at?: string
+          virtual_score?: number
         }
         Relationships: []
       }
