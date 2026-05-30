@@ -184,10 +184,8 @@ Deno.serve(async (req) => {
       })
       .filter((p) => p.sku && p.name && p.buy_price > 0);
 
-    products.sort((a, b) =>
-      a.sort_order - b.sort_order || a.name.localeCompare(b.name)
-    );
-
+    // Note: we intentionally do NOT sort here so consumers can preserve the
+    // natural DB order of variants (flavors) within a product group.
     return new Response(JSON.stringify({ products }), {
       headers: {
         ...corsHeaders,
