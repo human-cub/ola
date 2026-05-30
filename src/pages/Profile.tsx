@@ -105,7 +105,7 @@ const Profile = () => {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    window.location.href = isMayorista ? "/socios" : "/";
+    window.location.href = "/ingresar";
   };
 
   if (isLoading) {
