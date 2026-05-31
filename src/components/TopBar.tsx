@@ -51,22 +51,20 @@ export const TopBar = () => {
             className={`bg-primary text-primary-foreground transition-all duration-300 ease-in-out origin-top ${isVisible ? "translate-y-0 max-h-[48px] opacity-100" : "-translate-y-full max-h-0 opacity-0"
                 }`}
         >
-            <div className="container mx-auto px-4 py-2 flex justify-center items-center w-full h-[48px] overflow-hidden">
-                <div className="flex items-center gap-4">
-                    <p
-                        key={messageIndex}
-                        className="text-xs sm:text-sm font-medium uppercase tracking-wide text-center animate-fade-in"
-                    >
-                        {MESSAGES[messageIndex]}
-                    </p>
-                    <button
-                        onClick={handleClose}
-                        className="text-white hover:text-white/70 transition-colors flex-shrink-0 flex items-center justify-center"
-                        aria-label="Cerrar"
-                    >
-                        <span className="text-2xl leading-none">&times;</span>
-                    </button>
-                </div>
+            <div className="container mx-auto px-4 py-2 relative flex justify-center items-center w-full h-[48px] overflow-hidden">
+                <p
+                    key={messageIndex}
+                    className="text-xs sm:text-sm font-medium uppercase tracking-wide text-center animate-fade-in"
+                >
+                    {MESSAGES[messageIndex]}
+                </p>
+                <button
+                    onClick={handleClose}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:text-white/70 transition-colors flex-shrink-0 flex items-center justify-center"
+                    aria-label="Cerrar"
+                >
+                    <span className="text-2xl leading-none">&times;</span>
+                </button>
             </div>
         </div>
     );
