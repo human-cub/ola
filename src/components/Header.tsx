@@ -68,7 +68,7 @@ export const Header = ({ isVisible }: HeaderProps) => {
         }`}
     >
       <TopBar />
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+      <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <BurgerMenu />
           <div
@@ -86,7 +86,7 @@ export const Header = ({ isVisible }: HeaderProps) => {
 
         <form
           onSubmit={(e) => { e.preventDefault(); submitSearch(searchValue); }}
-          className="flex-1 max-w-md mx-2 sm:mx-3"
+          className="hidden sm:block flex-1 max-w-md mx-2 sm:mx-3"
         >
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -155,6 +155,21 @@ export const Header = ({ isVisible }: HeaderProps) => {
           </Link>
         </div>
       </div>
+      <form
+        onSubmit={(e) => { e.preventDefault(); submitSearch(searchValue); }}
+        className="sm:hidden container mx-auto px-4 pb-2"
+      >
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
+            placeholder="Buscar productos…"
+            className="pl-9 h-9 rounded-full bg-muted/40"
+            aria-label="Buscar productos"
+          />
+        </div>
+      </form>
     </header>
   );
 };
