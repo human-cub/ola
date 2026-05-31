@@ -19,8 +19,8 @@ export const BrandCollectiveCarousel = () => {
         </h2>
         <div className="w-20 h-1 bg-gradient-primary mx-auto rounded-full mt-4" />
       </div>
-      <div className="relative overflow-hidden group">
-        <div className="flex w-max gap-4 animate-marquee group-hover:[animation-play-state:paused]">
+      <div className="relative overflow-hidden group py-3">
+        <div className="flex w-max gap-4 animate-marquee group-hover:[animation-play-state:paused] px-1">
           {loop.map((b, i) => (
             <BrandMarqueeCard key={`${b.slug}-${i}`} slug={b.slug} name={b.name} logoUrl={b.logo_url} emoji={b.emoji} />
           ))}

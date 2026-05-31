@@ -23,9 +23,9 @@ export const CatalogProductCard = ({
   return (
     <Link
       to={`/v2/p/${urlSlug}`}
-      className="group bg-card rounded-xl border overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 flex flex-col"
+      className="group bg-card rounded-xl border overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 flex flex-col h-full"
     >
-      <div className="aspect-square bg-muted/30 p-4 flex items-center justify-center">
+      <div className="aspect-square bg-muted/30 p-4 flex items-center justify-center shrink-0">
         <img
           src={image || "/placeholder.svg"}
           alt={name}
@@ -36,22 +36,20 @@ export const CatalogProductCard = ({
           height={400}
         />
       </div>
-      <div className="p-4 space-y-1">
+      <div className="p-4 space-y-1 flex flex-col flex-1">
         {brandName && (
           <p className="text-[10px] uppercase tracking-wider text-primary font-semibold">
             {brandName}
           </p>
         )}
-        <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors">
+        <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors min-h-[2.5rem]">
           {name}
           {size && <span className="ml-1">{size}</span>}
         </h3>
-        <div className="pt-1">
-          {priceRetailDisplay && priceRetailDisplay > priceT3 ? (
-            <p className="text-xs text-muted-foreground/70 line-through leading-tight">
-              {formatPrice(priceRetailDisplay)}
-            </p>
-          ) : null}
+        <div className="pt-1 mt-auto">
+          <p className="text-xs text-muted-foreground/70 line-through leading-tight min-h-[1rem]">
+            {priceRetailDisplay && priceRetailDisplay > priceT3 ? formatPrice(priceRetailDisplay) : "\u00A0"}
+          </p>
           <p className="text-lg font-bold text-primary leading-tight">{formatPrice(priceT3)}</p>
           <p className="text-[10px] text-muted-foreground">(Súper-Precio)</p>
         </div>
