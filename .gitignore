@@ -29,3 +29,4 @@ dist-ssr
 .agents
 
 *.mp4
+config.bat

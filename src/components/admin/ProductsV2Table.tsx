@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { ChevronDown, ChevronRight, Loader2 } from "lucide-react";
+import { ChevronDown, ChevronRight, Loader2, RefreshCw, Snowflake } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSociosProducts, type SociosProduct } from "@/socios/hooks/useSociosProducts";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useBrands } from "@/hooks/useBrands";
 import { useCategories } from "@/hooks/useCategories";
 import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -37,6 +38,36 @@ const fetchOverrides = async (): Promise<Record<string, boolean>> => {
   return map;
 };
 
+interface WeeklyPriceSet {
+  retail: number;
+  t1: number;
+  t2: number;
+  t3: number;
+  t4: number;
+}
+
+interface SnapshotRow {
+  sku: string;
+  current_prices: WeeklyPriceSet | null;
+  this_week_prices: WeeklyPriceSet | null;
+  last_week_prices: WeeklyPriceSet | null;
+  current_updated_at: string | null;
+  snapshotted_at: string | null;
+}
+
+const fetchSnapshots = async (): Promise<Record<string, SnapshotRow>> => {
+  const { data, error } = await supabase
+    .from("sku_price_snapshots")
+    .select("sku, current_prices, this_week_prices, last_week_prices, current_updated_at, snapshotted_at");
+  if (error) throw error;
+  const map: Record<string, SnapshotRow> = {};
+  for (const r of ((data ?? []) as unknown) as SnapshotRow[]) map[r.sku] = r;
+  return map;
+};
+
+const fmt = (n: number | undefined) =>
+  typeof n === "number" && n > 0 ? `$${Math.round(n).toLocaleString("es-AR")}` : "—";
+
 const ProductsV2Table = () => {
   const qc = useQueryClient();
   const { data: products = [], isLoading } = useQuery({
@@ -47,11 +78,47 @@ const ProductsV2Table = () => {
     queryKey: ["admin", "socios-overrides"],
     queryFn: fetchOverrides,
   });
+  const { data: snapshots = {} } = useQuery({
+    queryKey: ["admin", "sku-price-snapshots"],
+    queryFn: fetchSnapshots,
+  });
   const { data: brands = [] } = useBrands({ includeInactive: true });
   const { data: categories = [] } = useCategories({ includeInactive: true });
 
   const [sortMode, setSortMode] = useState<SortMode>("brand");
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [syncing, setSyncing] = useState(false);
+  const [freezing, setFreezing] = useState(false);
+
+  const runSync = async () => {
+    setSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("sync-sku-prices");
+      if (error) throw error;
+      toast.success(`Precios actuales actualizados (${(data as any)?.upserted ?? 0} SKUs)`);
+      qc.invalidateQueries({ queryKey: ["admin", "sku-price-snapshots"] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : String(e));
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const runFreeze = async () => {
+    if (!confirm("¿Fijar precios actuales como precios de esta semana? Los precios de esta semana pasarán a la semana anterior.")) return;
+    setFreezing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("freeze-weekly-prices");
+      if (error) throw error;
+      toast.success(`Precios fijados para la nueva semana (${(data as any)?.frozen ?? 0} SKUs)`);
+      qc.invalidateQueries({ queryKey: ["admin", "sku-price-snapshots"] });
+      qc.invalidateQueries({ queryKey: ["catalog-products"] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : String(e));
+    } finally {
+      setFreezing(false);
+    }
+  };
 
   const isActive = (sku: string) => overrides[sku] !== false; // default true
 
@@ -148,7 +215,25 @@ const ProductsV2Table = () => {
             </a>
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={runSync}
+            disabled={syncing}
+          >
+            {syncing ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-1" />}
+            Sync precios actuales
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={runFreeze}
+            disabled={freezing}
+          >
+            {freezing ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Snowflake className="w-4 h-4 mr-1" />}
+            Fijar semana
+          </Button>
           <span className="text-sm text-muted-foreground">Agrupar por:</span>
           <Select value={sortMode} onValueChange={(v) => setSortMode(v as SortMode)}>
             <SelectTrigger className="w-[160px]">
@@ -197,6 +282,10 @@ const ProductsV2Table = () => {
                       const img = rawFirst.includes("|")
                         ? rawFirst.split("|")[0]
                         : rawFirst;
+                      const snap = snapshots[p.sku];
+                      const last = snap?.last_week_prices;
+                      const thisW = snap?.this_week_prices;
+                      const current = snap?.current_prices;
                       return (
                         <div
                           key={p.sku}
@@ -220,8 +309,19 @@ const ProductsV2Table = () => {
                               {p.flavor ? ` · ${p.flavor}` : ""}
                             </div>
                           </div>
-                          <div className="text-xs text-muted-foreground hidden sm:block w-32 text-right">
-                            ${p.buy_price.toLocaleString("es-AR")}
+                          <div className="hidden md:grid grid-cols-3 gap-3 text-xs text-right shrink-0">
+                            <div>
+                              <div className="text-[10px] uppercase text-muted-foreground">Anterior</div>
+                              <div>{fmt(last?.retail)} → {fmt(last?.t4)}</div>
+                            </div>
+                            <div>
+                              <div className="text-[10px] uppercase text-muted-foreground">Esta semana</div>
+                              <div>{fmt(thisW?.retail)} → {fmt(thisW?.t4)}</div>
+                            </div>
+                            <div>
+                              <div className="text-[10px] uppercase text-muted-foreground">Actual</div>
+                              <div>{fmt(current?.retail)} → {fmt(current?.t4)}</div>
+                            </div>
                           </div>
                           <div className="flex items-center gap-2">
                             <span className="text-xs text-muted-foreground hidden sm:inline">
