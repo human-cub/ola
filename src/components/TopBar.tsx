@@ -2,9 +2,15 @@ import { useState, useEffect } from "react";
 
 const TOP_BAR_HEIGHT = 48;
 
+const MESSAGES = [
+  "ENVÍO GRATIS EN CABA!",
+  "ENTREGA EL MISMO DÍA EN CABA Y GBA SI PEDÍS ANTES DE LAS 14:00 HS",
+];
+
 export const TopBar = () => {
     const [isVisible, setIsVisible] = useState(true);
     const [isRendered, setIsRendered] = useState(true);
+    const [messageIndex, setMessageIndex] = useState(0);
 
     useEffect(() => {
         const isClosed = localStorage.getItem("topBarClosed");
@@ -21,6 +27,14 @@ export const TopBar = () => {
             document.documentElement.style.paddingTop = "0px";
         };
     }, [isVisible]);
+
+    useEffect(() => {
+        if (!isRendered) return;
+        const interval = setInterval(() => {
+            setMessageIndex((prev) => (prev + 1) % MESSAGES.length);
+        }, 6000);
+        return () => clearInterval(interval);
+    }, [isRendered]);
 
     const handleClose = () => {
         setIsVisible(false);
@@ -39,8 +53,11 @@ export const TopBar = () => {
         >
             <div className="container mx-auto px-4 py-2 flex justify-center items-center w-full h-[48px] overflow-hidden">
                 <div className="flex items-center gap-4">
-                    <p className="text-xs sm:text-sm font-medium uppercase tracking-wide text-center">
-                        ENTREGA EL MISMO DÍA EN CABA Y GBA SI PEDÍS ANTES DE LAS 14:00 HS
+                    <p
+                        key={messageIndex}
+                        className="text-xs sm:text-sm font-medium uppercase tracking-wide text-center animate-fade-in"
+                    >
+                        {MESSAGES[messageIndex]}
                     </p>
                     <button
                         onClick={handleClose}
