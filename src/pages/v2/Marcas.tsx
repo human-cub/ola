@@ -6,7 +6,7 @@ import { Footer } from "@/components/Footer";
 import { Spinner } from "@/components/ui/spinner";
 import { useScrollHeader } from "@/hooks/useScrollHeader";
 import { useBrands } from "@/hooks/useBrands";
-import { BrandProgressBar } from "@/components/BrandProgressBar";
+import { BrandProgressBar, useBrandProgress } from "@/components/BrandProgressBar";
 
 const MarcasV2 = () => {
   const headerVisible = useScrollHeader();
@@ -34,29 +34,13 @@ const MarcasV2 = () => {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto">
               {sorted.map((b) => (
-                <Link
+                <BrandIndexCard
                   key={b.slug}
-                  to={`/v2/marcas/${b.slug}`}
-                  className="group bg-card rounded-xl border p-4 hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 flex flex-col gap-3"
-                >
-                  <div className="flex items-center gap-3 h-16">
-                    {b.logo_url ? (
-                      <img
-                        src={b.logo_url}
-                        alt={`Logo ${b.name}`}
-                        className="h-12 w-auto object-contain"
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    ) : (
-                      <span className="text-2xl">{b.emoji || "🏷️"}</span>
-                    )}
-                    <span className="font-semibold text-foreground group-hover:text-primary transition-colors">
-                      {b.name}
-                    </span>
-                  </div>
-                  <BrandProgressBar brandSlug={b.slug} />
-                </Link>
+                  slug={b.slug}
+                  name={b.name}
+                  logoUrl={b.logo_url}
+                  emoji={b.emoji}
+                />
               ))}
             </div>
           )}
@@ -68,3 +52,37 @@ const MarcasV2 = () => {
 };
 
 export default MarcasV2;
+
+const BrandIndexCard = ({
+  slug,
+  name,
+  logoUrl,
+  emoji,
+}: {
+  slug: string;
+  name: string;
+  logoUrl?: string | null;
+  emoji?: string | null;
+}) => {
+  const { reached } = useBrandProgress(slug);
+  return (
+    <Link
+      to={`/v2/marcas/${slug}`}
+      className={`group bg-card rounded-xl border p-4 hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 flex flex-col gap-3 ${
+        reached ? "ring-2 ring-primary border-primary shadow-md" : ""
+      }`}
+    >
+      <div className="flex items-center gap-3 h-16">
+        {logoUrl ? (
+          <img src={logoUrl} alt={`Logo ${name}`} className="h-12 w-auto object-contain" loading="lazy" decoding="async" />
+        ) : (
+          <span className="text-2xl">{emoji || "🏷️"}</span>
+        )}
+        <span className="font-semibold text-foreground group-hover:text-primary transition-colors">
+          {name}
+        </span>
+      </div>
+      <BrandProgressBar brandSlug={slug} />
+    </Link>
+  );
+};
