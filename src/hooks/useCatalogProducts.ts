@@ -84,16 +84,52 @@ const fetchInactiveBrandSlugs = async (): Promise<Set<string>> => {
   );
 };
 
+interface WeeklyPriceSet {
+  retail: number;
+  t1: number;
+  t2: number;
+  t3: number;
+  t4: number;
+}
+
+const fetchThisWeekPrices = async (): Promise<Map<string, WeeklyPriceSet>> => {
+  const { data, error } = await supabase
+    .from("sku_price_snapshots")
+    .select("sku, this_week_prices")
+    .not("this_week_prices", "is", null);
+  if (error) throw error;
+  const map = new Map<string, WeeklyPriceSet>();
+  for (const r of ((data ?? []) as unknown) as Array<{
+    sku: string;
+    this_week_prices: WeeklyPriceSet | null;
+  }>) {
+    if (r.this_week_prices) map.set(r.sku, r.this_week_prices);
+  }
+  return map;
+};
+
 const groupByUrlSlug = (
   rows: RawExternalProduct[],
   inactiveBrandSlugs: Set<string>,
+  weeklyPrices: Map<string, WeeklyPriceSet>,
 ): CatalogProduct[] => {
   const groups = new Map<string, RawExternalProduct[]>();
   for (const r of rows) {
     if (!r.url_slug) continue;
     if (r.brand_slug && inactiveBrandSlugs.has(r.brand_slug)) continue;
+    // Hide SKUs that have no frozen "this week" snapshot yet (e.g. brand-new
+    // products added mid-week). They will appear after the next Monday freeze.
+    const wk = weeklyPrices.get(r.sku);
+    if (!wk) continue;
     const arr = groups.get(r.url_slug) ?? [];
-    arr.push(r);
+    arr.push({
+      ...r,
+      price_retail_display: wk.retail || r.price_retail_display,
+      price_t1: wk.t1 || r.price_t1,
+      price_t2: wk.t2 || r.price_t2,
+      price_t3: wk.t3 || r.price_t3,
+      price_t4: wk.t4 || r.price_t4,
+    });
     groups.set(r.url_slug, arr);
   }
 
@@ -160,11 +196,12 @@ export const useCatalogProducts = () => {
   const query = useQuery({
     queryKey: ["catalog-products", "v2"],
     queryFn: async () => {
-      const [rows, inactive] = await Promise.all([
+      const [rows, inactive, weekly] = await Promise.all([
         fetchExternal(),
         fetchInactiveBrandSlugs(),
+        fetchThisWeekPrices(),
       ]);
-      return groupByUrlSlug(rows, inactive);
+      return groupByUrlSlug(rows, inactive, weekly);
     },
     staleTime: 1000 * 60 * 5,
   });
