@@ -539,6 +539,39 @@ export type Database = {
         }
         Relationships: []
       }
+      sku_price_snapshots: {
+        Row: {
+          created_at: string
+          current_prices: Json | null
+          current_updated_at: string | null
+          last_week_prices: Json | null
+          sku: string
+          snapshotted_at: string | null
+          this_week_prices: Json | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_prices?: Json | null
+          current_updated_at?: string | null
+          last_week_prices?: Json | null
+          sku: string
+          snapshotted_at?: string | null
+          this_week_prices?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_prices?: Json | null
+          current_updated_at?: string | null
+          last_week_prices?: Json | null
+          sku?: string
+          snapshotted_at?: string | null
+          this_week_prices?: Json | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       socios_product_overrides: {
         Row: {
           created_at: string
