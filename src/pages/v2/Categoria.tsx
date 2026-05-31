@@ -1,13 +1,13 @@
 import { useEffect, useMemo } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { Footer } from "@/components/Footer";
 import { Spinner } from "@/components/ui/spinner";
 import { useScrollHeader } from "@/hooks/useScrollHeader";
-import { formatPrice } from "@/lib/formatting";
 import { useCategories } from "@/hooks/useCategories";
 import { useCatalogProducts } from "@/hooks/useCatalogProducts";
+import { CatalogProductCard } from "@/components/v2/CatalogProductCard";
 
 const DEFAULT_TITLE = "Ola! - Suplementos Deportivos | Precio Mayorista en Argentina";
 const DEFAULT_DESCRIPTION =
@@ -74,38 +74,16 @@ const CategoriaV2 = () => {
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {filtered.map((p) => (
-                <Link
+                <CatalogProductCard
                   key={p.urlSlug}
-                  to={`/v2/p/${p.urlSlug}`}
-                  className="group bg-card rounded-xl border overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
-                >
-                  <div className="aspect-square bg-muted/30 p-4 flex items-center justify-center">
-                    <img
-                      src={p.images[0] || "/placeholder.svg"}
-                      alt={p.name}
-                      className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
-                      loading="lazy"
-                      decoding="async"
-                      width={400}
-                      height={400}
-                    />
-                  </div>
-                  <div className="p-4 space-y-2">
-                    <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors">
-                      {p.name}
-                    </h3>
-                    {p.size && <p className="text-xs text-muted-foreground">{p.size}</p>}
-                    <div className="space-y-0.5">
-                      {p.priceRetailDisplay > p.priceT3 && (
-                        <p className="text-sm text-muted-foreground/70 line-through">
-                          {formatPrice(p.priceRetailDisplay)}
-                        </p>
-                      )}
-                      <p className="text-lg font-bold text-primary">{formatPrice(p.priceT3)}</p>
-                      <p className="text-xs text-muted-foreground">(Súper-Precio)</p>
-                    </div>
-                  </div>
-                </Link>
+                  urlSlug={p.urlSlug}
+                  name={p.name}
+                  size={p.size}
+                  brandName={p.brandName}
+                  image={p.images[0]}
+                  priceRetailDisplay={p.priceRetailDisplay}
+                  priceT3={p.priceT3}
+                />
               ))}
             </div>
           )}

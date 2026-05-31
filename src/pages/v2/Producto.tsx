@@ -14,7 +14,7 @@ import {
   type CatalogVariant,
 } from "@/hooks/useCatalogProducts";
 import { useCategories } from "@/hooks/useCategories";
-import { formatPrice } from "@/lib/formatting";
+import { CatalogProductCard } from "@/components/v2/CatalogProductCard";
 
 const DEFAULT_TITLE = "Ola! - Suplementos Deportivos | Precio Mayorista en Argentina";
 const DEFAULT_DESCRIPTION =
@@ -237,36 +237,16 @@ const RelatedV2Products = ({
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {items.map((p) => (
-          <Link
+          <CatalogProductCard
             key={p.urlSlug}
-            to={`/v2/p/${p.urlSlug}`}
-            className="group bg-card rounded-xl border overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
-          >
-            <div className="aspect-square bg-muted/30 p-4 flex items-center justify-center">
-              <img
-                src={p.images[0] || "/placeholder.svg"}
-                alt={p.name}
-                className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
-                loading="lazy"
-                decoding="async"
-                width={400}
-                height={400}
-              />
-            </div>
-            <div className="p-4 space-y-1">
-              {p.brandName && (
-                <p className="text-[10px] uppercase tracking-wider text-primary font-semibold">
-                  {p.brandName}
-                </p>
-              )}
-              <h4 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors">
-                {p.name}
-              </h4>
-              {p.size && <p className="text-xs text-blue-500 font-medium">{p.size}</p>}
-              <p className="text-lg font-bold text-primary pt-1">{formatPrice(p.priceT3)}</p>
-              <p className="text-[10px] text-muted-foreground">(Súper-Precio)</p>
-            </div>
-          </Link>
+            urlSlug={p.urlSlug}
+            name={p.name}
+            size={p.size}
+            brandName={p.brandName}
+            image={p.images[0]}
+            priceRetailDisplay={p.priceRetailDisplay}
+            priceT3={p.priceT3}
+          />
         ))}
       </div>
     </section>

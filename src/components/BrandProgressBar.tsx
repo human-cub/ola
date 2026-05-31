@@ -12,11 +12,7 @@ interface Props {
 const formatARS = (n: number) =>
   `$${new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 }).format(n)}`;
 
-export const BrandProgressBar = ({
-  brandSlug,
-  showLabels = true,
-  heightClass = "h-2.5",
-}: Props) => {
+export const useBrandProgress = (brandSlug: string) => {
   const [stats, setStats] = useState<{ collected: number; target: number }>({
     collected: 0,
     target: 0,
@@ -52,8 +48,19 @@ export const BrandProgressBar = ({
     };
   }, [brandSlug]);
 
-  const pct =
-    stats.target > 0 ? Math.min(100, Math.max(0, (stats.collected / stats.target) * 100)) : 0;
+  const { collected: rawCollected, target } = stats;
+  const reached = target > 0 && rawCollected >= target;
+  const collectedCapped = target > 0 ? Math.min(rawCollected, target) : rawCollected;
+  const pct = target > 0 ? Math.min(100, Math.max(0, (collectedCapped / target) * 100)) : 0;
+  return { collected: collectedCapped, target, pct, reached };
+};
+
+export const BrandProgressBar = ({
+  brandSlug,
+  showLabels = true,
+  heightClass = "h-2.5",
+}: Props) => {
+  const { collected, target, pct, reached } = useBrandProgress(brandSlug);
 
   const fillStyle: CSSProperties = {
     width: `${pct}%`,
@@ -61,19 +68,38 @@ export const BrandProgressBar = ({
       "linear-gradient(90deg, hsl(36 100% 50%), hsl(var(--group-buy-accent)), hsl(48 100% 60%))",
   };
 
+  // Position the moving collected label so it tracks the fill end but stays
+  // visible at both extremes (clamp 6% .. 94%).
+  const labelLeft = Math.min(94, Math.max(6, pct));
+
   return (
     <div className="w-full">
       {showLabels && (
-        <div className="flex justify-start mb-1 text-xs font-bold min-h-[1rem]">
-          {stats.collected > 0 && <span className="text-foreground">{formatARS(stats.collected)}</span>}
+        <div className="relative mb-1 text-xs font-bold min-h-[1rem]">
+          {reached ? (
+            <span className="block text-center text-primary">¡Meta alcanzada! 🎉</span>
+          ) : (
+            collected > 0 && (
+              <span
+                className="absolute -translate-x-1/2 text-foreground whitespace-nowrap transition-all duration-1000"
+                style={{ left: `${labelLeft}%` }}
+              >
+                {formatARS(collected)}
+              </span>
+            )
+          )}
         </div>
       )}
-      <div className={`relative ${heightClass} bg-muted rounded-full overflow-hidden shadow-inner`}>
+      <div
+        className={`relative ${heightClass} bg-muted rounded-full overflow-hidden shadow-inner ${
+          reached ? "ring-1 ring-primary/60" : ""
+        }`}
+      >
         <div className="absolute top-0 left-0 h-full rounded-full transition-all duration-1000" style={fillStyle} />
       </div>
-      {showLabels && stats.target > 0 && (
+      {showLabels && target > 0 && !reached && (
         <div className="flex justify-end mt-1 text-xs font-bold">
-          <span className="text-muted-foreground">Meta: {formatARS(stats.target)}</span>
+          <span className="text-muted-foreground">Meta: {formatARS(target)}</span>
         </div>
       )}
     </div>
