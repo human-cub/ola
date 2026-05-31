@@ -99,7 +99,7 @@ const fetchThisWeekPrices = async (): Promise<Map<string, WeeklyPriceSet>> => {
     .not("this_week_prices", "is", null);
   if (error) throw error;
   const map = new Map<string, WeeklyPriceSet>();
-  for (const r of (data ?? []) as Array<{
+  for (const r of ((data ?? []) as unknown) as Array<{
     sku: string;
     this_week_prices: WeeklyPriceSet | null;
   }>) {

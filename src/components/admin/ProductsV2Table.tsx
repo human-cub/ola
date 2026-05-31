@@ -61,7 +61,7 @@ const fetchSnapshots = async (): Promise<Record<string, SnapshotRow>> => {
     .select("sku, current_prices, this_week_prices, last_week_prices, current_updated_at, snapshotted_at");
   if (error) throw error;
   const map: Record<string, SnapshotRow> = {};
-  for (const r of (data ?? []) as SnapshotRow[]) map[r.sku] = r;
+  for (const r of ((data ?? []) as unknown) as SnapshotRow[]) map[r.sku] = r;
   return map;
 };
 
