@@ -58,6 +58,12 @@ const DynamicProductGuard = () => {
   return <DynamicProduct />;
 };
 
+const V2Redirect = ({ to, param }: { to: string; param: string }) => {
+  const params = useParams();
+  const value = params[param];
+  return <Navigate to={value ? `${to}/${value}` : to} replace />;
+};
+
 const queryClient = new QueryClient();
 
 const App = () => {
