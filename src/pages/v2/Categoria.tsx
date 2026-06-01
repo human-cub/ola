@@ -72,7 +72,7 @@ const CategoriaV2 = () => {
               <p className="text-muted-foreground">No hay productos en esta categoría</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 auto-rows-fr items-stretch">
               {filtered.map((p) => (
                 <CatalogProductCard
                   key={p.urlSlug}
