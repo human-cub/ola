@@ -61,9 +61,10 @@ export const BurgerMenu = () => {
       ? [
           {
             name: "Marcas",
-            to: "/catalogo",
+              to: "/marcas",
             icon: Tag,
             children: brandChildren,
+              allHref: "/marcas",
             allLabel: "Todas las marcas",
           } as MenuItem,
         ]
