@@ -101,9 +101,12 @@ const App = () => {
         <ScrollToTop />
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/catalogo" element={<Catalog />} />
-          <Route path="/categoria/:category" element={<Category />} />
-          <Route path="/marca/:slug" element={<Brand />} />
+          <Route path="/catalogo" element={<Catalogo />} />
+          <Route path="/categoria/:category" element={<Categoria />} />
+          <Route path="/marcas" element={<Marcas />} />
+          <Route path="/marcas/:slug" element={<Marca />} />
+          <Route path="/marca/:slug" element={<Marca />} />
+          <Route path="/p/:urlSlug" element={<Producto />} />
           <Route path="/producto/:slug" element={<DynamicProduct />} />
           <Route path="/:slug" element={<DynamicProductGuard />} />
           <Route path="/ingresar" element={<AuthPage />} />
@@ -126,13 +129,13 @@ const App = () => {
           <Route path="/mayoristas" element={<Mayoristas />} />
           <Route path="/contacto" element={<Contacto />} />
           <Route path="/quienes-somos" element={<QuienesSomos />} />
-          {/* v2 — new catalog sourced from external DB. Will replace legacy routes on Monday. */}
-          <Route path="/v2/catalogo" element={<CatalogoV2 />} />
-          <Route path="/v2/categoria/:category" element={<CategoriaV2 />} />
-          <Route path="/v2/marcas" element={<MarcasV2 />} />
-          <Route path="/v2/marcas/:slug" element={<MarcaV2 />} />
-          <Route path="/v2/marca/:slug" element={<MarcaV2 />} />
-          <Route path="/v2/p/:urlSlug" element={<ProductoV2 />} />
+          {/* Legacy /v2/* — redirect to canonical paths */}
+          <Route path="/v2/catalogo" element={<Navigate to="/catalogo" replace />} />
+          <Route path="/v2/categoria/:category" element={<V2Redirect to="/categoria" param="category" />} />
+          <Route path="/v2/marcas" element={<Navigate to="/marcas" replace />} />
+          <Route path="/v2/marcas/:slug" element={<V2Redirect to="/marcas" param="slug" />} />
+          <Route path="/v2/marca/:slug" element={<V2Redirect to="/marca" param="slug" />} />
+          <Route path="/v2/p/:urlSlug" element={<V2Redirect to="/p" param="urlSlug" />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <FloatingWhatsApp />
