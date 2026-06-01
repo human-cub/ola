@@ -36,13 +36,13 @@ export const CatalogProductCard = ({
           height={400}
         />
       </div>
-      <div className="p-4 space-y-1 flex flex-col flex-1">
+      <div className="p-4 flex flex-col flex-1">
         {brandName && (
-          <p className="text-[10px] uppercase tracking-wider text-primary font-semibold">
+          <p className="text-[10px] uppercase tracking-wider text-primary font-semibold mb-1">
             {brandName}
           </p>
         )}
-        <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors min-h-[2.5rem]">
+        <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors min-h-[2.5rem] mb-1">
           {name}
           {size && <span className="ml-1">{size}</span>}
         </h3>

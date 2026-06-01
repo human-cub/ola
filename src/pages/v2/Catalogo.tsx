@@ -70,7 +70,7 @@ const CatalogoV2 = () => {
             searchResults.length === 0 ? (
               <p className="text-center text-muted-foreground py-12">No encontramos productos para tu búsqueda.</p>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 auto-rows-fr items-stretch">
                 {searchResults.map((p) => (
                   <CatalogProductCard
                     key={p.urlSlug}
