@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Breadcrumb } from "@/components/Breadcrumb";
@@ -10,6 +10,7 @@ import { useCatalogProducts } from "@/hooks/useCatalogProducts";
 import { useCategories } from "@/hooks/useCategories";
 import { BrandProgressBar } from "@/components/BrandProgressBar";
 import { CatalogProductCard } from "@/components/v2/CatalogProductCard";
+import { CatalogFilters, SortKey, sortProducts } from "@/components/v2/CatalogFilters";
 
 const DEFAULT_TITLE = "Ola! - Suplementos Deportivos | Precio Mayorista en Argentina";
 const DEFAULT_DESCRIPTION =
@@ -23,17 +24,32 @@ const MarcaV2 = () => {
   const { data: categories = [] } = useCategories({ includeInactive: true });
 
   const brand = useMemo(() => brands.find((b) => b.slug === slug) ?? null, [brands, slug]);
+
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [sort, setSort] = useState<SortKey>("popular");
+
+  const brandProducts = useMemo(
+    () => products.filter((p) => p.brandSlug === slug),
+    [products, slug],
+  );
+
+  const availableCategories = useMemo(() => {
+    const slugs = new Set(
+      brandProducts.map((p) => p.categorySlug).filter((s): s is string => !!s),
+    );
+    return categories
+      .filter((c) => slugs.has(c.slug))
+      .sort((a, b) => a.sort_order - b.sort_order)
+      .map((c) => ({ value: c.slug, label: c.name }));
+  }, [brandProducts, categories]);
+
   const filtered = useMemo(() => {
-    const catOrder = new Map<string, number>();
-    categories.forEach((c, i) => catOrder.set(c.slug, c.sort_order ?? i));
-    const list = products.filter((p) => p.brandSlug === slug);
-    return list.sort((a, b) => {
-      const ai = a.categorySlug ? catOrder.get(a.categorySlug) ?? 9999 : 9999;
-      const bi = b.categorySlug ? catOrder.get(b.categorySlug) ?? 9999 : 9999;
-      if (ai !== bi) return ai - bi;
-      return a.sortOrder - b.sortOrder || a.name.localeCompare(b.name);
-    });
-  }, [products, slug, categories]);
+    const list =
+      categoryFilter === "all"
+        ? brandProducts
+        : brandProducts.filter((p) => p.categorySlug === categoryFilter);
+    return sortProducts(list, sort);
+  }, [brandProducts, categoryFilter, sort]);
 
   useEffect(() => {
     if (!slug) return;
@@ -112,8 +128,17 @@ const MarcaV2 = () => {
               <p className="text-muted-foreground">No hay productos de esta marca</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 auto-rows-fr items-stretch">
-              {filtered.map((p) => (
+            <>
+              <CatalogFilters
+                sort={sort}
+                onSortChange={setSort}
+                filter={categoryFilter}
+                onFilterChange={setCategoryFilter}
+                filterLabel="Todas las categorías"
+                filterOptions={availableCategories}
+              />
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 items-start">
+                {filtered.map((p) => (
                 <CatalogProductCard
                   key={p.urlSlug}
                   urlSlug={p.urlSlug}
@@ -124,8 +149,9 @@ const MarcaV2 = () => {
                   priceRetailDisplay={p.priceRetailDisplay}
                   priceT3={p.priceT3}
                 />
-              ))}
-            </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
       </main>

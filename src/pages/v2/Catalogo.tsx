@@ -1,5 +1,5 @@
 import { Link, useSearchParams } from "react-router-dom";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { ChevronRight } from "lucide-react";
@@ -8,6 +8,7 @@ import { useScrollHeader } from "@/hooks/useScrollHeader";
 import { useCategories } from "@/hooks/useCategories";
 import { useCatalogProducts } from "@/hooks/useCatalogProducts";
 import { CatalogProductCard } from "@/components/v2/CatalogProductCard";
+import { CatalogFilters, SortKey, sortProducts } from "@/components/v2/CatalogFilters";
 
 const norm = (s: string) =>
   s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
@@ -18,6 +19,7 @@ const CatalogoV2 = () => {
   const { data: products = [] } = useCatalogProducts();
   const [searchParams] = useSearchParams();
   const q = (searchParams.get("q") ?? "").trim();
+  const [sort, setSort] = useState<SortKey>("popular");
 
   // Only show categories that have at least one active product (active brand)
   const activeCategories = useMemo(() => {
@@ -32,7 +34,7 @@ const CatalogoV2 = () => {
   const searchResults = useMemo(() => {
     if (!q) return [];
     const tokens = norm(q).split(/\s+/).filter(Boolean);
-    return products.filter((p) => {
+    const matched = products.filter((p) => {
       const cat = categories.find((c) => c.slug === p.categorySlug);
       const hay = norm(
         [
@@ -49,7 +51,8 @@ const CatalogoV2 = () => {
       );
       return tokens.every((t) => hay.includes(t));
     });
-  }, [q, products, categories]);
+    return sortProducts(matched, sort);
+  }, [q, products, categories, sort]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -70,8 +73,10 @@ const CatalogoV2 = () => {
             searchResults.length === 0 ? (
               <p className="text-center text-muted-foreground py-12">No encontramos productos para tu búsqueda.</p>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 auto-rows-fr items-stretch">
-                {searchResults.map((p) => (
+              <>
+                <CatalogFilters sort={sort} onSortChange={setSort} />
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 items-start">
+                  {searchResults.map((p) => (
                   <CatalogProductCard
                     key={p.urlSlug}
                     urlSlug={p.urlSlug}
@@ -82,8 +87,9 @@ const CatalogoV2 = () => {
                     priceRetailDisplay={p.priceRetailDisplay}
                     priceT3={p.priceT3}
                   />
-                ))}
-              </div>
+                  ))}
+                </div>
+              </>
             )
           ) : (
             <div className="max-w-md mx-auto space-y-3">

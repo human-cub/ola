@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Breadcrumb } from "@/components/Breadcrumb";
@@ -7,7 +7,9 @@ import { Spinner } from "@/components/ui/spinner";
 import { useScrollHeader } from "@/hooks/useScrollHeader";
 import { useCategories } from "@/hooks/useCategories";
 import { useCatalogProducts } from "@/hooks/useCatalogProducts";
+import { useBrands } from "@/hooks/useBrands";
 import { CatalogProductCard } from "@/components/v2/CatalogProductCard";
+import { CatalogFilters, SortKey, sortProducts } from "@/components/v2/CatalogFilters";
 
 const DEFAULT_TITLE = "Ola! - Suplementos Deportivos | Precio Mayorista en Argentina";
 const DEFAULT_DESCRIPTION =
@@ -18,16 +20,38 @@ const CategoriaV2 = () => {
   const headerVisible = useScrollHeader();
   const { data: categories = [] } = useCategories();
   const { data: products = [], isLoading } = useCatalogProducts();
+  const { data: brands = [] } = useBrands();
 
   const categoryRow = useMemo(
     () => categories.find((c) => c.slug === category) ?? null,
     [categories, category],
   );
 
-  const filtered = useMemo(
+  const categoryProducts = useMemo(
     () => products.filter((p) => p.categorySlug === category),
     [products, category],
   );
+
+  const [brandFilter, setBrandFilter] = useState<string>("all");
+  const [sort, setSort] = useState<SortKey>("popular");
+
+  const availableBrands = useMemo(() => {
+    const slugs = new Set(
+      categoryProducts.map((p) => p.brandSlug).filter((s): s is string => !!s),
+    );
+    return brands
+      .filter((b) => slugs.has(b.slug))
+      .sort((a, b) => a.sort_order - b.sort_order)
+      .map((b) => ({ value: b.slug, label: b.name }));
+  }, [categoryProducts, brands]);
+
+  const filtered = useMemo(() => {
+    const list =
+      brandFilter === "all"
+        ? categoryProducts
+        : categoryProducts.filter((p) => p.brandSlug === brandFilter);
+    return sortProducts(list, sort);
+  }, [categoryProducts, brandFilter, sort]);
 
   useEffect(() => {
     if (!category) return;
@@ -72,8 +96,17 @@ const CategoriaV2 = () => {
               <p className="text-muted-foreground">No hay productos en esta categoría</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 auto-rows-fr items-stretch">
-              {filtered.map((p) => (
+            <>
+              <CatalogFilters
+                sort={sort}
+                onSortChange={setSort}
+                filter={brandFilter}
+                onFilterChange={setBrandFilter}
+                filterLabel="Todas las marcas"
+                filterOptions={availableBrands}
+              />
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 items-start">
+                {filtered.map((p) => (
                 <CatalogProductCard
                   key={p.urlSlug}
                   urlSlug={p.urlSlug}
@@ -84,8 +117,9 @@ const CategoriaV2 = () => {
                   priceRetailDisplay={p.priceRetailDisplay}
                   priceT3={p.priceT3}
                 />
-              ))}
-            </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
       </main>
