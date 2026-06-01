@@ -147,7 +147,7 @@ const MarcaV2 = () => {
                   brandName={p.brandName}
                   image={p.images[0]}
                   priceRetailDisplay={p.priceRetailDisplay}
-                  priceT3={p.priceT3}
+                  priceT4={p.priceT4}
                 />
                 ))}
               </div>

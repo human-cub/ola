@@ -145,7 +145,7 @@ Deno.serve(async (req) => {
       .map((p) => {
         const retail = toNum(p.price_retail);
         const t4 = toNum(p.price_t4);
-        const buy = t4 > 0 ? t4 : retail;
+        const buy = t4 > 0 ? Math.max(t4 - 3000, 0) : retail;
         const discount = retail > 0 && buy < retail
           ? Math.round(((retail - buy) / retail) * 100)
           : 0;

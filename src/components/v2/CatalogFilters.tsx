@@ -72,7 +72,7 @@ export const CatalogFilters = ({
 };
 
 export const sortProducts = <
-  T extends { name: string; priceT3: number; sortOrder: number },
+  T extends { name: string; priceT4: number; sortOrder: number },
 >(
   list: T[],
   sort: SortKey,
@@ -80,9 +80,9 @@ export const sortProducts = <
   const arr = [...list];
   switch (sort) {
     case "price_asc":
-      return arr.sort((a, b) => a.priceT3 - b.priceT3 || a.name.localeCompare(b.name));
+      return arr.sort((a, b) => a.priceT4 - b.priceT4 || a.name.localeCompare(b.name));
     case "price_desc":
-      return arr.sort((a, b) => b.priceT3 - a.priceT3 || a.name.localeCompare(b.name));
+      return arr.sort((a, b) => b.priceT4 - a.priceT4 || a.name.localeCompare(b.name));
     case "alpha":
       return arr.sort((a, b) => a.name.localeCompare(b.name));
     case "popular":

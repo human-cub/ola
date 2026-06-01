@@ -165,7 +165,7 @@ export const MainProductCarousel = () => {
                                     ${product.priceRetailDisplay.toLocaleString('es-AR')}
                                   </span>
                                   <span className="text-2xl font-bold text-primary">
-                                    ${product.priceT1.toLocaleString('es-AR')}
+                                    ${product.priceT4.toLocaleString('es-AR')}
                                   </span>
                                 </div>
                                 <p className="text-sm text-muted-foreground italic">
