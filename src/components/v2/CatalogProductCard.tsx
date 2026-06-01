@@ -23,30 +23,30 @@ export const CatalogProductCard = ({
   return (
     <Link
       to={`/p/${urlSlug}`}
-      className="group bg-card rounded-xl border overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 flex flex-col h-full"
+      className="group bg-card rounded-xl border hover:shadow-lg transition-all duration-300 hover:-translate-y-1 flex flex-col p-4"
     >
-      <div className="aspect-square bg-muted/30 p-4 flex items-center justify-center shrink-0">
+      <div className="aspect-square bg-slate-50 rounded-xl overflow-hidden">
         <img
           src={image || "/placeholder.svg"}
           alt={name}
-          className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
+          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
           loading="lazy"
           decoding="async"
           width={400}
           height={400}
         />
       </div>
-      <div className="p-4 flex flex-col flex-1">
+      <div className="flex flex-col flex-1 pt-4">
         {brandName && (
           <p className="text-[10px] uppercase tracking-wider text-primary font-semibold mb-1">
             {brandName}
           </p>
         )}
-        <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors min-h-[2.5rem] mb-1">
+        <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors min-h-[2.8em] mb-1">
           {name}
           {size && <span className="ml-1">{size}</span>}
         </h3>
-        <div className="pt-1 mt-auto">
+        <div className="mt-auto pt-2">
           <p className="text-xs text-muted-foreground/70 line-through leading-tight min-h-[1rem]">
             {priceRetailDisplay && priceRetailDisplay > priceT3 ? formatPrice(priceRetailDisplay) : "\u00A0"}
           </p>
