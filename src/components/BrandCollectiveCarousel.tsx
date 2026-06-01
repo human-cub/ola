@@ -48,7 +48,7 @@ const BrandMarqueeCard = ({
   const { reached } = useBrandProgress(slug);
   return (
     <Link
-      to={`/v2/marcas/${slug}`}
+      to={`/marcas/${slug}`}
       className={`shrink-0 w-[260px] bg-card rounded-xl border p-4 hover:shadow-lg transition-all duration-300 flex flex-col gap-3 ${
         reached ? "ring-2 ring-primary border-primary shadow-md" : ""
       }`}

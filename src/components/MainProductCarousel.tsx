@@ -124,7 +124,7 @@ export const MainProductCarousel = () => {
                   {products.map((product) => (
                     <div key={product.urlSlug} className="grow-0 shrink-0 basis-[calc(100%/var(--slides))]">
                       <div className="flex justify-center px-3 h-full">
-                        <a href={`/v2/p/${product.urlSlug}`} onClick={() => amplitude.track('Product Viewed', { product_name: product.name, product_id: product.urlSlug, source: 'main_carousel' })}>
+                        <a href={`/p/${product.urlSlug}`} onClick={() => amplitude.track('Product Viewed', { product_name: product.name, product_id: product.urlSlug, source: 'main_carousel' })}>
                           <Card
                             className={cn(
                               "p-6 shadow-soft border border-1 border-transparent bg-gradient-card w-full max-w-sm cursor-pointer transition-all duration-300 ease-out h-full min-w-[280px]",
@@ -204,7 +204,7 @@ export const MainProductCarousel = () => {
 
             <div className="flex justify-center mt-6">
               <Button
-                onClick={() => navigate('/v2/catalogo')}
+                onClick={() => navigate('/catalogo')}
                 className="bg-gradient-primary hover:opacity-90 text-white font-semibold px-8 py-3 rounded-full shadow-elegant transition-all duration-300 hover:shadow-glow"
               >
                 Ver catálogo
