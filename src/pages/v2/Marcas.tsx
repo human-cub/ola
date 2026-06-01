@@ -67,7 +67,7 @@ const BrandIndexCard = ({
   const { reached } = useBrandProgress(slug);
   return (
     <Link
-      to={`/v2/marcas/${slug}`}
+      to={`/marcas/${slug}`}
       className={`group bg-card rounded-xl border p-4 hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 flex flex-col gap-3 ${
         reached ? "ring-2 ring-primary border-primary shadow-md" : ""
       }`}

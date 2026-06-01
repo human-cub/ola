@@ -73,7 +73,7 @@ const MarcaV2 = () => {
       <main className="pb-[24px] pt-[120px] sm:pt-[104px]">
         <Breadcrumb
           items={[
-            { label: "Marcas", href: "/v2/marcas" },
+            { label: "Marcas", href: "/marcas" },
             { label: brand?.name || "Marca" },
           ]}
         />

@@ -90,7 +90,7 @@ const CatalogoV2 = () => {
               {activeCategories.map((category) => (
                 <Link
                   key={category.slug}
-                  to={`/v2/categoria/${category.slug}`}
+                  to={`/categoria/${category.slug}`}
                   className="flex items-center justify-between p-4 rounded-xl bg-gradient-card shadow-soft hover:shadow-elegant transition-all duration-300 group"
                 >
                   <div className="flex items-center gap-3">

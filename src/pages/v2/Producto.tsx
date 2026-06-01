@@ -83,11 +83,11 @@ const ProductoV2 = () => {
   const category = categories.find((c) => c.slug === product.categorySlug);
   const breadcrumbItems = category
     ? [
-        { label: "Catálogo", href: "/v2/catalogo" },
-        { label: category.name, href: `/v2/categoria/${category.slug}` },
+        { label: "Catálogo", href: "/catalogo" },
+        { label: category.name, href: `/categoria/${category.slug}` },
         { label: product.name },
       ]
-    : [{ label: "Catálogo", href: "/v2/catalogo" }, { label: product.name }];
+    : [{ label: "Catálogo", href: "/catalogo" }, { label: product.name }];
 
   const flavors = product.variants
     .map((v) => v.flavor)
@@ -124,7 +124,7 @@ const ProductoV2 = () => {
               {product.brandName && (
                 product.brandSlug ? (
                   <Link
-                    to={`/v2/marcas/${product.brandSlug}`}
+                    to={`/marcas/${product.brandSlug}`}
                     className="inline-block text-xs sm:text-sm font-semibold uppercase tracking-wider text-primary hover:underline"
                   >
                     {product.brandName}

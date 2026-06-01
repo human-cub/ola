@@ -7,9 +7,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useParams } from "react-router-dom";
 import Index from "./pages/Index";
 import DynamicProduct from "./pages/DynamicProduct";
-import Category from "./pages/Category";
-import Catalog from "./pages/Catalog";
-import Brand from "./pages/Brand";
 import AuthPage from "./pages/AuthPage";
 import Profile from "./pages/Profile";
 import ReviewEmail from "./pages/ReviewEmail";
@@ -28,11 +25,12 @@ import Mayoristas from "./pages/Mayoristas";
 import Contacto from "./pages/Contacto";
 import QuienesSomos from "./pages/QuienesSomos";
 import NotFound from "./pages/NotFound";
-import CatalogoV2 from "./pages/v2/Catalogo";
-import CategoriaV2 from "./pages/v2/Categoria";
-import MarcaV2 from "./pages/v2/Marca";
-import MarcasV2 from "./pages/v2/Marcas";
-import ProductoV2 from "./pages/v2/Producto";
+import Catalogo from "./pages/v2/Catalogo";
+import Categoria from "./pages/v2/Categoria";
+import Marca from "./pages/v2/Marca";
+import Marcas from "./pages/v2/Marcas";
+import Producto from "./pages/v2/Producto";
+import { Navigate } from "react-router-dom";
 import { FloatingWhatsApp } from "./components/FloatingWhatsApp";
 import { ScrollToTop } from "./components/ScrollToTop";
 import { CartProvider } from "./contexts/CartContext";
@@ -58,6 +56,12 @@ const DynamicProductGuard = () => {
   }
 
   return <DynamicProduct />;
+};
+
+const V2Redirect = ({ to, param }: { to: string; param: string }) => {
+  const params = useParams();
+  const value = params[param];
+  return <Navigate to={value ? `${to}/${value}` : to} replace />;
 };
 
 const queryClient = new QueryClient();
@@ -103,9 +107,12 @@ const App = () => {
         <ScrollToTop />
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/catalogo" element={<Catalog />} />
-          <Route path="/categoria/:category" element={<Category />} />
-          <Route path="/marca/:slug" element={<Brand />} />
+          <Route path="/catalogo" element={<Catalogo />} />
+          <Route path="/categoria/:category" element={<Categoria />} />
+          <Route path="/marcas" element={<Marcas />} />
+          <Route path="/marcas/:slug" element={<Marca />} />
+          <Route path="/marca/:slug" element={<Marca />} />
+          <Route path="/p/:urlSlug" element={<Producto />} />
           <Route path="/producto/:slug" element={<DynamicProduct />} />
           <Route path="/:slug" element={<DynamicProductGuard />} />
           <Route path="/ingresar" element={<AuthPage />} />
@@ -128,13 +135,13 @@ const App = () => {
           <Route path="/mayoristas" element={<Mayoristas />} />
           <Route path="/contacto" element={<Contacto />} />
           <Route path="/quienes-somos" element={<QuienesSomos />} />
-          {/* v2 — new catalog sourced from external DB. Will replace legacy routes on Monday. */}
-          <Route path="/v2/catalogo" element={<CatalogoV2 />} />
-          <Route path="/v2/categoria/:category" element={<CategoriaV2 />} />
-          <Route path="/v2/marcas" element={<MarcasV2 />} />
-          <Route path="/v2/marcas/:slug" element={<MarcaV2 />} />
-          <Route path="/v2/marca/:slug" element={<MarcaV2 />} />
-          <Route path="/v2/p/:urlSlug" element={<ProductoV2 />} />
+          {/* Legacy /v2/* — redirect to canonical paths */}
+          <Route path="/v2/catalogo" element={<Navigate to="/catalogo" replace />} />
+          <Route path="/v2/categoria/:category" element={<V2Redirect to="/categoria" param="category" />} />
+          <Route path="/v2/marcas" element={<Navigate to="/marcas" replace />} />
+          <Route path="/v2/marcas/:slug" element={<V2Redirect to="/marcas" param="slug" />} />
+          <Route path="/v2/marca/:slug" element={<V2Redirect to="/marca" param="slug" />} />
+          <Route path="/v2/p/:urlSlug" element={<V2Redirect to="/p" param="urlSlug" />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <FloatingWhatsApp />

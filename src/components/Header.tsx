@@ -22,13 +22,13 @@ export const Header = ({ isVisible }: HeaderProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const initialQ =
-    location.pathname === "/v2/catalogo"
+    location.pathname === "/catalogo"
       ? new URLSearchParams(location.search).get("q") ?? ""
       : "";
   const [searchValue, setSearchValue] = useState(initialQ);
 
   useEffect(() => {
-    if (location.pathname === "/v2/catalogo") {
+    if (location.pathname === "/catalogo") {
       const q = new URLSearchParams(location.search).get("q") ?? "";
       setSearchValue(q);
     }
@@ -58,7 +58,7 @@ export const Header = ({ isVisible }: HeaderProps) => {
 
   const submitSearch = (value: string) => {
     const trimmed = value.trim();
-    const target = trimmed ? `/v2/catalogo?q=${encodeURIComponent(trimmed)}` : "/v2/catalogo";
+    const target = trimmed ? `/catalogo?q=${encodeURIComponent(trimmed)}` : "/catalogo";
     navigate(target);
   };
 
