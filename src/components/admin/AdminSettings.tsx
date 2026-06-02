@@ -14,6 +14,7 @@ export const AdminSettings = () => {
   const [minOrder, setMinOrder] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [forcingPrices, setForcingPrices] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -49,6 +50,25 @@ export const AdminSettings = () => {
     }
   };
 
+  const handleForceUpdatePrices = async () => {
+    if (!confirm("¿Forzar actualización de precios de esta semana a los actuales? Esto afecta a todos los clientes inmediatamente.")) {
+      return;
+    }
+    setForcingPrices(true);
+    try {
+      const { error: syncErr } = await supabase.functions.invoke("sync-sku-prices");
+      if (syncErr) throw syncErr;
+      const { error: freezeErr } = await supabase.functions.invoke("freeze-weekly-prices");
+      if (freezeErr) throw freezeErr;
+      toast.success("Precios de la semana actualizados");
+    } catch (err) {
+      console.error(err);
+      toast.error("Error al actualizar precios");
+    } finally {
+      setForcingPrices(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center py-8">
@@ -59,6 +79,20 @@ export const AdminSettings = () => {
 
   return (
     <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Precios de la semana</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3 max-w-md">
+          <p className="text-sm text-muted-foreground">
+            Normalmente los precios de la semana actual se congelan el domingo a las 23:59 (ART) y no se actualizan hasta el próximo ciclo. Usá este botón para forzar la actualización a los precios actuales del distribuidor ahora mismo.
+          </p>
+          <Button onClick={handleForceUpdatePrices} disabled={forcingPrices} variant="destructive">
+            {forcingPrices ? "Actualizando..." : "Forzar actualización de precios"}
+          </Button>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>Configuración Mayorista</CardTitle>
