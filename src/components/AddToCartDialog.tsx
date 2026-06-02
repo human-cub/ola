@@ -43,6 +43,9 @@ interface AddToCartDialogProps {
   currentParticipants?: number;
   onWaitingListAdded?: () => Promise<void> | void;
   preselectedFlavor?: string | null;
+  brandSlug?: string | null;
+  productLink?: string | null;
+  isBrandGoalReached?: boolean;
 }
 
 export const AddToCartDialog = ({
@@ -57,6 +60,9 @@ export const AddToCartDialog = ({
   currentParticipants = 0,
   onWaitingListAdded,
   preselectedFlavor = null,
+  brandSlug = null,
+  productLink = null,
+  isBrandGoalReached = false,
 }: AddToCartDialogProps) => {
   const { addToCart, addToWaitingList } = useCart();
   const navigate = useNavigate();
@@ -84,26 +90,12 @@ export const AddToCartDialog = ({
     if (prices.length === 0) return 0;
     
     const buyNowPrice = prices.length > 1 ? prices[1].price : prices[0].price;
-    const secondTierThreshold = prices.length > 1 ? prices[1].people : 0;
     
     if (isWaitingList) {
-      // For waiting list, price changes based on participants + user's quantity
-      const totalParticipants = currentParticipants + qty;
-      
-      // Before reaching 2nd tier threshold, use 2nd tier price (buy now price)
-      if (totalParticipants < secondTierThreshold) {
-        return buyNowPrice;
-      }
-      
-      // After 2nd tier, calculate based on tiers but never exceed buyNowPrice
-      for (let i = prices.length - 1; i >= 0; i--) {
-        if (totalParticipants >= prices[i].people) {
-          return Math.min(prices[i].price, buyNowPrice);
-        }
-      }
-      return buyNowPrice;
+      return isBrandGoalReached
+        ? (prices[3]?.price ?? prices[prices.length - 1]?.price ?? buyNowPrice)
+        : (prices[2]?.price ?? buyNowPrice);
     } else {
-      // For immediate purchase, always use second tier price
       return buyNowPrice;
     }
   };
@@ -145,6 +137,11 @@ export const AddToCartDialog = ({
               quantity,
               current_price_per_unit: pricePerUnit,
               product_image: productImage,
+              brand_slug: brandSlug,
+              retail_price_per_unit: prices[0]?.price ?? null,
+              guaranteed_price_per_unit: prices[2]?.price ?? pricePerUnit,
+              super_price_per_unit: prices[3]?.price ?? prices[prices.length - 1]?.price ?? null,
+              product_link: productLink,
             },
           });
         } else {
@@ -158,6 +155,7 @@ export const AddToCartDialog = ({
               quantity,
               price_per_unit: pricePerUnit,
               product_image: productImage,
+              product_link: productLink,
             },
           });
         }
@@ -175,6 +173,11 @@ export const AddToCartDialog = ({
           quantity,
           current_price_per_unit: pricePerUnit,
           product_image: productImage,
+          brand_slug: brandSlug,
+          retail_price_per_unit: prices[0]?.price ?? null,
+          guaranteed_price_per_unit: prices[2]?.price ?? pricePerUnit,
+          super_price_per_unit: prices[3]?.price ?? prices[prices.length - 1]?.price ?? null,
+          product_link: productLink,
         });
         await onWaitingListAdded?.();
       } else {
@@ -185,6 +188,7 @@ export const AddToCartDialog = ({
           quantity,
           price_per_unit: pricePerUnit,
           product_image: productImage,
+          product_link: productLink,
         });
       }
 

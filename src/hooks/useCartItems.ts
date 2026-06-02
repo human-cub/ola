@@ -23,15 +23,19 @@ export const useCartItems = (
 
       if (error) throw error;
 
-      return (data || []).map(item => ({
-        id: item.id,
-        product_id: item.product_id,
-        product_name: item.product_name,
-        flavor: item.flavor,
-        quantity: item.quantity,
-        price_per_unit: Number(item.price_per_unit),
-        product_image: item.product_image,
-      }));
+      return (data || []).map((raw) => {
+        const item = raw as any;
+        return {
+          id: item.id,
+          product_id: item.product_id,
+          product_name: item.product_name,
+          flavor: item.flavor,
+          quantity: item.quantity,
+          price_per_unit: Number(item.price_per_unit),
+          product_image: item.product_image,
+          product_link: item.product_link,
+        };
+      });
     } catch (error) {
       console.error('Error fetching cart:', error);
       return [];
@@ -49,6 +53,7 @@ export const useCartItems = (
         quantity: item.quantity,
         price_per_unit: item.price_per_unit,
         product_image: item.product_image,
+        product_link: item.product_link ?? null,
         mode: 'retail',
       };
 
@@ -81,12 +86,14 @@ export const useCartItems = (
 
       if (existing) {
         const newQty = Math.min(existing.quantity + item.quantity, 99);
-        await supabase
+        const { error } = await supabase
           .from('cart_items')
           .update({ quantity: newQty })
           .eq('id', existing.id);
+        if (error) throw error;
       } else {
-        await supabase.from('cart_items').insert(insertData);
+        const { error } = await supabase.from('cart_items').insert(insertData);
+        if (error) throw error;
       }
 
       const cart = await fetchCartItems(session?.user?.id || null);

@@ -9,6 +9,7 @@ export type PendingAddAction =
         quantity: number;
         price_per_unit: number;
         product_image: string | null;
+        product_link?: string | null;
       };
     }
   | {
@@ -21,6 +22,11 @@ export type PendingAddAction =
         quantity: number;
         current_price_per_unit: number;
         product_image: string | null;
+        brand_slug?: string | null;
+        retail_price_per_unit?: number | null;
+        guaranteed_price_per_unit?: number | null;
+        super_price_per_unit?: number | null;
+        product_link?: string | null;
       };
     };
 

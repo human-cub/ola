@@ -38,6 +38,8 @@ export type Database = {
           booster_started_at: string | null
           created_at: string
           emoji: string | null
+          goal_reached: boolean
+          goal_reached_at: string | null
           is_active: boolean
           slug: string
           sort_order: number
@@ -50,6 +52,8 @@ export type Database = {
           booster_started_at?: string | null
           created_at?: string
           emoji?: string | null
+          goal_reached?: boolean
+          goal_reached_at?: string | null
           is_active?: boolean
           slug: string
           sort_order?: number
@@ -62,6 +66,8 @@ export type Database = {
           booster_started_at?: string | null
           created_at?: string
           emoji?: string | null
+          goal_reached?: boolean
+          goal_reached_at?: string | null
           is_active?: boolean
           slug?: string
           sort_order?: number
@@ -117,6 +123,7 @@ export type Database = {
           price_per_unit: number
           product_id: string | null
           product_image: string | null
+          product_link: string | null
           product_name: string
           quantity: number
           session_id: string | null
@@ -132,6 +139,7 @@ export type Database = {
           price_per_unit: number
           product_id?: string | null
           product_image?: string | null
+          product_link?: string | null
           product_name: string
           quantity?: number
           session_id?: string | null
@@ -147,21 +155,14 @@ export type Database = {
           price_per_unit?: number
           product_id?: string | null
           product_image?: string | null
+          product_link?: string | null
           product_name?: string
           quantity?: number
           session_id?: string | null
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "cart_items_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       category_overrides: {
         Row: {
@@ -715,53 +716,60 @@ export type Database = {
       }
       waiting_list_items: {
         Row: {
+          brand_slug: string | null
           created_at: string
           current_price_per_unit: number
           flavor: string | null
+          guaranteed_price_per_unit: number | null
           id: string
           product_id: string
           product_image: string | null
+          product_link: string | null
           product_name: string
           quantity: number
+          retail_price_per_unit: number | null
           session_id: string | null
+          super_price_per_unit: number | null
           updated_at: string
           user_id: string | null
         }
         Insert: {
+          brand_slug?: string | null
           created_at?: string
           current_price_per_unit: number
           flavor?: string | null
+          guaranteed_price_per_unit?: number | null
           id?: string
           product_id: string
           product_image?: string | null
+          product_link?: string | null
           product_name: string
           quantity?: number
+          retail_price_per_unit?: number | null
           session_id?: string | null
+          super_price_per_unit?: number | null
           updated_at?: string
           user_id?: string | null
         }
         Update: {
+          brand_slug?: string | null
           created_at?: string
           current_price_per_unit?: number
           flavor?: string | null
+          guaranteed_price_per_unit?: number | null
           id?: string
           product_id?: string
           product_image?: string | null
+          product_link?: string | null
           product_name?: string
           quantity?: number
+          retail_price_per_unit?: number | null
           session_id?: string | null
+          super_price_per_unit?: number | null
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "waiting_list_items_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       wholesale_invite_tokens: {
         Row: {
@@ -893,6 +901,7 @@ export type Database = {
         }[]
       }
       recompute_waiting_for_discount_counts: { Args: never; Returns: undefined }
+      refresh_brand_goal: { Args: { _brand_slug: string }; Returns: boolean }
       set_collective_stage_complete_for_product: {
         Args: { _complete: boolean; _product_id: string }
         Returns: number
