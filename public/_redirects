@@ -4,3 +4,6 @@
 /s4 https://alaola.com.ar/?utm_source=offline&utm_medium=sticker&utm_campaign=out&utm_term=12-4&utm_content=v1 301 
 /s5 https://alaola.com.ar/?utm_source=offline&utm_medium=sticker&utm_campaign=out&utm_term=12-4&utm_content=v2 301 
 /s6 https://alaola.com.ar/?utm_source=offline&utm_medium=sticker&utm_campaign=out&utm_term=12-4&utm_content=v3 301
+
+# SPA fallback for client-side routing (Cloudflare Pages)
+/* /index.html 200
