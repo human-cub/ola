@@ -25,15 +25,23 @@ export const useWaitingListItems = (
 
       if (error) throw error;
 
-      return (data || []).map(item => ({
-        id: item.id,
-        product_id: item.product_id,
-        product_name: item.product_name,
-        flavor: item.flavor,
-        quantity: item.quantity,
-        current_price_per_unit: Number(item.current_price_per_unit),
-        product_image: item.product_image,
-      }));
+      return (data || []).map((raw) => {
+        const item = raw as any;
+        return {
+          id: item.id,
+          product_id: item.product_id,
+          product_name: item.product_name,
+          flavor: item.flavor,
+          quantity: item.quantity,
+          current_price_per_unit: Number(item.current_price_per_unit),
+          product_image: item.product_image,
+          brand_slug: item.brand_slug,
+          retail_price_per_unit: item.retail_price_per_unit == null ? null : Number(item.retail_price_per_unit),
+          guaranteed_price_per_unit: item.guaranteed_price_per_unit == null ? null : Number(item.guaranteed_price_per_unit),
+          super_price_per_unit: item.super_price_per_unit == null ? null : Number(item.super_price_per_unit),
+          product_link: item.product_link,
+        };
+      });
     } catch (error) {
       console.error('Error fetching waiting list:', error);
       return [];
@@ -51,6 +59,11 @@ export const useWaitingListItems = (
         quantity: item.quantity,
         current_price_per_unit: item.current_price_per_unit,
         product_image: item.product_image,
+        brand_slug: item.brand_slug ?? null,
+        retail_price_per_unit: item.retail_price_per_unit ?? null,
+        guaranteed_price_per_unit: item.guaranteed_price_per_unit ?? item.current_price_per_unit,
+        super_price_per_unit: item.super_price_per_unit ?? null,
+        product_link: item.product_link ?? null,
       };
 
       if (session?.user) {
@@ -81,12 +94,14 @@ export const useWaitingListItems = (
 
       if (existing) {
         const newQty = Math.min(existing.quantity + item.quantity, 99);
-        await supabase
+        const { error } = await supabase
           .from('waiting_list_items')
           .update({ quantity: newQty, current_price_per_unit: item.current_price_per_unit })
           .eq('id', existing.id);
+        if (error) throw error;
       } else {
-        await supabase.from('waiting_list_items').insert(insertData);
+        const { error } = await supabase.from('waiting_list_items').insert(insertData);
+        if (error) throw error;
       }
 
       const waiting = await fetchWaitingListItems(session?.user?.id || null);
@@ -94,6 +109,9 @@ export const useWaitingListItems = (
 
       if (session?.user) {
         await ensurePendingCollectiveOrder(session.user.id);
+        if (item.brand_slug) {
+          await supabase.rpc("refresh_brand_goal" as any, { _brand_slug: item.brand_slug } as any);
+        }
       }
 
       toast.success('Producto agregado a la lista de espera');
