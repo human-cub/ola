@@ -38,6 +38,8 @@ export type Database = {
           booster_started_at: string | null
           created_at: string
           emoji: string | null
+          goal_reached: boolean
+          goal_reached_at: string | null
           is_active: boolean
           slug: string
           sort_order: number
@@ -50,6 +52,8 @@ export type Database = {
           booster_started_at?: string | null
           created_at?: string
           emoji?: string | null
+          goal_reached?: boolean
+          goal_reached_at?: string | null
           is_active?: boolean
           slug: string
           sort_order?: number
@@ -62,6 +66,8 @@ export type Database = {
           booster_started_at?: string | null
           created_at?: string
           emoji?: string | null
+          goal_reached?: boolean
+          goal_reached_at?: string | null
           is_active?: boolean
           slug?: string
           sort_order?: number
@@ -153,15 +159,7 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "cart_items_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       category_overrides: {
         Row: {
@@ -753,15 +751,7 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "waiting_list_items_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       wholesale_invite_tokens: {
         Row: {
