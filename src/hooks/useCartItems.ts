@@ -23,16 +23,19 @@ export const useCartItems = (
 
       if (error) throw error;
 
-      return (data || []).map(item => ({
-        id: item.id,
-        product_id: item.product_id,
-        product_name: item.product_name,
-        flavor: item.flavor,
-        quantity: item.quantity,
-        price_per_unit: Number(item.price_per_unit),
-        product_image: item.product_image,
-        product_link: item.product_link,
-      }));
+      return (data || []).map((raw) => {
+        const item = raw as any;
+        return {
+          id: item.id,
+          product_id: item.product_id,
+          product_name: item.product_name,
+          flavor: item.flavor,
+          quantity: item.quantity,
+          price_per_unit: Number(item.price_per_unit),
+          product_image: item.product_image,
+          product_link: item.product_link,
+        };
+      });
     } catch (error) {
       console.error('Error fetching cart:', error);
       return [];
