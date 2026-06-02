@@ -86,12 +86,14 @@ export const useCartItems = (
 
       if (existing) {
         const newQty = Math.min(existing.quantity + item.quantity, 99);
-        await supabase
+        const { error } = await supabase
           .from('cart_items')
           .update({ quantity: newQty })
           .eq('id', existing.id);
+        if (error) throw error;
       } else {
-        await supabase.from('cart_items').insert(insertData);
+        const { error } = await supabase.from('cart_items').insert(insertData);
+        if (error) throw error;
       }
 
       const cart = await fetchCartItems(session?.user?.id || null);
