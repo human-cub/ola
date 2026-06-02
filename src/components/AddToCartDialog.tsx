@@ -137,6 +137,11 @@ export const AddToCartDialog = ({
               quantity,
               current_price_per_unit: pricePerUnit,
               product_image: productImage,
+              brand_slug: brandSlug,
+              retail_price_per_unit: prices[0]?.price ?? null,
+              guaranteed_price_per_unit: prices[2]?.price ?? pricePerUnit,
+              super_price_per_unit: prices[3]?.price ?? prices[prices.length - 1]?.price ?? null,
+              product_link: productLink,
             },
           });
         } else {
@@ -150,6 +155,7 @@ export const AddToCartDialog = ({
               quantity,
               price_per_unit: pricePerUnit,
               product_image: productImage,
+              product_link: productLink,
             },
           });
         }
@@ -167,6 +173,11 @@ export const AddToCartDialog = ({
           quantity,
           current_price_per_unit: pricePerUnit,
           product_image: productImage,
+          brand_slug: brandSlug,
+          retail_price_per_unit: prices[0]?.price ?? null,
+          guaranteed_price_per_unit: prices[2]?.price ?? pricePerUnit,
+          super_price_per_unit: prices[3]?.price ?? prices[prices.length - 1]?.price ?? null,
+          product_link: productLink,
         });
         await onWaitingListAdded?.();
       } else {
@@ -177,6 +188,7 @@ export const AddToCartDialog = ({
           quantity,
           price_per_unit: pricePerUnit,
           product_image: productImage,
+          product_link: productLink,
         });
       }
 
