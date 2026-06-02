@@ -13,6 +13,7 @@ export interface CartItem {
   quantity: number;
   price_per_unit: number;
   product_image: string | null;
+  product_link?: string | null;
 }
 
 export interface WaitingListItem {
@@ -23,6 +24,11 @@ export interface WaitingListItem {
   quantity: number;
   current_price_per_unit: number;
   product_image: string | null;
+  brand_slug?: string | null;
+  retail_price_per_unit?: number | null;
+  guaranteed_price_per_unit?: number | null;
+  super_price_per_unit?: number | null;
+  product_link?: string | null;
 }
 
 interface CartContextType {
@@ -188,6 +194,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           quantity: item.quantity,
           price_per_unit: buyNowPrice,
           product_image: item.product_image,
+          product_link: item.product_link,
         });
       }
 
