@@ -31,6 +31,7 @@ export const useCartItems = (
         quantity: item.quantity,
         price_per_unit: Number(item.price_per_unit),
         product_image: item.product_image,
+        product_link: item.product_link,
       }));
     } catch (error) {
       console.error('Error fetching cart:', error);
@@ -49,6 +50,7 @@ export const useCartItems = (
         quantity: item.quantity,
         price_per_unit: item.price_per_unit,
         product_image: item.product_image,
+        product_link: item.product_link ?? null,
         mode: 'retail',
       };
 
