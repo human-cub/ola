@@ -195,6 +195,7 @@ const ProductoV2 = () => {
                   waitingCount={0}
                   brandName={product.brandName}
                   brandSlug={product.brandSlug}
+                  productLink={`https://alaola.com.ar/p/${product.urlSlug}`}
                 />
               </div>
             </div>
