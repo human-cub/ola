@@ -41,6 +41,7 @@ export type Database = {
           goal_reached: boolean
           goal_reached_at: string | null
           is_active: boolean
+          real_score: number
           slug: string
           sort_order: number
           target_amount: number
@@ -55,6 +56,7 @@ export type Database = {
           goal_reached?: boolean
           goal_reached_at?: string | null
           is_active?: boolean
+          real_score?: number
           slug: string
           sort_order?: number
           target_amount?: number
@@ -69,6 +71,7 @@ export type Database = {
           goal_reached?: boolean
           goal_reached_at?: string | null
           is_active?: boolean
+          real_score?: number
           slug?: string
           sort_order?: number
           target_amount?: number
