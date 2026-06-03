@@ -29,6 +29,7 @@ interface GroupBuyPriceBlockProps {
   waitingCount?: number;
   brandName?: string | null;
   brandSlug?: string | null;
+  productLink?: string | null;
 }
 
 interface PriceComparisonItem {
@@ -211,11 +212,13 @@ export const GroupBuyPriceBlock = ({
   waitingCount = 0,
   brandName = null,
   brandSlug = null,
+  productLink = null,
 }: GroupBuyPriceBlockProps) => {
   const [displayWaitingCount, setDisplayWaitingCount] = useState(waitingCount);
-  const [brandStats, setBrandStats] = useState<{ collected: number; target: number }>({
+  const [brandStats, setBrandStats] = useState<{ collected: number; target: number; goalReached: boolean }>({
     collected: 0,
     target: 0,
+    goalReached: false,
   });
   const {
     timeLeft,
@@ -239,13 +242,14 @@ export const GroupBuyPriceBlock = ({
     const load = async () => {
       const { data } = await supabase
         .from("brand_overrides")
-        .select("virtual_score, target_amount")
+        .select("virtual_score, target_amount, goal_reached")
         .eq("slug", brandSlug)
         .maybeSingle();
       if (cancelled) return;
       setBrandStats({
         collected: Number(data?.virtual_score ?? 0),
         target: Number(data?.target_amount ?? 0),
+        goalReached: Boolean((data as any)?.goal_reached ?? false),
       });
     };
     load();
@@ -450,6 +454,9 @@ export const GroupBuyPriceBlock = ({
         isWaitingList={isWaitingList}
         currentParticipants={displayWaitingCount}
         onWaitingListAdded={refreshWaitingCount}
+        brandSlug={brandSlug}
+        productLink={productLink}
+        isBrandGoalReached={brandStats.goalReached}
       />
 
       <ConflictDialog
