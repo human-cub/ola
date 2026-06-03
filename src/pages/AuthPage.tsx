@@ -56,7 +56,8 @@ const AuthPage = () => {
 
         await ensurePendingCollectiveOrder(userId);
         if (action.item.brand_slug) {
-          await supabase.rpc("refresh_brand_goal" as any, { _brand_slug: action.item.brand_slug } as any);
+          const { error: goalError } = await supabase.rpc("refresh_brand_goal" as any, { _brand_slug: action.item.brand_slug } as any);
+          if (goalError) throw goalError;
         }
         toast.success("Producto agregado a la lista de espera");
         navigate(action.redirectTo);
