@@ -14,6 +14,7 @@ import { useScrollHeader } from "@/hooks/useScrollHeader";
 import { useCollectiveCountdown } from "@/hooks/useCollectiveCountdown";
 import { usePendingOrder } from "@/hooks/usePendingOrder";
 import { useWaitingListPricing } from "@/hooks/useWaitingListPricing";
+import { useCatalogProducts } from "@/hooks/useCatalogProducts";
 import { CountdownBanner } from "@/components/waiting-list/CountdownBanner";
 import { WaitingListSummary } from "@/components/waiting-list/WaitingListSummary";
 import { WaitingListActions } from "@/components/waiting-list/WaitingListActions";
@@ -53,8 +54,6 @@ const WaitingList = () => {
     useCollectiveCountdown(pendingOrderCreatedAt, collectiveCloseDate);
 
   const {
-    getNextDiscountThreshold,
-    getParticipantsCount,
     getCurrentPrice,
     getBuyNowTotal,
     subtotal,
@@ -70,6 +69,15 @@ const WaitingList = () => {
     frozenOrderData,
     promoTierBonus: appliedPromo?.tier_bonus ?? 0,
   });
+
+  const { data: catalogProducts } = useCatalogProducts();
+  const productBrandMap = useMemo(() => {
+    const map = new Map<string, { brandSlug: string | null; urlSlug: string }>();
+    (catalogProducts ?? []).forEach((p) => {
+      p.variants.forEach((v) => map.set(v.productId, { brandSlug: p.brandSlug, urlSlug: p.urlSlug }));
+    });
+    return map;
+  }, [catalogProducts]);
 
   const groupedWaitingListItems = useMemo(() => {
     const grouped = new Map<string, {
@@ -318,12 +326,9 @@ const WaitingList = () => {
               <div className="space-y-0 mb-6">
                 {groupedWaitingListItems.map((item, index) => {
                   const prod = productData[item.productId];
-                  const participantCount = getParticipantsCount(item.productId, item.totalQuantity);
-                  const nextThreshold = getNextDiscountThreshold(item.productId, item.totalQuantity);
+                  const brandInfo = productBrandMap.get(item.productId);
                   const fallbackPrice = waitingListItems.find((waitingItem) => waitingItem.product_id === item.productId)?.current_price_per_unit || 0;
                   const dynamicPrice = getCurrentPrice(item.productId, item.totalQuantity) || fallbackPrice;
-                  const maxParticipants = prod?.prices?.length ? prod.prices[prod.prices.length - 1].people : 100;
-
                   return (
                     <div key={item.productId}>
                       <WaitingListProductItem
@@ -333,10 +338,8 @@ const WaitingList = () => {
                         pricePerUnit={dynamicPrice}
                         totalQuantity={item.totalQuantity}
                         flavorEntries={item.flavorEntries}
-                        productLink={prod?.link || "#"}
-                        participantCount={participantCount}
-                        maxParticipants={maxParticipants}
-                        nextThreshold={nextThreshold}
+                        productLink={prod?.link || (brandInfo ? `/p/${brandInfo.urlSlug}` : "#")}
+                        brandSlug={brandInfo?.brandSlug ?? null}
                         isCollectionEnded={isCollectionEnded}
                         onQuantityChange={handleQuantityChange}
                         onDelete={() => setDeleteGroup({ productName: item.productName, itemIds: item.itemIds })}

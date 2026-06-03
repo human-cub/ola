@@ -35,7 +35,7 @@ export const useBrandProgress = (brandSlug: string) => {
     };
     load();
     const channel = supabase
-      .channel(`brand-progress-${brandSlug}`)
+      .channel(`brand-progress-${brandSlug}-${Math.random().toString(36).slice(2, 9)}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "brand_overrides", filter: `slug=eq.${brandSlug}` },
