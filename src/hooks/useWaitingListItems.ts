@@ -109,7 +109,8 @@ export const useWaitingListItems = (
       if (session?.user) {
         await ensurePendingCollectiveOrder(session.user.id);
         if (item.brand_slug) {
-          await supabase.rpc("refresh_brand_goal" as any, { _brand_slug: item.brand_slug } as any);
+          const { error: goalError } = await supabase.rpc("refresh_brand_goal" as any, { _brand_slug: item.brand_slug } as any);
+          if (goalError) throw goalError;
         }
       }
 
@@ -165,7 +166,8 @@ export const useWaitingListItems = (
       if (userId) {
         await syncWaitingListOrder(userId);
         if (item.brand_slug) {
-          await supabase.rpc("refresh_brand_goal" as any, { _brand_slug: item.brand_slug } as any);
+          const { error: goalError } = await supabase.rpc("refresh_brand_goal" as any, { _brand_slug: item.brand_slug } as any);
+          if (goalError) throw goalError;
         }
       }
     } catch (error) {
