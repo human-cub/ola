@@ -41,17 +41,6 @@ export const ensurePendingCollectiveOrder = async (userId: string) => {
 
   if (!waitingListData || waitingListData.length === 0) return;
 
-  const productIds = [...new Set(waitingListData.map(i => i.product_id))];
-  const { data: productsData } = await supabase
-    .from("products")
-    .select("id, prices")
-    .in("id", productIds);
-
-  const productPricesMap = new Map<string, any[]>();
-  productsData?.forEach(p => {
-    productPricesMap.set(p.id, (p.prices as any[]) || []);
-  });
-
   const { data: profile } = await supabase
     .from("profiles")
     .select("first_name, last_name, phone, address")
@@ -63,31 +52,32 @@ export const ensurePendingCollectiveOrder = async (userId: string) => {
 
   const deliveryAddress = parseAddress(profile?.address ?? null);
 
-  const orderItems = waitingListData.map((item) => ({
-    product_id: item.product_id,
-    product_name: item.product_name,
-    flavor: item.flavor,
-    quantity: item.quantity,
-    price_per_unit: item.current_price_per_unit,
-    product_image: item.product_image,
-  }));
+  const orderItems = waitingListData.map((raw) => {
+    const item = raw as any;
+    return {
+      product_id: item.product_id,
+      product_name: item.product_name,
+      flavor: item.flavor,
+      quantity: item.quantity,
+      price_per_unit: Number(item.current_price_per_unit),
+      product_image: item.product_image,
+      brand_slug: item.brand_slug ?? null,
+      retail_price_per_unit: item.retail_price_per_unit == null ? null : Number(item.retail_price_per_unit),
+      guaranteed_price_per_unit: item.guaranteed_price_per_unit == null ? null : Number(item.guaranteed_price_per_unit),
+      super_price_per_unit: item.super_price_per_unit == null ? null : Number(item.super_price_per_unit),
+      product_link: item.product_link ?? null,
+    };
+  });
 
   const subtotal = waitingListData.reduce(
     (sum, item) => sum + Number(item.current_price_per_unit) * item.quantity,
     0
   );
 
-  let fullPrice = 0;
-  waitingListData.forEach(item => {
-    const prices = productPricesMap.get(item.product_id);
-    if (prices && prices.length > 0) {
-      const sortedPrices = [...prices].sort((a, b) => (a.people || 0) - (b.people || 0));
-      const firstTierPrice = sortedPrices[0]?.price || item.current_price_per_unit;
-      fullPrice += firstTierPrice * item.quantity;
-    } else {
-      fullPrice += Number(item.current_price_per_unit) * item.quantity;
-    }
-  });
+  const fullPrice = orderItems.reduce(
+    (sum, item) => sum + Number(item.retail_price_per_unit ?? item.price_per_unit) * item.quantity,
+    0,
+  );
 
   const discountAmount = fullPrice - subtotal;
 
