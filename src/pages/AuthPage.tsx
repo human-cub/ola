@@ -8,7 +8,7 @@ import { RegisterForm } from "@/components/auth/RegisterForm";
 import { ArrowLeft } from "lucide-react";
 import { consumePendingAddAction, PendingAddAction } from "@/lib/postAuthAction";
 import { toast } from "sonner";
-import { formatPrice } from "@/lib/formatting";
+import { ensurePendingCollectiveOrder } from "@/services/orderService";
 
 const AuthPage = () => {
   const navigate = useNavigate();
@@ -30,6 +30,8 @@ const AuthPage = () => {
           quantity: action.item.quantity,
           price_per_unit: action.item.price_per_unit,
           product_image: action.item.product_image,
+          product_link: action.item.product_link ?? null,
+          mode: "retail",
         });
         toast.success("Producto agregado al carrito");
         navigate(action.redirectTo);
@@ -43,123 +45,18 @@ const AuthPage = () => {
           quantity: action.item.quantity,
           current_price_per_unit: action.item.current_price_per_unit,
           product_image: action.item.product_image,
+          brand_slug: action.item.brand_slug ?? null,
+          retail_price_per_unit: action.item.retail_price_per_unit ?? null,
+          guaranteed_price_per_unit: action.item.guaranteed_price_per_unit ?? action.item.current_price_per_unit,
+          super_price_per_unit: action.item.super_price_per_unit ?? null,
+          product_link: action.item.product_link ?? null,
         });
 
-        // Check if pending collective order exists
-        const { data: existingOrder } = await supabase
-          .from("user_orders")
-          .select("id")
-          .eq("user_id", userId)
-          .eq("order_type", "collective")
-          .eq("status", "pending")
-          .maybeSingle();
-
-        if (existingOrder) {
-          // Sync order items
-          const { data: waitingListData } = await supabase
-            .from("waiting_list_items")
-            .select("*")
-            .eq("user_id", userId);
-
-          if (waitingListData && waitingListData.length > 0) {
-            const orderItems = waitingListData.map((i) => ({
-              product_id: i.product_id,
-              product_name: i.product_name,
-              flavor: i.flavor,
-              quantity: i.quantity,
-              price_per_unit: i.current_price_per_unit,
-              product_image: i.product_image,
-            }));
-            const subtotal = waitingListData.reduce(
-              (sum, i) => sum + Number(i.current_price_per_unit) * i.quantity,
-              0
-            );
-            await supabase
-              .from("user_orders")
-              .update({
-                items: orderItems,
-                subtotal,
-                total_amount: subtotal,
-              })
-              .eq("id", existingOrder.id);
-          }
-          toast.success("Producto agregado a la lista de espera");
-        } else {
-          // Create new pending collective order
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("first_name, last_name, phone, address")
-            .eq("user_id", userId)
-            .maybeSingle();
-
-          const customerName =
-            [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") ||
-            "Cliente";
-          const phone = profile?.phone || "";
-
-          let deliveryAddress: any = null;
-          if (profile?.address) {
-            try {
-              deliveryAddress = JSON.parse(profile.address);
-            } catch {
-              deliveryAddress = null;
-            }
-          }
-
-          const orderItems = [
-            {
-              product_id: action.item.product_id,
-              product_name: action.item.product_name,
-              flavor: action.item.flavor,
-              quantity: action.item.quantity,
-              price_per_unit: action.item.current_price_per_unit,
-              product_image: action.item.product_image,
-            },
-          ];
-
-          const subtotal = action.item.current_price_per_unit * action.item.quantity;
-
-          const orderNumber = `OLA-${new Date()
-            .toISOString()
-            .slice(0, 10)
-            .replace(/-/g, "")}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
-
-          const { data: newOrder, error: insertError } = await supabase
-            .from("user_orders")
-            .insert({
-              user_id: userId,
-              order_number: orderNumber,
-              order_type: "collective",
-              items: orderItems,
-              subtotal,
-              total_amount: subtotal,
-              delivery_address: deliveryAddress,
-              status: "pending",
-              notes: phone || null,
-            })
-            .select("id, order_number")
-            .single();
-
-          if (insertError) {
-            console.error("Error creating order:", insertError);
-          } else {
-            // Notify Telegram
-            const orderUrl = `${window.location.origin}/mi-cuenta/pedidos/${newOrder.id}`;
-            await supabase.functions.invoke("notify-telegram", {
-              body: {
-                order_id: newOrder.id,
-                order_number: newOrder.order_number,
-                order_type: "Compra Colectiva",
-                customer_name: customerName,
-                phone,
-                total: formatPrice(subtotal),
-                order_url: orderUrl,
-                waiting_for_discount: true,
-              },
-            });
-          }
-          toast.success("Producto agregado a la lista de espera");
+        await ensurePendingCollectiveOrder(userId);
+        if (action.item.brand_slug) {
+          await supabase.rpc("refresh_brand_goal" as any, { _brand_slug: action.item.brand_slug } as any);
         }
+        toast.success("Producto agregado a la lista de espera");
         navigate(action.redirectTo);
       }
     } catch (err) {
