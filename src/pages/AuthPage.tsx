@@ -22,7 +22,7 @@ const AuthPage = () => {
     try {
       if (action.kind === "cart") {
         // Insert item into cart
-        await supabase.from("cart_items").insert({
+        const { error: cartError } = await supabase.from("cart_items").insert({
           user_id: userId,
           product_id: action.item.product_id,
           product_name: action.item.product_name,
@@ -33,11 +33,12 @@ const AuthPage = () => {
           product_link: action.item.product_link ?? null,
           mode: "retail",
         });
+        if (cartError) throw cartError;
         toast.success("Producto agregado al carrito");
         navigate(action.redirectTo);
       } else {
         // Waiting list: insert item + ensure pending collective order
-        await supabase.from("waiting_list_items").insert({
+        const { error: waitingError } = await supabase.from("waiting_list_items").insert({
           user_id: userId,
           product_id: action.item.product_id,
           product_name: action.item.product_name,
@@ -51,6 +52,7 @@ const AuthPage = () => {
           super_price_per_unit: action.item.super_price_per_unit ?? null,
           product_link: action.item.product_link ?? null,
         });
+        if (waitingError) throw waitingError;
 
         await ensurePendingCollectiveOrder(userId);
         if (action.item.brand_slug) {
