@@ -146,7 +146,25 @@ const WaitingList = () => {
 
       setProductData(prodDataMap);
     }
-  }, [productIds]);
+    setProductData((current) => {
+      const next = { ...current };
+      waitingListItems.forEach((item) => {
+        if (!next[item.product_id]) {
+          next[item.product_id] = {
+            id: item.product_id,
+            link: item.product_link || "",
+            total_orders_count: 0,
+            prices: [
+              { people: 1, price: item.retail_price_per_unit ?? item.current_price_per_unit },
+              { people: 50, price: item.guaranteed_price_per_unit ?? item.current_price_per_unit },
+              { people: 100, price: item.super_price_per_unit ?? item.current_price_per_unit },
+            ],
+          };
+        }
+      });
+      return next;
+    });
+  }, [productIds, waitingListItems]);
 
   // Fetch product data
   useEffect(() => {
@@ -320,9 +338,11 @@ const WaitingList = () => {
                   const prod = productData[item.productId];
                   const participantCount = getParticipantsCount(item.productId, item.totalQuantity);
                   const nextThreshold = getNextDiscountThreshold(item.productId, item.totalQuantity);
-                  const fallbackPrice = waitingListItems.find((waitingItem) => waitingItem.product_id === item.productId)?.current_price_per_unit || 0;
+                  const sourceItem = waitingListItems.find((waitingItem) => waitingItem.product_id === item.productId);
+                  const fallbackPrice = sourceItem?.current_price_per_unit || 0;
                   const dynamicPrice = getCurrentPrice(item.productId, item.totalQuantity) || fallbackPrice;
                   const maxParticipants = prod?.prices?.length ? prod.prices[prod.prices.length - 1].people : 100;
+                  const productLink = prod?.link || sourceItem?.product_link || "#";
 
                   return (
                     <div key={item.productId}>
@@ -333,7 +353,7 @@ const WaitingList = () => {
                         pricePerUnit={dynamicPrice}
                         totalQuantity={item.totalQuantity}
                         flavorEntries={item.flavorEntries}
-                        productLink={prod?.link || "#"}
+                        productLink={productLink}
                         participantCount={participantCount}
                         maxParticipants={maxParticipants}
                         nextThreshold={nextThreshold}
