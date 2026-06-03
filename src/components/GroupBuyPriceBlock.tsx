@@ -242,12 +242,12 @@ export const GroupBuyPriceBlock = ({
     const load = async () => {
       const { data } = await supabase
         .from("brand_overrides")
-        .select("virtual_score, target_amount, goal_reached")
+        .select("virtual_score, real_score, target_amount, goal_reached")
         .eq("slug", brandSlug)
         .maybeSingle();
       if (cancelled) return;
       setBrandStats({
-        collected: Number(data?.virtual_score ?? 0),
+        collected: Number(data?.virtual_score ?? 0) + Number((data as any)?.real_score ?? 0),
         target: Number(data?.target_amount ?? 0),
         goalReached: Boolean((data as any)?.goal_reached ?? false),
       });
@@ -329,7 +329,7 @@ export const GroupBuyPriceBlock = ({
       priceClassName: "",
       style: groupBuyAccentStyle,
     },
-  ];
+  ].filter((item) => !(brandStats.goalReached && item.label === "Precio Garantizado"));
 
   return (
     <>
