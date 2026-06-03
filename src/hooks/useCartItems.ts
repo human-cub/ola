@@ -102,6 +102,7 @@ export const useCartItems = (
     } catch (error) {
       console.error('Error adding to cart:', error);
       toast.error('Error al agregar al carrito');
+      throw error;
     }
   };
 

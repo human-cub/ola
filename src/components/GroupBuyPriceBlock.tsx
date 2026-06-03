@@ -242,12 +242,12 @@ export const GroupBuyPriceBlock = ({
     const load = async () => {
       const { data } = await supabase
         .from("brand_overrides")
-        .select("virtual_score, target_amount, goal_reached")
+        .select("virtual_score, real_score, target_amount, goal_reached")
         .eq("slug", brandSlug)
         .maybeSingle();
       if (cancelled) return;
       setBrandStats({
-        collected: Number(data?.virtual_score ?? 0),
+        collected: Number(data?.virtual_score ?? 0) + Number((data as any)?.real_score ?? 0),
         target: Number(data?.target_amount ?? 0),
         goalReached: Boolean((data as any)?.goal_reached ?? false),
       });
@@ -329,7 +329,7 @@ export const GroupBuyPriceBlock = ({
       priceClassName: "",
       style: groupBuyAccentStyle,
     },
-  ];
+  ].filter((item) => !(brandStats.goalReached && item.label === "Precio Garantizado"));
 
   return (
     <>
@@ -361,7 +361,7 @@ export const GroupBuyPriceBlock = ({
 
             {/* Price Comparison */}
             <div className="px-6 py-6 bg-card border-b border-border">
-              <div className="grid grid-cols-3 gap-2 text-center items-start">
+              <div className={`grid ${brandStats.goalReached ? "grid-cols-2" : "grid-cols-3"} gap-2 text-center items-start`}>
                 {priceComparisonItems.map((item) => (
                   <div key={item.label} className="flex flex-col items-center gap-1">
                     <div className={`text-[13px] font-bold ${item.labelClassName}`} style={item.style}>

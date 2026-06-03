@@ -45,12 +45,16 @@ export const useWaitingListPricing = ({
   promoTierBonus = 0,
 }: WaitingListPricingParams) => {
   const getFullPrice = (productId: string): number => {
+    const item = waitingListItems.find((i) => i.product_id === productId);
+    if (item?.retail_price_per_unit) return item.retail_price_per_unit;
     const prod = productData[productId];
     if (!prod || prod.prices.length === 0) return 0;
     return prod.prices[0].price;
   };
 
   const getMaxDiscountPrice = (productId: string): number => {
+    const item = waitingListItems.find((i) => i.product_id === productId);
+    if (item?.super_price_per_unit) return item.super_price_per_unit;
     const prod = productData[productId];
     if (!prod || prod.prices.length === 0) return 0;
     return prod.prices[prod.prices.length - 1].price;
@@ -87,6 +91,9 @@ export const useWaitingListPricing = ({
   };
 
   const getCurrentPrice = (productId: string, userQty: number): number => {
+    const currentItem = waitingListItems.find((i) => i.product_id === productId);
+    if (currentItem?.current_price_per_unit) return currentItem.current_price_per_unit;
+
     if (isCollectionEnded && frozenOrderData) {
       const frozenItem = frozenOrderData.items.find(i => i.product_id === productId);
       if (frozenItem) {
@@ -152,6 +159,8 @@ export const useWaitingListPricing = ({
   };
 
   const getSecondTierPrice = (productId: string): number => {
+    const item = waitingListItems.find((i) => i.product_id === productId);
+    if (item?.guaranteed_price_per_unit) return item.guaranteed_price_per_unit;
     const prod = productData[productId];
     if (!prod || prod.prices.length < 2) return 0;
     return prod.prices[1].price;

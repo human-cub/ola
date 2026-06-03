@@ -1,7 +1,6 @@
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { getCollectiveTierPrice } from "@/lib/collectivePricing";
 import { ensurePendingCollectiveOrder, syncWaitingListOrder } from "@/services/orderService";
 import type { WaitingListItem } from "@/contexts/CartContext";
 
@@ -110,7 +109,8 @@ export const useWaitingListItems = (
       if (session?.user) {
         await ensurePendingCollectiveOrder(session.user.id);
         if (item.brand_slug) {
-          await supabase.rpc("refresh_brand_goal" as any, { _brand_slug: item.brand_slug } as any);
+          const { error: goalError } = await supabase.rpc("refresh_brand_goal" as any, { _brand_slug: item.brand_slug } as any);
+          if (goalError) throw goalError;
         }
       }
 
@@ -118,6 +118,7 @@ export const useWaitingListItems = (
     } catch (error) {
       console.error('Error adding to waiting list:', error);
       toast.error('Error al agregar a la lista de espera');
+      throw error;
     }
   };
 
@@ -141,60 +142,33 @@ export const useWaitingListItems = (
         prev.map(i => i.id === id ? { ...i, quantity } : i)
       );
 
-      await supabase.from("waiting_list_items").update({ quantity }).eq("id", id);
+      const { data: brand } = item.brand_slug
+        ? await supabase
+            .from("brand_overrides")
+            .select("goal_reached")
+            .eq("slug", item.brand_slug)
+            .maybeSingle()
+        : { data: null };
 
-      const [orderResult, productResult, userItemsResult] = await Promise.all([
-        userId
-          ? supabase
-              .from("user_orders")
-              .select("id")
-              .eq("user_id", userId)
-              .eq("order_type", "collective")
-              .eq("status", "pending")
-              .maybeSingle()
-          : Promise.resolve({ data: null }),
-        supabase
-          .from("products")
-          .select("prices, total_orders_count")
-          .eq("id", item.product_id)
-          .maybeSingle(),
-        userId
-          ? supabase
-              .from("waiting_list_items")
-              .select("quantity")
-              .eq("user_id", userId)
-              .eq("product_id", item.product_id)
-          : Promise.resolve({ data: null })
-      ]);
+      const newPrice = brand?.goal_reached
+        ? (item.super_price_per_unit ?? item.current_price_per_unit)
+        : (item.guaranteed_price_per_unit ?? item.current_price_per_unit);
 
-      const hasExistingOrder = !!orderResult.data;
-      const product = productResult.data;
-      const userTotalQty = (userItemsResult.data || []).reduce(
-        (sum, i) => sum + (i.quantity || 0), 0
+      await supabase
+        .from("waiting_list_items")
+        .update({ quantity, current_price_per_unit: newPrice })
+        .eq("id", id);
+
+      setWaitingListItems(prev =>
+        prev.map(i => i.id === id ? { ...i, quantity, current_price_per_unit: newPrice } : i)
       );
 
-      const baseParticipants = Number(product?.total_orders_count ?? 0);
-      const effectiveParticipants = hasExistingOrder
-        ? baseParticipants
-        : baseParticipants + userTotalQty;
-
-      let newPrice: number | null = null;
-      if (product?.prices) {
-        newPrice = getCollectiveTierPrice(product.prices, effectiveParticipants);
-      }
-
-      if (newPrice !== null) {
-        await supabase
-          .from("waiting_list_items")
-          .update({ current_price_per_unit: newPrice })
-          .eq("id", id);
-        setWaitingListItems(prev =>
-          prev.map(i => i.id === id ? { ...i, current_price_per_unit: newPrice! } : i)
-        );
-      }
-
-      if (userId && hasExistingOrder) {
+      if (userId) {
         await syncWaitingListOrder(userId);
+        if (item.brand_slug) {
+          const { error: goalError } = await supabase.rpc("refresh_brand_goal" as any, { _brand_slug: item.brand_slug } as any);
+          if (goalError) throw goalError;
+        }
       }
     } catch (error) {
       console.error("Error updating waiting list item:", error);

@@ -7,6 +7,9 @@ interface CartLikeItem {
   quantity: number;
   price_per_unit?: number;
   current_price_per_unit?: number;
+  retail_price_per_unit?: number | null;
+  guaranteed_price_per_unit?: number | null;
+  super_price_per_unit?: number | null;
 }
 
 function getItemPrice(item: CartLikeItem): number {
@@ -59,7 +62,7 @@ export function useCheckoutPricing(
     for (const item of items) {
       const pd = productPriceData[item.product_id];
       const tiers = pd?.prices || [];
-      const firstTierPrice = tiers.length > 0 ? tiers[0].price : getItemPrice(item);
+      const firstTierPrice = item.retail_price_per_unit ?? (tiers.length > 0 ? tiers[0].price : getItemPrice(item));
 
       fullPrice += firstTierPrice * item.quantity;
 
@@ -76,17 +79,7 @@ export function useCheckoutPricing(
         }
 
         const effectiveIndex = getPromoTierIndex(baseTierIndex, promoTierBonus, tiers.length);
-        const promoPrice = tiers[effectiveIndex]?.price ?? getItemPrice(item);
-        console.log('[useCheckoutPricing] promo debug:', {
-          productId: item.product_id,
-          promoTierBonus,
-          isCollective,
-          baseTierIndex,
-          effectiveIndex,
-          tiers: tiers.map(t => ({ people: t.people, price: t.price })),
-          promoPrice,
-          itemPrice: getItemPrice(item),
-        });
+        const promoPrice = tiers[effectiveIndex]?.price ?? item.super_price_per_unit ?? getItemPrice(item);
         subtotal += promoPrice * item.quantity;
       } else {
         subtotal += getItemPrice(item) * item.quantity;
