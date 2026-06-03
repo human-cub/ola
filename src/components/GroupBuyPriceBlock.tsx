@@ -361,7 +361,7 @@ export const GroupBuyPriceBlock = ({
 
             {/* Price Comparison */}
             <div className="px-6 py-6 bg-card border-b border-border">
-              <div className="grid grid-cols-3 gap-2 text-center items-start">
+              <div className={`grid ${brandStats.goalReached ? "grid-cols-2" : "grid-cols-3"} gap-2 text-center items-start`}>
                 {priceComparisonItems.map((item) => (
                   <div key={item.label} className="flex flex-col items-center gap-1">
                     <div className={`text-[13px] font-bold ${item.labelClassName}`} style={item.style}>
