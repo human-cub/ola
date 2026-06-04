@@ -30,7 +30,7 @@ const BrandCollectiveRow = ({ brandSlug }: { brandSlug: string | null }) => {
   if (!brandSlug || target <= 0) return null;
   return (
     <div className="mb-1">
-      <div className="relative h-1.5 bg-muted rounded-full overflow-hidden">
+      <div className="relative h-2.5 bg-muted rounded-full overflow-hidden">
         <div
           className="absolute top-0 left-0 h-full rounded-full transition-all duration-1000"
           style={{

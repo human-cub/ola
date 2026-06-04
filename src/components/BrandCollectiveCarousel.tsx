@@ -61,7 +61,7 @@ const BrandMarqueeCard = ({
         )}
         <span className="font-semibold text-foreground truncate">{name}</span>
       </div>
-      <BrandProgressBar brandSlug={slug} heightClass="h-2" />
+      <BrandProgressBar brandSlug={slug} heightClass="h-3.5" />
     </Link>
   );
 };

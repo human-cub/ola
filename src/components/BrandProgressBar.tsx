@@ -58,7 +58,7 @@ export const useBrandProgress = (brandSlug: string) => {
 export const BrandProgressBar = ({
   brandSlug,
   showLabels = true,
-  heightClass = "h-2.5",
+  heightClass = "h-4",
 }: Props) => {
   const { collected, target, pct, reached } = useBrandProgress(brandSlug);
 

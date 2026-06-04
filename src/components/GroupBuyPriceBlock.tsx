@@ -394,7 +394,7 @@ export const GroupBuyPriceBlock = ({
                 </div>
 
                 {/* Progress bar — slim, no segments */}
-                <div className="relative h-2.5 bg-muted rounded-full overflow-hidden shadow-inner">
+                <div className="relative h-8 bg-muted rounded-full overflow-hidden shadow-inner">
                   <div
                     className="absolute top-0 left-0 h-full rounded-full transition-all duration-1000"
                     style={groupBuyProgressStyle}
