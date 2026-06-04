@@ -175,14 +175,14 @@ Deno.serve(async (req) => {
 
     const { data: overrides, error: ovErr } = await local
       .from("brand_overrides")
-      .select("slug, emoji, sort_order, is_active, target_amount, booster_mode, booster_started_at, virtual_score");
+      .select("slug, emoji, sort_order, is_active, target_amount, booster_mode, booster_started_at, virtual_score, real_score");
     if (ovErr) {
       throw new Error(`Cannot read local brand overrides: ${ovErr.message}`);
     }
     const ovMap = new Map<string, {
       emoji: string | null; sort_order: number; is_active: boolean;
       target_amount: number; booster_mode: 'off' | 'active' | 'first_24h';
-      booster_started_at: string | null; virtual_score: number;
+      booster_started_at: string | null; virtual_score: number; real_score: number;
     }>();
     for (const o of overrides ?? []) {
       ovMap.set(o.slug, {
@@ -193,13 +193,14 @@ Deno.serve(async (req) => {
         booster_mode: (o.booster_mode ?? 'off') as 'off' | 'active' | 'first_24h',
         booster_started_at: o.booster_started_at ?? null,
         virtual_score: Number(o.virtual_score ?? 0),
+        real_score: Number((o as Record<string, unknown>).real_score ?? 0),
       });
     }
 
     const merged: MergedBrand[] = extData.map((b, i) => {
       const ov = ovMap.get(b.slug);
       const hasProducts = b.productsCount > 0;
-      const collected = Number(ov?.virtual_score ?? 0);
+      const collectedTotal = Number(ov?.virtual_score ?? 0) + Number(ov?.real_score ?? 0);
       const target = Number(ov?.target_amount ?? 0);
       return {
         id: b.id ?? b.slug,
@@ -217,7 +218,9 @@ Deno.serve(async (req) => {
         target_amount: target,
         booster_mode: isAdmin ? (ov?.booster_mode ?? 'off') : 'off',
         booster_started_at: isAdmin ? (ov?.booster_started_at ?? null) : null,
-        virtual_score: collected,
+        // Non-admin: only the combined collected total (identical to brand_collection_public),
+        // so the virtual/real split cannot be derived. Admins get the raw virtual component.
+        virtual_score: isAdmin ? Number(ov?.virtual_score ?? 0) : collectedTotal,
       };
     });
 
