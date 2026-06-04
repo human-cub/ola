@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchCatalogProductsRaw } from "@/lib/catalogApi";
 
 export interface SociosProduct {
   sku: string;
@@ -46,12 +47,10 @@ const writeCache = (data: SociosProduct[]) => {
 };
 
 const fetchSociosProducts = async (): Promise<SociosProduct[]> => {
-  const [productsRes, overridesRes] = await Promise.all([
-    supabase.functions.invoke("fetch-external-products"),
+  const [products, overridesRes] = await Promise.all([
+    fetchCatalogProductsRaw<SociosProduct>(),
     supabase.from("socios_product_overrides").select("sku,is_active"),
   ]);
-  if (productsRes.error) throw productsRes.error;
-  const products = ((productsRes.data as any)?.products ?? []) as SociosProduct[];
   const inactive = new Set(
     ((overridesRes.data ?? []) as { sku: string; is_active: boolean }[])
       .filter((o) => o.is_active === false)

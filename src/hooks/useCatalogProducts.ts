@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo } from "react";
 import { v5 as uuidv5 } from "uuid";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchCatalogProductsRaw } from "@/lib/catalogApi";
 
 // Stable namespace used to derive deterministic UUIDs from external SKUs.
 const SKU_NAMESPACE = "8c3e6e5e-1234-4abc-8def-000000000001";
@@ -69,11 +70,8 @@ interface RawExternalProduct {
   price_t4: number;
 }
 
-const fetchExternal = async (): Promise<RawExternalProduct[]> => {
-  const { data, error } = await supabase.functions.invoke("fetch-external-products");
-  if (error) throw error;
-  return ((data as { products?: RawExternalProduct[] })?.products ?? []);
-};
+const fetchExternal = async (): Promise<RawExternalProduct[]> =>
+  fetchCatalogProductsRaw<RawExternalProduct>();
 
 const fetchInactiveBrandSlugs = async (): Promise<Set<string>> => {
   const { data } = await supabase
