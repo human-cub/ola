@@ -44,8 +44,8 @@ export const useCatalogPricing = () => {
     queryKey: ["brand-overrides-meta"],
     queryFn: async () => {
       const { data } = await supabase
-        .from("brand_overrides")
-        .select("slug, virtual_score, target_amount");
+        .from("brand_collection_public" as any)
+        .select("slug, collected_total, target_amount, goal_reached");
       return data ?? [];
     },
     staleTime: 60 * 1000,
@@ -53,9 +53,12 @@ export const useCatalogPricing = () => {
 
   const brandReached = useMemo(() => {
     const map = new Map<string, boolean>();
-    (overrides ?? []).forEach((b: { slug: string; virtual_score: number | null; target_amount: number | null }) => {
+    (overrides ?? []).forEach((b: any) => {
       const target = Number(b.target_amount ?? 0);
-      map.set(b.slug, target > 0 && Number(b.virtual_score ?? 0) >= target);
+      map.set(
+        b.slug,
+        Boolean(b.goal_reached) || (target > 0 && Number(b.collected_total ?? 0) >= target),
+      );
     });
     return map;
   }, [overrides]);
