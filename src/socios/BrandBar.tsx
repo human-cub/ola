@@ -1,7 +1,8 @@
 import { useBrands } from "@/hooks/useBrands";
 
 interface Props {
-  selectedBrandId: string | null;
+  // undefined = sin selección inicial todavía; null = "Todos"
+  selectedBrandId: string | null | undefined;
   onSelect: (brandId: string | null) => void;
 }
 

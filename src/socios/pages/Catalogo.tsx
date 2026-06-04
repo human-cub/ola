@@ -1,11 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import { Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useBrands } from "@/hooks/useBrands";
 import { useCategories } from "@/hooks/useCategories";
-import { useSociosProducts } from "../hooks/useSociosProducts";
+import { useSociosProducts, type SociosProduct } from "../hooks/useSociosProducts";
 import { useSociosCartCtx } from "../SociosCartProvider";
+import type { SociosCartItem } from "../hooks/useSociosCart";
 import { formatARS } from "../lib/format";
 import { SociosHeader } from "../SociosHeader";
 import { BrandBar } from "../BrandBar";
@@ -30,19 +31,116 @@ const sizeToNumber = (s: string | null | undefined): number => {
   return n * mult;
 };
 
+interface RowProps {
+  p: SociosProduct;
+  line: SociosCartItem | undefined;
+  onAdd: (p: SociosProduct, displayName: string, displayImage: string) => void;
+  onSetQuantity: (id: string, quantity: number) => void;
+}
+
+// Fila memoizada: con catálogos grandes ("Todos") evita re-renderizar las ~900
+// filas en cada cambio de carrito. content-visibility saltea el layout/paint
+// de las filas fuera de pantalla.
+const CatalogRow = memo(({ p, line, onAdd, onSetQuantity }: RowProps) => {
+  const qty = line?.quantity ?? 0;
+  const rawFirst = p.images?.[0] || "";
+  const displayImage = rawFirst.includes("|") ? rawFirst.split("|")[0] : rawFirst;
+  const displayName = p.name_short || p.name;
+
+  return (
+    <div className="flex items-center gap-3 bg-card border rounded-lg p-2 sm:p-3 [content-visibility:auto] [contain-intrinsic-size:auto_84px]">
+      <div className="w-16 h-16 shrink-0 bg-muted/30 rounded-md overflow-hidden flex items-center justify-center">
+        {displayImage ? (
+          <img
+            src={displayImage}
+            alt={displayName}
+            width={64}
+            height={64}
+            loading="lazy"
+            className="w-full h-full object-contain"
+          />
+        ) : null}
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-medium leading-tight line-clamp-2">
+          {displayName}
+          {p.size ? <span className="text-muted-foreground"> · {p.size}</span> : null}
+        </div>
+        {p.flavor && (
+          <div className="text-xs text-muted-foreground mt-0.5">{p.flavor}</div>
+        )}
+        {p.brand_name && (
+          <div className="text-[10px] uppercase tracking-wide text-muted-foreground mt-0.5">
+            {p.brand_name}
+          </div>
+        )}
+      </div>
+
+      <div className="flex items-center gap-2">
+        {qty === 0 ? (
+          <Button size="sm" onClick={() => onAdd(p, displayName, displayImage)}>
+            Agregar
+          </Button>
+        ) : (
+          <div className="flex items-center gap-1">
+            <Button
+              size="icon"
+              variant="outline"
+              className="h-7 w-7"
+              onClick={() => line && onSetQuantity(line.id, qty - 1)}
+            >
+              <Minus className="w-3 h-3" />
+            </Button>
+            <span className="w-7 text-center text-sm font-medium">{qty}</span>
+            <Button
+              size="icon"
+              variant="outline"
+              className="h-7 w-7"
+              onClick={() => line && onSetQuantity(line.id, qty + 1)}
+            >
+              <Plus className="w-3 h-3" />
+            </Button>
+          </div>
+        )}
+      </div>
+
+      <div className="text-right shrink-0 w-24 sm:w-28">
+        <div className="text-xs text-muted-foreground line-through">
+          {formatARS(p.retail_price)}
+        </div>
+        <div className="text-base font-bold">{formatARS(p.buy_price)}</div>
+        {p.discount_pct > 0 && (
+          <div className="text-xs text-emerald-600 font-medium">
+            -{p.discount_pct}%
+          </div>
+        )}
+      </div>
+    </div>
+  );
+});
+CatalogRow.displayName = "CatalogRow";
+
 const Catalogo = () => {
   const { data: products = [], isLoading } = useSociosProducts();
   const { data: brands = [], isLoading: brandsLoading } = useBrands({ includeInactive: true });
   const { data: categories = [] } = useCategories({ includeInactive: true });
   const { items, addItem, setQuantity, findLine } = useSociosCartCtx();
   const [search, setSearch] = useState("");
-  const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
+  // undefined = todavía no se eligió nada (autoseleccionamos la primera marca);
+  // null = el usuario eligió "Todos" explícitamente (no pisar con el autoselect).
+  const [selectedBrandId, setSelectedBrandId] = useState<string | null | undefined>(undefined);
 
   useEffect(() => {
-    if (brands.length > 0 && selectedBrandId === null) {
+    if (brands.length > 0 && selectedBrandId === undefined) {
       setSelectedBrandId(brands[0].id);
     }
   }, [brands, selectedBrandId]);
+
+  // Marca efectiva: antes de que corra el autoselect (efecto) ya filtramos por
+  // la primera marca, para no renderizar todo el catálogo en el primer frame.
+  const effectiveBrandId =
+    selectedBrandId === undefined ? brands[0]?.id ?? undefined : selectedBrandId;
 
   // Indexamos categorías y marcas por id/slug para enriquecer el haystack del buscador
   const categoryById = useMemo(() => {
@@ -77,7 +175,7 @@ const Catalogo = () => {
 
     return products.filter((p) => {
       // Cuando hay búsqueda, ignoramos el filtro de marca para buscar en todo el catálogo
-      if (!searchActive && selectedBrandId && p.brand_id !== selectedBrandId) return false;
+      if (!searchActive && effectiveBrandId && p.brand_id !== effectiveBrandId) return false;
       if (searchActive) {
         const catKey = (p.category_slug ?? "").toLowerCase();
         const cat = categoryById.get(catKey);
@@ -118,13 +216,26 @@ const Catalogo = () => {
       if (fl !== 0) return fl;
       return a.sku.localeCompare(b.sku);
     });
-  }, [products, selectedBrandId, search, categories, categoryById, brandById]);
+  }, [products, effectiveBrandId, search, categories, categoryById, brandById]);
 
   void items; // ensure rerender on cart change
 
+  const handleAdd = useMemo(
+    () => (p: SociosProduct, displayName: string, displayImage: string) =>
+      void addItem({
+        external_sku: p.sku,
+        product_name: displayName,
+        flavor: p.flavor,
+        price_per_unit: p.buy_price,
+        product_image: displayImage,
+        quantity: 1,
+      }),
+    [addItem],
+  );
+
   // Hasta que llegue la lista de marcas y se autoseleccione la primera,
   // no mostramos "todo el catálogo" (evita el flash con el contador total).
-  const initialBrandPending = brandsLoading && selectedBrandId === null && !search.trim();
+  const initialBrandPending = brandsLoading && selectedBrandId === undefined && !search.trim();
 
   return (
     <div className="min-h-screen bg-background pb-32">
@@ -134,7 +245,7 @@ const Catalogo = () => {
           <div className="flex items-baseline justify-between mb-3">
             <h1 className="text-xl font-bold">Catálogo Mayorista</h1>
             <span className="text-xs text-muted-foreground">
-              {initialBrandPending ? "\u2026" : `${filtered.length} productos`}
+              {initialBrandPending ? "…" : `${filtered.length} productos`}
             </span>
           </div>
 
@@ -153,100 +264,15 @@ const Catalogo = () => {
             </div>
           ) : (
             <div className="space-y-2">
-              {filtered.map((p) => {
-                const line = findLine(p.sku);
-                const qty = line?.quantity ?? 0;
-                const rawFirst = p.images?.[0] || "";
-                const displayImage = rawFirst.includes("|") ? rawFirst.split("|")[0] : rawFirst;
-                const displayName = p.name_short || p.name;
-
-                return (
-                  <div
-                    key={p.sku}
-                    className="flex items-center gap-3 bg-card border rounded-lg p-2 sm:p-3"
-                  >
-                    <div className="w-16 h-16 shrink-0 bg-muted/30 rounded-md overflow-hidden flex items-center justify-center">
-                      {displayImage ? (
-                        <img
-                          src={displayImage}
-                          alt={displayName}
-                          width={64}
-                          height={64}
-                          loading="lazy"
-                          className="w-full h-full object-contain"
-                        />
-                      ) : null}
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium leading-tight line-clamp-2">
-                        {displayName}
-                        {p.size ? <span className="text-muted-foreground"> · {p.size}</span> : null}
-                      </div>
-                      {p.flavor && (
-                        <div className="text-xs text-muted-foreground mt-0.5">{p.flavor}</div>
-                      )}
-                      {p.brand_name && (
-                        <div className="text-[10px] uppercase tracking-wide text-muted-foreground mt-0.5">
-                          {p.brand_name}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      {qty === 0 ? (
-                        <Button
-                          size="sm"
-                          onClick={() =>
-                            void addItem({
-                              external_sku: p.sku,
-                              product_name: displayName,
-                              flavor: p.flavor,
-                              price_per_unit: p.buy_price,
-                              product_image: displayImage,
-                              quantity: 1,
-                            })
-                          }
-                        >
-                          Agregar
-                        </Button>
-                      ) : (
-                        <div className="flex items-center gap-1">
-                          <Button
-                            size="icon"
-                            variant="outline"
-                            className="h-7 w-7"
-                            onClick={() => line && void setQuantity(line.id, qty - 1)}
-                          >
-                            <Minus className="w-3 h-3" />
-                          </Button>
-                          <span className="w-7 text-center text-sm font-medium">{qty}</span>
-                          <Button
-                            size="icon"
-                            variant="outline"
-                            className="h-7 w-7"
-                            onClick={() => line && void setQuantity(line.id, qty + 1)}
-                          >
-                            <Plus className="w-3 h-3" />
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="text-right shrink-0 w-24 sm:w-28">
-                      <div className="text-xs text-muted-foreground line-through">
-                        {formatARS(p.retail_price)}
-                      </div>
-                      <div className="text-base font-bold">{formatARS(p.buy_price)}</div>
-                      {p.discount_pct > 0 && (
-                        <div className="text-xs text-emerald-600 font-medium">
-                          -{p.discount_pct}%
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
+              {filtered.map((p) => (
+                <CatalogRow
+                  key={p.sku}
+                  p={p}
+                  line={findLine(p.sku)}
+                  onAdd={handleAdd}
+                  onSetQuantity={setQuantity}
+                />
+              ))}
               {filtered.length === 0 && (
                 <div className="text-center py-12 text-muted-foreground text-sm">
                   No hay productos
@@ -256,7 +282,7 @@ const Catalogo = () => {
           )}
         </div>
       </main>
-      <BrandBar selectedBrandId={selectedBrandId} onSelect={setSelectedBrandId} />
+      <BrandBar selectedBrandId={effectiveBrandId} onSelect={setSelectedBrandId} />
     </div>
   );
 };
