@@ -30,7 +30,7 @@ export const useBrandProgress = (brandSlug: string) => {
       if (cancelled) return;
       setStats({
         collected: Number((data as any)?.collected_total ?? 0),
-        target: Number(data?.target_amount ?? 0),
+        target: Number((data as any)?.target_amount ?? 0),
       });
     };
     load();
