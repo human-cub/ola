@@ -75,10 +75,10 @@ const fetchExternal = async (): Promise<RawExternalProduct[]> =>
 
 const fetchInactiveBrandSlugs = async (): Promise<Set<string>> => {
   const { data } = await supabase
-    .from("brand_overrides")
+    .from("brand_collection_public" as any)
     .select("slug, is_active");
   return new Set(
-    (data ?? []).filter((b) => b.is_active === false).map((b) => b.slug),
+    (data ?? []).filter((b: any) => b.is_active === false).map((b: any) => b.slug),
   );
 };
 
