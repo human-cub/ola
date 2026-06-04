@@ -8,7 +8,7 @@ interface Props {
   brandName?: string | null;
   image?: string | null;
   priceRetailDisplay?: number;
-  priceT4: number;
+  priceT3: number;
 }
 
 export const CatalogProductCard = ({
@@ -18,7 +18,7 @@ export const CatalogProductCard = ({
   brandName,
   image,
   priceRetailDisplay,
-  priceT4,
+  priceT3,
 }: Props) => {
   return (
     <Link
@@ -48,9 +48,9 @@ export const CatalogProductCard = ({
         </h3>
         <div className="mt-auto pt-2">
           <p className="text-xs text-muted-foreground/70 line-through leading-tight min-h-[1rem]">
-            {priceRetailDisplay && priceRetailDisplay > priceT4 ? formatPrice(priceRetailDisplay) : "\u00A0"}
+            {priceRetailDisplay && priceRetailDisplay > priceT3 ? formatPrice(priceRetailDisplay) : "\u00A0"}
           </p>
-          <p className="text-lg font-bold text-primary leading-tight">{formatPrice(priceT4)}</p>
+          <p className="text-lg font-bold text-primary leading-tight">{formatPrice(priceT3)}</p>
           <p className="text-[10px] text-muted-foreground">(Súper-Precio)</p>
         </div>
       </div>

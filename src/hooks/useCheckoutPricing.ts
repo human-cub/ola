@@ -1,89 +1,55 @@
-import { useState, useEffect, useMemo } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { normalizePriceTiers } from "@/lib/collectivePricing";
+import { useMemo } from "react";
+import {
+  buyNowPriceFor,
+  retailFor,
+  useCatalogPricing,
+  waitingPriceFor,
+} from "@/hooks/useCatalogPricing";
 
 interface CartLikeItem {
   product_id: string;
   quantity: number;
   price_per_unit?: number;
   current_price_per_unit?: number;
-  retail_price_per_unit?: number | null;
-  guaranteed_price_per_unit?: number | null;
-  super_price_per_unit?: number | null;
 }
 
-function getItemPrice(item: CartLikeItem): number {
+function getStoredPrice(item: CartLikeItem): number {
   return item.price_per_unit ?? item.current_price_per_unit ?? 0;
 }
 
-interface ProductPriceData {
-  prices: { people: number; price: number }[];
-}
-
 /**
- * Given the current tier index and a promo bonus, return the effective tier index
- * capped at tier index 4 (0-based index 3, which is the 4th tier).
+ * New brand-collective pricing model:
+ * - immediate ("Comprar Ahora"): t1, promo -> t2
+ * - collective (waiting list): t2 guaranteed; brand Meta reached or promo -> t3
+ * - discount is always computed against retail (price_retail_display)
  */
-function getPromoTierIndex(currentTierIndex: number, tierBonus: number, maxTiers: number): number {
-  return Math.min(currentTierIndex + tierBonus, maxTiers - 1);
-}
-
 export function useCheckoutPricing(
   items: CartLikeItem[],
   deliveryZone: "caba" | "gba" | "other",
   promoTierBonus: number = 0,
   isCollective: boolean = false,
 ) {
-  const [productPriceData, setProductPriceData] = useState<Record<string, ProductPriceData>>({});
+  const { priceMap, brandReached } = useCatalogPricing();
+  const hasPromo = promoTierBonus > 0;
 
-  useEffect(() => {
-    const fetchPrices = async () => {
-      const productIds = [...new Set(items.map(item => item.product_id))];
-      if (productIds.length === 0) return;
-      const { data } = await supabase.from("products").select("id, prices, total_orders_count").in("id", productIds);
-      if (data) {
-        const map: Record<string, ProductPriceData> = {};
-        data.forEach(p => {
-          map[p.id] = {
-            prices: normalizePriceTiers(p.prices),
-          };
-        });
-        setProductPriceData(map);
-      }
-    };
-    fetchPrices();
-  }, [items]);
+  const getUnitPrice = (item: CartLikeItem): number => {
+    const stored = getStoredPrice(item);
+    const info = priceMap.get(item.product_id);
+    if (isCollective) {
+      const reached = info?.brandSlug ? brandReached.get(info.brandSlug) ?? false : false;
+      return waitingPriceFor(info, reached, hasPromo, stored);
+    }
+    return buyNowPriceFor(info, hasPromo, stored);
+  };
 
   const pricing = useMemo(() => {
-    // Calculate per-item prices considering promo tier bonus
     let subtotal = 0;
     let fullPrice = 0;
 
     for (const item of items) {
-      const pd = productPriceData[item.product_id];
-      const tiers = pd?.prices || [];
-      const firstTierPrice = item.retail_price_per_unit ?? (tiers.length > 0 ? tiers[0].price : getItemPrice(item));
-
-      fullPrice += firstTierPrice * item.quantity;
-
-      if (promoTierBonus > 0 && tiers.length > 1) {
-        // For "Comprar Ahora" (immediate): base tier = 1 (buy now price, not retail)
-        // For "Sumate al grupo" (collective): base tier = current item price tier
-        let baseTierIndex = 1;
-
-        if (isCollective) {
-          // Find which tier the current price corresponds to
-          const currentPrice = getItemPrice(item);
-          const matchIndex = tiers.findIndex(t => t.price === currentPrice);
-          baseTierIndex = matchIndex >= 0 ? matchIndex : 0;
-        }
-
-        const effectiveIndex = getPromoTierIndex(baseTierIndex, promoTierBonus, tiers.length);
-        const promoPrice = tiers[effectiveIndex]?.price ?? item.super_price_per_unit ?? getItemPrice(item);
-        subtotal += promoPrice * item.quantity;
-      } else {
-        subtotal += getItemPrice(item) * item.quantity;
-      }
+      const unit = getUnitPrice(item);
+      subtotal += unit * item.quantity;
+      fullPrice += retailFor(priceMap.get(item.product_id), unit) * item.quantity;
     }
 
     const discount = fullPrice - subtotal;
@@ -92,7 +58,8 @@ export function useCheckoutPricing(
     const total = subtotal + deliveryCost;
 
     return { subtotal, fullPrice, discount, deliveryCost, total };
-  }, [items, productPriceData, deliveryZone, promoTierBonus, isCollective]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items, priceMap, brandReached, deliveryZone, promoTierBonus, isCollective]);
 
-  return pricing;
+  return { ...pricing, getUnitPrice };
 }

@@ -10,6 +10,7 @@ interface SubmitOptions {
   deliveryCost: number;
   total: number;
   items: any[];
+  itemUnitPrice?: (item: any) => number;
   promoCode?: string | null;
   promoTierBonus?: number | null;
   onSuccess: (data: { orderNumber: string; orderId: string; total: number }) => void;
@@ -72,7 +73,9 @@ export function useCheckoutSubmit(options: SubmitOptions) {
         product_name: item.product_name,
         flavor: item.flavor,
         quantity: item.quantity,
-        price_per_unit: 'price_per_unit' in item ? item.price_per_unit : item.current_price_per_unit,
+        price_per_unit: options.itemUnitPrice
+          ? options.itemUnitPrice(item)
+          : 'price_per_unit' in item ? item.price_per_unit : item.current_price_per_unit,
         product_image: item.product_image,
       }));
 
@@ -89,7 +92,7 @@ export function useCheckoutSubmit(options: SubmitOptions) {
 
         if (fetchError || !pendingOrder) throw fetchError || new Error("No pending collective order found");
 
-        const collectiveTotal = Number(pendingOrder.subtotal) + (options.deliveryCost || 0);
+        const collectiveTotal = options.subtotal + (options.deliveryCost || 0);
 
         const { error: updateError } = await supabase
           .from("user_orders")
@@ -97,6 +100,9 @@ export function useCheckoutSubmit(options: SubmitOptions) {
             status: "confirmed" as const,
             delivery_address: addressData as any,
             delivery_cost: options.deliveryCost || 0,
+            items: orderItems as any,
+            subtotal: options.subtotal,
+            discount_amount: options.discount,
             total_amount: collectiveTotal,
             payment_method: formData.paymentMethod,
             ...(options.promoCode

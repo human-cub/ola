@@ -240,8 +240,8 @@ export const useCatalogProduct = (urlSlug: string | undefined) => {
  */
 export const buildLegacyPriceTiers = (v: CatalogVariant) => [
   { people: 1, price: v.priceRetailDisplay },
-  { people: 25, price: v.priceT2 },
-  { people: 50, price: v.priceT3 },
-  { people: 75, price: v.priceT4 },
-  { people: 100, price: v.priceT4 },
+  { people: 25, price: v.priceT1 },
+  { people: 50, price: v.priceT2 },
+  { people: 75, price: v.priceT3 },
+  { people: 100, price: v.priceT3 },
 ];

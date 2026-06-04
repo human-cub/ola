@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -16,6 +16,7 @@ import { PromoCodeInput } from "@/components/checkout/PromoCodeInput";
 import { useCheckoutPricing } from "@/hooks/useCheckoutPricing";
 import { usePromoCode } from "@/hooks/usePromoCode";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useCatalogPricing } from "@/hooks/useCatalogPricing";
 
 const Cart = () => {
   const navigate = useNavigate();
@@ -29,42 +30,12 @@ const Cart = () => {
   } = useCart();
   const headerVisible = useScrollHeader();
   const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
-  const [productFlavors, setProductFlavors] = useState<Record<string, string[]>>({});
-  const [productLinks, setProductLinks] = useState<Record<string, string>>({});
-  const [productFirstPrices, setProductFirstPrices] = useState<Record<string, number>>({});
   const { appliedPromo, setAppliedPromo, removePromo } = usePromoCode();
   const { isMayorista } = useUserRole();
 
-  useEffect(() => {
-    const fetchProductData = async () => {
-      const productIds = [...new Set(cartItems.map(item => item.product_id))];
-      if (productIds.length === 0) return;
+  const { priceMap } = useCatalogPricing();
 
-      const { data } = await supabase
-        .from("products")
-        .select("id, flavors, link, prices")
-        .in("id", productIds);
-
-      if (data) {
-        const flavorsMap: Record<string, string[]> = {};
-        const linksMap: Record<string, string> = {};
-        const firstPricesMap: Record<string, number> = {};
-        data.forEach((p) => {
-          flavorsMap[p.id] = (p.flavors as string[]) || [];
-          linksMap[p.id] = p.link || "";
-          const prices = (p.prices as any[]) || [];
-          firstPricesMap[p.id] = prices.length > 0 ? prices[0].price : 0;
-        });
-        setProductFlavors(flavorsMap);
-        setProductLinks(linksMap);
-        setProductFirstPrices(firstPricesMap);
-      }
-    };
-
-    fetchProductData();
-  }, [cartItems]);
-
-  const { subtotal, fullPrice, discount } = useCheckoutPricing(
+  const { subtotal, fullPrice, discount, getUnitPrice } = useCheckoutPricing(
     cartItems,
     "caba",
     appliedPromo?.tier_bonus ?? 0,
@@ -149,11 +120,11 @@ const Cart = () => {
                       productId={item.product_id}
                       productName={item.product_name}
                       productImage={item.product_image}
-                      pricePerUnit={item.price_per_unit}
+                      pricePerUnit={getUnitPrice(item)}
                       quantity={item.quantity}
                       flavor={item.flavor}
-                      flavors={productFlavors[item.product_id] || []}
-                      productLink={productLinks[item.product_id] || "#"}
+                      flavors={priceMap.get(item.product_id)?.flavors || []}
+                      productLink={priceMap.get(item.product_id) ? `/p/${priceMap.get(item.product_id)!.urlSlug}` : "#"}
                       onQuantityChange={handleQuantityChange}
                       onFlavorChange={updateCartItemFlavor}
                       onDelete={(id) => setDeleteItemId(id)}

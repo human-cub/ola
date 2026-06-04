@@ -246,7 +246,7 @@ const RelatedV2Products = ({
             brandName={p.brandName}
             image={p.images[0]}
             priceRetailDisplay={p.priceRetailDisplay}
-            priceT4={p.priceT4}
+            priceT3={p.priceT3}
           />
         ))}
       </div>
