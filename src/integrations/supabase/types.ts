@@ -353,6 +353,13 @@ export type Database = {
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "orders_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       products: {
@@ -838,7 +845,101 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      brand_collection_public: {
+        Row: {
+          collected_total: number | null
+          emoji: string | null
+          goal_reached: boolean | null
+          goal_reached_at: string | null
+          is_active: boolean | null
+          slug: string | null
+          sort_order: number | null
+          target_amount: number | null
+        }
+        Insert: {
+          collected_total?: never
+          emoji?: string | null
+          goal_reached?: boolean | null
+          goal_reached_at?: string | null
+          is_active?: boolean | null
+          slug?: string | null
+          sort_order?: number | null
+          target_amount?: number | null
+        }
+        Update: {
+          collected_total?: never
+          emoji?: string | null
+          goal_reached?: boolean | null
+          goal_reached_at?: string | null
+          is_active?: boolean | null
+          slug?: string | null
+          sort_order?: number | null
+          target_amount?: number | null
+        }
+        Relationships: []
+      }
+      products_public: {
+        Row: {
+          brand_id: string | null
+          category: string | null
+          category_id: string | null
+          description: string | null
+          flavors: Json | null
+          id: string | null
+          images: Json | null
+          link: string | null
+          name: string | null
+          price_buy_now: number | null
+          price_guaranteed: number | null
+          price_retail: number | null
+          price_super: number | null
+          variants: Json | null
+          weight: string | null
+        }
+        Insert: {
+          brand_id?: string | null
+          category?: string | null
+          category_id?: string | null
+          description?: string | null
+          flavors?: Json | null
+          id?: string | null
+          images?: Json | null
+          link?: string | null
+          name?: string | null
+          price_buy_now?: never
+          price_guaranteed?: never
+          price_retail?: never
+          price_super?: never
+          variants?: Json | null
+          weight?: string | null
+        }
+        Update: {
+          brand_id?: string | null
+          category?: string | null
+          category_id?: string | null
+          description?: string | null
+          flavors?: Json | null
+          id?: string | null
+          images?: Json | null
+          link?: string | null
+          name?: string | null
+          price_buy_now?: never
+          price_guaranteed?: never
+          price_retail?: never
+          price_super?: never
+          variants?: Json | null
+          weight?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       assign_admin_role: { Args: { user_email: string }; Returns: string }
