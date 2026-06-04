@@ -145,7 +145,10 @@ Deno.serve(async (req) => {
       .map((p) => {
         const retail = toNum(p.price_retail);
         const t4 = toNum(p.price_t4);
-        const buy = t4 > 0 ? Math.max(t4 - 3000, 0) : retail;
+        // Real wholesale price: products.price_mayorista = costo_compra * 1.10
+        // (fallback to the old t4-3000 surrogate while the column is empty for a SKU)
+        const pm = toNum(p.price_mayorista);
+        const buy = pm > 0 ? pm : (t4 > 0 ? Math.max(t4 - 3000, 0) : retail);
         const discount = retail > 0 && buy < retail
           ? Math.round(((retail - buy) / retail) * 100)
           : 0;
