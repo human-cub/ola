@@ -100,6 +100,42 @@ Deno.serve(async (req) => {
       throw new Error("External Supabase credentials are not configured");
     }
 
+    // Determine if the caller is an approved wholesale (mayorista) user.
+    // Only those callers may receive `buy_price` and `discount_pct`.
+    let isWholesale = false;
+    try {
+      const authHeader = req.headers.get("Authorization");
+      if (authHeader?.startsWith("Bearer ")) {
+        const LOCAL_URL = Deno.env.get("SUPABASE_URL");
+        const LOCAL_ANON = Deno.env.get("SUPABASE_ANON_KEY");
+        if (LOCAL_URL && LOCAL_ANON) {
+          const userClient = createClient(LOCAL_URL, LOCAL_ANON, {
+            global: { headers: { Authorization: authHeader } },
+            auth: { persistSession: false },
+          });
+          const token = authHeader.replace("Bearer ", "");
+          const { data: claimsData } = await userClient.auth.getClaims(token);
+          const uid = claimsData?.claims?.sub as string | undefined;
+          if (uid) {
+            const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+            if (SERVICE_KEY) {
+              const admin = createClient(LOCAL_URL, SERVICE_KEY, {
+                auth: { persistSession: false },
+              });
+              const { data: roles } = await admin
+                .from("user_roles")
+                .select("role")
+                .eq("user_id", uid);
+              const roleSet = new Set((roles ?? []).map((r: { role: string }) => r.role));
+              isWholesale = roleSet.has("mayorista") || roleSet.has("admin");
+            }
+          }
+        }
+      }
+    } catch (authError) {
+      console.warn("auth check failed, treating as anonymous:", authError);
+    }
+
     const external = createClient(EXTERNAL_URL, EXTERNAL_KEY, {
       auth: { persistSession: false },
     });
@@ -140,7 +176,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    const products: CatalogProduct[] = ((prodRows ?? []) as Record<string, unknown>[])
+    const productsAll: CatalogProduct[] = ((prodRows ?? []) as Record<string, unknown>[])
       .filter((p) => p.active !== false && p.active !== 0)
       .map((p) => {
         const retail = toNum(p.price_retail);
@@ -186,6 +222,14 @@ Deno.serve(async (req) => {
         };
       })
       .filter((p) => p.sku && p.name && p.buy_price > 0);
+
+    // Strip wholesale-only fields from non-mayorista callers.
+    const products = isWholesale
+      ? productsAll
+      : productsAll.map((p) => {
+          const { buy_price: _b, discount_pct: _d, ...rest } = p;
+          return { ...rest, buy_price: 0, discount_pct: 0 } as CatalogProduct;
+        });
 
     // Note: we intentionally do NOT sort here so consumers can preserve the
     // natural DB order of variants (flavors) within a product group.
