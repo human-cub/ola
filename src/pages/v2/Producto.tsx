@@ -125,12 +125,12 @@ const ProductoV2 = () => {
                 product.brandSlug ? (
                   <Link
                     to={`/marcas/${product.brandSlug}`}
-                    className="inline-block text-xs sm:text-sm font-semibold uppercase tracking-wider text-primary hover:underline"
+                    className="inline-block text-2xl font-bold leading-tight uppercase tracking-wider text-primary hover:underline"
                   >
                     {product.brandName}
                   </Link>
                 ) : (
-                  <p className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-primary">
+                  <p className="text-2xl font-bold leading-tight uppercase tracking-wider text-primary">
                     {product.brandName}
                   </p>
                 )
@@ -247,6 +247,7 @@ const RelatedV2Products = ({
             image={p.images[0]}
             priceRetailDisplay={p.priceRetailDisplay}
             priceT3={p.priceT3}
+            compact
           />
         ))}
       </div>

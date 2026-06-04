@@ -19,7 +19,6 @@ interface DynamicProductCarouselProps {
 export const DynamicProductCarousel = ({ images, productName }: DynamicProductCarouselProps) => {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [inlineApi, setInlineApi] = useState<CarouselApi>();
-  const [thumbsApiVertical, setThumbsApiVertical] = useState<CarouselApi>();
   const [thumbsApiHorizontal, setThumbsApiHorizontal] = useState<CarouselApi>();
   const [inlineCurrent, setInlineCurrent] = useState(0);
   const [modalApi, setModalApi] = useState<CarouselApi>();
@@ -30,13 +29,10 @@ export const DynamicProductCarousel = ({ images, productName }: DynamicProductCa
   const onInlineSelect = useCallback(() => {
     if (!inlineApi) return;
     setInlineCurrent(inlineApi.selectedScrollSnap());
-    if (thumbsApiVertical) {
-      thumbsApiVertical.scrollTo(inlineApi.selectedScrollSnap());
-    }
     if (thumbsApiHorizontal) {
       thumbsApiHorizontal.scrollTo(inlineApi.selectedScrollSnap());
     }
-  }, [inlineApi, thumbsApiVertical, thumbsApiHorizontal]);
+  }, [inlineApi, thumbsApiHorizontal]);
 
   useEffect(() => {
     if (!inlineApi) return;
@@ -81,39 +77,8 @@ export const DynamicProductCarousel = ({ images, productName }: DynamicProductCa
     <>
       <section className="px-0 py-6" data-test-id="product-carousel">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col lg:flex-row gap-4 w-full justify-between lg:pr-8">
-            {displayImages.length > 1 && (
-              <div className="hidden lg:block w-[80px] shrink-0">
-                <Carousel
-                  opts={{ containScroll: "keepSnaps", dragFree: true }}
-                  orientation="vertical"
-                  setApi={setThumbsApiVertical}
-                  className="w-full"
-                >
-                  <CarouselContent className="h-full -mt-2">
-                    {displayImages.map((image, index) => (
-                      <CarouselItem key={index} className="pt-2 basis-1/4 aspect-square overflow-visible">
-                        <button
-                          onClick={() => inlineApi?.scrollTo(index)}
-                          className={`w-full aspect-square p-1 rounded-xl border-2 transition-all ${index === inlineCurrent ? "border-primary" : "border-transparent hover:border-muted-foreground/30"
-                            }`}
-                        >
-                          <img
-                            src={image}
-                            alt={`${productName} Thumbnail ${index + 1}`}
-                            className="w-full h-full object-contain bg-white rounded-lg max-h-full"
-                            loading="lazy"
-                            decoding="async"
-                          />
-                        </button>
-                      </CarouselItem>
-                    ))}
-                  </CarouselContent>
-                </Carousel>
-              </div>
-            )}
-
-            <div className="flex-1 min-w-0 max-w-md mx-auto lg:mx-0">
+          <div className="flex flex-col gap-4 w-full">
+            <div className="flex-1 min-w-0 max-w-md mx-auto">
               <Carousel opts={{ loop: true }} setApi={setInlineApi} className="w-full">
                 <CarouselContent>
                   {displayImages.map((image, index) => (
@@ -142,7 +107,7 @@ export const DynamicProductCarousel = ({ images, productName }: DynamicProductCa
 
             {/* THUMBNAILS */}
             {displayImages.length > 1 && (
-              <div className="block lg:hidden w-full h-full max-w-md mx-auto mt-2">
+              <div className="block w-full h-full max-w-md mx-auto mt-2">
                 <Carousel
                   opts={{ containScroll: "keepSnaps", dragFree: true }}
                   orientation="horizontal"

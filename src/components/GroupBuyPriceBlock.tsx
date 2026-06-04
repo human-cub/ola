@@ -341,9 +341,9 @@ export const GroupBuyPriceBlock = ({
             <div className="px-4 py-4 relative overflow-hidden bg-gradient-primary">
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" style={{ backgroundSize: '200% 100%' }} />
               <div className="flex items-center justify-between gap-2 relative">
-                <div className="flex items-center gap-1.5 min-w-0 flex-shrink">
+                <div className="flex items-center gap-1.5 min-w-0 flex-1">
                   <Sparkles className="w-5 h-5 text-white animate-pulse flex-shrink-0" />
-                  <span className="text-white font-bold text-base whitespace-nowrap">
+                  <span className="text-white font-bold text-sm sm:text-base truncate">
                     {brandName ? `Grupo ${brandName}` : "Grupo"}
                   </span>
                 </div>
@@ -381,10 +381,15 @@ export const GroupBuyPriceBlock = ({
             {/* Progress Bar Section */}
             <div className="px-6 py-8 bg-card">
               <div className="relative">
-                {/* Amount collected (only when > 0) */}
-                <div className="flex justify-start mb-2 text-sm font-bold min-h-[1.25rem]">
+                {/* Amount collected — метка движется за концом прогресс-бара */}
+                <div className="relative mb-2 text-sm font-bold min-h-[1.25rem]">
                   {brandStats.collected > 0 && (
-                    <span className="text-foreground">{formatPrice(brandStats.collected)}</span>
+                    <span
+                      className="absolute -translate-x-1/2 text-foreground whitespace-nowrap transition-all duration-1000"
+                      style={{ left: `${Math.min(88, Math.max(8, visualProgress))}%` }}
+                    >
+                      {formatPrice(brandStats.collected)}
+                    </span>
                   )}
                 </div>
 
