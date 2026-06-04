@@ -253,6 +253,10 @@ export const GroupBuyPriceBlock = ({
       });
     };
     load();
+    const onCollectaChanged = () => load();
+    if (typeof window !== "undefined") {
+      window.addEventListener("collecta-changed", onCollectaChanged);
+    }
     const channel = supabase
       .channel(`brand-override-${brandSlug}`)
       .on(
@@ -263,6 +267,9 @@ export const GroupBuyPriceBlock = ({
       .subscribe();
     return () => {
       cancelled = true;
+      if (typeof window !== "undefined") {
+        window.removeEventListener("collecta-changed", onCollectaChanged);
+      }
       supabase.removeChannel(channel);
     };
   }, [brandSlug]);

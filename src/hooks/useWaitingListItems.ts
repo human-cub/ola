@@ -131,11 +131,8 @@ export const useWaitingListItems = (
 
       if (session?.user) {
         await ensurePendingCollectiveOrder(session.user.id);
-        if (item.brand_slug) {
-          const { error: goalError } = await supabase.rpc("refresh_brand_goal" as any, { _brand_slug: item.brand_slug } as any);
-          if (goalError) throw goalError;
-        }
       }
+      await refreshBrandGoals([item.brand_slug]);
 
       toast.success('Producto agregado a la lista de espera');
     } catch (error) {
