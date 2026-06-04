@@ -63,12 +63,12 @@ export const Footer = ({ isHomePage = false }: FooterProps) => {
                 <div>
                   <h4 className="font-semibold text-foreground mb-1">Dirección</h4>
                   <a 
-                    href="https://maps.app.goo.gl/ZWBkLMDaPkFZgTb6A"
+                    href="https://maps.app.goo.gl/T9vBY7MKpY7e1k4Z7"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-sm text-muted-foreground hover:text-primary transition-colors"
                   >
-                    Av. Gral. Mosconi 3147, E, C1419EQK Cdad. Autónoma de Buenos Aires
+                    Fragata Pres. Sarmiento 1398, C1416CBF Cdad. Autónoma de Buenos Aires
                   </a>
                 </div>
               </div>

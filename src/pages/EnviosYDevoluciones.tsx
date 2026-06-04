@@ -82,12 +82,12 @@ const EnviosYDevoluciones = () => {
             <p className="text-foreground">
               <span className="font-semibold">Dirección:</span>{" "}
               <a
-                href="https://maps.app.goo.gl/ZWBkLMDaPkFZgTb6A"
+                href="https://maps.app.goo.gl/T9vBY7MKpY7e1k4Z7"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-primary hover:underline"
               >
-                Av. Gral. Mosconi 3147, 3E, Villa Pueyrredón, CABA
+                Fragata Pres. Sarmiento 1398, C1416CBF Cdad. Autónoma de Buenos Aires
               </a>
             </p>
           </section>

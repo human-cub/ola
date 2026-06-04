@@ -81,12 +81,12 @@ const Contacto = () => {
             Dirección
           </h2>
           <a
-            href="https://maps.app.goo.gl/ZWBkLMDaPkFZgTb6A"
+            href="https://maps.app.goo.gl/T9vBY7MKpY7e1k4Z7"
             target="_blank"
             rel="noopener noreferrer"
             className="text-muted-foreground hover:text-primary transition-colors"
           >
-            Av. Gral. Mosconi 3147, E, C1419EQK Cdad. Autónoma de Buenos Aires
+            Fragata Pres. Sarmiento 1398, C1416CBF Cdad. Autónoma de Buenos Aires
           </a>
         </section>
       </main>
