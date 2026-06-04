@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
@@ -14,20 +14,12 @@ import { useScrollHeader } from "@/hooks/useScrollHeader";
 import { useCollectiveCountdown } from "@/hooks/useCollectiveCountdown";
 import { usePendingOrder } from "@/hooks/usePendingOrder";
 import { useWaitingListPricing } from "@/hooks/useWaitingListPricing";
-import { useCatalogProducts } from "@/hooks/useCatalogProducts";
+import { useCatalogPricing } from "@/hooks/useCatalogPricing";
 import { CountdownBanner } from "@/components/waiting-list/CountdownBanner";
 import { WaitingListSummary } from "@/components/waiting-list/WaitingListSummary";
 import { WaitingListActions } from "@/components/waiting-list/WaitingListActions";
 import { PromoCodeInput } from "@/components/checkout/PromoCodeInput";
 import { usePromoCode } from "@/hooks/usePromoCode";
-import type { PriceData } from "@/lib/types";
-
-interface ProductData {
-  id: string;
-  link: string;
-  total_orders_count: number;
-  prices: PriceData[];
-}
 
 const WaitingList = () => {
   const navigate = useNavigate();
@@ -42,7 +34,6 @@ const WaitingList = () => {
   } = useCart();
   const headerVisible = useScrollHeader();
   const [deleteGroup, setDeleteGroup] = useState<{ productName: string; itemIds: string[] } | null>(null);
-  const [productData, setProductData] = useState<Record<string, ProductData>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isMovingToCart, setIsMovingToCart] = useState(false);
   const { appliedPromo, setAppliedPromo, removePromo } = usePromoCode();
@@ -52,6 +43,8 @@ const WaitingList = () => {
 
   const { timeLeft, isCollectionEnded } =
     useCollectiveCountdown(pendingOrderCreatedAt, collectiveCloseDate);
+
+  const { priceMap, brandReached } = useCatalogPricing();
 
   const {
     getCurrentPrice,
@@ -63,21 +56,13 @@ const WaitingList = () => {
     estimatedDiscount,
   } = useWaitingListPricing({
     waitingListItems,
-    productData,
     isCollectionEnded,
     hasExistingOrder,
     frozenOrderData,
     promoTierBonus: appliedPromo?.tier_bonus ?? 0,
+    priceMap,
+    brandReached,
   });
-
-  const { data: catalogProducts } = useCatalogProducts();
-  const productBrandMap = useMemo(() => {
-    const map = new Map<string, { brandSlug: string | null; urlSlug: string }>();
-    (catalogProducts ?? []).forEach((p) => {
-      p.variants.forEach((v) => map.set(v.productId, { brandSlug: p.brandSlug, urlSlug: p.urlSlug }));
-    });
-    return map;
-  }, [catalogProducts]);
 
   const groupedWaitingListItems = useMemo(() => {
     const grouped = new Map<string, {
@@ -123,72 +108,15 @@ const WaitingList = () => {
   }, [waitingListItems]);
 
   const displayedProductCount = groupedWaitingListItems.length;
-  const productIds = useMemo(
-    () => [...new Set(waitingListItems.map((item) => item.product_id))],
-    [waitingListItems]
-  );
-  const productIdsKey = useMemo(() => productIds.slice().sort().join(","), [productIds]);
-
-  const fetchProductData = useCallback(async () => {
-    if (productIds.length === 0) {
-      setProductData({});
-      return;
-    }
-
-    const { data } = await supabase
-      .from("products")
-      .select("id, link, total_orders_count, prices")
-      .in("id", productIds);
-
-    if (data) {
-      const prodDataMap: Record<string, ProductData> = {};
-
-      data.forEach((p) => {
-        prodDataMap[p.id] = {
-          id: p.id,
-          link: p.link || "",
-          total_orders_count: p.total_orders_count || 0,
-          prices: (p.prices as unknown as PriceData[]) || [],
-        };
-      });
-
-      setProductData(prodDataMap);
-    }
-  }, [productIds]);
-
-  // Fetch product data
-  useEffect(() => {
-    void fetchProductData();
-  }, [fetchProductData, productIdsKey]);
-
   useEffect(() => {
     void syncPendingOrderPrices();
 
     return undefined;
   }, [syncPendingOrderPrices]);
 
-  useEffect(() => {
-    const channel = supabase
-      .channel("products-price-updates")
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "products" },
-        () => {
-          void fetchProductData();
-          void syncPendingOrderPrices();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [fetchProductData, syncPendingOrderPrices]);
-
   const handleShare = (productId: string, productName: string) => {
-    const prod = productData[productId];
-    if (!prod) return;
-    const link = `${window.location.origin}${prod.link}`;
+    const info = priceMap.get(productId);
+    const link = `${window.location.origin}${info ? `/p/${info.urlSlug}` : ""}`;
     const text = `¡Sumate a la compra colectiva de ${productName}! Seamos más, pagamos menos. ${link}`;
     if (navigator.share) {
       navigator.share({ title: productName, text, url: link });
@@ -325,10 +253,9 @@ const WaitingList = () => {
             <>
               <div className="space-y-0 mb-6">
                 {groupedWaitingListItems.map((item, index) => {
-                  const prod = productData[item.productId];
-                  const brandInfo = productBrandMap.get(item.productId);
+                  const brandInfo = priceMap.get(item.productId);
                   const fallbackPrice = waitingListItems.find((waitingItem) => waitingItem.product_id === item.productId)?.current_price_per_unit || 0;
-                  const dynamicPrice = getCurrentPrice(item.productId, item.totalQuantity) || fallbackPrice;
+                  const dynamicPrice = getCurrentPrice(item.productId) || fallbackPrice;
                   return (
                     <div key={item.productId}>
                       <WaitingListProductItem
@@ -338,7 +265,7 @@ const WaitingList = () => {
                         pricePerUnit={dynamicPrice}
                         totalQuantity={item.totalQuantity}
                         flavorEntries={item.flavorEntries}
-                        productLink={prod?.link || (brandInfo ? `/p/${brandInfo.urlSlug}` : "#")}
+                        productLink={brandInfo ? `/p/${brandInfo.urlSlug}` : "#"}
                         brandSlug={brandInfo?.brandSlug ?? null}
                         isCollectionEnded={isCollectionEnded}
                         onQuantityChange={handleQuantityChange}
