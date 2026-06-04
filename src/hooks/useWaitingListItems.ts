@@ -70,6 +70,19 @@ export const useWaitingListItems = (
     }
   }, [getSessionId]);
 
+  // Пересчитать collecta-агрегат марки (refresh_brand_goal обновляет brand_overrides) —
+  // это шлёт realtime-событие, на которое подписаны прогресс-бары и ценовой мета-кэш.
+  const refreshBrandGoals = async (slugs: Array<string | null | undefined>) => {
+    const unique = [...new Set(slugs.filter((s): s is string => !!s))];
+    await Promise.all(
+      unique.map((slug) =>
+        supabase
+          .rpc("refresh_brand_goal" as any, { _brand_slug: slug } as any)
+          .then(() => undefined, () => undefined),
+      ),
+    );
+  };
+
   const addToWaitingList = async (item: Omit<WaitingListItem, 'id'>) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -228,6 +241,7 @@ export const useWaitingListItems = (
 
   const removeFromWaitingList = async (id: string) => {
     try {
+      const removed = waitingListItems.find((i) => i.id === id);
       await supabase.from('waiting_list_items').delete().eq('id', id);
 
       const waiting = await fetchWaitingListItems(currentUserId);
@@ -236,6 +250,7 @@ export const useWaitingListItems = (
       if (currentUserId) {
         await syncWaitingListOrder(currentUserId);
       }
+      await refreshBrandGoals([removed?.brand_slug]);
 
       toast.success('Producto eliminado de la lista de espera');
     } catch (error) {
@@ -256,8 +271,10 @@ export const useWaitingListItems = (
         query = query.eq('session_id', getSessionId());
       }
 
+      const clearedSlugs = waitingListItems.map((i) => i.brand_slug);
       await query;
       setWaitingListItems([]);
+      await refreshBrandGoals(clearedSlugs);
     } catch (error) {
       console.error('Error clearing waiting list:', error);
     }

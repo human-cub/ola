@@ -1,5 +1,5 @@
-import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useCatalogProducts } from "@/hooks/useCatalogProducts";
 
@@ -50,6 +50,21 @@ export const useCatalogPricing = () => {
     },
     staleTime: 60 * 1000,
   });
+
+  const qc = useQueryClient();
+  useEffect(() => {
+    const channel = supabase
+      .channel(`brand-meta-pricing-${Math.random().toString(36).slice(2, 9)}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "brand_overrides" },
+        () => qc.invalidateQueries({ queryKey: ["brand-overrides-meta"] }),
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [qc]);
 
   const brandReached = useMemo(() => {
     const map = new Map<string, boolean>();
