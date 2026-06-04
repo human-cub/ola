@@ -189,6 +189,33 @@ const groupByUrlSlug = (
   return out;
 };
 
+// Кэш последнего удачного каталога: первый рендер мгновенный (без «флэша»
+// старой главной), свежие данные подтягиваются в фоне (как в socios).
+const CATALOG_CACHE_KEY = "catalog:products:v2";
+const CATALOG_CACHE_TTL = 1000 * 60 * 60 * 24;
+
+const readCatalogCache = (): CatalogProduct[] | undefined => {
+  if (typeof window === "undefined") return undefined;
+  try {
+    const raw = localStorage.getItem(CATALOG_CACHE_KEY);
+    if (!raw) return undefined;
+    const parsed = JSON.parse(raw) as { at: number; data: CatalogProduct[] };
+    if (!parsed?.data || Date.now() - parsed.at > CATALOG_CACHE_TTL) return undefined;
+    return parsed.data;
+  } catch {
+    return undefined;
+  }
+};
+
+const writeCatalogCache = (data: CatalogProduct[]) => {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(CATALOG_CACHE_KEY, JSON.stringify({ at: Date.now(), data }));
+  } catch {
+    /* quota — игнорируем */
+  }
+};
+
 export const useCatalogProducts = () => {
   const qc = useQueryClient();
   const query = useQuery({
@@ -199,9 +226,13 @@ export const useCatalogProducts = () => {
         fetchInactiveBrandSlugs(),
         fetchThisWeekPrices(),
       ]);
-      return groupByUrlSlug(rows, inactive, weekly);
+      const grouped = groupByUrlSlug(rows, inactive, weekly);
+      writeCatalogCache(grouped);
+      return grouped;
     },
     staleTime: 1000 * 60 * 5,
+    initialData: readCatalogCache,
+    initialDataUpdatedAt: 0, // считаем кэш устаревшим — фоновый рефетч сразу
   });
 
   useEffect(() => {
