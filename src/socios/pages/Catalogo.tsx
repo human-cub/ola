@@ -14,9 +14,25 @@ import { BrandBar } from "../BrandBar";
 const norm = (s: string) =>
   s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 
+// Tamaño -> número comparable (kg/l -> x1000, lb -> x453.6, g/ml/caps/unid -> tal cual)
+const sizeToNumber = (s: string | null | undefined): number => {
+  if (!s) return Number.MAX_SAFE_INTEGER;
+  const m = s.toLowerCase().replace(",", ".").match(/([\d.]+)\s*(kg|kilo|lbs?|gr?s?|ml|cc|lt?|litros?|c[aá]ps?|comp|unid|sobres?)?/);
+  if (!m) return Number.MAX_SAFE_INTEGER;
+  const n = parseFloat(m[1]);
+  if (!Number.isFinite(n)) return Number.MAX_SAFE_INTEGER;
+  const unit = m[2] ?? "";
+  const mult = unit.startsWith("kg") || unit.startsWith("kilo") || unit === "l" || unit === "lt" || unit.startsWith("litro")
+    ? 1000
+    : unit.startsWith("lb")
+      ? 453.6
+      : 1;
+  return n * mult;
+};
+
 const Catalogo = () => {
   const { data: products = [], isLoading } = useSociosProducts();
-  const { data: brands = [] } = useBrands({ includeInactive: true });
+  const { data: brands = [], isLoading: brandsLoading } = useBrands({ includeInactive: true });
   const { data: categories = [] } = useCategories({ includeInactive: true });
   const { items, addItem, setQuantity, findLine } = useSociosCartCtx();
   const [search, setSearch] = useState("");
@@ -93,11 +109,22 @@ const Catalogo = () => {
       if (ak !== bk) return ak.localeCompare(bk, "es-AR");
       const an = (a.name_short || a.name).trim();
       const bn = (b.name_short || b.name).trim();
-      return an.localeCompare(bn, "es-AR");
+      const nameCmp = an.localeCompare(bn, "es-AR");
+      if (nameCmp !== 0) return nameCmp;
+      const asz = sizeToNumber(a.size);
+      const bsz = sizeToNumber(b.size);
+      if (asz !== bsz) return asz - bsz;
+      const fl = (a.flavor ?? "").localeCompare(b.flavor ?? "", "es-AR");
+      if (fl !== 0) return fl;
+      return a.sku.localeCompare(b.sku);
     });
   }, [products, selectedBrandId, search, categories, categoryById, brandById]);
 
   void items; // ensure rerender on cart change
+
+  // Hasta que llegue la lista de marcas y se autoseleccione la primera,
+  // no mostramos "todo el catálogo" (evita el flash con el contador total).
+  const initialBrandPending = brandsLoading && selectedBrandId === null && !search.trim();
 
   return (
     <div className="min-h-screen bg-background pb-32">
@@ -106,10 +133,12 @@ const Catalogo = () => {
         <div className="container mx-auto max-w-5xl">
           <div className="flex items-baseline justify-between mb-3">
             <h1 className="text-xl font-bold">Catálogo Mayorista</h1>
-            <span className="text-xs text-muted-foreground">{filtered.length} productos</span>
+            <span className="text-xs text-muted-foreground">
+              {initialBrandPending ? "\u2026" : `${filtered.length} productos`}
+            </span>
           </div>
 
-          {isLoading && products.length === 0 ? (
+          {(isLoading && products.length === 0) || initialBrandPending ? (
             <div className="space-y-2">
               {Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} className="flex items-center gap-3 bg-card border rounded-lg p-2 sm:p-3">
