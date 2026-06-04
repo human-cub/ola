@@ -34,6 +34,10 @@ export const useBrandProgress = (brandSlug: string) => {
       });
     };
     load();
+    const onCollectaChanged = () => load();
+    if (typeof window !== "undefined") {
+      window.addEventListener("collecta-changed", onCollectaChanged);
+    }
     const channel = supabase
       .channel(`brand-progress-${brandSlug}-${Math.random().toString(36).slice(2, 9)}`)
       .on(
@@ -44,6 +48,9 @@ export const useBrandProgress = (brandSlug: string) => {
       .subscribe();
     return () => {
       cancelled = true;
+      if (typeof window !== "undefined") {
+        window.removeEventListener("collecta-changed", onCollectaChanged);
+      }
       supabase.removeChannel(channel);
     };
   }, [brandSlug]);

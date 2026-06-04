@@ -23,30 +23,7 @@ export const useCartItems = (
 
       if (error) throw error;
 
-      // Self-heal: схлопываем исторические дубли одного product_id+flavor
-      const rowsRaw = (data || []) as any[];
-      const groups = new Map<string, any[]>();
-      for (const r of rowsRaw) {
-        const k = `${r.product_id}::${r.flavor ?? ""}`;
-        const arr = groups.get(k) ?? [];
-        arr.push(r);
-        groups.set(k, arr);
-      }
-      const healed: any[] = [];
-      for (const arr of groups.values()) {
-        if (arr.length === 1) {
-          healed.push(arr[0]);
-          continue;
-        }
-        const total = Math.min(arr.reduce((s, r) => s + (r.quantity ?? 0), 0), 99);
-        const [keep, ...extras] = arr;
-        keep.quantity = total;
-        healed.push(keep);
-        void supabase.from("cart_items").update({ quantity: total }).eq("id", keep.id);
-        void supabase.from("cart_items").delete().in("id", extras.map((r) => r.id));
-      }
-      healed.sort((a, b) => String(a.created_at ?? "").localeCompare(String(b.created_at ?? "")));
-      return healed.map((raw) => {
+      return (data || []).map((raw) => {
         const item = raw as any;
         return {
           id: item.id,

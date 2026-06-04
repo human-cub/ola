@@ -53,15 +53,22 @@ export const useCatalogPricing = () => {
 
   const qc = useQueryClient();
   useEffect(() => {
+    const invalidate = () => qc.invalidateQueries({ queryKey: ["brand-overrides-meta"] });
     const channel = supabase
       .channel(`brand-meta-pricing-${Math.random().toString(36).slice(2, 9)}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "brand_overrides" },
-        () => qc.invalidateQueries({ queryKey: ["brand-overrides-meta"] }),
+        invalidate,
       )
       .subscribe();
+    if (typeof window !== "undefined") {
+      window.addEventListener("collecta-changed", invalidate);
+    }
     return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("collecta-changed", invalidate);
+      }
       supabase.removeChannel(channel);
     };
   }, [qc]);

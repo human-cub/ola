@@ -24,30 +24,7 @@ export const useWaitingListItems = (
 
       if (error) throw error;
 
-      // Self-heal: схлопываем исторические дубли одного product_id+flavor
-      const rowsRaw = (data || []) as any[];
-      const groups = new Map<string, any[]>();
-      for (const r of rowsRaw) {
-        const k = `${r.product_id}::${r.flavor ?? ""}`;
-        const arr = groups.get(k) ?? [];
-        arr.push(r);
-        groups.set(k, arr);
-      }
-      const healed: any[] = [];
-      for (const arr of groups.values()) {
-        if (arr.length === 1) {
-          healed.push(arr[0]);
-          continue;
-        }
-        const total = Math.min(arr.reduce((s, r) => s + (r.quantity ?? 0), 0), 99);
-        const [keep, ...extras] = arr;
-        keep.quantity = total;
-        healed.push(keep);
-        void supabase.from("waiting_list_items").update({ quantity: total }).eq("id", keep.id);
-        void supabase.from("waiting_list_items").delete().in("id", extras.map((r) => r.id));
-      }
-      healed.sort((a, b) => String(a.created_at ?? "").localeCompare(String(b.created_at ?? "")));
-      return healed.map((raw) => {
+      return (data || []).map((raw) => {
         const item = raw as any;
         return {
           id: item.id,
@@ -81,6 +58,10 @@ export const useWaitingListItems = (
           .then(() => undefined, () => undefined),
       ),
     );
+    // brand_overrides realtime недоступен анону после локдауна — оповещаем UI событием
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("collecta-changed"));
+    }
   };
 
   const addToWaitingList = async (item: Omit<WaitingListItem, 'id'>) => {
@@ -207,11 +188,8 @@ export const useWaitingListItems = (
 
       if (userId) {
         await syncWaitingListOrder(userId);
-        if (item.brand_slug) {
-          const { error: goalError } = await supabase.rpc("refresh_brand_goal" as any, { _brand_slug: item.brand_slug } as any);
-          if (goalError) throw goalError;
-        }
       }
+      await refreshBrandGoals([item.brand_slug]);
     } catch (error) {
       console.error("Error updating waiting list item:", error);
       toast.error("Error al actualizar cantidad");
