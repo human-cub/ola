@@ -212,11 +212,12 @@ Deno.serve(async (req) => {
         seo_title: b.seo_title,
         seo_description: b.seo_description,
         products_count: b.productsCount,
-        // Public-safe fields only. Admins still get the originals.
-        target_amount: isAdmin ? target : 0,
+        // Public: target_amount + virtual_score (collected total) are shown on UI.
+        // Booster internals (mode, started_at) leak strategy — admin only.
+        target_amount: target,
         booster_mode: isAdmin ? (ov?.booster_mode ?? 'off') : 'off',
         booster_started_at: isAdmin ? (ov?.booster_started_at ?? null) : null,
-        virtual_score: isAdmin ? collected : 0,
+        virtual_score: collected,
       };
     });
 
