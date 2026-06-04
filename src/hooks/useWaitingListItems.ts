@@ -144,13 +144,13 @@ export const useWaitingListItems = (
 
       const { data: brand } = item.brand_slug
         ? await supabase
-            .from("brand_overrides")
+            .from("brand_collection_public" as any)
             .select("goal_reached")
             .eq("slug", item.brand_slug)
             .maybeSingle()
         : { data: null };
 
-      const newPrice = brand?.goal_reached
+      const newPrice = (brand as any)?.goal_reached
         ? (item.super_price_per_unit ?? item.current_price_per_unit)
         : (item.guaranteed_price_per_unit ?? item.current_price_per_unit);
 

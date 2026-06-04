@@ -241,14 +241,14 @@ export const GroupBuyPriceBlock = ({
     let cancelled = false;
     const load = async () => {
       const { data } = await supabase
-        .from("brand_overrides")
-        .select("virtual_score, real_score, target_amount, goal_reached")
+        .from("brand_collection_public" as any)
+        .select("collected_total, target_amount, goal_reached")
         .eq("slug", brandSlug)
         .maybeSingle();
       if (cancelled) return;
       setBrandStats({
-        collected: Number(data?.virtual_score ?? 0) + Number((data as any)?.real_score ?? 0),
-        target: Number(data?.target_amount ?? 0),
+        collected: Number((data as any)?.collected_total ?? 0),
+        target: Number((data as any)?.target_amount ?? 0),
         goalReached: Boolean((data as any)?.goal_reached ?? false),
       });
     };

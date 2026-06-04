@@ -60,6 +60,33 @@ Deno.serve(async (req) => {
       auth: { persistSession: false },
     });
 
+    // Only admins receive booster / virtual_score internals.
+    let isAdmin = false;
+    try {
+      const authHeader = req.headers.get("Authorization");
+      if (authHeader?.startsWith("Bearer ")) {
+        const ANON = Deno.env.get("SUPABASE_ANON_KEY");
+        if (ANON) {
+          const userClient = createClient(LOCAL_URL, ANON, {
+            global: { headers: { Authorization: authHeader } },
+            auth: { persistSession: false },
+          });
+          const token = authHeader.replace("Bearer ", "");
+          const { data: claimsData } = await userClient.auth.getClaims(token);
+          const uid = claimsData?.claims?.sub as string | undefined;
+          if (uid) {
+            const { data: roles } = await local
+              .from("user_roles")
+              .select("role")
+              .eq("user_id", uid);
+            isAdmin = (roles ?? []).some((r: { role: string }) => r.role === "admin");
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("admin check failed:", e);
+    }
+
     // Discover tables via OpenAPI
     const specRes = await fetch(`${EXTERNAL_URL}/rest/v1/`, {
       headers: { apikey: EXTERNAL_KEY, Authorization: `Bearer ${EXTERNAL_KEY}` },
@@ -172,6 +199,8 @@ Deno.serve(async (req) => {
     const merged: MergedBrand[] = extData.map((b, i) => {
       const ov = ovMap.get(b.slug);
       const hasProducts = b.productsCount > 0;
+      const collected = Number(ov?.virtual_score ?? 0);
+      const target = Number(ov?.target_amount ?? 0);
       return {
         id: b.id ?? b.slug,
         name: b.name,
@@ -183,10 +212,12 @@ Deno.serve(async (req) => {
         seo_title: b.seo_title,
         seo_description: b.seo_description,
         products_count: b.productsCount,
-        target_amount: ov?.target_amount ?? 0,
-        booster_mode: ov?.booster_mode ?? 'off',
-        booster_started_at: ov?.booster_started_at ?? null,
-        virtual_score: ov?.virtual_score ?? 0,
+        // Public: target_amount + virtual_score (collected total) are shown on UI.
+        // Booster internals (mode, started_at) leak strategy — admin only.
+        target_amount: target,
+        booster_mode: isAdmin ? (ov?.booster_mode ?? 'off') : 'off',
+        booster_started_at: isAdmin ? (ov?.booster_started_at ?? null) : null,
+        virtual_score: collected,
       };
     });
 

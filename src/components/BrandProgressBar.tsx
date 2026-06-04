@@ -23,14 +23,14 @@ export const useBrandProgress = (brandSlug: string) => {
     let cancelled = false;
     const load = async () => {
       const { data } = await supabase
-        .from("brand_overrides")
-        .select("virtual_score, target_amount")
+        .from("brand_collection_public" as any)
+        .select("collected_total, target_amount")
         .eq("slug", brandSlug)
         .maybeSingle();
       if (cancelled) return;
       setStats({
-        collected: Number(data?.virtual_score ?? 0),
-        target: Number(data?.target_amount ?? 0),
+        collected: Number((data as any)?.collected_total ?? 0),
+        target: Number((data as any)?.target_amount ?? 0),
       });
     };
     load();
