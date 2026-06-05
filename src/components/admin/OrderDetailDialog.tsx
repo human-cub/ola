@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useCatalogPricing } from "@/hooks/useCatalogPricing";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
@@ -77,6 +78,8 @@ export const OrderDetailDialog = ({ order, onClose, onNotesUpdated }: OrderDetai
   const [promoCodes, setPromoCodes] = useState<Array<{ id: string; code: string; tier_bonus: number }>>([]);
   const [selectedPromoId, setSelectedPromoId] = useState<string>("");
   const [applyingPromo, setApplyingPromo] = useState(false);
+  // Каталог: бренд и ссылка на страницу товара для позиций заказа
+  const { priceMap } = useCatalogPricing();
 
   useEffect(() => {
     if (!order) return;
@@ -414,6 +417,12 @@ export const OrderDetailDialog = ({ order, onClose, onNotesUpdated }: OrderDetai
                     ? (perItemCount != null && perItemCount > 0 ? perItemCount : orderLevelCount)
                     : (isCollective ? productCounters[item.product_id] : undefined);
 
+                  const catalogInfo = priceMap.get(item.product_id);
+                  const productHref = catalogInfo?.urlSlug
+                    ? `/p/${catalogInfo.urlSlug}${item.flavor ? `?flavor=${encodeURIComponent(item.flavor)}` : ""}`
+                    : ((item as any).product_link ?? null);
+                  const brandLabel = catalogInfo?.brandName ?? (item as any).brand_slug ?? null;
+
                   return (
                     <div
                       key={idx}
@@ -429,7 +438,24 @@ export const OrderDetailDialog = ({ order, onClose, onNotesUpdated }: OrderDetai
                         />
                       )}
                       <div className="flex-1">
-                        <p className="font-medium">{item.product_name}</p>
+                        {brandLabel && (
+                          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                            {brandLabel}
+                          </p>
+                        )}
+                        {productHref ? (
+                          <a
+                            href={productHref}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="font-medium text-primary hover:underline"
+                            title="Abrir la página del producto con el sabor elegido"
+                          >
+                            {item.product_name}
+                          </a>
+                        ) : (
+                          <p className="font-medium">{item.product_name}</p>
+                        )}
                         {item.flavor && (
                           <p className="text-sm text-muted-foreground">
                             Sabor: {item.flavor}

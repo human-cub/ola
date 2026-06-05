@@ -10,7 +10,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { AddToCartDialog } from "./AddToCartDialog";
+import { AddToCartDialog, type DialogVariantOption } from "./AddToCartDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandCollection } from "@/hooks/useBrandCollection";
 import { getLastSundayClose } from "@/lib/collectivePricing";
@@ -31,6 +31,10 @@ interface GroupBuyPriceBlockProps {
   brandName?: string | null;
   brandSlug?: string | null;
   productLink?: string | null;
+  /** Вкус, выбранный на странице товара (предзадан в попапе) */
+  preselectedFlavor?: string | null;
+  /** Варианты по вкусам для смены вкуса прямо в попапе */
+  variantOptions?: DialogVariantOption[];
 }
 
 interface PriceComparisonItem {
@@ -214,6 +218,8 @@ export const GroupBuyPriceBlock = ({
   brandName = null,
   brandSlug = null,
   productLink = null,
+  preselectedFlavor = null,
+  variantOptions,
 }: GroupBuyPriceBlockProps) => {
   const [displayWaitingCount, setDisplayWaitingCount] = useState(waitingCount);
   // Общий кэш сбора всех марок (один запрос на приложение) + optimistic-дельта
@@ -432,6 +438,8 @@ export const GroupBuyPriceBlock = ({
         brandSlug={brandSlug}
         productLink={productLink}
         isBrandGoalReached={brandStats.goalReached}
+        preselectedFlavor={preselectedFlavor}
+        variantOptions={variantOptions}
       />
 
       <ConflictDialog

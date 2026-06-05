@@ -31,6 +31,14 @@ interface PriceData {
   price: number;
 }
 
+// Вариант (вкус) товара v2: смена вкуса в попапе подменяет productId/фото/цены
+export interface DialogVariantOption {
+  productId: string;
+  flavor: string | null;
+  image: string | null;
+  prices: PriceData[];
+}
+
 interface AddToCartDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -46,6 +54,8 @@ interface AddToCartDialogProps {
   brandSlug?: string | null;
   productLink?: string | null;
   isBrandGoalReached?: boolean;
+  /** Варианты по вкусам (v2): позволяет менять вкус прямо в попапе */
+  variantOptions?: DialogVariantOption[];
 }
 
 export const AddToCartDialog = ({
@@ -63,6 +73,7 @@ export const AddToCartDialog = ({
   brandSlug = null,
   productLink = null,
   isBrandGoalReached = false,
+  variantOptions,
 }: AddToCartDialogProps) => {
   const { addToCart, addToWaitingList } = useCart();
   const navigate = useNavigate();
@@ -85,20 +96,30 @@ export const AddToCartDialog = ({
     }
   }, [open, flavors, preselectedFlavor]);
 
+
   // Calculate price based on quantity for waiting list
   const calculatePrice = (qty: number) => {
-    if (prices.length === 0) return 0;
-    
-    const buyNowPrice = prices.length > 1 ? prices[1].price : prices[0].price;
-    
+    void qty;
+    const list = (variantOptions?.find((v) => (v.flavor ?? "") === (selectedFlavor || ""))?.prices) ?? prices;
+    if (list.length === 0) return 0;
+
+    const buyNowPrice = list.length > 1 ? list[1].price : list[0].price;
+
     if (isWaitingList) {
       return isBrandGoalReached
-        ? (prices[3]?.price ?? prices[prices.length - 1]?.price ?? buyNowPrice)
-        : (prices[2]?.price ?? buyNowPrice);
+        ? (list[3]?.price ?? list[list.length - 1]?.price ?? buyNowPrice)
+        : (list[2]?.price ?? buyNowPrice);
     } else {
       return buyNowPrice;
     }
   };
+
+  // Активный вариант по выбранному вкусу (v2): подменяет id/фото/цены
+  const activeVariant =
+    variantOptions?.find((v) => (v.flavor ?? "") === (selectedFlavor || "")) ?? null;
+  const effProductId = activeVariant?.productId ?? productId;
+  const effImage = activeVariant?.image ?? productImage;
+  const effPrices = activeVariant?.prices ?? prices;
 
   const pricePerUnit = calculatePrice(quantity);
   const totalPrice = pricePerUnit * quantity;
@@ -131,16 +152,16 @@ export const AddToCartDialog = ({
             kind: "waiting_list",
             redirectTo: "/lista-espera",
             item: {
-              product_id: productId,
+              product_id: effProductId,
               product_name: productName,
               flavor: selectedFlavor || null,
               quantity,
               current_price_per_unit: pricePerUnit,
-              product_image: productImage,
+              product_image: effImage,
               brand_slug: brandSlug,
-              retail_price_per_unit: prices[0]?.price ?? null,
-              guaranteed_price_per_unit: prices[2]?.price ?? pricePerUnit,
-              super_price_per_unit: prices[3]?.price ?? prices[prices.length - 1]?.price ?? null,
+              retail_price_per_unit: effPrices[0]?.price ?? null,
+              guaranteed_price_per_unit: effPrices[2]?.price ?? pricePerUnit,
+              super_price_per_unit: effPrices[3]?.price ?? effPrices[effPrices.length - 1]?.price ?? null,
               product_link: productLink,
             },
           });
@@ -149,12 +170,12 @@ export const AddToCartDialog = ({
             kind: "cart",
             redirectTo: "/carrito",
             item: {
-              product_id: productId,
+              product_id: effProductId,
               product_name: productName,
               flavor: selectedFlavor || null,
               quantity,
               price_per_unit: pricePerUnit,
-              product_image: productImage,
+              product_image: effImage,
               product_link: productLink,
             },
           });
@@ -167,34 +188,34 @@ export const AddToCartDialog = ({
 
       if (isWaitingList) {
         await addToWaitingList({
-          product_id: productId,
+          product_id: effProductId,
           product_name: productName,
           flavor: selectedFlavor || null,
           quantity,
           current_price_per_unit: pricePerUnit,
-          product_image: productImage,
+          product_image: effImage,
           brand_slug: brandSlug,
-          retail_price_per_unit: prices[0]?.price ?? null,
-          guaranteed_price_per_unit: prices[2]?.price ?? pricePerUnit,
-          super_price_per_unit: prices[3]?.price ?? prices[prices.length - 1]?.price ?? null,
+          retail_price_per_unit: effPrices[0]?.price ?? null,
+          guaranteed_price_per_unit: effPrices[2]?.price ?? pricePerUnit,
+          super_price_per_unit: effPrices[3]?.price ?? effPrices[effPrices.length - 1]?.price ?? null,
           product_link: productLink,
         });
         await onWaitingListAdded?.();
       } else {
         await addToCart({
-          product_id: productId,
+          product_id: effProductId,
           product_name: productName,
           flavor: selectedFlavor || null,
           quantity,
           price_per_unit: pricePerUnit,
-          product_image: productImage,
+          product_image: effImage,
           product_link: productLink,
         });
       }
 
       amplitude.track('CTA Clicked', {
         button_label: isWaitingList ? 'Agregar a Lista de Espera' : 'Agregar al Carrito',
-        product_id: productId,
+        product_id: effProductId,
         product_name: productName,
         flavor: selectedFlavor || "",
         quantity,
@@ -303,9 +324,9 @@ export const AddToCartDialog = ({
           <div className="space-y-4">
             {/* Product Info */}
             <div className="flex gap-4 items-start">
-              {productImage && (
+              {effImage && (
                 <img
-                  src={productImage}
+                  src={effImage}
                   alt={productName}
                   className="w-20 h-20 object-cover rounded-lg"
                   loading="lazy"
@@ -320,8 +341,8 @@ export const AddToCartDialog = ({
               </div>
             </div>
 
-            {/* Flavor Selection (hidden when preselected on product page) */}
-            {flavors.length > 0 && !preselectedFlavor && (
+            {/* Flavor Selection: предвыбран вкус со страницы, но можно поменять */}
+            {flavors.length > 0 && (flavors.length > 1 || !preselectedFlavor) && (
               <div className="space-y-2">
                 <Label htmlFor="flavor">
                   Sabor <span className="text-destructive">*</span>
@@ -380,7 +401,7 @@ export const AddToCartDialog = ({
                 <span>{isWaitingList ? "Súper-Precio:" : "Total:"}</span>
                 <span className="text-primary">
                   {isWaitingList
-                    ? formatPrice((prices[prices.length - 1]?.price ?? pricePerUnit) * quantity)
+                    ? formatPrice((effPrices[effPrices.length - 1]?.price ?? pricePerUnit) * quantity)
                     : formatPrice(totalPrice)}
                 </span>
               </div>

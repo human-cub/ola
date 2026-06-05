@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useSearchParams } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { Footer } from "@/components/Footer";
@@ -27,13 +27,23 @@ const ProductoV2 = () => {
   const { data: categories = [] } = useCategories();
 
   const [selectedSku, setSelectedSku] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
 
   // Initialise selected variant
   useEffect(() => {
     if (product && !selectedSku) {
-      setSelectedSku(product.variants[0]?.sku ?? null);
+      // ?sku= / ?flavor= в URL (ссылки из админки) предвыбирают вариант
+      const qsSku = searchParams.get("sku");
+      const qsFlavor = searchParams.get("flavor");
+      const bySku = qsSku ? product.variants.find((v) => v.sku === qsSku) : undefined;
+      const byFlavor = !bySku && qsFlavor
+        ? product.variants.find(
+            (v) => (v.flavor ?? "").toLowerCase() === qsFlavor.toLowerCase(),
+          )
+        : undefined;
+      setSelectedSku((bySku ?? byFlavor)?.sku ?? product.variants[0]?.sku ?? null);
     }
-  }, [product, selectedSku]);
+  }, [product, selectedSku, searchParams]);
 
   const selectedVariant: CatalogVariant | null = useMemo(() => {
     if (!product) return null;
@@ -95,6 +105,14 @@ const ProductoV2 = () => {
   const hasFlavors = flavors.length > 0;
 
   const legacyPrices = buildLegacyPriceTiers(selectedVariant);
+  // Все вкусы товара + данные вариантов для смены вкуса в попапе добавления
+  const allFlavors = product.variants.map((v) => v.flavor).filter(Boolean) as string[];
+  const variantOptions = product.variants.map((v) => ({
+    productId: v.productId,
+    flavor: v.flavor,
+    image: v.images[0] || product.galleryImages[0] || product.images[0] || null,
+    prices: buildLegacyPriceTiers(v),
+  }));
   // Main image: variant's own first image if it has one, else first gallery image.
   const variantPrimary =
     selectedVariant.images[0] || product.galleryImages[0] || product.images[0] || null;
@@ -190,7 +208,9 @@ const ProductoV2 = () => {
                   productName={product.name}
                   productId={selectedVariant.productId}
                   productImage={images[0] ?? null}
-                  flavors={selectedVariant.flavor ? [selectedVariant.flavor] : []}
+                  flavors={allFlavors}
+                  preselectedFlavor={selectedVariant.flavor}
+                  variantOptions={variantOptions}
                   priceData={legacyPrices}
                   waitingCount={0}
                   brandName={product.brandName}
