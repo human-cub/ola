@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { AddToCartDialog } from "./AddToCartDialog";
 import { supabase } from "@/integrations/supabase/client";
+import { COLLECTA_DELTA_EVENT, type CollectaDeltaDetail } from "@/lib/collectaBus";
 import { getLastSundayClose } from "@/lib/collectivePricing";
 import { useCollectiveClock } from "@/hooks/useCollectiveClock";
 
@@ -220,6 +221,9 @@ export const GroupBuyPriceBlock = ({
     target: 0,
     goalReached: false,
   });
+  // Optimistic-дельта суммы сбора (см. collectaBus): мгновенное движение,
+  // серверный рефетч (collecta-changed) потом заменяет настоящим значением.
+  const [collectaDelta, setCollectaDelta] = useState(0);
   const {
     timeLeft,
     dialogOpen,
@@ -251,11 +255,19 @@ export const GroupBuyPriceBlock = ({
         target: Number((data as any)?.target_amount ?? 0),
         goalReached: Boolean((data as any)?.goal_reached ?? false),
       });
+      setCollectaDelta(0);
     };
     load();
     const onCollectaChanged = () => load();
+    const onCollectaDelta = (e: Event) => {
+      const detail = (e as CustomEvent<CollectaDeltaDetail>).detail;
+      if (detail?.slug === brandSlug) {
+        setCollectaDelta((d) => d + detail.amount);
+      }
+    };
     if (typeof window !== "undefined") {
       window.addEventListener("collecta-changed", onCollectaChanged);
+      window.addEventListener(COLLECTA_DELTA_EVENT, onCollectaDelta);
     }
     const channel = supabase
       .channel(`brand-override-${brandSlug}`)
@@ -269,10 +281,14 @@ export const GroupBuyPriceBlock = ({
       cancelled = true;
       if (typeof window !== "undefined") {
         window.removeEventListener("collecta-changed", onCollectaChanged);
+        window.removeEventListener(COLLECTA_DELTA_EVENT, onCollectaDelta);
       }
       supabase.removeChannel(channel);
     };
   }, [brandSlug]);
+
+  // Сумма с учётом optimistic-дельты — используется во всех местах рендера
+  const collectedDisplay = Math.max(0, brandStats.collected + collectaDelta);
 
   const refreshWaitingCount = async () => {
     const { data, error } = await supabase
@@ -305,7 +321,7 @@ export const GroupBuyPriceBlock = ({
 
   // Brand-level money progress
   const visualProgress = brandStats.target > 0
-    ? Math.min(100, Math.max(0, (brandStats.collected / brandStats.target) * 100))
+    ? Math.min(100, Math.max(0, (collectedDisplay / brandStats.target) * 100))
     : 0;
   const groupBuyProgressStyle = {
     width: `${visualProgress}%`,
@@ -390,12 +406,12 @@ export const GroupBuyPriceBlock = ({
               <div className="relative">
                 {/* Amount collected — метка движется за концом прогресс-бара */}
                 <div className="relative mb-2 text-sm font-bold min-h-[1.25rem]">
-                  {brandStats.collected > 0 && (
+                  {collectedDisplay > 0 && (
                     <span
                       className="absolute -translate-x-1/2 text-foreground whitespace-nowrap transition-all duration-1000"
                       style={{ left: `${Math.min(88, Math.max(8, visualProgress))}%` }}
                     >
-                      {formatPrice(brandStats.collected)}
+                      {formatPrice(collectedDisplay)}
                     </span>
                   )}
                 </div>
@@ -419,12 +435,12 @@ export const GroupBuyPriceBlock = ({
               </div>
 
               {/* Next threshold message (brand-level money) */}
-              {superPrice !== null && brandStats.target > 0 && brandStats.collected < brandStats.target && (
+              {superPrice !== null && brandStats.target > 0 && collectedDisplay < brandStats.target && (
                 <div className="mt-6 text-center">
                   <p className="text-[15px] font-semibold text-foreground">
                     Faltan{' '}
                     <span className="font-bold" style={groupBuyAccentStyle}>
-                      {formatPrice(brandStats.target - brandStats.collected)}
+                      {formatPrice(brandStats.target - collectedDisplay)}
                     </span>{' '}
                     para Súper-Precio:{' '}
                     <span className="font-bold" style={groupBuyAccentStyle}>

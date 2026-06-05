@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ensurePendingCollectiveOrder, syncWaitingListOrder } from "@/services/orderService";
+import { collectaUnitPrice, dispatchCollectaDelta } from "@/lib/collectaBus";
 import type { WaitingListItem } from "@/contexts/CartContext";
 
 const MAX_QTY = 99;
@@ -22,6 +23,13 @@ export const useWaitingListItems = (
   useEffect(() => {
     userIdRef.current = currentUserId;
   }, [currentUserId]);
+
+  // Optimistic-дельта суммы сбора: только для залогиненных — вклад гостя не
+  // попадает в real_score (заказ не создаётся), сервер сумму не изменит.
+  const emitCollectaDelta = (item: Pick<WaitingListItem, "brand_slug" | "guaranteed_price_per_unit" | "current_price_per_unit">, qtyDiff: number) => {
+    if (!userIdRef.current || !qtyDiff) return;
+    dispatchCollectaDelta(item.brand_slug, qtyDiff * collectaUnitPrice(item));
+  };
 
   // Optimistic UI + escrituras diferidas (debounce) por línea, como en el carrito:
   // la cadena costosa (precio según goal_reached -> UPDATE -> sync orden -> refresh
@@ -73,6 +81,10 @@ export const useWaitingListItems = (
       toast.error(msg);
       const waiting = await fetchWaitingListItems(userIdRef.current);
       setWaitingListItems(waiting);
+      // Сбросить optimistic-дельты баров к серверному значению
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("collecta-changed"));
+      }
     },
     [fetchWaitingListItems],
   );
@@ -180,6 +192,7 @@ export const useWaitingListItems = (
       setWaitingListItems((prev) =>
         prev.map((i) => (i.id === existingLocal.id ? { ...i, quantity: q } : i)),
       );
+      emitCollectaDelta(existingLocal, q - existingLocal.quantity);
       scheduleWrite(existingLocal.id);
       toast.success('Producto agregado a la lista de espera');
       return;
@@ -204,6 +217,14 @@ export const useWaitingListItems = (
         product_link: item.product_link ?? null,
       },
     ]);
+    emitCollectaDelta(
+      {
+        brand_slug: item.brand_slug ?? null,
+        guaranteed_price_per_unit: item.guaranteed_price_per_unit ?? item.current_price_per_unit,
+        current_price_per_unit: item.current_price_per_unit,
+      },
+      item.quantity,
+    );
     toast.success('Producto agregado a la lista de espera');
 
     // Persistencia en segundo plano
@@ -309,6 +330,7 @@ export const useWaitingListItems = (
     setWaitingListItems(prev =>
       prev.map(i => i.id === id ? { ...i, quantity } : i)
     );
+    emitCollectaDelta(item, quantity - item.quantity);
     scheduleWrite(id);
   };
 
@@ -350,6 +372,7 @@ export const useWaitingListItems = (
     writeTimers.current.delete(id);
     pendingQty.current.delete(id);
     setWaitingListItems((prev) => prev.filter((i) => i.id !== id));
+    if (removed) emitCollectaDelta(removed, -removed.quantity);
     toast.success('Producto eliminado de la lista');
 
     const write = async (attempt = 0): Promise<void> => {
@@ -392,6 +415,9 @@ export const useWaitingListItems = (
       }
 
       const clearedSlugs = waitingListItems.map((i) => i.brand_slug);
+      // Без optimistic-дельт: clear зовётся и после сабмита коллективного заказа,
+      // где сумма сбора НЕ падает (заказ остаётся pending и продолжает считаться).
+      // Ручная очистка листа обновит бары через refreshBrandGoals -> collecta-changed.
       setWaitingListItems([]);
       await query;
       await refreshBrandGoals(clearedSlugs);

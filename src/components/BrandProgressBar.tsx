@@ -1,5 +1,6 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { COLLECTA_DELTA_EVENT, type CollectaDeltaDetail } from "@/lib/collectaBus";
 
 interface Props {
   brandSlug: string;
@@ -17,6 +18,9 @@ export const useBrandProgress = (brandSlug: string) => {
     collected: 0,
     target: 0,
   });
+  // Optimistic-дельта поверх последнего серверного значения: двигает бар
+  // мгновенно, пока серверная цепочка пересчитывает real_score.
+  const [optimisticDelta, setOptimisticDelta] = useState(0);
 
   useEffect(() => {
     if (!brandSlug) return;
@@ -32,11 +36,20 @@ export const useBrandProgress = (brandSlug: string) => {
         collected: Number((data as any)?.collected_total ?? 0),
         target: Number((data as any)?.target_amount ?? 0),
       });
+      // Свежие данные включают эффект наших действий — дельта отработала
+      setOptimisticDelta(0);
     };
     load();
     const onCollectaChanged = () => load();
+    const onCollectaDelta = (e: Event) => {
+      const detail = (e as CustomEvent<CollectaDeltaDetail>).detail;
+      if (detail?.slug === brandSlug) {
+        setOptimisticDelta((d) => d + detail.amount);
+      }
+    };
     if (typeof window !== "undefined") {
       window.addEventListener("collecta-changed", onCollectaChanged);
+      window.addEventListener(COLLECTA_DELTA_EVENT, onCollectaDelta);
     }
     const channel = supabase
       .channel(`brand-progress-${brandSlug}-${Math.random().toString(36).slice(2, 9)}`)
@@ -50,12 +63,14 @@ export const useBrandProgress = (brandSlug: string) => {
       cancelled = true;
       if (typeof window !== "undefined") {
         window.removeEventListener("collecta-changed", onCollectaChanged);
+        window.removeEventListener(COLLECTA_DELTA_EVENT, onCollectaDelta);
       }
       supabase.removeChannel(channel);
     };
   }, [brandSlug]);
 
-  const { collected: rawCollected, target } = stats;
+  const { collected: serverCollected, target } = stats;
+  const rawCollected = Math.max(0, serverCollected + optimisticDelta);
   const reached = target > 0 && rawCollected >= target;
   const collectedCapped = target > 0 ? Math.min(rawCollected, target) : rawCollected;
   const pct = target > 0 ? Math.min(100, Math.max(0, (collectedCapped / target) * 100)) : 0;
