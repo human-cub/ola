@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import ProductsTable from "@/components/admin/ProductsTable";
 import OrdersTable from "@/components/admin/OrdersTable";
 import UsersTable from "@/components/admin/UsersTable";
 import UserOrdersTable from "@/components/admin/UserOrdersTable";
