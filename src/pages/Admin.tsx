@@ -13,47 +13,12 @@ import CategoriesTable from "@/components/admin/CategoriesTable";
 import BrandsTable from "@/components/admin/BrandsTable";
 import AdminSettings from "@/components/admin/AdminSettings";
 import ProductsV2Table from "@/components/admin/ProductsV2Table";
-import { getAllProducts } from "@/data/products";
 import { ExternalLink } from "lucide-react";
 
 const Admin = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  const syncAttempted = useRef(false);
-
-  // Sync products from products.ts to Supabase
-  const syncProducts = async () => {
-    if (syncAttempted.current) return;
-    syncAttempted.current = true;
-
-    try {
-      const allProducts = getAllProducts();
-      const productsData = allProducts.map(p => ({
-        id: p.id,
-        name: p.name,
-        weight: p.weight,
-        priceSlider: p.priceSlider,
-        description: p.description,
-        link: p.link,
-        image: p.image,
-        flavors: p.flavors,
-        variants: p.variants,
-      }));
-
-      const { data, error } = await supabase.functions.invoke('sync-products', {
-        body: { products: productsData }
-      });
-
-      if (error) throw error;
-      
-      if (data?.inserted > 0) {
-        console.log(`Synced ${data.inserted} new products`);
-      }
-    } catch (error) {
-      console.error('Error syncing products:', error);
-    }
-  };
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -82,9 +47,6 @@ const Admin = () => {
 
       setIsAdmin(true);
       setLoading(false);
-      
-      // Sync products after auth check
-      syncProducts();
     };
 
     checkAuth();
@@ -127,10 +89,9 @@ const Admin = () => {
         </div>
 
         <Tabs defaultValue="userorders" className="w-full">
-          <TabsList className="grid w-full grid-cols-7">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="userorders">Pedidos</TabsTrigger>
-            <TabsTrigger value="products">Productos</TabsTrigger>
-            <TabsTrigger value="productsv2">Productos V2</TabsTrigger>
+            <TabsTrigger value="productsv2">Productos</TabsTrigger>
             <TabsTrigger value="taxonomy">Cat. y Marcas</TabsTrigger>
             <TabsTrigger value="users">Usuarios</TabsTrigger>
             <TabsTrigger value="promos">Promos</TabsTrigger>
@@ -138,9 +99,6 @@ const Admin = () => {
           </TabsList>
           <TabsContent value="userorders">
             <UserOrdersTable />
-          </TabsContent>
-          <TabsContent value="products">
-            <ProductsTable />
           </TabsContent>
           <TabsContent value="productsv2">
             <ProductsV2Table />
