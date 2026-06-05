@@ -1,7 +1,7 @@
 import { useState, useEffect, type CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
 import * as amplitude from "@amplitude/analytics-browser";
-import { Sparkles, Timer, AlertTriangle } from "lucide-react";
+import { Sparkles, Timer, AlertTriangle, ShoppingCart } from "lucide-react";
 import { GroupIcon } from "@/components/icons/GroupIcon";
 import { Button } from "@/components/ui/button";
 import {
@@ -408,8 +408,9 @@ export const GroupBuyPriceBlock = ({
               </button>
               <button
                 onClick={handleBuyNow}
-                className="w-full py-4 rounded-2xl font-bold text-foreground border-2 border-border bg-card hover:bg-muted transform transition active:scale-95"
+                className="w-full py-4 rounded-2xl font-bold text-foreground border-2 border-border bg-card hover:bg-muted transform transition active:scale-95 flex items-center justify-center gap-2"
               >
+                <ShoppingCart className="w-5 h-5" />
                 Comprar ahora {formatPrice(buyNowPrice)}
               </button>
             </div>
