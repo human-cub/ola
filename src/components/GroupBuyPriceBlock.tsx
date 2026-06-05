@@ -338,34 +338,26 @@ export const GroupBuyPriceBlock = ({
             {/* Progress Bar Section */}
             <div className="px-6 pt-6 pb-4 bg-card border-b border-border">
               <div className="relative">
-                {/* Amount collected — метка движется за концом прогресс-бара */}
-                <div className="relative mb-2 text-sm font-bold min-h-[1.25rem]">
-                  {collectedDisplay > 0 && (
-                    <span
-                      className="absolute -translate-x-1/2 text-foreground whitespace-nowrap transition-all duration-1000"
-                      style={{ left: `${Math.min(88, Math.max(8, visualProgress))}%` }}
-                    >
-                      {formatPrice(collectedDisplay)}
-                    </span>
-                  )}
-                </div>
-
-                {/* Progress bar — slim, no segments */}
+                {/* Progress bar — сумма сбора живёт ВНУТРИ бара: в заполненной
+                    части когда влезает (белым), иначе сразу за заливкой */}
                 <div className="relative h-8 bg-muted rounded-full overflow-hidden shadow-inner">
                   <div
                     className="absolute top-0 left-0 h-full rounded-full transition-all duration-1000"
                     style={groupBuyProgressStyle}
                   />
-                </div>
-
-                {/* Target amount under the bar */}
-                {brandStats.target > 0 && (
-                  <div className="flex justify-end mt-2 text-sm font-bold">
-                    <span className="text-muted-foreground">
-                      Meta: {formatPrice(brandStats.target)}
+                  {collectedDisplay > 0 && (
+                    <span
+                      className={`absolute top-0 bottom-0 flex items-center text-sm font-bold whitespace-nowrap transition-all duration-1000 ${
+                        visualProgress >= 40 ? "text-white -translate-x-full" : "text-foreground"
+                      }`}
+                      style={{
+                        left: `calc(${visualProgress}% ${visualProgress >= 40 ? "- 8px" : "+ 8px"})`,
+                      }}
+                    >
+                      {formatPrice(collectedDisplay)}
                     </span>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
 
               {/* Next threshold message (brand-level money) */}
@@ -376,9 +368,9 @@ export const GroupBuyPriceBlock = ({
                     <span className="font-bold" style={groupBuyAccentStyle}>
                       {formatPrice(brandStats.target - collectedDisplay)}
                     </span>{' '}
-                    para Súper-Precio:{' '}
+                    para{' '}
                     <span className="font-bold" style={groupBuyAccentStyle}>
-                      {formatPrice(superPrice)}
+                      Súper-Precio
                     </span>
                   </p>
                 </div>
