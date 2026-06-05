@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useDeliveryEstimate } from "@/hooks/useDeliveryEstimate";
 import { useNavigate, Link } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -35,6 +36,7 @@ const Cart = () => {
 
   const { priceMap } = useCatalogPricing();
 
+  const { costFor } = useDeliveryEstimate();
   const { subtotal, fullPrice, discount, getUnitPrice } = useCheckoutPricing(
     cartItems,
     "caba",
@@ -146,6 +148,7 @@ const Cart = () => {
                 fullPrice={fullPrice}
                 discount={discount}
                 subtotal={subtotal}
+                deliveryCost={costFor(subtotal)}
               />
 
               <Button

@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useDeliveryEstimate } from "@/hooks/useDeliveryEstimate";
 import { useNavigate, Link } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
@@ -65,6 +66,7 @@ const WaitingList = () => {
     priceMap,
     brandReached,
   });
+  const { costFor } = useDeliveryEstimate();
 
   const groupedWaitingListItems = useMemo(() => {
     const grouped = new Map<string, {
@@ -339,6 +341,7 @@ const WaitingList = () => {
                 currentDiscount={currentDiscount}
                 estimatedTotal={estimatedTotal}
                 estimatedDiscount={estimatedDiscount}
+                deliveryCost={costFor(subtotal)}
               />
 
               <WaitingListActions

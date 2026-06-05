@@ -8,6 +8,8 @@ interface WaitingListSummaryProps {
   currentDiscount: number;
   estimatedTotal: number;
   estimatedDiscount: number;
+  /** Оценка доставки по адресу кабинета (0 = Gratis) */
+  deliveryCost?: number;
 }
 
 export const WaitingListSummary = ({
@@ -17,6 +19,7 @@ export const WaitingListSummary = ({
   currentDiscount,
   estimatedTotal,
   estimatedDiscount,
+  deliveryCost = 0,
 }: WaitingListSummaryProps) => {
   if (isCollectionEnded) {
     return (
@@ -35,10 +38,14 @@ export const WaitingListSummary = ({
           <span className="text-muted-foreground">Subtotal:</span>
           <span>{formatPrice(subtotal)}</span>
         </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">Envío:</span>
+          <span>{deliveryCost === 0 ? "Gratis" : formatPrice(deliveryCost)}</span>
+        </div>
         <Separator />
         <div className="flex justify-between text-lg font-bold pt-2">
           <span>Total:</span>
-          <span>{formatPrice(subtotal)}</span>
+          <span>{formatPrice(subtotal + deliveryCost)}</span>
         </div>
       </div>
     );
@@ -58,10 +65,14 @@ export const WaitingListSummary = ({
           <span>-{formatPrice(currentDiscount)}</span>
         </div>
       )}
+      <div className="flex justify-between text-sm">
+        <span className="text-muted-foreground">Envío:</span>
+        <span>{deliveryCost === 0 ? "Gratis" : formatPrice(deliveryCost)}</span>
+      </div>
       <Separator />
       <div className="flex justify-between text-lg font-bold pt-2">
         <span>Total actual:</span>
-        <span>{formatPrice(subtotal)}</span>
+        <span>{formatPrice(subtotal + deliveryCost)}</span>
       </div>
       {estimatedTotal < subtotal && (
         <>

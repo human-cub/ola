@@ -5,6 +5,7 @@ import {
   useCatalogPricing,
   waitingPriceFor,
 } from "@/hooks/useCatalogPricing";
+import { DELIVERY_COST, FREE_DELIVERY_THRESHOLD } from "@/hooks/useDeliveryEstimate";
 
 interface CartLikeItem {
   product_id: string;
@@ -53,8 +54,8 @@ export function useCheckoutPricing(
     }
 
     const discount = fullPrice - subtotal;
-    const baseDeliveryCost = deliveryZone === "caba" ? 0 : deliveryZone === "gba" ? 3000 : 5000;
-    const deliveryCost = subtotal >= 100000 ? 0 : baseDeliveryCost;
+    const baseDeliveryCost = DELIVERY_COST[deliveryZone] ?? DELIVERY_COST.other;
+    const deliveryCost = subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : baseDeliveryCost;
     const total = subtotal + deliveryCost;
 
     return { subtotal, fullPrice, discount, deliveryCost, total };

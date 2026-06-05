@@ -24,6 +24,7 @@ import { ShareIcon } from "./icons/ShareIcon";
 import { WhatsAppIcon } from "./icons/WhatsAppIcon";
 import { toast } from "sonner";
 import { useCart } from "@/contexts/CartContext";
+import { useDeliveryEstimate } from "@/hooks/useDeliveryEstimate";
 import { supabase } from "@/integrations/supabase/client";
 import { setPendingAddAction } from "@/lib/postAuthAction";
 
@@ -79,7 +80,8 @@ export const AddToCartDialog = ({
   isBrandGoalReached = false,
   variantOptions,
 }: AddToCartDialogProps) => {
-  const { addToCart, addToWaitingList } = useCart();
+  const { addToCart, addToWaitingList, cartItems, waitingListItems } = useCart();
+  const { costFor } = useDeliveryEstimate();
   const navigate = useNavigate();
   const location = useLocation();
   // selectedFlavor хранит КЛЮЧ опции: имя вкуса или FLAVORLESS_KEY («Sin sabor»)
@@ -141,6 +143,13 @@ export const AddToCartDialog = ({
 
   const pricePerUnit = calculatePrice(quantity);
   const totalPrice = pricePerUnit * quantity;
+
+  // Оценка доставки: Gratis по умолчанию; адрес платной зоны в кабинете —
+  // её тариф (порог бесплатной доставки считается от суммы списка + этого товара)
+  const baseSubtotal = isWaitingList
+    ? waitingListItems.reduce((s, i) => s + i.current_price_per_unit * i.quantity, 0)
+    : cartItems.reduce((s, i) => s + i.price_per_unit * i.quantity, 0);
+  const deliveryEstimate = costFor(baseSubtotal + totalPrice);
 
   const handleQuantityChange = (delta: number) => {
     const newQty = quantity + delta;
@@ -415,6 +424,10 @@ export const AddToCartDialog = ({
               <div className="flex justify-between text-sm">
                 <span>{isWaitingList ? "Precio Garantizado:" : "Precio unitario:"}</span>
                 <span>{formatPrice(pricePerUnit)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>Envío:</span>
+                <span>{deliveryEstimate === 0 ? "Gratis" : formatPrice(deliveryEstimate)}</span>
               </div>
               <div className="flex justify-between font-semibold text-lg">
                 <span>{isWaitingList ? "Súper-Precio:" : "Total:"}</span>
