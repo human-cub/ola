@@ -9,6 +9,7 @@ import UserOrdersTable from "@/components/admin/UserOrdersTable";
 import PromoCodesTable from "@/components/admin/PromoCodesTable";
 import CategoriesTable from "@/components/admin/CategoriesTable";
 import BrandsTable from "@/components/admin/BrandsTable";
+import WeeklyPricesCard from "@/components/admin/WeeklyPricesCard";
 import AdminSettings from "@/components/admin/AdminSettings";
 import ProductsV2Table from "@/components/admin/ProductsV2Table";
 import { ExternalLink } from "lucide-react";
@@ -103,6 +104,7 @@ const Admin = () => {
           </TabsContent>
           <TabsContent value="taxonomy">
             <div className="space-y-10">
+              <WeeklyPricesCard />
               <CategoriesTable />
               <BrandsTable />
             </div>
