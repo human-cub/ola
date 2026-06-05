@@ -1,14 +1,35 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ensurePendingCollectiveOrder, syncWaitingListOrder } from "@/services/orderService";
 import type { WaitingListItem } from "@/contexts/CartContext";
+
+const MAX_QTY = 99;
+const WRITE_DEBOUNCE_MS = 350;
 
 export const useWaitingListItems = (
   currentUserId: string | null,
   getSessionId: () => string
 ) => {
   const [waitingListItems, setWaitingListItems] = useState<WaitingListItem[]>([]);
+
+  // Refs para que los timers diferidos lean siempre el estado actual
+  const itemsRef = useRef<WaitingListItem[]>([]);
+  useEffect(() => {
+    itemsRef.current = waitingListItems;
+  }, [waitingListItems]);
+  const userIdRef = useRef<string | null>(currentUserId);
+  useEffect(() => {
+    userIdRef.current = currentUserId;
+  }, [currentUserId]);
+
+  // Optimistic UI + escrituras diferidas (debounce) por línea, como en el carrito:
+  // la cadena costosa (precio según goal_reached -> UPDATE -> sync orden -> refresh
+  // collecta) corre UNA vez con la cantidad final, no en cada click.
+  const pendingQty = useRef(new Map<string, number>());
+  const writeTimers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
+  const tempIdMap = useRef(new Map<string, string>());
+  const writeChain = useRef(new Map<string, Promise<void>>());
 
   const fetchWaitingListItems = useCallback(async (userId: string | null): Promise<WaitingListItem[]> => {
     try {
@@ -47,6 +68,15 @@ export const useWaitingListItems = (
     }
   }, [getSessionId]);
 
+  const failSync = useCallback(
+    async (msg: string) => {
+      toast.error(msg);
+      const waiting = await fetchWaitingListItems(userIdRef.current);
+      setWaitingListItems(waiting);
+    },
+    [fetchWaitingListItems],
+  );
+
   // Пересчитать collecta-агрегат марки (refresh_brand_goal обновляет brand_overrides) —
   // это шлёт realtime-событие, на которое подписаны прогресс-бары и ценовой мета-кэш.
   const refreshBrandGoals = async (slugs: Array<string | null | undefined>) => {
@@ -64,7 +94,119 @@ export const useWaitingListItems = (
     }
   };
 
+  // Цена строки по состоянию сбора марки (goal_reached -> super, иначе guaranteed)
+  const resolveLinePrice = async (item: WaitingListItem): Promise<number> => {
+    const { data: brand } = item.brand_slug
+      ? await supabase
+          .from("brand_collection_public" as any)
+          .select("goal_reached")
+          .eq("slug", item.brand_slug)
+          .maybeSingle()
+      : { data: null };
+
+    return (brand as any)?.goal_reached
+      ? (item.super_price_per_unit ?? item.current_price_per_unit)
+      : (item.guaranteed_price_per_unit ?? item.current_price_per_unit);
+  };
+
+  // Flush diferido de cantidad: corre la cadena completa UNA vez con el valor final
+  const scheduleWrite = useCallback(
+    (lineId: string, delay = WRITE_DEBOUNCE_MS) => {
+      const timers = writeTimers.current;
+      const prev = timers.get(lineId);
+      if (prev) clearTimeout(prev);
+
+      const flush = () => {
+        const realId = tempIdMap.current.get(lineId) ?? lineId;
+        if (realId.startsWith("tmp-")) {
+          timers.set(lineId, setTimeout(flush, 200));
+          return;
+        }
+        timers.delete(lineId);
+        const qty = pendingQty.current.get(lineId);
+        if (qty === undefined) return;
+
+        const doWrite = async () => {
+          const item = itemsRef.current.find((i) => i.id === lineId || i.id === realId);
+          if (!item) {
+            // La línea fue eliminada mientras tanto: el remove ya sincronizó todo
+            pendingQty.current.delete(lineId);
+            return;
+          }
+          try {
+            const newPrice = await resolveLinePrice(item);
+
+            const { error } = await supabase
+              .from("waiting_list_items")
+              .update({ quantity: qty, current_price_per_unit: newPrice })
+              .eq("id", realId);
+            if (error) throw error;
+
+            setWaitingListItems(prev =>
+              prev.map(i => (i.id === lineId || i.id === realId) ? { ...i, current_price_per_unit: newPrice } : i)
+            );
+
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user) {
+              await syncWaitingListOrder(session.user.id);
+            }
+            await refreshBrandGoals([item.brand_slug]);
+
+            if (pendingQty.current.get(lineId) === qty && !writeTimers.current.has(lineId)) {
+              pendingQty.current.delete(lineId);
+            }
+          } catch (error) {
+            console.error("Error updating waiting list item:", error);
+            await failSync("Error al actualizar cantidad");
+          }
+        };
+        const prevChain = writeChain.current.get(realId) ?? Promise.resolve();
+        writeChain.current.set(realId, prevChain.then(doWrite, doWrite));
+      };
+
+      timers.set(lineId, setTimeout(flush, delay));
+    },
+    [failSync],
+  );
+
   const addToWaitingList = async (item: Omit<WaitingListItem, 'id'>) => {
+    // Si la línea (producto+sabor) ya existe localmente, es un incremento optimista
+    const existingLocal = itemsRef.current.find(
+      (i) => i.product_id === item.product_id && (i.flavor ?? null) === (item.flavor ?? null),
+    );
+    if (existingLocal) {
+      const q = Math.min(existingLocal.quantity + item.quantity, MAX_QTY);
+      pendingQty.current.set(existingLocal.id, q);
+      setWaitingListItems((prev) =>
+        prev.map((i) => (i.id === existingLocal.id ? { ...i, quantity: q } : i)),
+      );
+      scheduleWrite(existingLocal.id);
+      toast.success('Producto agregado a la lista de espera');
+      return;
+    }
+
+    // Optimista: la línea aparece ya mismo con un id temporal
+    const tempId = `tmp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    setWaitingListItems((prev) => [
+      ...prev,
+      {
+        id: tempId,
+        product_id: item.product_id,
+        product_name: item.product_name,
+        flavor: item.flavor,
+        quantity: item.quantity,
+        current_price_per_unit: item.current_price_per_unit,
+        product_image: item.product_image,
+        brand_slug: item.brand_slug ?? null,
+        retail_price_per_unit: item.retail_price_per_unit ?? null,
+        guaranteed_price_per_unit: item.guaranteed_price_per_unit ?? item.current_price_per_unit,
+        super_price_per_unit: item.super_price_per_unit ?? null,
+        product_link: item.product_link ?? null,
+      },
+    ]);
+    toast.success('Producto agregado a la lista de espera');
+
+    // Persistencia en segundo plano
     try {
       const { data: { session } } = await supabase.auth.getSession();
 
@@ -111,8 +253,13 @@ export const useWaitingListItems = (
       if (existingRows && existingRows.length > 0) {
         // Суммируем все совпадающие строки (включая возможные дубли) и схлопываем в одну
         const totalExisting = existingRows.reduce((s: number, r: any) => s + (r.quantity ?? 0), 0);
-        const newQty = Math.min(totalExisting + item.quantity, 99);
+        const localPending = pendingQty.current.get(tempId);
+        const newQty = Math.min(localPending ?? (totalExisting + item.quantity), MAX_QTY);
         const [keep, ...extras] = existingRows as any[];
+        tempIdMap.current.set(tempId, keep.id);
+        setWaitingListItems((prev) =>
+          prev.map((i) => (i.id === tempId ? { ...i, id: keep.id, quantity: newQty } : i)),
+        );
         const { error } = await supabase
           .from('waiting_list_items')
           .update({ quantity: newQty, current_price_per_unit: item.current_price_per_unit })
@@ -122,22 +269,25 @@ export const useWaitingListItems = (
           await supabase.from('waiting_list_items').delete().in('id', extras.map((r: any) => r.id));
         }
       } else {
-        const { error } = await supabase.from('waiting_list_items').insert(insertData);
-        if (error) throw error;
+        const { data: created, error } = await supabase
+          .from('waiting_list_items')
+          .insert(insertData)
+          .select('id')
+          .single();
+        if (error || !created) throw error ?? new Error('insert failed');
+        tempIdMap.current.set(tempId, (created as any).id);
+        setWaitingListItems((prev) =>
+          prev.map((i) => (i.id === tempId ? { ...i, id: (created as any).id } : i)),
+        );
       }
-
-      const waiting = await fetchWaitingListItems(session?.user?.id || null);
-      setWaitingListItems(waiting);
 
       if (session?.user) {
         await ensurePendingCollectiveOrder(session.user.id);
       }
       await refreshBrandGoals([item.brand_slug]);
-
-      toast.success('Producto agregado a la lista de espera');
     } catch (error) {
       console.error('Error adding to waiting list:', error);
-      toast.error('Error al agregar a la lista de espera');
+      await failSync('Error al agregar a la lista de espera');
       throw error;
     }
   };
@@ -148,94 +298,89 @@ export const useWaitingListItems = (
     /** Pass current waitingListItems from parent to avoid stale closure */
     currentItems: WaitingListItem[]
   ) => {
-    try {
-      if (quantity < 1 || quantity > 99) return;
+    if (quantity < 1 || quantity > MAX_QTY) return;
 
-      const { data: { session } } = await supabase.auth.getSession();
-      const userId = session?.user?.id ?? null;
+    const item =
+      itemsRef.current.find(i => i.id === id) ?? currentItems.find(i => i.id === id);
+    if (!item) return;
 
-      const item = currentItems.find(i => i.id === id);
-      if (!item) return;
-
-      // Optimistic local update
-      setWaitingListItems(prev =>
-        prev.map(i => i.id === id ? { ...i, quantity } : i)
-      );
-
-      const { data: brand } = item.brand_slug
-        ? await supabase
-            .from("brand_collection_public" as any)
-            .select("goal_reached")
-            .eq("slug", item.brand_slug)
-            .maybeSingle()
-        : { data: null };
-
-      const newPrice = (brand as any)?.goal_reached
-        ? (item.super_price_per_unit ?? item.current_price_per_unit)
-        : (item.guaranteed_price_per_unit ?? item.current_price_per_unit);
-
-      await supabase
-        .from("waiting_list_items")
-        .update({ quantity, current_price_per_unit: newPrice })
-        .eq("id", id);
-
-      setWaitingListItems(prev =>
-        prev.map(i => i.id === id ? { ...i, quantity, current_price_per_unit: newPrice } : i)
-      );
-
-      if (userId) {
-        await syncWaitingListOrder(userId);
-      }
-      await refreshBrandGoals([item.brand_slug]);
-    } catch (error) {
-      console.error("Error updating waiting list item:", error);
-      toast.error("Error al actualizar cantidad");
-      const waiting = await fetchWaitingListItems(currentUserId);
-      setWaitingListItems(waiting);
-    }
+    // Optimistic local update; la cadena de persistencia corre en el flush
+    pendingQty.current.set(id, quantity);
+    setWaitingListItems(prev =>
+      prev.map(i => i.id === id ? { ...i, quantity } : i)
+    );
+    scheduleWrite(id);
   };
 
   const updateWaitingListItemFlavor = async (id: string, flavor: string) => {
-    try {
-      await supabase
-        .from('waiting_list_items')
-        .update({ flavor })
-        .eq('id', id);
-
-      const waiting = await fetchWaitingListItems(currentUserId);
-      setWaitingListItems(waiting);
-
-      if (currentUserId) {
-        await syncWaitingListOrder(currentUserId);
+    setWaitingListItems(prev =>
+      prev.map(i => i.id === id ? { ...i, flavor } : i)
+    );
+    const write = async (attempt = 0): Promise<void> => {
+      const realId = tempIdMap.current.get(id) ?? id;
+      if (realId.startsWith('tmp-')) {
+        if (attempt < 25) setTimeout(() => void write(attempt + 1), 200);
+        return;
       }
-    } catch (error) {
-      console.error('Error updating waiting list item flavor:', error);
-      toast.error('Error al actualizar sabor');
-    }
+      try {
+        const { error } = await supabase
+          .from('waiting_list_items')
+          .update({ flavor })
+          .eq('id', realId);
+        if (error) throw error;
+
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          await syncWaitingListOrder(session.user.id);
+        }
+      } catch (error) {
+        console.error('Error updating waiting list item flavor:', error);
+        await failSync('Error al actualizar sabor');
+      }
+    };
+    await write();
   };
 
   const removeFromWaitingList = async (id: string) => {
-    try {
-      const removed = waitingListItems.find((i) => i.id === id);
-      await supabase.from('waiting_list_items').delete().eq('id', id);
+    const removed = itemsRef.current.find((i) => i.id === id);
 
-      const waiting = await fetchWaitingListItems(currentUserId);
-      setWaitingListItems(waiting);
+    // Optimista: la línea desaparece ya mismo
+    const timer = writeTimers.current.get(id);
+    if (timer) clearTimeout(timer);
+    writeTimers.current.delete(id);
+    pendingQty.current.delete(id);
+    setWaitingListItems((prev) => prev.filter((i) => i.id !== id));
+    toast.success('Producto eliminado de la lista');
 
-      if (currentUserId) {
-        await syncWaitingListOrder(currentUserId);
+    const write = async (attempt = 0): Promise<void> => {
+      const realId = tempIdMap.current.get(id) ?? id;
+      if (realId.startsWith('tmp-')) {
+        if (attempt < 25) setTimeout(() => void write(attempt + 1), 200);
+        return;
       }
-      await refreshBrandGoals([removed?.brand_slug]);
+      try {
+        const { error } = await supabase.from('waiting_list_items').delete().eq('id', realId);
+        if (error) throw error;
 
-      toast.success('Producto eliminado de la lista de espera');
-    } catch (error) {
-      console.error('Error removing from waiting list:', error);
-      toast.error('Error al eliminar de la lista');
-    }
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          await syncWaitingListOrder(session.user.id);
+        }
+        await refreshBrandGoals([removed?.brand_slug]);
+      } catch (error) {
+        console.error('Error removing from waiting list:', error);
+        await failSync('Error al eliminar de la lista');
+      }
+    };
+    await write();
   };
 
   const clearWaitingList = async () => {
     try {
+      for (const t of writeTimers.current.values()) clearTimeout(t);
+      writeTimers.current.clear();
+      pendingQty.current.clear();
+
       const { data: { session } } = await supabase.auth.getSession();
 
       let query = supabase.from('waiting_list_items').delete();
@@ -247,8 +392,8 @@ export const useWaitingListItems = (
       }
 
       const clearedSlugs = waitingListItems.map((i) => i.brand_slug);
-      await query;
       setWaitingListItems([]);
+      await query;
       await refreshBrandGoals(clearedSlugs);
     } catch (error) {
       console.error('Error clearing waiting list:', error);

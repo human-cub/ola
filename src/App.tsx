@@ -1,36 +1,45 @@
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import * as amplitude from "@amplitude/analytics-browser";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useParams } from "react-router-dom";
+import { Spinner } from "@/components/ui/spinner";
+// Ruta crítica de compra: eager (en el bundle principal)
 import Index from "./pages/Index";
-import DynamicProduct from "./pages/DynamicProduct";
-import AuthPage from "./pages/AuthPage";
-import Profile from "./pages/Profile";
-import ReviewEmail from "./pages/ReviewEmail";
-import ProfileComplete from "./pages/ProfileComplete";
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
-import Admin from "./pages/Admin";
-import Cart from "./pages/Cart";
-import WaitingList from "./pages/WaitingList";
-import Checkout from "./pages/Checkout";
-import CompletarDatosColectiva from "./pages/CompletarDatosColectiva";
-import OrderDetail from "./pages/OrderDetail";
-import ComoComprar from "./pages/ComoComprar";
-import EnviosYDevoluciones from "./pages/EnviosYDevoluciones";
-import Mayoristas from "./pages/Mayoristas";
-import Contacto from "./pages/Contacto";
-import QuienesSomos from "./pages/QuienesSomos";
-import NotFound from "./pages/NotFound";
 import Catalogo from "./pages/v2/Catalogo";
 import Categoria from "./pages/v2/Categoria";
 import Marca from "./pages/v2/Marca";
 import Marcas from "./pages/v2/Marcas";
 import Producto from "./pages/v2/Producto";
 import { Navigate } from "react-router-dom";
+// Resto: chunks separados (lazy) para achicar el bundle inicial
+const DynamicProduct = lazy(() => import("./pages/DynamicProduct"));
+const AuthPage = lazy(() => import("./pages/AuthPage"));
+const Profile = lazy(() => import("./pages/Profile"));
+const ReviewEmail = lazy(() => import("./pages/ReviewEmail"));
+const ProfileComplete = lazy(() => import("./pages/ProfileComplete"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const Admin = lazy(() => import("./pages/Admin"));
+const Cart = lazy(() => import("./pages/Cart"));
+const WaitingList = lazy(() => import("./pages/WaitingList"));
+const Checkout = lazy(() => import("./pages/Checkout"));
+const CompletarDatosColectiva = lazy(() => import("./pages/CompletarDatosColectiva"));
+const OrderDetail = lazy(() => import("./pages/OrderDetail"));
+const ComoComprar = lazy(() => import("./pages/ComoComprar"));
+const EnviosYDevoluciones = lazy(() => import("./pages/EnviosYDevoluciones"));
+const Mayoristas = lazy(() => import("./pages/Mayoristas"));
+const Contacto = lazy(() => import("./pages/Contacto"));
+const QuienesSomos = lazy(() => import("./pages/QuienesSomos"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+
+const RouteFallback = () => (
+  <div className="min-h-screen flex items-center justify-center bg-background">
+    <Spinner size="lg" />
+  </div>
+);
 import { FloatingWhatsApp } from "./components/FloatingWhatsApp";
 import { ScrollToTop } from "./components/ScrollToTop";
 import { CartProvider } from "./contexts/CartContext";
@@ -67,6 +76,22 @@ const V2Redirect = ({ to, param }: { to: string; param: string }) => {
 const queryClient = new QueryClient();
 
 const App = () => {
+  // Precarga en idle de los chunks del flujo de compra para que la primera
+  // navegación a carrito/lista/checkout no espere la descarga del chunk.
+  useEffect(() => {
+    const prefetch = () => {
+      void import("./pages/Cart");
+      void import("./pages/WaitingList");
+      void import("./pages/Checkout");
+      void import("./pages/DynamicProduct");
+    };
+    if ("requestIdleCallback" in window) {
+      (window as any).requestIdleCallback(prefetch, { timeout: 4000 });
+    } else {
+      setTimeout(prefetch, 2500);
+    }
+  }, []);
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('utm_source')) {
@@ -105,6 +130,7 @@ const App = () => {
       <BrowserRouter>
         <CartProvider>
         <ScrollToTop />
+        <Suspense fallback={<RouteFallback />}>
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/catalogo" element={<Catalogo />} />
@@ -144,6 +170,7 @@ const App = () => {
           <Route path="/v2/p/:urlSlug" element={<V2Redirect to="/p" param="urlSlug" />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </Suspense>
         <FloatingWhatsApp />
         </CartProvider>
       </BrowserRouter>

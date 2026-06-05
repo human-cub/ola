@@ -3,7 +3,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { useScrollHeader } from "@/hooks/useScrollHeader";
 import { Truck, Package, MapPin, RefreshCw } from "lucide-react";
-import zonasEnvio from "@/assets/zonas-envio.png";
+import zonasEnvio from "@/assets/zonas-envio.webp";
 
 const EnviosYDevoluciones = () => {
   const isVisible = useScrollHeader();

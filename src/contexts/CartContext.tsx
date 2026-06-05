@@ -108,6 +108,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Listen to auth changes
   useEffect(() => {
     let mounted = true;
+    // Supabase emite SIGNED_IN / TOKEN_REFRESHED en cada focus de pestaña y
+    // duplica INITIAL_SESSION+SIGNED_IN al arrancar: cargamos solo cuando el
+    // usuario realmente cambió (evita refetches que pisan el estado optimista).
+    let lastLoadedKey: string | undefined;
 
     const loadData = async (userId: string | null) => {
       if (!mounted) return;
@@ -127,6 +131,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const handleAuthChange = async (event: string, userId: string | null) => {
+      const key = userId ?? "guest";
+      if (key === lastLoadedKey) return;
+      lastLoadedKey = key;
       if (event === "SIGNED_IN" && userId) {
         await migrateGuestCart(userId);
       }
