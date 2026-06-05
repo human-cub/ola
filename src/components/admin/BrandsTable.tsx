@@ -179,20 +179,24 @@ const BrandsTable = () => {
     let cancelled = false;
     const load = async () => {
       try {
-        const { data, error: e } = await supabase.functions.invoke("brand-scores", { body: {} });
+        // real_score — сумма заказов реальных участников текущей недели,
+        // её поддерживает refresh_brand_goal (та же цифра, что двигает бар).
+        // (Старая edge brand-scores мапила товары через legacy-таблицу
+        // products и для v2-заказов всегда давала 0.)
+        const { data, error: e } = await supabase
+          .from("brand_overrides" as any)
+          .select("slug, virtual_score, real_score");
         if (e) throw e;
         if (cancelled) return;
         const map = new Map<string, BrandScore>();
-        for (const s of (data as { scores?: BrandScore[] & { slug: string }[] })?.scores ?? []) {
-          map.set((s as { slug: string }).slug, {
-            mayorista: (s as BrandScore).mayorista,
-            virtual: (s as BrandScore).virtual,
-            score: (s as BrandScore).score,
-          });
+        for (const row of (data ?? []) as Array<{ slug: string; virtual_score: number | null; real_score: number | null }>) {
+          const mayorista = Number(row.real_score ?? 0);
+          const virtual = Number(row.virtual_score ?? 0);
+          map.set(row.slug, { mayorista, virtual, score: mayorista + virtual });
         }
         setScores(map);
       } catch (err) {
-        console.warn("brand-scores load failed", err);
+        console.warn("brand scores load failed", err);
       }
     };
     load();

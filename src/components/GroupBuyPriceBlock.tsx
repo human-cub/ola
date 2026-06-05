@@ -243,6 +243,9 @@ export const GroupBuyPriceBlock = ({
   }, [waitingCount]);
 
   const collectedDisplay = brandStats.collected;
+  // Цель достигнута: вместо суммы показываем «Meta alcanzada»
+  const goalReachedVisual =
+    brandStats.goalReached || (brandStats.target > 0 && collectedDisplay >= brandStats.target);
 
   const refreshWaitingCount = async () => {
     const { data, error } = await supabase
@@ -346,23 +349,29 @@ export const GroupBuyPriceBlock = ({
                     className="absolute top-0 left-0 h-full rounded-full transition-all duration-1000"
                     style={groupBuyProgressStyle}
                   />
-                  {collectedDisplay > 0 && (
-                    <span
-                      className={`absolute top-0 bottom-0 flex items-center text-sm font-bold whitespace-nowrap transition-all duration-1000 ${
-                        visualProgress >= 40 ? "text-white -translate-x-full" : "text-foreground"
-                      }`}
-                      style={{
-                        left: `calc(${visualProgress}% ${visualProgress >= 40 ? "- 8px" : "+ 8px"})`,
-                      }}
-                    >
-                      {formatPrice(collectedDisplay)}
+                  {goalReachedVisual ? (
+                    <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-white whitespace-nowrap">
+                      ¡Meta alcanzada! 🎉
                     </span>
+                  ) : (
+                    collectedDisplay > 0 && (
+                      <span
+                        className={`absolute top-0 bottom-0 flex items-center text-sm font-bold whitespace-nowrap transition-all duration-1000 ${
+                          visualProgress >= 40 ? "text-white -translate-x-full" : "text-foreground"
+                        }`}
+                        style={{
+                          left: `calc(${visualProgress}% ${visualProgress >= 40 ? "- 8px" : "+ 8px"})`,
+                        }}
+                      >
+                        {formatPrice(collectedDisplay)}
+                      </span>
+                    )
                   )}
                 </div>
               </div>
 
               {/* Next threshold message (brand-level money) */}
-              {superPrice !== null && brandStats.target > 0 && collectedDisplay < brandStats.target && (
+              {superPrice !== null && brandStats.target > 0 && !goalReachedVisual && (
                 <div className="mt-3 text-center">
                   <p className="text-[15px] font-semibold text-foreground">
                     Faltan{' '}
