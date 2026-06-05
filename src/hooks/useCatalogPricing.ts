@@ -7,6 +7,7 @@ export interface CatalogPriceInfo {
   t1: number;
   t2: number;
   t3: number;
+  t4: number;
   brandSlug: string | null;
   brandName: string | null;
   urlSlug: string;
@@ -31,6 +32,7 @@ export const useCatalogPricing = () => {
           t1: v.priceT1 || p.priceT1 || 0,
           t2: v.priceT2 || p.priceT2 || 0,
           t3: v.priceT3 || p.priceT3 || 0,
+          t4: v.priceT4 || p.priceT4 || 0,
           brandSlug: p.brandSlug,
           brandName: p.brandName,
           urlSlug: p.urlSlug,
@@ -62,7 +64,7 @@ export const useCatalogPricing = () => {
 
 // ---- New model price rules. Discounts are ALWAYS computed against retail. ----
 
-/** Waiting list / collective: t2 guaranteed; brand Meta reached or promo -> t3. Never beyond t3. */
+/** Waiting list / collective: t3 guaranteed; brand Meta reached or promo -> t4 (Súper). Never beyond t4. */
 export const waitingPriceFor = (
   info: CatalogPriceInfo | undefined,
   reached: boolean,
@@ -70,7 +72,7 @@ export const waitingPriceFor = (
   fallback: number,
 ): number => {
   if (!info) return fallback;
-  return reached || hasPromo ? info.t3 || info.t2 || fallback : info.t2 || fallback;
+  return reached || hasPromo ? info.t4 || info.t3 || fallback : info.t3 || fallback;
 };
 
 /** Buy now: t1; promo -> t2. */

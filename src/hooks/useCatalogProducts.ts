@@ -267,10 +267,12 @@ export const useCatalogProduct = (urlSlug: string | undefined) => {
  * are synthetic (1/25/50/75/100) and unused in v2 — the brand-level money
  * progress drives all UI in the new system.
  */
+// Лестница страницы товара: [0] Retail, [1] Comprar Ahora (t1),
+// [2] Precio Garantizado (t3), [3] Súper-Precio (t4)
 export const buildLegacyPriceTiers = (v: CatalogVariant) => [
   { people: 1, price: v.priceRetailDisplay },
   { people: 25, price: v.priceT1 },
-  { people: 50, price: v.priceT2 },
-  { people: 75, price: v.priceT3 },
-  { people: 100, price: v.priceT3 },
+  { people: 50, price: v.priceT3 },
+  { people: 75, price: v.priceT4 },
+  { people: 100, price: v.priceT4 },
 ];

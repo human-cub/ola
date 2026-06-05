@@ -20,7 +20,7 @@ function getStoredPrice(item: CartLikeItem): number {
 /**
  * New brand-collective pricing model:
  * - immediate ("Comprar Ahora"): t1, promo -> t2
- * - collective (waiting list): t2 guaranteed; brand Meta reached or promo -> t3
+ * - collective (waiting list): t3 guaranteed; brand Meta reached or promo -> t4
  * - discount is always computed against retail (price_retail_display)
  */
 export function useCheckoutPricing(

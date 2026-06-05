@@ -8,7 +8,8 @@ interface Props {
   brandName?: string | null;
   image?: string | null;
   priceRetailDisplay?: number;
-  priceT3: number;
+  /** Súper-Precio (t4) */
+  priceSuper: number;
   /** Компактный вид (блок Otros Productos): меньше паддинги и зазор имя-цена */
   compact?: boolean;
 }
@@ -20,7 +21,7 @@ export const CatalogProductCard = ({
   brandName,
   image,
   priceRetailDisplay,
-  priceT3,
+  priceSuper,
   compact = false,
 }: Props) => {
   return (
@@ -51,9 +52,9 @@ export const CatalogProductCard = ({
         </h3>
         <div className={`mt-auto ${compact ? "pt-0.5" : "pt-2"}`}>
           <p className="text-xs text-muted-foreground/70 line-through leading-tight min-h-[1rem]">
-            {priceRetailDisplay && priceRetailDisplay > priceT3 ? formatPrice(priceRetailDisplay) : "\u00A0"}
+            {priceRetailDisplay && priceRetailDisplay > priceSuper ? formatPrice(priceRetailDisplay) : "\u00A0"}
           </p>
-          <p className={`${compact ? "text-base" : "text-lg"} font-bold text-primary leading-tight`}>{formatPrice(priceT3)}</p>
+          <p className={`${compact ? "text-base" : "text-lg"} font-bold text-primary leading-tight`}>{formatPrice(priceSuper)}</p>
           <p className="text-[10px] text-muted-foreground">(Súper-Precio)</p>
         </div>
       </div>

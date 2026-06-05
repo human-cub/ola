@@ -33,8 +33,8 @@ interface WaitingListPricingParams {
 
 /**
  * New brand-collective model:
- * - price in waiting list = t2 guaranteed; brand Meta reached or promo -> t3 (max t3)
- * - after the weekly freeze, frozen stored prices apply (promo still lifts to t3)
+ * - price in waiting list = t3 guaranteed; brand Meta reached or promo -> t4 (max t4)
+ * - after the weekly freeze, frozen stored prices apply (promo still lifts to t4)
  * - "sin descuento" baseline is ALWAYS retail
  */
 export const useWaitingListPricing = ({
@@ -60,7 +60,7 @@ export const useWaitingListPricing = ({
     if (isCollectionEnded && frozenOrderData) {
       const frozenItem = frozenOrderData.items.find((i) => i.product_id === productId);
       const frozenPrice = frozenItem?.price_per_unit ?? stored;
-      // Promo still upgrades a frozen order to Súper-Precio (t3).
+      // Promo still upgrades a frozen order to Súper-Precio (t4).
       return hasPromo ? waitingPriceFor(info, true, true, frozenPrice) : frozenPrice;
     }
 
@@ -85,8 +85,8 @@ export const useWaitingListPricing = ({
       sub += unit * item.quantity;
       full += retailFor(info, unit) * item.quantity;
       if (!isCollectionEnded) {
-        // Best case at close = Súper-Precio (t3)
-        const best = info ? info.t3 || info.t2 || unit : unit;
+        // Best case at close = Súper-Precio (t4)
+        const best = info ? info.t4 || info.t3 || unit : unit;
         est += best * item.quantity;
       }
     }
