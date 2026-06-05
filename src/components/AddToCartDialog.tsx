@@ -18,7 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Minus, ShoppingCart, Timer, Check } from "lucide-react";
+import { Plus, Minus, ShoppingCart, Check } from "lucide-react";
+import { GroupIcon } from "@/components/icons/GroupIcon";
 import { ShareIcon } from "./icons/ShareIcon";
 import { WhatsAppIcon } from "./icons/WhatsAppIcon";
 import { toast } from "sonner";
@@ -232,7 +233,7 @@ export const AddToCartDialog = ({
       }
 
       amplitude.track('CTA Clicked', {
-        button_label: isWaitingList ? 'Agregar a Lista de Espera' : 'Agregar al Carrito',
+        button_label: isWaitingList ? 'Agregar el producto' : 'Agregar al Carrito',
         product_id: effProductId,
         product_name: productName,
         flavor: flavorValue ?? "",
@@ -264,8 +265,8 @@ export const AddToCartDialog = ({
           <DialogTitle className="flex items-center gap-2">
             {isWaitingList ? (
               <>
-                <Timer className="w-5 h-5 text-primary" />
-                Agregar a Lista de Espera
+                <GroupIcon className="w-5 h-5 text-primary" />
+                Agregar el producto
               </>
             ) : (
               <>

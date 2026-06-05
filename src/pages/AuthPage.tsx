@@ -59,7 +59,7 @@ const AuthPage = () => {
           const { error: goalError } = await supabase.rpc("refresh_brand_goal" as any, { _brand_slug: action.item.brand_slug } as any);
           if (goalError) throw goalError;
         }
-        toast.success("Producto agregado a la lista de espera");
+        toast.success("Producto agregado a tus grupos");
         navigate(action.redirectTo);
       }
     } catch (err) {

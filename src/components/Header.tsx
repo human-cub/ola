@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { User, LogIn, ShoppingCart, Clock, Search } from "lucide-react";
+import { User, LogIn, ShoppingCart, Search } from "lucide-react";
+import { GroupIcon } from "@/components/icons/GroupIcon";
 import olaLogo from "@/assets/ola-logo-new.webp";
 import { TopBar } from "@/components/TopBar";
 import { Button } from "@/components/ui/button";
@@ -108,7 +109,7 @@ export const Header = ({ isVisible }: HeaderProps) => {
                 size="icon"
                 className="relative hover:bg-primary/5"
               >
-                <Clock className="w-5 h-5 text-muted-foreground" />
+                <GroupIcon className="w-5 h-5 text-muted-foreground" />
                 {waitingCount > 0 && (
                   <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs bg-amber-500 hover:bg-amber-500">
                     {waitingCount}

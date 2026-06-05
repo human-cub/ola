@@ -279,11 +279,11 @@ const CompletarDatosColectiva = () => {
             className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            Volver a lista de espera
+            Volver a tus grupos
           </Link>
 
           <h1 className="text-2xl font-bold mb-2">
-            {hasExistingOrder ? "¡Ya participás! 🎉" : "Entrar en lista de espera"}
+            {hasExistingOrder ? "¡Ya participás! 🎉" : "Sumate al grupo"}
           </h1>
           <p className="text-muted-foreground mb-6">
             {hasExistingOrder 
@@ -373,7 +373,7 @@ const CompletarDatosColectiva = () => {
           </Button>
 
           <p className="text-sm text-center text-muted-foreground mt-4">
-            Al confirmar, entrás en la lista de espera para la compra colectiva de esta semana
+            Al confirmar, entrás en el grupo para la compra colectiva de esta semana
           </p>
         </div>
       </main>

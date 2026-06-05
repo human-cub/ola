@@ -1,7 +1,8 @@
 import { useState, useEffect, type CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
 import * as amplitude from "@amplitude/analytics-browser";
-import { Users, Sparkles, Timer, AlertTriangle } from "lucide-react";
+import { Sparkles, Timer, AlertTriangle } from "lucide-react";
+import { GroupIcon } from "@/components/icons/GroupIcon";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -189,13 +190,13 @@ function ConflictDialog({
             Pedido pendiente
           </DialogTitle>
           <DialogDescription className="text-left pt-2">
-            Tenés un pedido de la semana pasada en tu Lista de Espera que aún no fue confirmado ni
+            Tenés un pedido de la semana pasada en Tus grupos que aún no fue confirmado ni
             cancelado. Para agregar nuevos productos, primero necesitás resolver ese pedido.
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-2 pt-2">
           <Button onClick={onGoToWaitingList} className="w-full">
-            Ir a mi Lista de Espera
+            Ir a Tus grupos
           </Button>
           <Button variant="outline" onClick={onClose} className="w-full">
             Cerrar
@@ -402,7 +403,7 @@ export const GroupBuyPriceBlock = ({
                 onClick={handleWaitForDiscount}
                 className="w-full py-4 rounded-2xl font-bold text-white text-[17px] flex items-center justify-center gap-2 shadow-lg transform transition active:scale-95 bg-gradient-primary"
               >
-                <Users className="w-6 h-6" />
+                <GroupIcon className="w-6 h-6" />
                 Sumate al grupo
               </button>
               <button

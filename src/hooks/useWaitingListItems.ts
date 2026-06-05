@@ -194,7 +194,7 @@ export const useWaitingListItems = (
       );
       emitCollectaDelta(existingLocal, q - existingLocal.quantity);
       scheduleWrite(existingLocal.id);
-      toast.success('Producto agregado a la lista de espera');
+      toast.success('Producto agregado a tus grupos');
       return;
     }
 
@@ -225,7 +225,7 @@ export const useWaitingListItems = (
       },
       item.quantity,
     );
-    toast.success('Producto agregado a la lista de espera');
+    toast.success('Producto agregado a tus grupos');
 
     // Persistencia en segundo plano
     try {
@@ -308,7 +308,7 @@ export const useWaitingListItems = (
       await refreshBrandGoals([item.brand_slug]);
     } catch (error) {
       console.error('Error adding to waiting list:', error);
-      await failSync('Error al agregar a la lista de espera');
+      await failSync('Error al agregar el producto');
       throw error;
     }
   };
@@ -373,7 +373,7 @@ export const useWaitingListItems = (
     pendingQty.current.delete(id);
     setWaitingListItems((prev) => prev.filter((i) => i.id !== id));
     if (removed) emitCollectaDelta(removed, -removed.quantity);
-    toast.success('Producto eliminado de la lista');
+    toast.success('Producto eliminado de tus grupos');
 
     const write = async (attempt = 0): Promise<void> => {
       const realId = tempIdMap.current.get(id) ?? id;
