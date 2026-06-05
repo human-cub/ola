@@ -279,7 +279,7 @@ export const GroupBuyPriceBlock = ({
   const groupBuyProgressStyle = {
     width: `${visualProgress}%`,
     background:
-      "linear-gradient(90deg, hsl(36 100% 50%), hsl(var(--group-buy-accent)), hsl(48 100% 60%))",
+      "linear-gradient(90deg, hsl(48 100% 60%), hsl(var(--group-buy-accent)), hsl(36 100% 50%))",
   } satisfies CSSProperties;
 
   // Remaining units to reach Súper-Precio (tier index 3)
@@ -365,7 +365,7 @@ export const GroupBuyPriceBlock = ({
                 <div className="mt-6 text-center">
                   <p className="text-[15px] font-semibold text-foreground">
                     Faltan{' '}
-                    <span className="font-bold" style={groupBuyAccentStyle}>
+                    <span className="font-bold">
                       {formatPrice(brandStats.target - collectedDisplay)}
                     </span>{' '}
                     para{' '}
