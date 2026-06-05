@@ -2,7 +2,6 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Plus, Minus, Trash2, Share2 } from "lucide-react";
 import { formatPrice } from "@/lib/formatting";
-import { useBrandProgress } from "@/components/BrandProgressBar";
 
 interface FlavorEntry {
   id: string;
@@ -18,40 +17,11 @@ interface WaitingListProductItemProps {
   totalQuantity: number;
   flavorEntries: FlavorEntry[];
   productLink: string;
-  brandSlug: string | null;
   isCollectionEnded?: boolean;
   onQuantityChange: (id: string, delta: number, currentQty: number) => void;
   onDelete: (id: string) => void;
   onShare: () => void;
 }
-
-const BrandCollectiveRow = ({ brandSlug }: { brandSlug: string | null }) => {
-  const { collected, target, pct, reached } = useBrandProgress(brandSlug ?? "");
-  if (!brandSlug || target <= 0) return null;
-  return (
-    <div className="mb-1">
-      <div className="relative h-2.5 bg-muted rounded-full overflow-hidden">
-        <div
-          className="absolute top-0 left-0 h-full rounded-full transition-all duration-1000"
-          style={{
-            width: `${pct}%`,
-            background:
-              "linear-gradient(90deg, hsl(36 100% 50%), hsl(var(--group-buy-accent)), hsl(48 100% 60%))",
-          }}
-        />
-      </div>
-      <p className="text-xs text-muted-foreground mt-1">
-        {reached ? (
-          <span className="font-semibold text-primary">¡Meta alcanzada! Súper-Precio activo</span>
-        ) : (
-          <>
-            Faltan <span className="font-semibold text-primary">{formatPrice(target - collected)}</span> para Súper-Precio
-          </>
-        )}
-      </p>
-    </div>
-  );
-};
 
 export const WaitingListProductItem = ({
   id,
@@ -61,7 +31,6 @@ export const WaitingListProductItem = ({
   totalQuantity,
   flavorEntries,
   productLink,
-  brandSlug,
   isCollectionEnded = false,
   onQuantityChange,
   onDelete,
@@ -112,9 +81,6 @@ export const WaitingListProductItem = ({
             </Button>
           </div>
         </div>
-
-        {/* Row 2: Brand collective progress (money-based model) */}
-        <BrandCollectiveRow brandSlug={brandSlug} />
 
         {/* Row 3: Plain-text flavor list with per-flavor quantity controls */}
         {flavorEntries.length > 0 && (

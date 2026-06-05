@@ -9,6 +9,7 @@ export interface CatalogPriceInfo {
   t2: number;
   t3: number;
   brandSlug: string | null;
+  brandName: string | null;
   urlSlug: string;
   flavors: string[];
 }
@@ -32,6 +33,7 @@ export const useCatalogPricing = () => {
           t2: v.priceT2 || p.priceT2 || 0,
           t3: v.priceT3 || p.priceT3 || 0,
           brandSlug: p.brandSlug,
+          brandName: p.brandName,
           urlSlug: p.urlSlug,
           flavors,
         });

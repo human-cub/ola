@@ -10,6 +10,7 @@ import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { WaitingListProductItem } from "@/components/WaitingListProductItem";
+import { BrandGroupHeader } from "@/components/waiting-list/BrandGroupHeader";
 import { useScrollHeader } from "@/hooks/useScrollHeader";
 import { useCollectiveCountdown } from "@/hooks/useCollectiveCountdown";
 import { usePendingOrder } from "@/hooks/usePendingOrder";
@@ -107,6 +108,28 @@ const WaitingList = () => {
     return Array.from(grouped.values());
   }, [waitingListItems]);
 
+  const brandGroups = useMemo(() => {
+    type Group = {
+      key: string;
+      brandSlug: string | null;
+      brandName: string | null;
+      items: typeof groupedWaitingListItems;
+    };
+    const groups: Group[] = [];
+    const idx = new Map<string, number>();
+    for (const item of groupedWaitingListItems) {
+      const info = priceMap.get(item.productId);
+      const slug = info?.brandSlug ?? null;
+      const key = slug ?? "__sin_marca__";
+      if (!idx.has(key)) {
+        idx.set(key, groups.length);
+        groups.push({ key, brandSlug: slug, brandName: info?.brandName ?? null, items: [] });
+      }
+      groups[idx.get(key)!].items.push(item);
+    }
+    return groups;
+  }, [groupedWaitingListItems, priceMap]);
+
   const displayedProductCount = groupedWaitingListItems.length;
   useEffect(() => {
     void syncPendingOrderPrices();
@@ -120,6 +143,17 @@ const WaitingList = () => {
     const text = `¡Sumate a la compra colectiva de ${productName}! Seamos más, pagamos menos. ${link}`;
     if (navigator.share) {
       navigator.share({ title: productName, text, url: link });
+    } else {
+      navigator.clipboard.writeText(text);
+      toast.success("Enlace copiado al portapapeles");
+    }
+  };
+
+  const handleShareBrand = (slug: string, name: string) => {
+    const link = `${window.location.origin}/marcas/${slug}`;
+    const text = `¡Sumate a la colecta de ${name} en Ola! Cuanto más juntamos, más barato pagamos. ${link}`;
+    if (navigator.share) {
+      navigator.share({ title: name, text, url: link });
     } else {
       navigator.clipboard.writeText(text);
       toast.success("Enlace copiado al portapapeles");
@@ -251,32 +285,42 @@ const WaitingList = () => {
             </div>
           ) : (
             <>
-              <div className="space-y-0 mb-6">
-                {groupedWaitingListItems.map((item, index) => {
-                  const brandInfo = priceMap.get(item.productId);
-                  const sourceItem = waitingListItems.find((waitingItem) => waitingItem.product_id === item.productId);
-                  const fallbackPrice = sourceItem?.current_price_per_unit || 0;
-                  const dynamicPrice = getCurrentPrice(item.productId) || fallbackPrice;
-                  return (
-                    <div key={item.productId}>
-                      <WaitingListProductItem
-                        id={item.productId}
-                        productName={item.productName}
-                        productImage={item.productImage}
-                        pricePerUnit={dynamicPrice}
-                        totalQuantity={item.totalQuantity}
-                        flavorEntries={item.flavorEntries}
-                        productLink={brandInfo ? `/p/${brandInfo.urlSlug}` : ((sourceItem as any)?.product_link || "#")}
-                        brandSlug={brandInfo?.brandSlug ?? null}
-                        isCollectionEnded={isCollectionEnded}
-                        onQuantityChange={handleQuantityChange}
-                        onDelete={() => setDeleteGroup({ productName: item.productName, itemIds: item.itemIds })}
-                        onShare={() => handleShare(item.productId, item.productName)}
+              <div className="mb-6 space-y-4">
+                {brandGroups.map((group) => (
+                  <div key={group.key} className="rounded-2xl border bg-card px-4 sm:px-5 py-4">
+                    {group.brandSlug && (
+                      <BrandGroupHeader
+                        brandSlug={group.brandSlug}
+                        brandName={group.brandName ?? group.brandSlug}
+                        onShare={() => handleShareBrand(group.brandSlug!, group.brandName ?? group.brandSlug!)}
                       />
-                      {index < groupedWaitingListItems.length - 1 && <Separator />}
-                    </div>
-                  );
-                })}
+                    )}
+                    {group.items.map((item, index) => {
+                      const brandInfo = priceMap.get(item.productId);
+                      const sourceItem = waitingListItems.find((waitingItem) => waitingItem.product_id === item.productId);
+                      const fallbackPrice = sourceItem?.current_price_per_unit || 0;
+                      const dynamicPrice = getCurrentPrice(item.productId) || fallbackPrice;
+                      return (
+                        <div key={item.productId}>
+                          <WaitingListProductItem
+                            id={item.productId}
+                            productName={item.productName}
+                            productImage={item.productImage}
+                            pricePerUnit={dynamicPrice}
+                            totalQuantity={item.totalQuantity}
+                            flavorEntries={item.flavorEntries}
+                            productLink={brandInfo ? `/p/${brandInfo.urlSlug}` : ((sourceItem as any)?.product_link || "#")}
+                            isCollectionEnded={isCollectionEnded}
+                            onQuantityChange={handleQuantityChange}
+                            onDelete={() => setDeleteGroup({ productName: item.productName, itemIds: item.itemIds })}
+                            onShare={() => handleShare(item.productId, item.productName)}
+                          />
+                          {index < group.items.length - 1 && <Separator />}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
               </div>
 
               <Separator className="my-6" />
