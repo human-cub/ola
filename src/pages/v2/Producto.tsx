@@ -175,7 +175,7 @@ const ProductoV2 = () => {
                               : "bg-card border-border text-foreground hover:border-primary/60"
                           }`}
                         >
-                          {v.flavor || "Único"}
+                          {v.flavor || "Sin sabor"}
                         </button>
                       );
                     })}

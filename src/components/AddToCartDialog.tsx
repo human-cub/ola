@@ -39,6 +39,9 @@ export interface DialogVariantOption {
   prices: PriceData[];
 }
 
+// Ключ-сентинел для варианта без вкуса (рендерится как «Sin sabor»)
+const FLAVORLESS_KEY = "__sin_sabor__";
+
 interface AddToCartDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -78,29 +81,43 @@ export const AddToCartDialog = ({
   const { addToCart, addToWaitingList } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
+  // selectedFlavor хранит КЛЮЧ опции: имя вкуса или FLAVORLESS_KEY («Sin sabor»)
   const [selectedFlavor, setSelectedFlavor] = useState<string>("");
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
+  const flavorOptions = variantOptions
+    ? variantOptions.map((v) => ({
+        key: v.flavor ?? FLAVORLESS_KEY,
+        label: v.flavor ?? "Sin sabor",
+      }))
+    : flavors.map((f) => ({ key: f, label: f }));
+  // В v2 (variantOptions) предвыбор есть всегда — null значит «Sin sabor»
+  const hasPreselect = variantOptions ? true : preselectedFlavor != null;
+
   // Reset state when dialog opens
   useEffect(() => {
     if (open) {
-      setSelectedFlavor(
-        preselectedFlavor ?? (flavors.length === 1 ? flavors[0] : ""),
-      );
+      if (variantOptions) {
+        setSelectedFlavor(preselectedFlavor ?? FLAVORLESS_KEY);
+      } else {
+        setSelectedFlavor(
+          preselectedFlavor ?? (flavors.length === 1 ? flavors[0] : ""),
+        );
+      }
       setQuantity(1);
       setError("");
       setSuccess(false);
     }
-  }, [open, flavors, preselectedFlavor]);
+  }, [open, flavors, preselectedFlavor, variantOptions]);
 
 
   // Calculate price based on quantity for waiting list
   const calculatePrice = (qty: number) => {
     void qty;
-    const list = (variantOptions?.find((v) => (v.flavor ?? "") === (selectedFlavor || ""))?.prices) ?? prices;
+    const list = (variantOptions?.find((v) => (v.flavor ?? FLAVORLESS_KEY) === selectedFlavor)?.prices) ?? prices;
     if (list.length === 0) return 0;
 
     const buyNowPrice = list.length > 1 ? list[1].price : list[0].price;
@@ -116,7 +133,7 @@ export const AddToCartDialog = ({
 
   // Активный вариант по выбранному вкусу (v2): подменяет id/фото/цены
   const activeVariant =
-    variantOptions?.find((v) => (v.flavor ?? "") === (selectedFlavor || "")) ?? null;
+    variantOptions?.find((v) => (v.flavor ?? FLAVORLESS_KEY) === selectedFlavor) ?? null;
   const effProductId = activeVariant?.productId ?? productId;
   const effImage = activeVariant?.image ?? productImage;
   const effPrices = activeVariant?.prices ?? prices;
@@ -133,12 +150,13 @@ export const AddToCartDialog = ({
 
   const handleSubmit = async () => {
     setError("");
-    
+
     // Validate flavor selection
-    if (flavors.length > 0 && !selectedFlavor) {
+    if (flavorOptions.length > 0 && !selectedFlavor) {
       setError("Por favor seleccioná un sabor");
       return;
     }
+    const flavorValue = selectedFlavor === FLAVORLESS_KEY ? null : (selectedFlavor || null);
 
     setLoading(true);
 
@@ -154,7 +172,7 @@ export const AddToCartDialog = ({
             item: {
               product_id: effProductId,
               product_name: productName,
-              flavor: selectedFlavor || null,
+              flavor: flavorValue,
               quantity,
               current_price_per_unit: pricePerUnit,
               product_image: effImage,
@@ -172,7 +190,7 @@ export const AddToCartDialog = ({
             item: {
               product_id: effProductId,
               product_name: productName,
-              flavor: selectedFlavor || null,
+              flavor: flavorValue,
               quantity,
               price_per_unit: pricePerUnit,
               product_image: effImage,
@@ -190,7 +208,7 @@ export const AddToCartDialog = ({
         await addToWaitingList({
           product_id: effProductId,
           product_name: productName,
-          flavor: selectedFlavor || null,
+          flavor: flavorValue,
           quantity,
           current_price_per_unit: pricePerUnit,
           product_image: effImage,
@@ -205,7 +223,7 @@ export const AddToCartDialog = ({
         await addToCart({
           product_id: effProductId,
           product_name: productName,
-          flavor: selectedFlavor || null,
+          flavor: flavorValue,
           quantity,
           price_per_unit: pricePerUnit,
           product_image: effImage,
@@ -217,7 +235,7 @@ export const AddToCartDialog = ({
         button_label: isWaitingList ? 'Agregar a Lista de Espera' : 'Agregar al Carrito',
         product_id: effProductId,
         product_name: productName,
-        flavor: selectedFlavor || "",
+        flavor: flavorValue ?? "",
         quantity,
         price_per_unit: pricePerUnit,
         total_price: totalPrice,
@@ -342,7 +360,7 @@ export const AddToCartDialog = ({
             </div>
 
             {/* Flavor Selection: предвыбран вкус со страницы, но можно поменять */}
-            {flavors.length > 0 && (flavors.length > 1 || !preselectedFlavor) && (
+            {flavorOptions.length > 0 && (flavorOptions.length > 1 || !hasPreselect) && (
               <div className="space-y-2">
                 <Label htmlFor="flavor">
                   Sabor <span className="text-destructive">*</span>
@@ -355,9 +373,9 @@ export const AddToCartDialog = ({
                     <SelectValue placeholder="Seleccioná un sabor" />
                   </SelectTrigger>
                   <SelectContent>
-                    {flavors.map((flavor) => (
-                      <SelectItem key={flavor} value={flavor}>
-                        {flavor}
+                    {flavorOptions.map((opt) => (
+                      <SelectItem key={opt.key} value={opt.key}>
+                        {opt.label}
                       </SelectItem>
                     ))}
                   </SelectContent>

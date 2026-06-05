@@ -335,27 +335,8 @@ export const GroupBuyPriceBlock = ({
               </div>
             </div>
 
-            {/* Price Comparison */}
-            <div className="px-6 py-6 bg-card border-b border-border">
-              <div className={`grid ${brandStats.goalReached ? "grid-cols-2" : "grid-cols-3"} gap-2 text-center items-start`}>
-                {priceComparisonItems.map((item) => (
-                  <div key={item.label} className="flex flex-col items-center gap-1">
-                    <div className={`text-[13px] font-bold ${item.labelClassName}`} style={item.style}>
-                      {item.label}
-                    </div>
-                    <div
-                      className={`text-[20px] sm:text-[24px] font-bold leading-none ${item.priceClassName}`}
-                      style={item.style}
-                    >
-                      {formatPrice(item.price)}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
             {/* Progress Bar Section */}
-            <div className="px-6 py-8 bg-card">
+            <div className="px-6 pt-6 pb-4 bg-card border-b border-border">
               <div className="relative">
                 {/* Amount collected — метка движется за концом прогресс-бара */}
                 <div className="relative mb-2 text-sm font-bold min-h-[1.25rem]">
@@ -402,6 +383,25 @@ export const GroupBuyPriceBlock = ({
                   </p>
                 </div>
               )}
+            </div>
+
+            {/* Price Comparison */}
+            <div className="px-6 py-6 bg-card">
+              <div className={`grid ${brandStats.goalReached ? "grid-cols-2" : "grid-cols-3"} gap-2 text-center items-start`}>
+                {priceComparisonItems.map((item) => (
+                  <div key={item.label} className="flex flex-col items-center gap-1">
+                    <div className={`text-[13px] font-bold ${item.labelClassName}`} style={item.style}>
+                      {item.label}
+                    </div>
+                    <div
+                      className={`text-[20px] sm:text-[24px] font-bold leading-none ${item.priceClassName}`}
+                      style={item.style}
+                    >
+                      {formatPrice(item.price)}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* CTA Buttons */}
