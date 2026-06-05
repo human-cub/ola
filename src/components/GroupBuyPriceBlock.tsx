@@ -362,14 +362,14 @@ export const GroupBuyPriceBlock = ({
 
               {/* Next threshold message (brand-level money) */}
               {superPrice !== null && brandStats.target > 0 && collectedDisplay < brandStats.target && (
-                <div className="mt-6 text-center">
+                <div className="mt-3 text-center">
                   <p className="text-[15px] font-semibold text-foreground">
                     Faltan{' '}
-                    <span className="font-bold">
+                    <span className="font-bold" style={groupBuyAccentStyle}>
                       {formatPrice(brandStats.target - collectedDisplay)}
                     </span>{' '}
                     para{' '}
-                    <span className="font-bold" style={groupBuyAccentStyle}>
+                    <span className="font-bold">
                       Súper-Precio
                     </span>
                   </p>
