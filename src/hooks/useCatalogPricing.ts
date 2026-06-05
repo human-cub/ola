@@ -1,7 +1,6 @@
-import { useEffect, useMemo } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useMemo } from "react";
 import { useCatalogProducts } from "@/hooks/useCatalogProducts";
+import { useBrandCollectionData } from "@/hooks/useBrandCollection";
 
 export interface CatalogPriceInfo {
   retail: number;
@@ -40,38 +39,9 @@ export const useCatalogPricing = () => {
     return map;
   }, [catalogProducts]);
 
-  const { data: overrides } = useQuery({
-    queryKey: ["brand-overrides-meta"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("brand_collection_public" as any)
-        .select("slug, collected_total, target_amount, goal_reached");
-      return data ?? [];
-    },
-    staleTime: 60 * 1000,
-  });
-
-  const qc = useQueryClient();
-  useEffect(() => {
-    const invalidate = () => qc.invalidateQueries({ queryKey: ["brand-overrides-meta"] });
-    const channel = supabase
-      .channel(`brand-meta-pricing-${Math.random().toString(36).slice(2, 9)}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "brand_overrides" },
-        invalidate,
-      )
-      .subscribe();
-    if (typeof window !== "undefined") {
-      window.addEventListener("collecta-changed", invalidate);
-    }
-    return () => {
-      if (typeof window !== "undefined") {
-        window.removeEventListener("collecta-changed", invalidate);
-      }
-      supabase.removeChannel(channel);
-    };
-  }, [qc]);
+  // Общий кэш сбора всех марок: один запрос/канал на приложение
+  // (инвалидация по collecta-changed/realtime — внутри useBrandCollectionData)
+  const { data: overrides } = useBrandCollectionData();
 
   const brandReached = useMemo(() => {
     const map = new Map<string, boolean>();

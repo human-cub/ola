@@ -1,7 +1,6 @@
 import { createRoot } from 'react-dom/client'
 import * as amplitude from '@amplitude/analytics-browser'
 import App from './App.tsx'
-import { CartProvider } from './contexts/CartContext'
 import './index.css'
 
 amplitude.init('8308e53a7a79469337419645b55075f8', {
@@ -11,8 +10,6 @@ amplitude.init('8308e53a7a79469337419645b55075f8', {
   transport: 'beacon',
 })
 
-createRoot(document.getElementById("root")!).render(
-  <CartProvider>
-    <App />
-  </CartProvider>
-);
+// CartProvider живёт внутри App (поверх Routes). Второй провайдер здесь
+// дублировал все стартовые запросы корзины и листа ожидания.
+createRoot(document.getElementById("root")!).render(<App />);

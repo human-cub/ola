@@ -57,9 +57,40 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 const SESSION_ID_KEY = 'ola_session_id';
 
+// localStorage-кэш корзины и листа ожидания: мгновенные цифры на иконках и
+// контент страниц при перезагрузке (фоновый фетч потом заменяет данные).
+// Ключ привязан к владельцу (uid или session id) — чужой кэш не показываем.
+const CART_CACHE_PREFIX = 'ola:cart:v1:';
+const WAITING_CACHE_PREFIX = 'ola:waiting:v1:';
+
+const readOwnerCache = <T,>(key: string): T[] | null => {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed?.items) ? (parsed.items as T[]) : null;
+  } catch {
+    return null;
+  }
+};
+
+const writeOwnerCache = (key: string, items: Array<{ id: string }>) => {
+  try {
+    // tmp-строки (insert ещё в полёте) в кэш не пишем: после перезагрузки
+    // их id бессмысленны
+    localStorage.setItem(
+      key,
+      JSON.stringify({ at: Date.now(), items: items.filter((i) => !String(i.id).startsWith('tmp-')) }),
+    );
+  } catch { /* quota — ignorar */ }
+};
+
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  // Ключ владельца, для которого реально загружены данные: кэш пишем только
+  // под него (страхует от записи гостевых строк в кэш юзера при логине)
+  const loadedOwnerKeyRef = React.useRef<string | null>(null);
 
   const getSessionId = useCallback((): string => {
     let storedSessionId = localStorage.getItem(SESSION_ID_KEY);
@@ -81,6 +112,17 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     addToWaitingList, updateWaitingListItemQuantity: rawUpdateWLQuantity,
     updateWaitingListItemFlavor, removeFromWaitingList, clearWaitingList,
   } = useWaitingListItems(currentUserId, getSessionId);
+
+  // Кэш владельца обновляется при каждом изменении (optimistic-операции тоже)
+  useEffect(() => {
+    const ownerKey = loadedOwnerKeyRef.current;
+    if (ownerKey) writeOwnerCache(CART_CACHE_PREFIX + ownerKey, cartItems);
+  }, [cartItems]);
+
+  useEffect(() => {
+    const ownerKey = loadedOwnerKeyRef.current;
+    if (ownerKey) writeOwnerCache(WAITING_CACHE_PREFIX + ownerKey, waitingListItems);
+  }, [waitingListItems]);
 
   // Wrap updateWaitingListItemQuantity to inject current items
   const updateWaitingListItemQuantity = useCallback(
@@ -115,7 +157,15 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const loadData = async (userId: string | null) => {
       if (!mounted) return;
-      setIsLoading(true);
+      const ownerKey = userId ?? `s:${getSessionId()}`;
+      // Мгновенный рендер из кэша владельца; сервер ревалидирует в фоне
+      const cachedCart = readOwnerCache<CartItem>(CART_CACHE_PREFIX + ownerKey);
+      const cachedWaiting = readOwnerCache<WaitingListItem>(WAITING_CACHE_PREFIX + ownerKey);
+      if (cachedCart) setCartItems(cachedCart);
+      if (cachedWaiting) setWaitingListItems(cachedWaiting);
+      const hasCache = !!(cachedCart || cachedWaiting);
+      if (!hasCache) setIsLoading(true);
+      else setIsLoading(false);
       try {
         const [cart, waiting] = await Promise.all([
           fetchCartItems(userId),
@@ -125,6 +175,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (!mounted) return;
         setCartItems(cart);
         setWaitingListItems(waiting);
+        writeOwnerCache(CART_CACHE_PREFIX + ownerKey, cart);
+        writeOwnerCache(WAITING_CACHE_PREFIX + ownerKey, waiting);
+        loadedOwnerKeyRef.current = ownerKey;
       } finally {
         if (mounted) setIsLoading(false);
       }

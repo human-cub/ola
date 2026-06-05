@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { AddToCartDialog } from "./AddToCartDialog";
 import { supabase } from "@/integrations/supabase/client";
-import { COLLECTA_DELTA_EVENT, type CollectaDeltaDetail } from "@/lib/collectaBus";
+import { useBrandCollection } from "@/hooks/useBrandCollection";
 import { getLastSundayClose } from "@/lib/collectivePricing";
 import { useCollectiveClock } from "@/hooks/useCollectiveClock";
 
@@ -216,14 +216,9 @@ export const GroupBuyPriceBlock = ({
   productLink = null,
 }: GroupBuyPriceBlockProps) => {
   const [displayWaitingCount, setDisplayWaitingCount] = useState(waitingCount);
-  const [brandStats, setBrandStats] = useState<{ collected: number; target: number; goalReached: boolean }>({
-    collected: 0,
-    target: 0,
-    goalReached: false,
-  });
-  // Optimistic-дельта суммы сбора (см. collectaBus): мгновенное движение,
-  // серверный рефетч (collecta-changed) потом заменяет настоящим значением.
-  const [collectaDelta, setCollectaDelta] = useState(0);
+  // Общий кэш сбора всех марок (один запрос на приложение) + optimistic-дельта
+  const { collectedRaw, target: brandTarget, goalReached: brandGoalReached } = useBrandCollection(brandSlug);
+  const brandStats = { collected: collectedRaw, target: brandTarget, goalReached: brandGoalReached };
   const {
     timeLeft,
     dialogOpen,
@@ -240,55 +235,7 @@ export const GroupBuyPriceBlock = ({
     setDisplayWaitingCount(waitingCount);
   }, [waitingCount]);
 
-  useEffect(() => {
-    if (!brandSlug) return;
-    let cancelled = false;
-    const load = async () => {
-      const { data } = await supabase
-        .from("brand_collection_public" as any)
-        .select("collected_total, target_amount, goal_reached")
-        .eq("slug", brandSlug)
-        .maybeSingle();
-      if (cancelled) return;
-      setBrandStats({
-        collected: Number((data as any)?.collected_total ?? 0),
-        target: Number((data as any)?.target_amount ?? 0),
-        goalReached: Boolean((data as any)?.goal_reached ?? false),
-      });
-      setCollectaDelta(0);
-    };
-    load();
-    const onCollectaChanged = () => load();
-    const onCollectaDelta = (e: Event) => {
-      const detail = (e as CustomEvent<CollectaDeltaDetail>).detail;
-      if (detail?.slug === brandSlug) {
-        setCollectaDelta((d) => d + detail.amount);
-      }
-    };
-    if (typeof window !== "undefined") {
-      window.addEventListener("collecta-changed", onCollectaChanged);
-      window.addEventListener(COLLECTA_DELTA_EVENT, onCollectaDelta);
-    }
-    const channel = supabase
-      .channel(`brand-override-${brandSlug}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "brand_overrides", filter: `slug=eq.${brandSlug}` },
-        () => load(),
-      )
-      .subscribe();
-    return () => {
-      cancelled = true;
-      if (typeof window !== "undefined") {
-        window.removeEventListener("collecta-changed", onCollectaChanged);
-        window.removeEventListener(COLLECTA_DELTA_EVENT, onCollectaDelta);
-      }
-      supabase.removeChannel(channel);
-    };
-  }, [brandSlug]);
-
-  // Сумма с учётом optimistic-дельты — используется во всех местах рендера
-  const collectedDisplay = Math.max(0, brandStats.collected + collectaDelta);
+  const collectedDisplay = brandStats.collected;
 
   const refreshWaitingCount = async () => {
     const { data, error } = await supabase

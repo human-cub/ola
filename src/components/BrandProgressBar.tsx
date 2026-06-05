@@ -1,6 +1,5 @@
-import { useEffect, useState, type CSSProperties } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { COLLECTA_DELTA_EVENT, type CollectaDeltaDetail } from "@/lib/collectaBus";
+import { type CSSProperties } from "react";
+import { useBrandCollection } from "@/hooks/useBrandCollection";
 
 interface Props {
   brandSlug: string;
@@ -14,65 +13,10 @@ const formatARS = (n: number) =>
   `$${new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 }).format(n)}`;
 
 export const useBrandProgress = (brandSlug: string) => {
-  const [stats, setStats] = useState<{ collected: number; target: number }>({
-    collected: 0,
-    target: 0,
-  });
-  // Optimistic-дельта поверх последнего серверного значения: двигает бар
-  // мгновенно, пока серверная цепочка пересчитывает real_score.
-  const [optimisticDelta, setOptimisticDelta] = useState(0);
-
-  useEffect(() => {
-    if (!brandSlug) return;
-    let cancelled = false;
-    const load = async () => {
-      const { data } = await supabase
-        .from("brand_collection_public" as any)
-        .select("collected_total, target_amount")
-        .eq("slug", brandSlug)
-        .maybeSingle();
-      if (cancelled) return;
-      setStats({
-        collected: Number((data as any)?.collected_total ?? 0),
-        target: Number((data as any)?.target_amount ?? 0),
-      });
-      // Свежие данные включают эффект наших действий — дельта отработала
-      setOptimisticDelta(0);
-    };
-    load();
-    const onCollectaChanged = () => load();
-    const onCollectaDelta = (e: Event) => {
-      const detail = (e as CustomEvent<CollectaDeltaDetail>).detail;
-      if (detail?.slug === brandSlug) {
-        setOptimisticDelta((d) => d + detail.amount);
-      }
-    };
-    if (typeof window !== "undefined") {
-      window.addEventListener("collecta-changed", onCollectaChanged);
-      window.addEventListener(COLLECTA_DELTA_EVENT, onCollectaDelta);
-    }
-    const channel = supabase
-      .channel(`brand-progress-${brandSlug}-${Math.random().toString(36).slice(2, 9)}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "brand_overrides", filter: `slug=eq.${brandSlug}` },
-        () => load(),
-      )
-      .subscribe();
-    return () => {
-      cancelled = true;
-      if (typeof window !== "undefined") {
-        window.removeEventListener("collecta-changed", onCollectaChanged);
-        window.removeEventListener(COLLECTA_DELTA_EVENT, onCollectaDelta);
-      }
-      supabase.removeChannel(channel);
-    };
-  }, [brandSlug]);
-
-  const { collected: serverCollected, target } = stats;
-  const rawCollected = Math.max(0, serverCollected + optimisticDelta);
-  const reached = target > 0 && rawCollected >= target;
-  const collectedCapped = target > 0 ? Math.min(rawCollected, target) : rawCollected;
+  // Общий кэш всех марок (один запрос/канал на приложение) + optimistic-дельта
+  const { collectedRaw, target } = useBrandCollection(brandSlug);
+  const reached = target > 0 && collectedRaw >= target;
+  const collectedCapped = target > 0 ? Math.min(collectedRaw, target) : collectedRaw;
   const pct = target > 0 ? Math.min(100, Math.max(0, (collectedCapped / target) * 100)) : 0;
   return { collected: collectedCapped, target, pct, reached };
 };
