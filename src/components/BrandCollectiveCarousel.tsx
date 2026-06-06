@@ -11,83 +11,119 @@ export const BrandCollectiveCarousel = () => {
     () => [...brands].sort((a, b) => a.sort_order - b.sort_order),
     [brands],
   );
-  // lista duplicada para loop continuo
-  const loop = useMemo(() => [...sorted, ...sorted], [sorted]);
+  const copyLen = sorted.length;
+  // 3 copias para loop infinito en ambos sentidos (arrastre con el dedo)
+  const loop = useMemo(() => [...sorted, ...sorted, ...sorted], [sorted]);
 
-  // Auto-desplazamiento por JS (no CSS): así el contenedor sigue siendo
-  // scrolleable de forma nativa y el usuario puede arrastrar con el dedo.
-  // El auto-avance se pausa al interactuar (touch / mouse / scroll manual).
   useEffect(() => {
     const el = scrollRef.current;
-    if (!el || sorted.length === 0) return;
+    if (!el || copyLen === 0) return;
+
+    // Ancho EXACTO de una copia (incluye el gap) medido por la posición de la
+    // primera tarjeta de la 2da copia. Evita el salto/parpadeo de usar
+    // scrollWidth/2 (que no contempla bien el gap entre copias).
+    let oneWidth = 0;
+    const measure = () => {
+      const kids = el.children;
+      if (kids.length > copyLen) {
+        oneWidth =
+          (kids[copyLen] as HTMLElement).offsetLeft -
+          (kids[0] as HTMLElement).offsetLeft;
+      }
+    };
+    measure();
+    // arrancar en la 2da copia para poder arrastrar hacia ambos lados
+    if (oneWidth > 0) el.scrollLeft = oneWidth;
+
+    // Mantener el scroll dentro de [oneWidth, 2*oneWidth): el salto cae sobre
+    // contenido idéntico (copias), así que es invisible (sin parpadeo).
+    const normalize = () => {
+      if (oneWidth <= 0) return;
+      if (el.scrollLeft >= 2 * oneWidth) el.scrollLeft -= oneWidth;
+      else if (el.scrollLeft < oneWidth) el.scrollLeft += oneWidth;
+    };
 
     let raf = 0;
-    let pausedUntil = 0; // timestamp hasta el cual el auto-avance está pausado
-    const SPEED = 0.4; // px por frame (~24px/s a 60fps)
-
-    const half = () => el.scrollWidth / 2; // ancho de UNA copia de la lista
+    let pausedUntil = 0;
+    let hoverPaused = false;
+    const SPEED = 0.4; // px/frame, derecha -> izquierda
 
     const tick = () => {
-      const h = half();
-      if (h > 0 && performance.now() >= pausedUntil) {
+      if (!hoverPaused && performance.now() >= pausedUntil && oneWidth > 0) {
         el.scrollLeft += SPEED;
-        if (el.scrollLeft >= h) el.scrollLeft -= h;
+        normalize();
       }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
 
-    // Loop sin costuras también para el arrastre manual
-    const onScroll = () => {
-      const h = half();
-      if (h <= 0) return;
-      if (el.scrollLeft >= h) el.scrollLeft -= h;
-      else if (el.scrollLeft <= 0) el.scrollLeft += h;
-    };
-
-    // Pausa breve tras cada interacción para que el dedo mande
-    const pause = () => {
-      pausedUntil = performance.now() + 1500;
-    };
-    const pauseHover = () => {
-      pausedUntil = Number.MAX_SAFE_INTEGER;
-    };
-    const resumeHover = () => {
-      pausedUntil = 0;
+    const onScroll = () => normalize();
+    // Pausa breve tras tocar/arrastrar para que mande el dedo
+    const pauseTouch = () => {
+      pausedUntil = performance.now() + 2000;
     };
 
     el.addEventListener("scroll", onScroll, { passive: true });
-    el.addEventListener("touchstart", pause, { passive: true });
-    el.addEventListener("touchmove", pause, { passive: true });
-    el.addEventListener("wheel", pause, { passive: true });
-    el.addEventListener("mouseenter", pauseHover);
-    el.addEventListener("mouseleave", resumeHover);
+    el.addEventListener("touchstart", pauseTouch, { passive: true });
+    el.addEventListener("touchmove", pauseTouch, { passive: true });
+    el.addEventListener("wheel", pauseTouch, { passive: true });
+
+    // Hover-pausa SÓLO en dispositivos con mouse real (no en touch, donde
+    // iOS dispara mouseenter falsos y dejaba el auto-avance pausado para siempre)
+    const hoverCapable =
+      typeof window !== "undefined" &&
+      window.matchMedia &&
+      window.matchMedia("(hover: hover)").matches;
+    const onEnter = () => {
+      hoverPaused = true;
+    };
+    const onLeave = () => {
+      hoverPaused = false;
+    };
+    if (hoverCapable) {
+      el.addEventListener("mouseenter", onEnter);
+      el.addEventListener("mouseleave", onLeave);
+    }
+
+    const onResize = () => {
+      const prev = oneWidth;
+      measure();
+      // re-centrar manteniendo posición relativa
+      if (prev > 0 && oneWidth > 0) {
+        const frac = (el.scrollLeft - prev) / prev;
+        el.scrollLeft = oneWidth + frac * oneWidth;
+      }
+    };
+    window.addEventListener("resize", onResize);
 
     return () => {
       cancelAnimationFrame(raf);
       el.removeEventListener("scroll", onScroll);
-      el.removeEventListener("touchstart", pause);
-      el.removeEventListener("touchmove", pause);
-      el.removeEventListener("wheel", pause);
-      el.removeEventListener("mouseenter", pauseHover);
-      el.removeEventListener("mouseleave", resumeHover);
+      el.removeEventListener("touchstart", pauseTouch);
+      el.removeEventListener("touchmove", pauseTouch);
+      el.removeEventListener("wheel", pauseTouch);
+      el.removeEventListener("mouseenter", onEnter);
+      el.removeEventListener("mouseleave", onLeave);
+      window.removeEventListener("resize", onResize);
     };
-  }, [sorted.length, loop.length]);
+  }, [copyLen, loop.length]);
 
   if (brands.length === 0) return null;
 
   return (
-    <section className="py-8" id="colectas-semana">
+    <section className="py-8 overflow-hidden" id="colectas-semana">
       <div className="text-center mb-6">
         <h2 className="text-2xl md:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
           Colectas de la semana
         </h2>
         <div className="w-20 h-1 bg-gradient-primary mx-auto rounded-full mt-4" />
       </div>
-      <div className="relative py-3">
+      <div className="relative">
+        {/* py-3 deja aire para el ring/sombra de la tarjeta destacada
+            (overflow-x:auto fuerza overflow-y:auto y si no recorta arriba/abajo) */}
         <div
           ref={scrollRef}
-          className="flex gap-4 overflow-x-auto scrollbar-hide px-1 [scroll-behavior:auto] [-webkit-overflow-scrolling:touch] [touch-action:pan-x]"
+          className="flex gap-4 overflow-x-auto scrollbar-hide px-4 py-3 [-webkit-overflow-scrolling:touch] [touch-action:pan-x]"
         >
           {loop.map((b, i) => (
             <BrandMarqueeCard
@@ -99,8 +135,8 @@ export const BrandCollectiveCarousel = () => {
             />
           ))}
         </div>
-        <div className="pointer-events-none absolute inset-y-0 left-0 w-12 md:w-16 bg-gradient-to-r from-background to-transparent z-10" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 w-12 md:w-16 bg-gradient-to-l from-background to-transparent z-10" />
+        <div className="pointer-events-none absolute inset-y-0 left-0 w-10 md:w-16 bg-gradient-to-r from-background to-transparent z-10" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-10 md:w-16 bg-gradient-to-l from-background to-transparent z-10" />
       </div>
     </section>
   );
