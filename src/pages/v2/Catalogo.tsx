@@ -9,9 +9,7 @@ import { useCategories } from "@/hooks/useCategories";
 import { useCatalogProducts } from "@/hooks/useCatalogProducts";
 import { CatalogProductCard } from "@/components/v2/CatalogProductCard";
 import { CatalogFilters, SortKey, sortProducts } from "@/components/v2/CatalogFilters";
-
-const norm = (s: string) =>
-  s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+import { searchProducts } from "@/lib/productSearch";
 
 const CatalogoV2 = () => {
   const headerVisible = useScrollHeader();
@@ -31,28 +29,19 @@ const CatalogoV2 = () => {
       .sort((a, b) => a.sort_order - b.sort_order);
   }, [categories, products]);
 
+  const categoryNameBySlug = useMemo(() => {
+    const m = new Map<string, string>();
+    categories.forEach((c) => c.slug && m.set(c.slug, c.name ?? c.slug));
+    return m;
+  }, [categories]);
+
   const searchResults = useMemo(() => {
     if (!q) return [];
-    const tokens = norm(q).split(/\s+/).filter(Boolean);
-    const matched = products.filter((p) => {
-      const cat = categories.find((c) => c.slug === p.categorySlug);
-      const hay = norm(
-        [
-          p.name,
-          p.nameShort ?? "",
-          p.size ?? "",
-          p.brandName ?? "",
-          p.categorySlug ?? "",
-          cat?.name ?? "",
-          (p.tags ?? []).join(" "),
-          p.variants.map((v) => v.flavor ?? "").join(" "),
-          p.variants.map((v) => v.sku).join(" "),
-        ].join(" "),
-      );
-      return tokens.every((t) => hay.includes(t));
-    });
-    return sortProducts(matched, sort);
-  }, [q, products, categories, sort]);
+    // Misma lógica que el dropdown del header (sinónimos + tipeo + ranking).
+    const ranked = searchProducts(products, q, categoryNameBySlug).map((r) => r.product);
+    // "popular" = mantener orden por relevancia; otros = aplicar orden elegido.
+    return sort === "popular" ? ranked : sortProducts(ranked, sort);
+  }, [q, products, categoryNameBySlug, sort]);
 
   return (
     <div className="min-h-screen bg-background">

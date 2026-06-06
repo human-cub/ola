@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import { User, LogIn, ShoppingCart, Search } from "lucide-react";
+import { Link } from "react-router-dom";
+import { User, LogIn, ShoppingCart } from "lucide-react";
 import { GroupIcon } from "@/components/icons/GroupIcon";
 import olaLogo from "@/assets/ola-logo-new.webp";
 import { TopBar } from "@/components/TopBar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { BurgerMenu } from "@/components/BurgerMenu";
+import { SearchBox } from "@/components/SearchBox";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -20,21 +20,6 @@ export const Header = ({ isVisible }: HeaderProps) => {
   const [user, setUser] = useState<any>(null);
   const { cartItems, waitingListItems } = useCart();
   const { isMayorista } = useUserRole();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const initialQ =
-    location.pathname === "/catalogo"
-      ? new URLSearchParams(location.search).get("q") ?? ""
-      : "";
-  const [searchValue, setSearchValue] = useState(initialQ);
-
-  useEffect(() => {
-    if (location.pathname === "/catalogo") {
-      const q = new URLSearchParams(location.search).get("q") ?? "";
-      setSearchValue(q);
-    }
-  }, [location.pathname, location.search]);
-
   // Show number of unique items (positions), not total quantities
   const cartCount = cartItems.length;
   const waitingCount = waitingListItems.length;
@@ -55,12 +40,6 @@ export const Header = ({ isVisible }: HeaderProps) => {
 
   const handleHomeClick = () => {
     window.location.href = "/";
-  };
-
-  const submitSearch = (value: string) => {
-    const trimmed = value.trim();
-    const target = trimmed ? `/catalogo?q=${encodeURIComponent(trimmed)}` : "/catalogo";
-    navigate(target);
   };
 
   return (
@@ -85,21 +64,7 @@ export const Header = ({ isVisible }: HeaderProps) => {
           </div>
         </div>
 
-        <form
-          onSubmit={(e) => { e.preventDefault(); submitSearch(searchValue); }}
-          className="hidden sm:block flex-1 max-w-md mx-2 sm:mx-3"
-        >
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-              placeholder="Buscar productos…"
-              className="pl-9 h-9 rounded-full bg-muted/40"
-              aria-label="Buscar productos"
-            />
-          </div>
-        </form>
+        <SearchBox className="hidden sm:block flex-1 max-w-md mx-2 sm:mx-3" />
 
         <div className="flex items-center gap-2">
           {/* Waiting List Icon — hidden for mayorista (no waiting list flow) */}
@@ -156,21 +121,9 @@ export const Header = ({ isVisible }: HeaderProps) => {
           </Link>
         </div>
       </div>
-      <form
-        onSubmit={(e) => { e.preventDefault(); submitSearch(searchValue); }}
-        className="sm:hidden container mx-auto px-4 pb-2"
-      >
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
-            placeholder="Buscar productos…"
-            className="pl-9 h-9 rounded-full bg-muted/40"
-            aria-label="Buscar productos"
-          />
-        </div>
-      </form>
+      <div className="sm:hidden container mx-auto px-4 pb-2">
+        <SearchBox />
+      </div>
     </header>
   );
 };
