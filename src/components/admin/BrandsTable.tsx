@@ -189,7 +189,7 @@ const BrandsTable = () => {
         if (e) throw e;
         if (cancelled) return;
         const map = new Map<string, BrandScore>();
-        for (const row of (data ?? []) as Array<{ slug: string; virtual_score: number | null; real_score: number | null }>) {
+        for (const row of ((data ?? []) as unknown) as Array<{ slug: string; virtual_score: number | null; real_score: number | null }>) {
           const mayorista = Number(row.real_score ?? 0);
           const virtual = Number(row.virtual_score ?? 0);
           map.set(row.slug, { mayorista, virtual, score: mayorista + virtual });
