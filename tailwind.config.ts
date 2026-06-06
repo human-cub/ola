@@ -19,7 +19,10 @@ export default {
 		},
 		extend: {
 			fontFamily: {
-				sans: ['Geologica', 'sans-serif'],
+				// Шрифты цветных эмодзи в конце стека: для глифов, которых нет в
+				// Geologica (эмодзи), браузер берёт цветной emoji-шрифт ОС вместо
+				// монохромного контурного начертания (та самая «толстая чёрная обводка»).
+				sans: ['Geologica', 'sans-serif', '"Apple Color Emoji"', '"Segoe UI Emoji"', '"Noto Color Emoji"'],
 			},
 			backgroundImage: {
 				'gradient-primary': 'var(--gradient-primary)',
