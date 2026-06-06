@@ -186,7 +186,12 @@ const groupByUrlSlug = (
     });
   }
   out.sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name));
-  return out;
+  // Ocultar productos sin precio (todas las tarifas en 0): no se pueden comprar
+  // y no deben aparecer en catálogo, búsqueda, "Otros Productos" ni carruseles.
+  // (p. ej. shakers/accesorios sin precio cargado.) Reaparecen al cargar precio.
+  return out.filter(
+    (p) => p.priceRetailDisplay > 0 || p.priceT1 > 0 || p.priceT4 > 0,
+  );
 };
 
 // Кэш последнего удачного каталога: первый рендер мгновенный (без «флэша»
