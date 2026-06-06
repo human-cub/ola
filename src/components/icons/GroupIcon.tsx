@@ -4,7 +4,7 @@ interface GroupIconProps {
 
 /**
  * Tres personas en contorno (la del centro más grande) — ícono de
- * "Tus grupos" / "Sumate al grupo". Hereda el color via currentColor.
+ * "Mis grupos" / "Sumate al grupo". Hereda el color via currentColor.
  */
 export const GroupIcon = ({ className }: GroupIconProps) => (
   <svg

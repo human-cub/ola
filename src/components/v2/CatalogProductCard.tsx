@@ -26,7 +26,7 @@ export const CatalogProductCard = ({
 }: Props) => {
   return (
     <Link
-      to={`/p/${urlSlug}`}
+      to={`/productos/${urlSlug}`}
       className={`group bg-card rounded-xl border hover:shadow-lg transition-all duration-300 hover:-translate-y-1 flex flex-col ${compact ? "p-3" : "p-4"}`}
     >
       <div className="aspect-square bg-slate-50 rounded-xl overflow-hidden">

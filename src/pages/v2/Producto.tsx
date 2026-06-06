@@ -55,7 +55,7 @@ const ProductoV2 = () => {
     if (!product) return;
     const title = product.seoTitle || `${product.name} | Ola! Argentina`;
     const description = product.seoDescription || DEFAULT_DESCRIPTION;
-    const canonical = `https://alaola.com.ar/p/${product.urlSlug}`;
+    const canonical = `https://alaola.com.ar/productos/${product.urlSlug}`;
     document.title = title;
     const descTag = document.querySelector('meta[name="description"]');
     if (descTag) descTag.setAttribute("content", description);
@@ -215,7 +215,7 @@ const ProductoV2 = () => {
                   waitingCount={0}
                   brandName={product.brandName}
                   brandSlug={product.brandSlug}
-                  productLink={`https://alaola.com.ar/p/${product.urlSlug}`}
+                  productLink={`https://alaola.com.ar/productos/${product.urlSlug}`}
                 />
               </div>
             </div>

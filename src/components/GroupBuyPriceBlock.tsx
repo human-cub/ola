@@ -154,7 +154,7 @@ function useGroupBuyBlock(prices: PriceData[], productName: string, productId: s
 
   const goToWaitingList = () => {
     setConflictDialogOpen(false);
-    navigate("/lista-espera");
+    navigate("/mis-grupos");
   };
 
   return {
@@ -190,13 +190,13 @@ function ConflictDialog({
             Pedido pendiente
           </DialogTitle>
           <DialogDescription className="text-left pt-2">
-            Tenés un pedido de la semana pasada en Tus grupos que aún no fue confirmado ni
+            Tenés un pedido de la semana pasada en Mis grupos que aún no fue confirmado ni
             cancelado. Para agregar nuevos productos, primero necesitás resolver ese pedido.
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-2 pt-2">
           <Button onClick={onGoToWaitingList} className="w-full">
-            Ir a Tus grupos
+            Ir a Mis grupos
           </Button>
           <Button variant="outline" onClick={onClose} className="w-full">
             Cerrar

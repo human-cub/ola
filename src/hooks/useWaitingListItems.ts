@@ -194,7 +194,7 @@ export const useWaitingListItems = (
       );
       emitCollectaDelta(existingLocal, q - existingLocal.quantity);
       scheduleWrite(existingLocal.id);
-      toast.success('Producto agregado a tus grupos');
+      toast.success('Producto agregado a mis grupos');
       return;
     }
 
@@ -225,7 +225,7 @@ export const useWaitingListItems = (
       },
       item.quantity,
     );
-    toast.success('Producto agregado a tus grupos');
+    toast.success('Producto agregado a mis grupos');
 
     // Persistencia en segundo plano
     try {
@@ -373,7 +373,7 @@ export const useWaitingListItems = (
     pendingQty.current.delete(id);
     setWaitingListItems((prev) => prev.filter((i) => i.id !== id));
     if (removed) emitCollectaDelta(removed, -removed.quantity);
-    toast.success('Producto eliminado de tus grupos');
+    toast.success('Producto eliminado de mis grupos');
 
     const write = async (attempt = 0): Promise<void> => {
       const realId = tempIdMap.current.get(id) ?? id;

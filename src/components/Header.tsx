@@ -103,7 +103,7 @@ export const Header = ({ isVisible }: HeaderProps) => {
 
         <div className="flex items-center gap-2">
           {/* Waiting List Icon — hidden for mayorista (no waiting list flow) */}
-          <Link to="/lista-espera">
+          <Link to="/mis-grupos">
               <Button
                 variant="ghost"
                 size="icon"

@@ -220,7 +220,7 @@ export const OrderDetailDialog = ({ order, onClose, onNotesUpdated }: OrderDetai
 
     const total = o.subtotal + o.delivery_cost;
 
-    let addressText = "https://alaola.com.ar/completar-datos-colectiva";
+    let addressText = "https://alaola.com.ar/completar-datos-grupo";
     if (o.delivery_address) {
       const a = o.delivery_address;
       const line1 = [a.street, a.number, a.floor].filter(Boolean).join(" ");
@@ -419,7 +419,7 @@ export const OrderDetailDialog = ({ order, onClose, onNotesUpdated }: OrderDetai
 
                   const catalogInfo = priceMap.get(item.product_id);
                   const productHref = catalogInfo?.urlSlug
-                    ? `/p/${catalogInfo.urlSlug}${item.flavor ? `?flavor=${encodeURIComponent(item.flavor)}` : ""}`
+                    ? `/productos/${catalogInfo.urlSlug}${item.flavor ? `?flavor=${encodeURIComponent(item.flavor)}` : ""}`
                     : ((item as any).product_link ?? null);
                   const brandLabel = catalogInfo?.brandName ?? (item as any).brand_slug ?? null;
 

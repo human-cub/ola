@@ -84,7 +84,7 @@ const CompletarDatosColectiva = () => {
     const loadProfile = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        navigate("/ingresar?redirect=/completar-datos-colectiva");
+        navigate("/ingresar?redirect=/completar-datos-grupo");
         return;
       }
 
@@ -246,7 +246,7 @@ const CompletarDatosColectiva = () => {
         items_count: waitingListItems?.length || 0,
       });
       toast.success("¡Datos guardados correctamente!", { id: loadingToastId });
-      navigate("/lista-espera", { replace: true });
+      navigate("/mis-grupos", { replace: true });
     } catch (error: any) {
       console.error("Error saving data:", error);
       toast.error(error?.message || "Error al guardar los datos", { id: loadingToastId });
@@ -275,11 +275,11 @@ const CompletarDatosColectiva = () => {
       <main className="pt-[120px] sm:pt-[104px] pb-8 px-4">
         <div className="container mx-auto max-w-2xl">
           <Link
-            to="/lista-espera"
+            to="/mis-grupos"
             className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            Volver a tus grupos
+            Volver a mis grupos
           </Link>
 
           <h1 className="text-2xl font-bold mb-2">

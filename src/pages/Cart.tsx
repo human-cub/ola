@@ -61,9 +61,9 @@ const Cart = () => {
   const handleCheckout = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
-      navigate("/ingresar?redirect=/checkout");
+      navigate("/ingresar?redirect=/finalizar-compra");
     } else {
-      navigate("/checkout");
+      navigate("/finalizar-compra");
     }
   };
 
@@ -126,7 +126,7 @@ const Cart = () => {
                       quantity={item.quantity}
                       flavor={item.flavor}
                       flavors={priceMap.get(item.product_id)?.flavors || []}
-                      productLink={priceMap.get(item.product_id) ? `/p/${priceMap.get(item.product_id)!.urlSlug}` : "#"}
+                      productLink={priceMap.get(item.product_id) ? `/productos/${priceMap.get(item.product_id)!.urlSlug}` : "#"}
                       onQuantityChange={handleQuantityChange}
                       onFlavorChange={updateCartItemFlavor}
                       onDelete={(id) => setDeleteItemId(id)}

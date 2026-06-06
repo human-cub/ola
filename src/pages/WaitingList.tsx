@@ -142,7 +142,7 @@ const WaitingList = () => {
 
   const handleShare = (productId: string, productName: string) => {
     const info = priceMap.get(productId);
-    const link = `${window.location.origin}${info ? `/p/${info.urlSlug}` : ""}`;
+    const link = `${window.location.origin}${info ? `/productos/${info.urlSlug}` : ""}`;
     const text = `¡Sumate a la compra colectiva de ${productName}! Seamos más, pagamos menos. ${link}`;
     if (navigator.share) {
       navigator.share({ title: productName, text, url: link });
@@ -182,14 +182,14 @@ const WaitingList = () => {
   const handleCompletarDatos = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
-      navigate("/ingresar?redirect=/completar-datos-colectiva");
+      navigate("/ingresar?redirect=/completar-datos-grupo");
     } else {
-      navigate("/completar-datos-colectiva");
+      navigate("/completar-datos-grupo");
     }
   };
 
   const handleContinueToCheckout = () => {
-    navigate("/checkout-colectivo?from=waiting-list");
+    navigate("/finalizar-compra-grupal?from=waiting-list");
   };
 
   const handleBuyNow = async () => {
@@ -208,7 +208,7 @@ const WaitingList = () => {
   const handleCancelOrder = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
-      navigate("/ingresar?redirect=/lista-espera");
+      navigate("/ingresar?redirect=/mis-grupos");
       return;
     }
 
@@ -239,7 +239,7 @@ const WaitingList = () => {
         <Header isVisible={true} />
         <main className="pt-[120px] sm:pt-[104px] pb-8 px-4">
           <div className="container mx-auto max-w-2xl">
-            <p className="text-center text-muted-foreground">Cargando tus grupos...</p>
+            <p className="text-center text-muted-foreground">Cargando mis grupos...</p>
           </div>
         </main>
       </div>
@@ -263,7 +263,7 @@ const WaitingList = () => {
           <div className="mb-6">
             <h1 className="text-2xl font-bold flex items-center gap-2 flex-wrap">
               <GroupIcon className="w-6 h-6 text-primary" />
-              Tus grupos
+              Mis grupos
               {hasExistingOrder && profileCompleted && !isCollectionEnded && (
                 <span className="text-primary text-lg font-medium">— ¡Ya participás! 🎉</span>
               )}
@@ -278,7 +278,7 @@ const WaitingList = () => {
           {waitingListItems.length === 0 ? (
             <div className="text-center py-12">
               <GroupIcon className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-              <h2 className="text-xl font-semibold mb-2">Tus grupos están vacíos</h2>
+              <h2 className="text-xl font-semibold mb-2">Todavía no estás en ningún grupo</h2>
               <p className="text-muted-foreground mb-4">
                 Agregá productos y esperá para pagar menos
               </p>
@@ -312,7 +312,7 @@ const WaitingList = () => {
                             pricePerUnit={dynamicPrice}
                             totalQuantity={item.totalQuantity}
                             flavorEntries={item.flavorEntries}
-                            productLink={brandInfo ? `/p/${brandInfo.urlSlug}` : ((sourceItem as any)?.product_link || "#")}
+                            productLink={brandInfo ? `/productos/${brandInfo.urlSlug}` : ((sourceItem as any)?.product_link || "#")}
                             isCollectionEnded={isCollectionEnded}
                             onQuantityChange={handleQuantityChange}
                             onDelete={() => setDeleteGroup({ productName: item.productName, itemIds: item.itemIds })}
@@ -366,8 +366,8 @@ const WaitingList = () => {
         onOpenChange={() => setDeleteGroup(null)}
         title="¿Eliminar producto?"
         description={deleteGroup
-          ? `¿Estás seguro de que querés eliminar ${deleteGroup.productName} de tus grupos?`
-          : "¿Estás seguro de que querés eliminar este producto de tus grupos?"}
+          ? `¿Estás seguro de que querés eliminar ${deleteGroup.productName} de mis grupos?`
+          : "¿Estás seguro de que querés eliminar este producto de mis grupos?"}
         onConfirm={handleDeleteConfirm}
       />
 

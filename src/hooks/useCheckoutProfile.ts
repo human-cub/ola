@@ -14,7 +14,7 @@ export function useCheckoutProfile(
     const loadProfile = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        navigate("/ingresar?redirect=" + (isCollective ? "/checkout-colectivo" : "/checkout"));
+        navigate("/ingresar?redirect=" + (isCollective ? "/finalizar-compra-grupal" : "/finalizar-compra"));
         return;
       }
 

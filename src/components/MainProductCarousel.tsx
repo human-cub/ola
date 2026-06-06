@@ -124,7 +124,7 @@ export const MainProductCarousel = () => {
                   {products.map((product) => (
                     <div key={product.urlSlug} className="grow-0 shrink-0 basis-[calc(100%/var(--slides))]">
                       <div className="flex justify-center px-3 h-full">
-                        <a href={`/p/${product.urlSlug}`} onClick={() => amplitude.track('Product Viewed', { product_name: product.name, product_id: product.urlSlug, source: 'main_carousel' })}>
+                        <a href={`/productos/${product.urlSlug}`} onClick={() => amplitude.track('Product Viewed', { product_name: product.name, product_id: product.urlSlug, source: 'main_carousel' })}>
                           <Card
                             className={cn(
                               "p-6 shadow-soft border border-1 border-transparent bg-gradient-card w-full max-w-sm cursor-pointer transition-all duration-300 ease-out h-full min-w-[280px]",

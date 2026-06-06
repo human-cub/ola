@@ -15,7 +15,6 @@ import Marcas from "./pages/v2/Marcas";
 import Producto from "./pages/v2/Producto";
 import { Navigate } from "react-router-dom";
 // Resto: chunks separados (lazy) para achicar el bundle inicial
-const DynamicProduct = lazy(() => import("./pages/DynamicProduct"));
 const AuthPage = lazy(() => import("./pages/AuthPage"));
 const Profile = lazy(() => import("./pages/Profile"));
 const ReviewEmail = lazy(() => import("./pages/ReviewEmail"));
@@ -55,16 +54,11 @@ const SHORT_LINK_REDIRECTS: Record<string, string> = {
   s6: "https://alaola.com.ar/?utm_source=offline&utm_medium=sticker&utm_campaign=out&utm_term=12-4&utm_content=v3",
 };
 
-const DynamicProductGuard = () => {
-  const { slug } = useParams<{ slug: string }>();
-  const redirectUrl = slug ? SHORT_LINK_REDIRECTS[slug] : undefined;
-
-  if (redirectUrl) {
-    window.location.replace(redirectUrl);
-    return null;
-  }
-
-  return <DynamicProduct />;
+// Offline-стикеры s1..s6 -> внешний UTM-URL (явные роуты, без catch-all).
+const ShortLinkRedirect = ({ code }: { code: string }) => {
+  const url = SHORT_LINK_REDIRECTS[code];
+  if (url) window.location.replace(url);
+  return null;
 };
 
 const V2Redirect = ({ to, param }: { to: string; param: string }) => {
@@ -83,7 +77,6 @@ const App = () => {
       void import("./pages/Cart");
       void import("./pages/WaitingList");
       void import("./pages/Checkout");
-      void import("./pages/DynamicProduct");
     };
     if ("requestIdleCallback" in window) {
       (window as any).requestIdleCallback(prefetch, { timeout: 4000 });
@@ -137,10 +130,7 @@ const App = () => {
           <Route path="/categoria/:category" element={<Categoria />} />
           <Route path="/marcas" element={<Marcas />} />
           <Route path="/marcas/:slug" element={<Marca />} />
-          <Route path="/marca/:slug" element={<Marca />} />
-          <Route path="/p/:urlSlug" element={<Producto />} />
-          <Route path="/producto/:slug" element={<DynamicProduct />} />
-          <Route path="/:slug" element={<DynamicProductGuard />} />
+          <Route path="/productos/:urlSlug" element={<Producto />} />
           <Route path="/ingresar" element={<AuthPage />} />
           <Route path="/revisar-email" element={<ReviewEmail />} />
           <Route path="/mi-cuenta" element={<Profile />} />
@@ -150,10 +140,10 @@ const App = () => {
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/carrito" element={<Cart />} />
-          <Route path="/lista-espera" element={<WaitingList />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/checkout-colectivo" element={<Checkout isCollective />} />
-          <Route path="/completar-datos-colectiva" element={<CompletarDatosColectiva />} />
+          <Route path="/mis-grupos" element={<WaitingList />} />
+          <Route path="/finalizar-compra" element={<Checkout />} />
+          <Route path="/finalizar-compra-grupal" element={<Checkout isCollective />} />
+          <Route path="/completar-datos-grupo" element={<CompletarDatosColectiva />} />
           <Route path="/pedido/:orderId" element={<OrderDetail />} />
           <Route path="/mi-cuenta/pedidos/:orderId" element={<OrderDetail />} />
           <Route path="/como-comprar" element={<ComoComprar />} />
@@ -161,13 +151,30 @@ const App = () => {
           <Route path="/mayoristas" element={<Mayoristas />} />
           <Route path="/contacto" element={<Contacto />} />
           <Route path="/quienes-somos" element={<QuienesSomos />} />
-          {/* Legacy /v2/* — redirect to canonical paths */}
+
+          {/* Offline-стикеры (UTM) — явные роуты */}
+          <Route path="/s1" element={<ShortLinkRedirect code="s1" />} />
+          <Route path="/s2" element={<ShortLinkRedirect code="s2" />} />
+          <Route path="/s3" element={<ShortLinkRedirect code="s3" />} />
+          <Route path="/s4" element={<ShortLinkRedirect code="s4" />} />
+          <Route path="/s5" element={<ShortLinkRedirect code="s5" />} />
+          <Route path="/s6" element={<ShortLinkRedirect code="s6" />} />
+
+          {/* Редиректы со старых путей (сохранённые product_link в БД, чужие ссылки) */}
+          <Route path="/p/:urlSlug" element={<V2Redirect to="/productos" param="urlSlug" />} />
+          <Route path="/lista-espera" element={<Navigate to="/mis-grupos" replace />} />
+          <Route path="/checkout" element={<Navigate to="/finalizar-compra" replace />} />
+          <Route path="/checkout-colectivo" element={<Navigate to="/finalizar-compra-grupal" replace />} />
+          <Route path="/completar-datos-colectiva" element={<Navigate to="/completar-datos-grupo" replace />} />
+          <Route path="/marca/:slug" element={<V2Redirect to="/marcas" param="slug" />} />
+          <Route path="/producto/:slug" element={<Navigate to="/catalogo" replace />} />
+          {/* Legacy /v2/* */}
           <Route path="/v2/catalogo" element={<Navigate to="/catalogo" replace />} />
           <Route path="/v2/categoria/:category" element={<V2Redirect to="/categoria" param="category" />} />
           <Route path="/v2/marcas" element={<Navigate to="/marcas" replace />} />
           <Route path="/v2/marcas/:slug" element={<V2Redirect to="/marcas" param="slug" />} />
-          <Route path="/v2/marca/:slug" element={<V2Redirect to="/marca" param="slug" />} />
-          <Route path="/v2/p/:urlSlug" element={<V2Redirect to="/p" param="urlSlug" />} />
+          <Route path="/v2/marca/:slug" element={<V2Redirect to="/marcas" param="slug" />} />
+          <Route path="/v2/p/:urlSlug" element={<V2Redirect to="/productos" param="urlSlug" />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         </Suspense>

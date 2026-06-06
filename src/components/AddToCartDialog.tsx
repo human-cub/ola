@@ -178,7 +178,7 @@ export const AddToCartDialog = ({
         if (isWaitingList) {
           setPendingAddAction({
             kind: "waiting_list",
-            redirectTo: "/lista-espera",
+            redirectTo: "/mis-grupos",
             item: {
               product_id: effProductId,
               product_name: productName,
@@ -210,7 +210,7 @@ export const AddToCartDialog = ({
         }
 
         onOpenChange(false);
-        navigate(`/ingresar?redirect=${encodeURIComponent(isWaitingList ? "/lista-espera" : "/carrito")}`);
+        navigate(`/ingresar?redirect=${encodeURIComponent(isWaitingList ? "/mis-grupos" : "/carrito")}`);
         return;
       }
 

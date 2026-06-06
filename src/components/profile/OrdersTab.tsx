@@ -152,7 +152,7 @@ const OrdersTab = () => {
             const StatusIcon = statusConfig[order.status]?.icon || Package;
             // Pending collective orders should redirect to waiting list
             const isPendingCollective = order.order_type === 'collective' && order.status === 'pending';
-            const linkTo = isPendingCollective ? '/lista-espera' : `/mi-cuenta/pedidos/${order.id}`;
+            const linkTo = isPendingCollective ? '/mis-grupos' : `/mi-cuenta/pedidos/${order.id}`;
             
             return (
               <Card key={order.id} className="overflow-hidden hover:shadow-md transition-shadow">
