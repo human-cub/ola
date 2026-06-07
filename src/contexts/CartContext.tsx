@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { syncWaitingListOrder } from "@/services/orderService";
@@ -91,6 +92,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Ключ владельца, для которого реально загружены данные: кэш пишем только
   // под него (страхует от записи гостевых строк в кэш юзера при логине)
   const loadedOwnerKeyRef = React.useRef<string | null>(null);
+  const navigate = useNavigate();
 
   const getSessionId = useCallback((): string => {
     let storedSessionId = localStorage.getItem(SESSION_ID_KEY);
@@ -146,6 +148,28 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     void newUserId;
     return;
   };
+
+  // Captura silenciosa de contrasena para usuarios migrados (sin password
+  // tras la migracion de BD): si la sesion tiene user_metadata.password_set
+  // === false lo enviamos a /establecer-clave. Punto central que cubre todos
+  // los metodos de login (password / magic-link / Google) via onAuthStateChange
+  // y la carga inicial de pagina via getSession. Solo dispara con === false
+  // (undefined de usuarios nuevos y true de los ya confirmados no se tocan).
+  useEffect(() => {
+    const gate = (session: import("@supabase/supabase-js").Session | null) => {
+      if (
+        session?.user?.user_metadata?.password_set === false &&
+        window.location.pathname !== "/establecer-clave"
+      ) {
+        navigate("/establecer-clave");
+      }
+    };
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => gate(session));
+    supabase.auth.getSession().then(({ data: { session } }) => gate(session));
+    return () => subscription.unsubscribe();
+  }, [navigate]);
 
   // Listen to auth changes
   useEffect(() => {

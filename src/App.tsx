@@ -21,6 +21,7 @@ const ReviewEmail = lazy(() => import("./pages/ReviewEmail"));
 const ProfileComplete = lazy(() => import("./pages/ProfileComplete"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const EstablecerClave = lazy(() => import("./pages/EstablecerClave"));
 const Admin = lazy(() => import("./pages/Admin"));
 const Cart = lazy(() => import("./pages/Cart"));
 const WaitingList = lazy(() => import("./pages/WaitingList"));
@@ -137,6 +138,7 @@ const App = () => {
           <Route path="/completar-perfil" element={<ProfileComplete />} />
           <Route path="/recuperar-clave" element={<ForgotPassword />} />
           <Route path="/restablecer-clave" element={<ResetPassword />} />
+          <Route path="/establecer-clave" element={<EstablecerClave />} />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/carrito" element={<Cart />} />
