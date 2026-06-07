@@ -80,10 +80,8 @@ const AuthPage = () => {
               void processPendingAction(session.user.id, pendingAction);
             }, 300);
           } else {
-            // Usuario migrado sin password -> captura silenciosa de contrasena
-            const dest = session.user.user_metadata?.password_set === false ? "/establecer-clave" : redirectTo;
             setTimeout(() => {
-              navigate(dest);
+              navigate(redirectTo);
             }, 500);
           }
         }
@@ -97,8 +95,7 @@ const AuthPage = () => {
         if (pendingAction) {
           void processPendingAction(session.user.id, pendingAction);
         } else {
-          const dest = session.user.user_metadata?.password_set === false ? "/establecer-clave" : redirectTo;
-          navigate(dest);
+          navigate(redirectTo);
         }
       }
     });

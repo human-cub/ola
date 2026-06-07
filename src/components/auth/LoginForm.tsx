@@ -8,14 +8,12 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { z } from "zod";
-import { Eye, EyeOff, Loader2, Mail } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 const loginSchema = z.object({
   email: z.string().email("Email inválido"),
   password: z.string().min(1, "La contraseña es requerida"),
 });
-
-const emailOnlySchema = z.string().email("Email inválido");
 
 interface LoginFormProps {
   onSuccess: () => void;
@@ -32,7 +30,6 @@ const GoogleIcon = () => (
 
 export const LoginForm = ({ onSuccess }: LoginFormProps) => {
   const [loading, setLoading] = useState(false);
-  const [magicLoading, setMagicLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -55,30 +52,10 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
     }
   };
 
-  const handleMagicLink = async () => {
-    const result = emailOnlySchema.safeParse(email);
-    if (!result.success) {
-      setErrors({ email: "Ingresá tu email para enviarte el enlace" });
-      return;
-    }
-    setErrors({});
-    setMagicLoading(true);
-    try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: { emailRedirectTo: redirectTo, shouldCreateUser: false },
-      });
-      if (error) {
-        toast.error(error.message);
-        return;
-      }
-      amplitude.track("Login", { method: "magic_link" });
-      toast.success("Te enviamos un enlace para entrar. Revisá tu email 📩");
-    } catch {
-      toast.error("No se pudo enviar el enlace. Reintentá.");
-    } finally {
-      setMagicLoading(false);
-    }
+  const finishSuccess = (method: string) => {
+    amplitude.track("Login", { button_label: "Iniciar Sesión", method });
+    toast.success("¡Bienvenido/a!");
+    onSuccess();
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -118,6 +95,20 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
 
       if (error) {
         if (error.message.includes("Invalid login credentials")) {
+          try {
+            const { data: claim } = await supabase.functions.invoke("claim-password", {
+              body: { email, password },
+            });
+            if (claim?.claimed) {
+              const retry = await supabase.auth.signInWithPassword({ email, password });
+              if (!retry.error) {
+                finishSuccess("email_first_set");
+                return;
+              }
+            }
+          } catch {
+            /* fall through to standard error */
+          }
           toast.error("Email o contraseña incorrectos");
         } else if (error.message.includes("Email not confirmed")) {
           toast.error("Confirmá tu email antes de iniciar sesión");
@@ -127,9 +118,7 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
         return;
       }
 
-      amplitude.track("Login", { button_label: "Iniciar Sesión", method: "email" });
-      toast.success("¡Bienvenido/a!");
-      onSuccess();
+      finishSuccess("email");
     } catch (error: any) {
       if (error?.message === "timeout") {
         toast.error("La autenticación tardó demasiado. Reintentá.");
@@ -183,11 +172,6 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
           {loading ? (<><Loader2 className="w-4 h-4 mr-2 animate-spin" />Cargando...</>) : ("Iniciar Sesión")}
         </Button>
       </form>
-
-      <Button type="button" variant="ghost" className="w-full" onClick={handleMagicLink} disabled={magicLoading}>
-        {magicLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Mail className="w-4 h-4 mr-2" />}
-        Prefiero entrar con un enlace mágico
-      </Button>
     </div>
   );
 };
