@@ -76,15 +76,18 @@ export const RegisterForm = () => {
       }
 
       amplitude.track('Sign Up', { button_label: 'Crear Cuenta', method: 'email' });
-      navigate("/revisar-email", { state: { email } });
 
-      // Send welcome email (fire and forget)
-      try {
-        await supabase.functions.invoke("send-email", {
-          body: { type: "welcome", to: email },
-        });
-      } catch {
-        // Welcome email failed but registration succeeded
+      // Welcome email (fire and forget)
+      supabase.functions.invoke("send-email", { body: { type: "welcome", to: email } }).catch(() => {});
+
+      // Account is auto-confirmed → sign in directly.
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      if (signInError) {
+        toast.success("¡Cuenta creada! Iniciá sesión.");
+        navigate("/ingresar");
+      } else {
+        toast.success("¡Bienvenido/a a Ola! 🌊");
+        navigate("/completar-perfil");
       }
     } catch (error: any) {
       toast.error("Error al registrarte");
