@@ -8,16 +8,16 @@ const corsHeaders = {
 
 // ART = UTC-3 (Buenos Aires, no DST)
 const ART_OFFSET_MS = -3 * 60 * 60 * 1000;
-// Weekly reset boundary = Monday 00:30 ART; accrual starts 9.5h later = Monday 10:00 ART.
-const ACCRUAL_DELAY_MS = 9.5 * 60 * 60 * 1000;
+// Weekly reset boundary = Monday 00:00 ART; accrual starts 10h later = Monday 10:00 ART.
+const ACCRUAL_DELAY_MS = 10 * 60 * 60 * 1000;
 const toArt = (d: Date) => new Date(d.getTime() + ART_OFFSET_MS);
 
-// Most recent Monday 00:30 ART (returned as UTC Date) — the weekly RESET boundary.
+// Most recent Monday 00:00 ART (returned as UTC Date) — the weekly RESET boundary.
 const currentCycleStart = (now: Date): Date => {
   const art = toArt(now);
   const dayFromMon = (art.getUTCDay() + 6) % 7;
   const cycle = new Date(art);
-  cycle.setUTCHours(0, 30, 0, 0);
+  cycle.setUTCHours(0, 0, 0, 0);
   cycle.setUTCDate(cycle.getUTCDate() - dayFromMon);
   if (now.getTime() < (cycle.getTime() - ART_OFFSET_MS)) {
     cycle.setUTCDate(cycle.getUTCDate() - 7);
@@ -25,8 +25,8 @@ const currentCycleStart = (now: Date): Date => {
   return new Date(cycle.getTime() - ART_OFFSET_MS);
 };
 
-// Progress 0..1 across the week. Accrual starts Monday 10:00 ART (cycleStart + 9.5h);
-// returns 0 from Monday 00:30 to 10:00 (counters reset, no growth yet).
+// Progress 0..1 across the week. Accrual starts Monday 10:00 ART (cycleStart + 10h);
+// returns 0 from Monday 00:00 to 10:00 (counters reset, no growth yet).
 const expectedProgress = (now: Date, cycleStart: Date): number => {
   const accrualStart = cycleStart.getTime() + ACCRUAL_DELAY_MS;
   const h = (now.getTime() - accrualStart) / 3_600_000;
@@ -70,7 +70,7 @@ Deno.serve(async (req) => {
     const cycleStart = currentCycleStart(now);
     const accrualStart = cycleStart.getTime() + ACCRUAL_DELAY_MS;
 
-    // Past Monday 00:30 of a new cycle → reset virtual_score to 0
+    // Past Monday 00:00 of a new cycle → reset virtual_score to 0
     await admin
       .from("brand_overrides")
       .update({ virtual_score: 0, booster_started_at: now.toISOString() })
