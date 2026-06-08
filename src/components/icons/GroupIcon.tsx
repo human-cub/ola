@@ -13,18 +13,19 @@ export const GroupIcon = ({ className }: GroupIconProps) => (
     stroke="currentColor"
     strokeWidth="1.9"
     strokeLinecap="round"
+    strokeLinejoin="round"
     className={className}
     aria-hidden="true"
   >
-    {/* central */}
-    <circle cx="12" cy="6.8" r="3.1" />
-    <path d="M6.6 20.5c.6-4 2.6-6.1 5.4-6.1s4.8 2.1 5.4 6.1" />
     {/* izquierda */}
-    <circle cx="4.6" cy="9.4" r="2.2" />
-    <path d="M1.2 19.2c.4-2.9 1.8-4.5 3.9-4.6" />
+    <circle cx="4.4" cy="9.5" r="2.25" />
+    <path d="M1.5 20.6V18.2A2.95 2.95 0 0 1 7.4 18.2V20.6" />
     {/* derecha */}
-    <circle cx="19.4" cy="9.4" r="2.2" />
-    <path d="M22.8 19.2c-.4-2.9-1.8-4.5-3.9-4.6" />
+    <circle cx="19.6" cy="9.5" r="2.25" />
+    <path d="M16.6 20.6V18.2A2.95 2.95 0 0 1 22.5 18.2V20.6" />
+    {/* central (más grande, más arriba) */}
+    <circle cx="12" cy="7.8" r="3.05" />
+    <path d="M7.9 20.6V17.2A4.05 4.05 0 0 1 16 17.2V20.6" />
   </svg>
 );
 
