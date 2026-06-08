@@ -41,6 +41,7 @@ const RouteFallback = () => (
 );
 import { FloatingWhatsApp } from "./components/FloatingWhatsApp";
 import { ScrollToTop } from "./components/ScrollToTop";
+import { captureRefFromUrl } from "@/lib/referral";
 import { CartProvider } from "./contexts/CartContext";
 import { isSociosHost } from "./socios/lib/host";
 import SociosApp from "./socios/SociosApp";
@@ -96,6 +97,11 @@ const App = () => {
         utm_content: params.get('utm_content'),
       });
     }
+  }, []);
+
+  // Capture personal referral code (?ref=CODE) into localStorage for the signup loop.
+  useEffect(() => {
+    captureRefFromUrl();
   }, []);
 
   if (isSociosHost()) {
