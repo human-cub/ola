@@ -8,15 +8,16 @@ const corsHeaders = {
 
 // ART = UTC-3 (Buenos Aires, no DST)
 const ART_OFFSET_MS = -3 * 60 * 60 * 1000;
+// Weekly reset boundary = Monday 00:30 ART; accrual starts 9.5h later = Monday 10:00 ART.
+const ACCRUAL_DELAY_MS = 9.5 * 60 * 60 * 1000;
 const toArt = (d: Date) => new Date(d.getTime() + ART_OFFSET_MS);
 
-// Monday 10:00 ART <= now (returned as UTC Date)
+// Most recent Monday 00:30 ART (returned as UTC Date) — the weekly RESET boundary.
 const currentCycleStart = (now: Date): Date => {
   const art = toArt(now);
-  const day = art.getUTCDay();
-  const dayFromMon = (day + 6) % 7;
+  const dayFromMon = (art.getUTCDay() + 6) % 7;
   const cycle = new Date(art);
-  cycle.setUTCHours(10, 0, 0, 0);
+  cycle.setUTCHours(0, 30, 0, 0);
   cycle.setUTCDate(cycle.getUTCDate() - dayFromMon);
   if (now.getTime() < (cycle.getTime() - ART_OFFSET_MS)) {
     cycle.setUTCDate(cycle.getUTCDate() - 7);
@@ -24,24 +25,26 @@ const currentCycleStart = (now: Date): Date => {
   return new Date(cycle.getTime() - ART_OFFSET_MS);
 };
 
-// Progress curve 0..1 across the week (hours since Monday 10:00 ART)
+// Progress 0..1 across the week. Accrual starts Monday 10:00 ART (cycleStart + 9.5h);
+// returns 0 from Monday 00:30 to 10:00 (counters reset, no growth yet).
 const expectedProgress = (now: Date, cycleStart: Date): number => {
-  const hoursSinceStart = (now.getTime() - cycleStart.getTime()) / (3_600_000);
-  if (hoursSinceStart <= 0) return 0;
-  if (hoursSinceStart <= 24) return (hoursSinceStart / 24) * 0.275;
-  if (hoursSinceStart <= 108) {
-    const t = (hoursSinceStart - 24) / 84;
+  const accrualStart = cycleStart.getTime() + ACCRUAL_DELAY_MS;
+  const h = (now.getTime() - accrualStart) / 3_600_000;
+  if (h <= 0) return 0;
+  if (h <= 24) return (h / 24) * 0.275;
+  if (h <= 108) {
+    const t = (h - 24) / 84;
     return 0.275 + t * (0.75 - 0.275);
   }
-  if (hoursSinceStart <= 120) return 0.75;
-  if (hoursSinceStart <= 156) {
-    const t = (hoursSinceStart - 120) / 36;
+  if (h <= 120) return 0.75;
+  if (h <= 156) {
+    const t = (h - 120) / 36;
     return 0.75 + t * 0.25;
   }
   return 1;
 };
 
-// Stable per-brand factor in [0,1) from slug → each brand gets its own trajectory
+// Stable per-brand factor in [0,1) from slug → each brand its own trajectory
 function brandHash(slug: string): number {
   let h = 0;
   for (let i = 0; i < slug.length; i++) h = ((h << 5) - h + slug.charCodeAt(i)) | 0;
@@ -65,17 +68,15 @@ Deno.serve(async (req) => {
 
     const now = new Date();
     const cycleStart = currentCycleStart(now);
+    const accrualStart = cycleStart.getTime() + ACCRUAL_DELAY_MS;
 
-    // New cycle → reset virtual_score
+    // Past Monday 00:30 of a new cycle → reset virtual_score to 0
     await admin
       .from("brand_overrides")
       .update({ virtual_score: 0, booster_started_at: now.toISOString() })
       .neq("booster_mode", "off")
       .or(`booster_started_at.is.null,booster_started_at.lt.${cycleStart.toISOString()}`);
 
-    // Active boosters. real_score is maintained by refresh_brand_goal at the GUARANTEED-price
-    // basis, so reading it keeps the booster consistent with the storefront counter even after
-    // a brand reaches Súper-Precio (no phantom shortfall).
     const { data: overrides } = await admin
       .from("brand_overrides")
       .select("slug, target_amount, booster_mode, booster_started_at, virtual_score, real_score")
@@ -87,8 +88,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Guaranteed price per brand for realistic chunks (Precio Garantizado = second-to-last
-    // collective tier; last tier = Súper-Precio).
+    // Guaranteed price per brand (Precio Garantizado = second-to-last collective tier; last = Súper)
     const { data: products } = await admin.from("products").select("id, brand_id, prices");
     const { data: brands } = await admin.from("brands").select("id, slug");
     const slugByBrandId = new Map<string, string>();
@@ -112,26 +112,25 @@ Deno.serve(async (req) => {
       const target = Number(ov.target_amount ?? 0);
       if (target <= 0) continue;
 
-      // first_24h: only accrue during the first 24h of the cycle
-      if (ov.booster_mode === "first_24h" && ov.booster_started_at) {
-        const elapsed = now.getTime() - new Date(ov.booster_started_at).getTime();
-        if (elapsed > 24 * 3_600_000) continue;
+      // first_24h: only accrue during the first 24h of accrual (Mon 10:00 → Tue 10:00)
+      if (ov.booster_mode === "first_24h" && now.getTime() >= accrualStart + 24 * 3_600_000) {
+        continue;
       }
 
       const real = Number(ov.real_score ?? 0);
       let virtual = Number(ov.virtual_score ?? 0);
       const current = real + virtual;
 
-      // Curve + stable per-brand offset (±15%) + small jitter → brands diverge, fill unevenly
+      // Curve × stable per-brand multiplier (±15%) × jitter (±2%). At 0% (morning) stays 0.
       const basePct = expectedProgress(now, cycleStart);
-      const brandOffset = (brandHash(ov.slug) - 0.5) * 0.30;
-      const jitter = (Math.random() * 0.04) - 0.02;
-      let pct = Math.max(0, Math.min(1, basePct + brandOffset + jitter));
+      const brandFactor = 1 + (brandHash(ov.slug) - 0.5) * 0.30;
+      const jitter = 1 + ((Math.random() * 0.04) - 0.02);
+      let pct = Math.max(0, Math.min(1, basePct * brandFactor * jitter));
       let expectedAmt = target * pct;
 
-      // Final phase: 80% chance to actually hit 100%, else 92–98%
-      const hours = (now.getTime() - cycleStart.getTime()) / 3_600_000;
-      if (hours > 156) {
+      // Final phase (curve hit 100% ~Sun 22:00): 80% chance to actually reach 100%, else 92–98%
+      const hoursSinceAccrual = (now.getTime() - accrualStart) / 3_600_000;
+      if (hoursSinceAccrual > 156) {
         if (Math.random() < 0.8) expectedAmt = target;
         else expectedAmt = target * (0.92 + Math.random() * 0.06);
       }
