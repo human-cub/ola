@@ -18,14 +18,14 @@ export const GroupIcon = ({ className }: GroupIconProps) => (
     aria-hidden="true"
   >
     {/* izquierda */}
-    <circle cx="4.4" cy="9.5" r="2.25" />
-    <path d="M1.5 20.6V18.2A2.95 2.95 0 0 1 7.4 18.2V20.6" />
+    <circle cx="5.3" cy="9.8" r="2.15" />
+    <path d="M1 20.5A5 5 0 0 1 8.28 16.05" />
     {/* derecha */}
-    <circle cx="19.6" cy="9.5" r="2.25" />
-    <path d="M16.6 20.6V18.2A2.95 2.95 0 0 1 22.5 18.2V20.6" />
+    <circle cx="18.7" cy="9.8" r="2.15" />
+    <path d="M23 20.5A5 5 0 0 0 15.72 16.05" />
     {/* central (más grande, más arriba) */}
-    <circle cx="12" cy="7.8" r="3.05" />
-    <path d="M7.9 20.6V17.2A4.05 4.05 0 0 1 16 17.2V20.6" />
+    <circle cx="12" cy="7.6" r="3" />
+    <path d="M6.2 20.5A5.8 5.8 0 0 1 17.8 20.5" />
   </svg>
 );
 
