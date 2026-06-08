@@ -8,63 +8,57 @@ const corsHeaders = {
 
 // ART = UTC-3 (Buenos Aires, no DST)
 const ART_OFFSET_MS = -3 * 60 * 60 * 1000;
-
+// Weekly reset boundary = Monday 00:00 ART; accrual starts 10h later = Monday 10:00 ART.
+const ACCRUAL_DELAY_MS = 10 * 60 * 60 * 1000;
 const toArt = (d: Date) => new Date(d.getTime() + ART_OFFSET_MS);
 
-// Returns Monday 10:00 ART <= now (as UTC Date)
+// Most recent Monday 00:00 ART (returned as UTC Date) — the weekly RESET boundary.
 const currentCycleStart = (now: Date): Date => {
   const art = toArt(now);
-  const day = art.getUTCDay(); // 0..6 (Sun..Sat) in shifted clock
-  // We want Monday = 1 as anchor at 10:00
-  const dayFromMon = (day + 6) % 7; // 0=Mon ... 6=Sun
+  const dayFromMon = (art.getUTCDay() + 6) % 7;
   const cycle = new Date(art);
-  cycle.setUTCHours(10, 0, 0, 0);
+  cycle.setUTCHours(0, 0, 0, 0);
   cycle.setUTCDate(cycle.getUTCDate() - dayFromMon);
-  // If we're earlier than Monday 10:00 in this week, go back one week
   if (now.getTime() < (cycle.getTime() - ART_OFFSET_MS)) {
     cycle.setUTCDate(cycle.getUTCDate() - 7);
   }
-  return new Date(cycle.getTime() - ART_OFFSET_MS); // convert back to UTC
+  return new Date(cycle.getTime() - ART_OFFSET_MS);
 };
 
-// Phase target progress (0..1) for given ART time within the cycle
+// Progress 0..1 across the week. Accrual starts Monday 10:00 ART (cycleStart + 10h);
+// returns 0 from Monday 00:00 to 10:00 (counters reset, no growth yet).
 const expectedProgress = (now: Date, cycleStart: Date): number => {
-  const hoursSinceStart = (now.getTime() - cycleStart.getTime()) / (3_600_000);
-  // Phases (hours since Monday 10:00 ART):
-  // 0..24       -> ramp 0% -> 27.5%
-  // 24..108     -> ramp 27.5% -> 75% (Tue 10 -> Fri 22 = 84h)
-  // 108..120    -> hold 75%
-  // 120..156    -> ramp 75% -> 100% (Sat 10 -> Sun 22 = 36h)
-  // >156        -> 100%
-  if (hoursSinceStart <= 0) return 0;
-  if (hoursSinceStart <= 24) {
-    return (hoursSinceStart / 24) * 0.275;
-  }
-  if (hoursSinceStart <= 108) {
-    const t = (hoursSinceStart - 24) / 84;
+  const accrualStart = cycleStart.getTime() + ACCRUAL_DELAY_MS;
+  const h = (now.getTime() - accrualStart) / 3_600_000;
+  if (h <= 0) return 0;
+  if (h <= 24) return (h / 24) * 0.275;
+  if (h <= 108) {
+    const t = (h - 24) / 84;
     return 0.275 + t * (0.75 - 0.275);
   }
-  if (hoursSinceStart <= 120) {
-    return 0.75;
-  }
-  if (hoursSinceStart <= 156) {
-    const t = (hoursSinceStart - 120) / 36;
+  if (h <= 120) return 0.75;
+  if (h <= 156) {
+    const t = (h - 120) / 36;
     return 0.75 + t * 0.25;
   }
   return 1;
 };
 
+// Stable per-brand factor in [0,1) from slug → each brand its own trajectory
+function brandHash(slug: string): number {
+  let h = 0;
+  for (let i = 0; i < slug.length; i++) h = ((h << 5) - h + slug.charCodeAt(i)) | 0;
+  return Math.abs(h % 10000) / 10000;
+}
+
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
     const expected = Deno.env.get("CRON_SECRET");
     const provided = req.headers.get("x-cron-secret");
     if (!expected || provided !== expected) {
       return new Response(JSON.stringify({ error: "unauthorized" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401,
       });
     }
 
@@ -74,64 +68,42 @@ Deno.serve(async (req) => {
 
     const now = new Date();
     const cycleStart = currentCycleStart(now);
+    const accrualStart = cycleStart.getTime() + ACCRUAL_DELAY_MS;
 
-    // Reset virtual_score if booster_started_at is before this cycle (new week)
+    // Past Monday 00:00 of a new cycle → reset virtual_score to 0
     await admin
       .from("brand_overrides")
       .update({ virtual_score: 0, booster_started_at: now.toISOString() })
       .neq("booster_mode", "off")
       .or(`booster_started_at.is.null,booster_started_at.lt.${cycleStart.toISOString()}`);
 
-    // Fetch all active boosters
     const { data: overrides } = await admin
       .from("brand_overrides")
-      .select("slug, target_amount, booster_mode, booster_started_at, virtual_score")
+      .select("slug, target_amount, booster_mode, booster_started_at, virtual_score, real_score")
       .neq("booster_mode", "off");
 
     if (!overrides || overrides.length === 0) {
       return new Response(JSON.stringify({ processed: 0 }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200,
       });
     }
 
-    // Get mayorista per slug (real) + collect product prices per slug for realistic chunks
+    // Guaranteed price per brand (Precio Garantizado = second-to-last collective tier; last = Súper)
     const { data: products } = await admin.from("products").select("id, brand_id, prices");
     const { data: brands } = await admin.from("brands").select("id, slug");
     const slugByBrandId = new Map<string, string>();
     for (const b of brands ?? []) if (b.id && b.slug) slugByBrandId.set(b.id, b.slug);
-    const slugByProductId = new Map<string, string>();
     const pricesBySlug = new Map<string, number[]>();
     for (const p of products ?? []) {
       const s = p.brand_id ? slugByBrandId.get(p.brand_id) : undefined;
       if (!s) continue;
-      slugByProductId.set(p.id, s);
       const tiers = Array.isArray(p.prices) ? p.prices : [];
-      // Use T1 (buy-now) when available, otherwise T0
-      const tier = (tiers[1] ?? tiers[0]) as { price?: number } | undefined;
-      const price = Number(tier?.price ?? 0);
+      const gTier = (tiers.length >= 2 ? tiers[tiers.length - 2] : tiers[tiers.length - 1]) as { price?: number } | undefined;
+      const price = Number(gTier?.price ?? 0);
       if (price > 0) {
         const list = pricesBySlug.get(s) ?? [];
         list.push(price);
         pricesBySlug.set(s, list);
-      }
-    }
-    const { data: orders } = await admin
-      .from("user_orders")
-      .select("items, status, created_at")
-      .eq("status", "pending")
-      .gte("created_at", cycleStart.toISOString());
-    const mayoristaBySlug = new Map<string, number>();
-    for (const o of orders ?? []) {
-      const items = Array.isArray(o.items) ? o.items : [];
-      for (const it of items) {
-        const pid = (it as Record<string, unknown>).product_id as string | undefined;
-        if (!pid) continue;
-        const slug = slugByProductId.get(pid);
-        if (!slug) continue;
-        const qty = Number((it as Record<string, unknown>).quantity ?? 0);
-        const ppu = Number((it as Record<string, unknown>).price_per_unit ?? 0);
-        mayoristaBySlug.set(slug, (mayoristaBySlug.get(slug) ?? 0) + qty * ppu);
       }
     }
 
@@ -140,62 +112,50 @@ Deno.serve(async (req) => {
       const target = Number(ov.target_amount ?? 0);
       if (target <= 0) continue;
 
-      // first_24h: skip if more than 24h elapsed since booster_started_at
-      if (ov.booster_mode === "first_24h" && ov.booster_started_at) {
-        const elapsed = now.getTime() - new Date(ov.booster_started_at).getTime();
-        if (elapsed > 24 * 3_600_000) continue;
+      // first_24h: only accrue during the first 24h of accrual (Mon 10:00 → Tue 10:00)
+      if (ov.booster_mode === "first_24h" && now.getTime() >= accrualStart + 24 * 3_600_000) {
+        continue;
       }
 
-      const mayorista = mayoristaBySlug.get(ov.slug) ?? 0;
+      const real = Number(ov.real_score ?? 0);
       let virtual = Number(ov.virtual_score ?? 0);
-      const current = mayorista + virtual;
+      const current = real + virtual;
 
-      // Expected progress with small jitter +/- 2%
-      let pct = expectedProgress(now, cycleStart);
-      const jitter = (Math.random() * 0.04) - 0.02;
-      pct = Math.max(0, Math.min(1, pct + jitter));
+      // Curve × stable per-brand multiplier (±15%) × jitter (±2%). At 0% (morning) stays 0.
+      const basePct = expectedProgress(now, cycleStart);
+      const brandFactor = 1 + (brandHash(ov.slug) - 0.5) * 0.30;
+      const jitter = 1 + ((Math.random() * 0.04) - 0.02);
+      let pct = Math.max(0, Math.min(1, basePct * brandFactor * jitter));
       let expectedAmt = target * pct;
 
-      // Final phase 90% chance to actually hit 100%
-      const hours = (now.getTime() - cycleStart.getTime()) / 3_600_000;
-      if (hours > 156) {
-        if (Math.random() < 0.9) expectedAmt = target;
+      // Final phase (curve hit 100% ~Sun 22:00): 80% chance to actually reach 100%, else 92–98%
+      const hoursSinceAccrual = (now.getTime() - accrualStart) / 3_600_000;
+      if (hoursSinceAccrual > 156) {
+        if (Math.random() < 0.8) expectedAmt = target;
         else expectedAmt = target * (0.92 + Math.random() * 0.06);
       }
 
       if (current < expectedAmt) {
-        // Add realistic "purchase" chunks: pick random product price for this brand,
-        // fallback to random 10_000..70_000 range. Keep adding until we reach expectedAmt.
         const brandPrices = pricesBySlug.get(ov.slug) ?? [];
-        const randomChunk = () => {
-          if (brandPrices.length > 0) {
-            return brandPrices[Math.floor(Math.random() * brandPrices.length)];
-          }
-          return Math.floor(10_000 + Math.random() * 60_000);
-        };
+        const randomChunk = () =>
+          brandPrices.length > 0
+            ? brandPrices[Math.floor(Math.random() * brandPrices.length)]
+            : Math.floor(10_000 + Math.random() * 60_000);
         let added = 0;
-        // Safety cap to avoid runaway loops
-        for (let i = 0; i < 200 && current + added < expectedAmt; i++) {
-          added += randomChunk();
-        }
+        for (let i = 0; i < 200 && current + added < expectedAmt; i++) added += randomChunk();
         virtual += added;
-        await admin
-          .from("brand_overrides")
-          .update({ virtual_score: virtual })
-          .eq("slug", ov.slug);
+        await admin.from("brand_overrides").update({ virtual_score: virtual }).eq("slug", ov.slug);
         processed++;
       }
     }
 
     return new Response(JSON.stringify({ processed }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200,
     });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     return new Response(JSON.stringify({ error: message }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500,
     });
   }
 });

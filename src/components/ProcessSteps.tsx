@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Users, Share2, FileCheck, Truck, ShoppingCart, ClipboardCheck, CreditCard } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -79,7 +80,9 @@ export const ProcessSteps = () => {
       <div className="container mx-auto">
         <div className="text-center mb-8 md:mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-            ¿Cómo Funciona?
+            <Link to="/como-comprar" className="hover:opacity-80 transition-opacity">
+              Cómo Comprar
+            </Link>
           </h2>
           <div className="w-20 h-1 bg-gradient-primary mx-auto rounded-full mb-6"></div>
 
@@ -88,7 +91,7 @@ export const ProcessSteps = () => {
             <SegmentedToggleButton
               isActive={isWaitingList}
               onClick={() => setIsWaitingList(true)}
-              label="Esperar y pagar menos"
+              label="Sumate al grupo"
             />
             <SegmentedToggleButton
               isActive={!isWaitingList}
