@@ -6,23 +6,23 @@ import { cn } from "@/lib/utils";
 const waitingListSteps = [
   {
     icon: Users,
-    title: "Sumate a los grupos que quieras",
-    description: "Elegí tus productos y sumate a la compra grupal de cada marca. Podés estar en varios grupos a la vez. Desde que entrás ya tenés el Precio Garantizado, más barato que Comprar ahora"
+    title: "Elegí tus productos",
+    description: "Sumate al grupo de cada marca. Podés estar en varios a la vez y ya tenés el Precio Garantizado."
   },
   {
     icon: Share2,
-    title: "Invitá y compartí para llegar al Súper-Precio",
-    description: "El Súper-Precio se activa cuando los pedidos del grupo suman el monto de la marca. Cada uno paga su producto, y cada persona que sumás acerca el mínimo para todos"
+    title: "Invitá y compartí",
+    description: "El Súper-Precio se activa cuando los pedidos del grupo llegan a la meta. Cada persona que sumás acerca el mínimo para todos."
   },
   {
     icon: FileCheck,
     title: "El lunes conocés tu precio",
-    description: "Si la marca llegó al monto pagás el Súper-Precio, y si no, te queda el Precio Garantizado igual. Esperar siempre te conviene. Después confirmás tu pedido"
+    description: "Si el grupo llegó a la meta, pagás el Súper-Precio; si no, te queda el Precio Garantizado. Después confirmás tu pedido."
   },
   {
     icon: Truck,
     title: "Coordinamos la entrega",
-    description: "Envío a domicilio o retiro, como te quede mejor. Pagás al recibirlo, en efectivo o transferencia. Envío gratis en CABA · GBA $3.000 · Interior $5.000 · gratis en todo el país desde $100.000"
+    description: "A domicilio o retiro, pagás al recibirlo. Gratis en CABA · GBA $3.000 · Interior $5.000 · gratis desde $100.000."
   }
 ];
 
