@@ -177,45 +177,27 @@ Deno.serve(async (req) => {
       const items = order.items as OrderItem[];
       if (!items || items.length === 0) continue;
 
-      // Calculate final price for each item based on current total_orders_count
+      // Brand-collective model: items already carry the frozen prices
+      // (price_per_unit + retail_price_per_unit set when the item entered the
+      // waiting list; super_price_per_unit applied by refresh_brand_goal when
+      // the brand target was reached). Just recompute order-level totals.
+      const updatedItems = items;
+      const num = (v: unknown) => {
+        const n = Number(v);
+        return Number.isFinite(n) ? n : 0;
+      };
       let newSubtotal = 0;
-      const updatedItems = items.map((item) => {
-        const productInfo = productMap.get(item.product_id);
-        if (!productInfo) return item;
-
-        // Calculate the final unit price based on total participants
-        const finalPrice = calculatePrice(productInfo.prices, productInfo.total_orders_count);
-        newSubtotal += finalPrice * item.quantity;
-
-        return {
-          ...item,
-          price_per_unit: finalPrice,
-          participants_count: productInfo.total_orders_count, // per-product frozen count
-        };
-      });
-
-      // Get the full price (first tier) for discount calculation
       let fullPrice = 0;
-      updatedItems.forEach((item) => {
-        const productInfo = productMap.get(item.product_id);
-        if (productInfo && productInfo.prices.length > 0) {
-          const sortedPrices = [...productInfo.prices].sort((a, b) => a.people - b.people);
-          fullPrice += sortedPrices[0].price * item.quantity;
-        }
-      });
-
-      // Calculate discount from full price
-      const discountAmount = fullPrice - newSubtotal;
-
-      // Keep order-level participants_count as max for backward compat
-      const productIds = [...new Set(updatedItems.map((i) => i.product_id))];
-      let maxParticipants = 0;
-      productIds.forEach((pid) => {
-        const productInfo = productMap.get(pid);
-        if (productInfo) {
-          maxParticipants = Math.max(maxParticipants, productInfo.total_orders_count);
-        }
-      });
+      for (const item of updatedItems as any[]) {
+        const qty = num(item?.quantity);
+        const unit = num(item?.price_per_unit);
+        const retail = item?.retail_price_per_unit != null
+          ? num(item.retail_price_per_unit)
+          : unit;
+        newSubtotal += unit * qty;
+        fullPrice += retail * qty;
+      }
+      const discountAmount = Math.max(fullPrice - newSubtotal, 0);
 
       // Update the order with snapshot data
       const { error: updateError } = await supabase
@@ -225,7 +207,6 @@ Deno.serve(async (req) => {
           subtotal: newSubtotal,
           total_amount: newSubtotal, // For collective, no delivery cost yet
           discount_amount: discountAmount,
-          participants_count: maxParticipants,
         })
         .eq('id', order.id);
 
@@ -234,7 +215,7 @@ Deno.serve(async (req) => {
       } else {
         snapshotCount++;
         userIdsForEmail.push(order.user_id);
-        console.log(`[reset-weekly-orders] Snapshot order ${order.id}: participants=${maxParticipants}, subtotal=${newSubtotal}, discount=${discountAmount}`);
+        console.log(`[reset-weekly-orders] Snapshot order ${order.id}: subtotal=${newSubtotal}, discount=${discountAmount}`);
       }
     }
 
