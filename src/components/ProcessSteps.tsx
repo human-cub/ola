@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
+import { GroupIcon } from "@/components/icons/GroupIcon";
 import { Users, Share2, FileCheck, Truck, ShoppingCart, ClipboardCheck, CreditCard } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -54,18 +55,20 @@ type SegmentedToggleButtonProps = {
   isActive: boolean;
   onClick: () => void;
   label: string;
+  icon?: ReactNode;
 };
 
-const SegmentedToggleButton = ({ isActive, onClick, label }: SegmentedToggleButtonProps) => (
+const SegmentedToggleButton = ({ isActive, onClick, label, icon }: SegmentedToggleButtonProps) => (
   <button
     onClick={onClick}
     style={{ fontSize: 'clamp(14px, 3vw, 16px)' }}
-    className={`w-1/2 py-2.5 px-4 sm:px-6 rounded-full sm:text-sm font-medium transition-all duration-300 flex items-center justify-center whitespace-nowrap ${
+    className={`w-1/2 py-2.5 px-4 sm:px-6 rounded-full sm:text-sm font-medium transition-all duration-300 flex items-center justify-center gap-1.5 whitespace-nowrap ${
       isActive
         ? 'bg-primary text-primary-foreground shadow-md'
         : 'text-muted-foreground hover:text-foreground'
     }`}
   >
+    {icon}
     {label}
   </button>
 );
@@ -92,6 +95,7 @@ export const ProcessSteps = () => {
               isActive={isWaitingList}
               onClick={() => setIsWaitingList(true)}
               label="Sumate al grupo"
+              icon={<GroupIcon className="w-4 h-4 shrink-0" />}
             />
             <SegmentedToggleButton
               isActive={!isWaitingList}
