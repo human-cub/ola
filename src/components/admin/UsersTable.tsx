@@ -71,6 +71,7 @@ const UsersTable = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<UserProfile | null>(null);
   const [userRoles, setUserRoles] = useState<Record<string, UserRole>>({});
+  const [passwordSet, setPasswordSet] = useState<Record<string, boolean>>({});
   const [updatingRole, setUpdatingRole] = useState<string | null>(null);
 
   const fetchUsers = async () => {
@@ -100,6 +101,13 @@ const UsersTable = () => {
 
       setUsers(data || []);
       setTotalCount(count || 0);
+
+      // Password-set status (admin only): flag migrated accounts that still have no password.
+      supabase.rpc("admin_users_password_status" as any).then(({ data: pwd }) => {
+        const pmap: Record<string, boolean> = {};
+        (pwd ?? []).forEach((r: any) => { pmap[r.user_id] = r.password_set; });
+        setPasswordSet(pmap);
+      });
 
       // Load roles for the visible users
       const userIds = (data ?? []).map((u) => u.user_id);
@@ -307,7 +315,10 @@ const UsersTable = () => {
                           ) : (
                             <Badge variant="secondary">Incompleto</Badge>
                           )}
-                        </TableCell>
+                        {passwordSet[user.user_id] === false && (
+                            <Badge variant="outline" className="ml-1 border-amber-500 text-amber-600">Sin clave</Badge>
+                          )}
+                          </TableCell>
                         <TableCell className="text-right space-x-2">
                           <Button
                             variant="ghost"
