@@ -153,6 +153,16 @@ export const syncWaitingListOrder = async (userId: string) => {
 
     if (!existingOrder) return;
 
+    // Read the customer's applied promo (client-side) so the synced order carries it
+    // and the admin sees it. Collective promo = one level up: PG -> SP.
+    let promoCode: string | null = null;
+    let promoBonus = 0;
+    try {
+      const raw = typeof localStorage !== "undefined" ? localStorage.getItem("ola_applied_promo") : null;
+      if (raw) { const pj = JSON.parse(raw); promoCode = pj?.code ?? null; promoBonus = Number(pj?.tier_bonus ?? 0); }
+    } catch { /* ignore */ }
+    const hasPromo = !!promoCode && promoBonus > 0;
+
     if (!waitingListData || waitingListData.length === 0) {
       await supabase
         .from("user_orders")
@@ -168,7 +178,9 @@ export const syncWaitingListOrder = async (userId: string) => {
         product_name: item.product_name,
         flavor: item.flavor,
         quantity: item.quantity,
-        price_per_unit: Number(item.current_price_per_unit),
+        price_per_unit: hasPromo
+          ? Number(item.super_price_per_unit ?? item.guaranteed_price_per_unit ?? item.current_price_per_unit)
+          : Number(item.current_price_per_unit),
         product_image: item.product_image,
         brand_slug: item.brand_slug ?? null,
         retail_price_per_unit: item.retail_price_per_unit == null ? null : Number(item.retail_price_per_unit),
@@ -198,6 +210,9 @@ export const syncWaitingListOrder = async (userId: string) => {
         subtotal,
         total_amount: subtotal,
         discount_amount: discountAmount,
+        is_promo: hasPromo,
+        promo_code: hasPromo ? promoCode : null,
+        promo_tier: hasPromo ? promoBonus : null,
       })
       .eq("id", existingOrder.id);
   } catch (error) {
