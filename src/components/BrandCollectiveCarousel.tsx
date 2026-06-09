@@ -48,11 +48,11 @@ export const BrandCollectiveCarousel = () => {
 
     let raf = 0;
     let pausedUntil = 0;
-    let hoverPaused = false;
+    let dragging = false;
     const SPEED = 0.4; // px/frame, derecha -> izquierda
 
     const tick = () => {
-      if (!hoverPaused && performance.now() >= pausedUntil && oneWidth > 0) {
+      if (!dragging && performance.now() >= pausedUntil && oneWidth > 0) {
         el.scrollLeft += SPEED;
         normalize();
       }
@@ -61,32 +61,57 @@ export const BrandCollectiveCarousel = () => {
     raf = requestAnimationFrame(tick);
 
     const onScroll = () => normalize();
-    // Pausa breve tras tocar/arrastrar para que mande el dedo
-    const pauseTouch = () => {
-      pausedUntil = performance.now() + 2000;
+    // Pausa breve tras rueda/touch para que mande el usuario.
+    const pauseBriefly = () => {
+      pausedUntil = performance.now() + 1500;
     };
 
     el.addEventListener("scroll", onScroll, { passive: true });
-    el.addEventListener("touchstart", pauseTouch, { passive: true });
-    el.addEventListener("touchmove", pauseTouch, { passive: true });
-    el.addEventListener("wheel", pauseTouch, { passive: true });
+    el.addEventListener("touchstart", pauseBriefly, { passive: true });
+    el.addEventListener("touchmove", pauseBriefly, { passive: true });
+    el.addEventListener("wheel", pauseBriefly, { passive: true });
 
-    // Hover-pausa SÓLO en dispositivos con mouse real (no en touch, donde
-    // iOS dispara mouseenter falsos y dejaba el auto-avance pausado para siempre)
-    const hoverCapable =
-      typeof window !== "undefined" &&
-      window.matchMedia &&
-      window.matchMedia("(hover: hover)").matches;
-    const onEnter = () => {
-      hoverPaused = true;
+    // Arrastre con mouse manteniendo el botón izquierdo (el touch usa scroll nativo).
+    let startX = 0;
+    let startScroll = 0;
+    let moved = false;
+    const onPointerDown = (e: PointerEvent) => {
+      if (e.pointerType !== "mouse" || e.button !== 0) return;
+      dragging = true;
+      moved = false;
+      startX = e.clientX;
+      startScroll = el.scrollLeft;
+      try { el.setPointerCapture(e.pointerId); } catch {}
+      el.style.cursor = "grabbing";
     };
-    const onLeave = () => {
-      hoverPaused = false;
+    const onPointerMove = (e: PointerEvent) => {
+      if (!dragging) return;
+      const dx = e.clientX - startX;
+      if (Math.abs(dx) > 4) moved = true;
+      el.scrollLeft = startScroll - dx;
+      normalize();
     };
-    if (hoverCapable) {
-      el.addEventListener("mouseenter", onEnter);
-      el.addEventListener("mouseleave", onLeave);
-    }
+    const onPointerUp = (e: PointerEvent) => {
+      if (!dragging) return;
+      dragging = false;
+      try { el.releasePointerCapture(e.pointerId); } catch {}
+      el.style.cursor = "grab";
+      pausedUntil = performance.now() + 1200; // breve pausa tras soltar, luego sigue
+    };
+    // Evitar que un arrastre dispare la navegación del logo (Link).
+    const onClickCapture = (e: MouseEvent) => {
+      if (moved) {
+        e.preventDefault();
+        e.stopPropagation();
+        moved = false;
+      }
+    };
+
+    el.addEventListener("pointerdown", onPointerDown);
+    el.addEventListener("pointermove", onPointerMove);
+    el.addEventListener("pointerup", onPointerUp);
+    el.addEventListener("pointercancel", onPointerUp);
+    el.addEventListener("click", onClickCapture, true);
 
     const onResize = () => {
       const prev = oneWidth;
@@ -102,11 +127,14 @@ export const BrandCollectiveCarousel = () => {
     return () => {
       cancelAnimationFrame(raf);
       el.removeEventListener("scroll", onScroll);
-      el.removeEventListener("touchstart", pauseTouch);
-      el.removeEventListener("touchmove", pauseTouch);
-      el.removeEventListener("wheel", pauseTouch);
-      el.removeEventListener("mouseenter", onEnter);
-      el.removeEventListener("mouseleave", onLeave);
+      el.removeEventListener("touchstart", pauseBriefly);
+      el.removeEventListener("touchmove", pauseBriefly);
+      el.removeEventListener("wheel", pauseBriefly);
+      el.removeEventListener("pointerdown", onPointerDown);
+      el.removeEventListener("pointermove", onPointerMove);
+      el.removeEventListener("pointerup", onPointerUp);
+      el.removeEventListener("pointercancel", onPointerUp);
+      el.removeEventListener("click", onClickCapture, true);
       window.removeEventListener("resize", onResize);
     };
   }, [copyLen, loop.length]);
@@ -127,7 +155,7 @@ export const BrandCollectiveCarousel = () => {
             (overflow-x:auto fuerza overflow-y:auto y si no recorta arriba/abajo) */}
         <div
           ref={scrollRef}
-          className="flex gap-4 overflow-x-auto scrollbar-hide px-4 py-3 [-webkit-overflow-scrolling:touch] [touch-action:pan-x]"
+          className="flex gap-4 overflow-x-auto scrollbar-hide cursor-grab select-none px-4 py-3 [-webkit-overflow-scrolling:touch] [touch-action:pan-x]"
         >
           {loop.map((b, i) => (
             <BrandMarqueeCard
