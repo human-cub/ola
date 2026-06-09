@@ -12,6 +12,7 @@ import BrandsTable from "@/components/admin/BrandsTable";
 import WeeklyPricesCard from "@/components/admin/WeeklyPricesCard";
 import AdminSettings from "@/components/admin/AdminSettings";
 import ProductsV2Table from "@/components/admin/ProductsV2Table";
+import ReferralsTable from "@/components/admin/ReferralsTable";
 import { ExternalLink } from "lucide-react";
 
 const Admin = () => {
@@ -88,13 +89,14 @@ const Admin = () => {
         </div>
 
         <Tabs defaultValue="userorders" className="w-full">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="userorders">Pedidos</TabsTrigger>
             <TabsTrigger value="productsv2">Productos</TabsTrigger>
             <TabsTrigger value="taxonomy">Cat. y Marcas</TabsTrigger>
             <TabsTrigger value="users">Usuarios</TabsTrigger>
             <TabsTrigger value="promos">Promos</TabsTrigger>
             <TabsTrigger value="settings">Mayorista</TabsTrigger>
+            <TabsTrigger value="referrals">Referidos</TabsTrigger>
           </TabsList>
           <TabsContent value="userorders">
             <UserOrdersTable />
@@ -117,6 +119,9 @@ const Admin = () => {
           </TabsContent>
           <TabsContent value="settings">
             <AdminSettings />
+          </TabsContent>
+          <TabsContent value="referrals">
+            <ReferralsTable />
           </TabsContent>
         </Tabs>
       </div>
