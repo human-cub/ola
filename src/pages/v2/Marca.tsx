@@ -11,6 +11,7 @@ import { useCategories } from "@/hooks/useCategories";
 import { BrandProgressBar } from "@/components/BrandProgressBar";
 import { CatalogProductCard } from "@/components/v2/CatalogProductCard";
 import { CatalogFilters, SortKey, sortProducts } from "@/components/v2/CatalogFilters";
+import { usePopularity } from "@/hooks/usePopularity";
 
 const DEFAULT_TITLE = "Ola! - Suplementos Deportivos | Precio Mayorista en Argentina";
 const DEFAULT_DESCRIPTION =
@@ -43,13 +44,15 @@ const MarcaV2 = () => {
       .map((c) => ({ value: c.slug, label: c.name }));
   }, [brandProducts, categories]);
 
+  const { scoreOf } = usePopularity();
+
   const filtered = useMemo(() => {
     const list =
       categoryFilter === "all"
         ? brandProducts
         : brandProducts.filter((p) => p.categorySlug === categoryFilter);
-    return sortProducts(list, sort);
-  }, [brandProducts, categoryFilter, sort]);
+    return sortProducts(list, sort, scoreOf);
+  }, [brandProducts, categoryFilter, sort, scoreOf]);
 
   useEffect(() => {
     if (!slug) return;

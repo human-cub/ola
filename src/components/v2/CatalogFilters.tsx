@@ -76,6 +76,7 @@ export const sortProducts = <
 >(
   list: T[],
   sort: SortKey,
+  popOf?: (p: T) => number,
 ): T[] => {
   const arr = [...list];
   switch (sort) {
@@ -87,8 +88,12 @@ export const sortProducts = <
       return arr.sort((a, b) => a.name.localeCompare(b.name));
     case "popular":
     default:
+      // Popularidad real (conteo de pedidos) primero; luego orden de catálogo.
       return arr.sort(
-        (a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name),
+        (a, b) =>
+          (popOf ? popOf(b) - popOf(a) : 0) ||
+          a.sortOrder - b.sortOrder ||
+          a.name.localeCompare(b.name),
       );
   }
 };
