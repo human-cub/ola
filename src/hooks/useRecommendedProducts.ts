@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCatalogProducts, type CatalogProduct } from "@/hooks/useCatalogProducts";
+import { usePopularity } from "@/hooks/usePopularity";
 
 // Categorías que NUNCA recomendamos (accesorios/shakers y vacías).
 const EXCLUDED_CATEGORIES = new Set(["accesorios", "frutos-secos", "semillas"]);
@@ -48,64 +49,40 @@ async function fetchOrderedProductIds(): Promise<string[]> {
   return ids;
 }
 
-// Popularidad (productId -> total_orders_count) para el fallback "más pedidos".
-async function fetchPopularity(): Promise<Map<string, number>> {
-  const m = new Map<string, number>();
-  const { data, error } = await supabase
-    .from("products")
-    .select("id, total_orders_count")
-    .gt("total_orders_count", 0)
-    .order("total_orders_count", { ascending: false })
-    .limit(400);
-  if (!error && data) {
-    for (const r of data as Array<{ id: string; total_orders_count: number | null }>) {
-      m.set(r.id, r.total_orders_count ?? 0);
-    }
-  }
-  return m;
-}
-
 /**
  * Lista personalizada para la home:
  *  - con historial: lo ya pedido + misma categoría/marca + complementos (carta), mezclado;
- *  - sin sesión/historial: los más pedidos (fallback), sin accesorios.
+ *  - sin sesión/historial: los más pedidos reales (vista product_popularity).
+ *
+ * No devuelve nada hasta tener catálogo + popularidad + historial listos, para
+ * NO mostrar un set provisional y luego cambiarlo (eso causaba el parpadeo).
  */
 export function useRecommendedProducts(limit = 12) {
-  const { data: catalog = [], isLoading } = useCatalogProducts();
-  const { data: orderedIds = [] } = useQuery({
+  const { data: catalog = [], isLoading: catLoading } = useCatalogProducts();
+  const { scoreOf, ready: popReady } = usePopularity();
+  const { data: orderedIds } = useQuery({
     queryKey: ["recommended", "ordered-ids"],
     queryFn: fetchOrderedProductIds,
     staleTime: 2 * 60 * 1000,
   });
-  const { data: popularity } = useQuery({
-    queryKey: ["recommended", "popularity"],
-    queryFn: fetchPopularity,
-    staleTime: 10 * 60 * 1000,
-  });
+
+  const ready = !catLoading && popReady && orderedIds !== undefined;
 
   const products = useMemo<CatalogProduct[]>(() => {
+    if (!ready) return [];
     const usable = catalog.filter(
       (p) => p.categorySlug && !EXCLUDED_CATEGORIES.has(p.categorySlug) && p.priceT4 > 0,
     );
     if (usable.length === 0) return [];
 
-    const popScore = (p: CatalogProduct) => {
-      if (!popularity) return 0;
-      let s = 0;
-      for (const v of p.variants) s = Math.max(s, popularity.get(v.productId) ?? 0);
-      return s;
-    };
-
-    const orderedSet = new Set(orderedIds);
+    const orderedSet = new Set(orderedIds ?? []);
     const orderedProducts = usable.filter((p) => p.variants.some((v) => orderedSet.has(v.productId)));
 
-    // Fallback (invitado o sin historial): más pedidos; si no hay datos de popularidad, al azar.
+    // Invitado / sin historial: los más pedidos (determinístico => sin parpadeo).
     if (orderedProducts.length === 0) {
-      const hasPop = popularity && popularity.size > 0;
-      const base = hasPop
-        ? [...usable].sort((a, b) => popScore(b) - popScore(a) || a.sortOrder - b.sortOrder)
-        : shuffle(usable);
-      return base.slice(0, limit);
+      return [...usable]
+        .sort((a, b) => scoreOf(b) - scoreOf(a) || a.sortOrder - b.sortOrder)
+        .slice(0, limit);
     }
 
     // Con historial: mezcla de ya-pedido + misma cat/marca + complementos.
@@ -136,11 +113,13 @@ export function useRecommendedProducts(limit = 12) {
 
     if (result.length < limit) {
       const have = new Set(result.map((p) => p.urlSlug));
-      const backfill = [...usable].sort((a, b) => popScore(b) - popScore(a)).filter((p) => !have.has(p.urlSlug));
+      const backfill = [...usable]
+        .sort((a, b) => scoreOf(b) - scoreOf(a))
+        .filter((p) => !have.has(p.urlSlug));
       result = [...result, ...backfill].slice(0, limit);
     }
     return result;
-  }, [catalog, orderedIds, popularity, limit]);
+  }, [ready, catalog, orderedIds, scoreOf, limit]);
 
-  return { products, isLoading };
+  return { products, isLoading: !ready };
 }
