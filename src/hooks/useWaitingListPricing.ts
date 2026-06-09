@@ -61,11 +61,11 @@ export const useWaitingListPricing = ({
       const frozenItem = frozenOrderData.items.find((i) => i.product_id === productId);
       const frozenPrice = frozenItem?.price_per_unit ?? stored;
       // Promo still upgrades a frozen order to Súper-Precio (t4).
-      return hasPromo ? waitingPriceFor(info, true, true, frozenPrice) : frozenPrice;
+      return hasPromo ? waitingPriceFor(info, true, promoTierBonus, frozenPrice) : frozenPrice;
     }
 
     const reached = info?.brandSlug ? brandReached.get(info.brandSlug) ?? false : false;
-    return waitingPriceFor(info, reached, hasPromo, stored);
+    return waitingPriceFor(info, reached, promoTierBonus, stored);
   };
 
   const getUserQtyForProduct = (productId: string): number => {
@@ -104,7 +104,7 @@ export const useWaitingListPricing = ({
   const getBuyNowTotal = (): number => {
     return waitingListItems.reduce((sum, item) => {
       const info = priceMap.get(item.product_id);
-      const price = buyNowPriceFor(info, hasPromo, item.current_price_per_unit || 0);
+      const price = buyNowPriceFor(info, promoTierBonus, item.current_price_per_unit || 0);
       return sum + price * item.quantity;
     }, 0);
   };
