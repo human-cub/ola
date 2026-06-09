@@ -80,7 +80,7 @@ export const ProcessSteps = () => {
     <section className="py-8 bg-muted/30" id="how-it-works">
       <div className="container mx-auto">
         <div className="text-center mb-8 md:mb-16">
-          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
+          <h2 className="text-xl md:text-2xl font-bold text-foreground mb-4">
             <Link to="/como-comprar" className="hover:opacity-80 transition-opacity">
               Cómo Comprar
             </Link>
