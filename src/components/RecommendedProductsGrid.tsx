@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { CatalogProductCard } from "@/components/v2/CatalogProductCard";
 import { useRecommendedProducts } from "@/hooks/useRecommendedProducts";
 
@@ -12,7 +13,7 @@ export const RecommendedProductsGrid = () => {
     <section className="py-8" id="products">
       <div className="container mx-auto max-w-6xl px-4">
         <div className="text-center mb-8">
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Productos para vos</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Lo más pedido</h2>
           <div className="w-20 h-1 bg-gradient-primary mx-auto rounded-full" />
         </div>
 
@@ -39,6 +40,15 @@ export const RecommendedProductsGrid = () => {
             ))}
           </div>
         )}
+
+        <div className="text-center mt-8">
+          <Link
+            to="/catalogo"
+            className="inline-flex items-center gap-1 text-primary font-semibold text-lg hover:underline"
+          >
+            Ver catálogo →
+          </Link>
+        </div>
       </div>
     </section>
   );
