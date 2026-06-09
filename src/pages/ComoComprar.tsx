@@ -28,31 +28,19 @@ const ComoComprar = () => {
               <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gradient-primary text-white text-sm mr-2 align-middle">1</span>
               Elegí tus productos
             </h2>
-            <p className="text-muted-foreground mb-3">Tenés dos modalidades:</p>
-            <ul className="space-y-3 ml-2">
-              <li className="text-foreground">
-                <span className="font-semibold">Compra grupal:</span>{" "}
-                <span className="text-muted-foreground">
-                  Hacé clic en "Esperar y pagar menos" para unirte a la colecta. A medida que más personas se suman, el precio baja en tiempo real
-                </span>
-              </li>
-              <li className="text-foreground">
-                <span className="font-semibold">Compra inmediata:</span>{" "}
-                <span className="text-muted-foreground">
-                  Si no podés esperar, elegí "Comprar ahora" para llevarlo ya con un 20% de descuento
-                </span>
-              </li>
-            </ul>
+            <p className="text-muted-foreground">
+              Elegí tus productos y sumate a la compra grupal de cada marca — apretá "Sumate al grupo". Podés estar en varios grupos a la vez. Desde que entrás ya tenés el Precio Garantizado. También está "Comprar ahora", la opción para llevarlos ya, sin esperar, al precio más alto.
+            </p>
           </section>
 
           {/* Step 2 */}
           <section>
             <h2 className="text-xl md:text-2xl font-semibold text-foreground mb-3">
               <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gradient-primary text-white text-sm mr-2 align-middle">2</span>
-              Tus datos y envío
+              Invitá y compartí para llegar al Súper-Precio
             </h2>
             <p className="text-muted-foreground">
-              Completá tu info de contacto y decinos dónde querés recibir el pedido. El envío es gratis en CABA, y para compras desde $100.000, gratis a todo el país.
+              El Súper-Precio se activa cuando los pedidos del grupo suman la meta de la marca. Cada uno paga su producto, y cada persona que sumás acerca el mínimo para todos.
             </p>
           </section>
 
@@ -60,25 +48,10 @@ const ComoComprar = () => {
           <section>
             <h2 className="text-xl md:text-2xl font-semibold text-foreground mb-3">
               <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gradient-primary text-white text-sm mr-2 align-middle">3</span>
-              Confirmación y pago
+              El lunes conocés tu precio
             </h2>
-            <p className="text-muted-foreground mb-3">¡Cero riesgo y sin prepago!</p>
-            <ul className="space-y-3 ml-2">
-              <li className="text-foreground">
-                <span className="font-semibold">Grupal:</span>{" "}
-                <span className="text-muted-foreground">
-                  La colecta cierra el domingo a la medianoche. Ahí se fija el precio final y confirmás tu pedido
-                </span>
-              </li>
-              <li className="text-foreground">
-                <span className="font-semibold">Inmediata:</span>{" "}
-                <span className="text-muted-foreground">
-                  Confirmás tu compra en el momento
-                </span>
-              </li>
-            </ul>
-            <p className="text-muted-foreground mt-3">
-              En ambos casos, pagás recién cuando tenés el producto en la mano y verificás que todo esté perfecto.
+            <p className="text-muted-foreground">
+              Si la marca llegó a la meta pagás el Súper-Precio, y si no, te queda el Precio Garantizado igual. Esperar siempre te conviene. Después confirmás tu pedido.
             </p>
           </section>
 
@@ -86,10 +59,13 @@ const ComoComprar = () => {
           <section>
             <h2 className="text-xl md:text-2xl font-semibold text-foreground mb-3">
               <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gradient-primary text-white text-sm mr-2 align-middle">4</span>
-              ¡Listo!
+              Coordinamos la entrega
             </h2>
             <p className="text-muted-foreground">
-              Te va a llegar un e-mail con el detalle. Los pedidos de "Comprar ahora" se despachan en el mismo día (CABA y GBA). Los pedidos grupales te llegan al inicio de la semana.
+              Envío a domicilio o retiro, como te quede mejor. Pagás al recibirlo, en efectivo o transferencia.
+            </p>
+            <p className="text-muted-foreground mt-2">
+              Envío gratis en CABA · GBA $3.000 · Interior $5.000 · Gratis en todo el país desde $100.000.
             </p>
           </section>
 
