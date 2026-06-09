@@ -44,7 +44,8 @@ import {
   ORDER_TYPE_LABELS,
 } from "@/lib/types";
 import { formatPrice } from "@/lib/formatting";
-import { setOrderPriceLevel } from "@/services/orderService";
+import { setOrderPriceLevel, type OrderPriceLevel } from "@/services/orderService";
+import { useCatalogPricing } from "@/hooks/useCatalogPricing";
 import { fetchServerTime } from "@/lib/serverClock";
 import { OrderFilters } from "./OrderFilters";
 import { OrderStats } from "./OrderStats";
@@ -93,6 +94,25 @@ const UserOrdersTable = () => {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<UserOrder | null>(null);
+
+  const { priceMap } = useCatalogPricing();
+
+  const levelLabels: Record<OrderPriceLevel, string> = {
+    ca: "Comprar Ahora",
+    garantizado: "Garantizado",
+    super: "Súper",
+  };
+  const currentLevelOf = (order: UserOrder): OrderPriceLevel => {
+    const item: any = (order as any).items?.[0];
+    if (!item) return order.order_type === "immediate" ? "ca" : "garantizado";
+    const info = priceMap.get(item.product_id);
+    const price = Number(item.price_per_unit);
+    const sp = Number(item.super_price_per_unit ?? info?.t4 ?? NaN);
+    const pg = Number(item.guaranteed_price_per_unit ?? info?.t3 ?? NaN);
+    if (!Number.isNaN(sp) && Math.abs(price - sp) < 1) return "super";
+    if (!Number.isNaN(pg) && Math.abs(price - pg) < 1) return "garantizado";
+    return order.order_type === "immediate" ? "ca" : "garantizado";
+  };
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -283,13 +303,13 @@ const UserOrdersTable = () => {
     }
   };
 
-  const handleSetLevel = async (orderId: string, level: "garantizado" | "super") => {
+  const handleSetLevel = async (orderId: string, level: OrderPriceLevel) => {
     const order = orders.find(o => o.id === orderId);
     if (!order) return;
 
     try {
-      await setOrderPriceLevel(order, level);
-      toast.success(level === "super" ? "S\u00faper-Precio aplicado" : "Precio Garantizado aplicado");
+      await setOrderPriceLevel(order, level, { priceMap });
+      toast.success("Precio actualizado");
       fetchOrders();
     } catch {
       toast.error("Error al actualizar el precio");
@@ -427,16 +447,19 @@ const UserOrdersTable = () => {
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      {order.order_type === "collective" && (
+                      {(order.order_type === "collective" || order.order_type === "immediate") && (
                         <Select
-                          value={order.is_promo ? "super" : "garantizado"}
-                          onValueChange={(value) => handleSetLevel(order.id, value as "garantizado" | "super")}
+                          value={currentLevelOf(order)}
+                          onValueChange={(value) => handleSetLevel(order.id, value as OrderPriceLevel)}
                         >
-                          <SelectTrigger className="w-[150px]">
+                          <SelectTrigger className="w-[160px]">
                             <Tag className="w-3 h-3 mr-1" />
-                            {order.is_promo ? "S\u00faper" : "Garantizado"}
+                            {levelLabels[currentLevelOf(order)]}
                           </SelectTrigger>
                           <SelectContent>
+                            {order.order_type === "immediate" && (
+                              <SelectItem value="ca">Comprar Ahora</SelectItem>
+                            )}
                             <SelectItem value="garantizado">Precio Garantizado</SelectItem>
                             <SelectItem value="super">Súper-Precio</SelectItem>
                           </SelectContent>
