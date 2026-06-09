@@ -13,7 +13,7 @@ export const RecommendedProductsGrid = () => {
     <section className="py-8" id="products">
       <div className="container mx-auto max-w-6xl px-4">
         <div className="text-center mb-8">
-          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">Lo más pedido</h2>
+          <h2 className="text-xl md:text-2xl font-bold text-foreground mb-4">Lo más pedido</h2>
           <div className="w-20 h-1 bg-gradient-primary mx-auto rounded-full" />
         </div>
 
@@ -41,7 +41,7 @@ export const RecommendedProductsGrid = () => {
           </div>
         )}
 
-        <div className="text-center mt-8">
+        <div className="text-right mt-6">
           <Link
             to="/catalogo"
             className="inline-flex items-center gap-1 text-primary font-semibold text-lg hover:underline"
