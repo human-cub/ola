@@ -5,7 +5,7 @@ const benefits = [
   {
     icon: Percent,
     title: "Hasta 2 veces más barato",
-    description: "Conseguí mejores precios con compras colectivas"
+    description: "Conseguí mejores precios comprando en grupo"
   },
   {
     icon: Shield,
