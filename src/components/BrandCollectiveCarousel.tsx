@@ -72,23 +72,26 @@ export const BrandCollectiveCarousel = () => {
     el.addEventListener("wheel", pauseBriefly, { passive: true });
 
     // Arrastre con mouse manteniendo el botón izquierdo (el touch usa scroll nativo).
-    let startX = 0;
-    let startScroll = 0;
+    let downX = 0;
+    let lastX = 0;
     let moved = false;
     const onPointerDown = (e: PointerEvent) => {
       if (e.pointerType !== "mouse" || e.button !== 0) return;
       dragging = true;
       moved = false;
-      startX = e.clientX;
-      startScroll = el.scrollLeft;
+      downX = e.clientX;
+      lastX = e.clientX;
       try { el.setPointerCapture(e.pointerId); } catch {}
       el.style.cursor = "grabbing";
     };
     const onPointerMove = (e: PointerEvent) => {
       if (!dragging) return;
-      const dx = e.clientX - startX;
-      if (Math.abs(dx) > 4) moved = true;
-      el.scrollLeft = startScroll - dx;
+      const dx = e.clientX - lastX;
+      lastX = e.clientX;
+      if (Math.abs(e.clientX - downX) > 4) moved = true;
+      // Incremental: mover desde la posición ACTUAL (no desde un ancla fija),
+      // así normalize() envuelve el loop infinito sin saltos ni topes.
+      el.scrollLeft -= dx;
       normalize();
     };
     const onPointerUp = (e: PointerEvent) => {
