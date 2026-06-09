@@ -64,25 +64,32 @@ export const useCatalogPricing = () => {
 
 // ---- New model price rules. Discounts are ALWAYS computed against retail. ----
 
-/** Waiting list / collective: t3 guaranteed; brand Meta reached or promo -> t4 (Súper). Never beyond t4. */
+/** Collective/waiting: base t3 (Garantizado). Brand Meta reached -> t4 (Super).
+ *  A promo bonus shifts up the named ladder [PG=t3, SP=t4] (cap SP). Never below guaranteed. */
 export const waitingPriceFor = (
   info: CatalogPriceInfo | undefined,
   reached: boolean,
-  hasPromo: boolean,
+  promoBonus: number,
   fallback: number,
 ): number => {
   if (!info) return fallback;
-  return reached || hasPromo ? info.t4 || info.t3 || fallback : info.t3 || fallback;
+  if (reached) return info.t4 || info.t3 || fallback;
+  const ladder = [info.t3, info.t4]; // PG, SP
+  const idx = Math.min(Math.max(promoBonus, 0), ladder.length - 1);
+  return ladder[idx] || info.t3 || fallback;
 };
 
-/** Buy now: t1; promo -> t2. */
+/** Buy now ("Comprar Ahora"): base t1 (CA). A promo bonus shifts up the named ladder
+ *  [CA=t1, PG=t3, SP=t4] (cap SP): +1 -> PG, +2 -> SP. */
 export const buyNowPriceFor = (
   info: CatalogPriceInfo | undefined,
-  hasPromo: boolean,
+  promoBonus: number,
   fallback: number,
 ): number => {
   if (!info) return fallback;
-  return hasPromo ? info.t2 || info.t1 || fallback : info.t1 || fallback;
+  const ladder = [info.t1, info.t3, info.t4]; // CA, PG, SP
+  const idx = Math.min(Math.max(promoBonus, 0), ladder.length - 1);
+  return ladder[idx] || info.t1 || fallback;
 };
 
 /** Retail baseline for "sin descuento". Falls back so unknown items show zero discount. */

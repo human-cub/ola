@@ -38,9 +38,9 @@ export function useCheckoutPricing(
     const info = priceMap.get(item.product_id);
     if (isCollective) {
       const reached = info?.brandSlug ? brandReached.get(info.brandSlug) ?? false : false;
-      return waitingPriceFor(info, reached, hasPromo, stored);
+      return waitingPriceFor(info, reached, promoTierBonus, stored);
     }
-    return buyNowPriceFor(info, hasPromo, stored);
+    return buyNowPriceFor(info, promoTierBonus, stored);
   };
 
   const pricing = useMemo(() => {
