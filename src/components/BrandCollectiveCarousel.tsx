@@ -112,6 +112,9 @@ export const BrandCollectiveCarousel = () => {
     el.addEventListener("pointerup", onPointerUp);
     el.addEventListener("pointercancel", onPointerUp);
     el.addEventListener("click", onClickCapture, true);
+    // Cancelar el drag nativo (fantasma de la imagen/enlace) durante el arrastre.
+    const onDragStart = (e: Event) => e.preventDefault();
+    el.addEventListener("dragstart", onDragStart);
 
     const onResize = () => {
       const prev = oneWidth;
@@ -135,6 +138,7 @@ export const BrandCollectiveCarousel = () => {
       el.removeEventListener("pointerup", onPointerUp);
       el.removeEventListener("pointercancel", onPointerUp);
       el.removeEventListener("click", onClickCapture, true);
+      el.removeEventListener("dragstart", onDragStart);
       window.removeEventListener("resize", onResize);
     };
   }, [copyLen, loop.length]);
@@ -205,13 +209,14 @@ const BrandMarqueeCard = ({
   return (
     <Link
       to={`/marcas/${slug}`}
+      draggable={false}
       className={`shrink-0 w-[260px] bg-card rounded-xl border p-4 hover:shadow-lg transition-all duration-300 flex flex-col gap-3 ${
         reached ? "ring-2 ring-primary border-primary shadow-md" : ""
       }`}
     >
       <div className="flex items-center gap-3 h-14">
         {logoUrl ? (
-          <img src={logoUrl} alt={`Logo ${name}`} className="h-10 w-auto object-contain" loading="lazy" decoding="async" />
+          <img src={logoUrl} alt={`Logo ${name}`} className="h-10 w-auto object-contain" loading="lazy" decoding="async" draggable={false} />
         ) : (
           <span className="text-2xl">{emoji || "🏷️"}</span>
         )}
