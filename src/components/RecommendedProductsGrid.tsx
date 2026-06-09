@@ -13,7 +13,7 @@ export const RecommendedProductsGrid = () => {
     <section className="py-8" id="products">
       <div className="container mx-auto max-w-6xl px-4">
         <div className="text-center mb-8">
-          <h2 className="text-xl md:text-2xl font-bold text-foreground mb-4">Lo más pedido</h2>
+          <h2 className="text-lg md:text-xl font-bold text-foreground mb-4">Lo más pedido</h2>
           <div className="w-20 h-1 bg-gradient-primary mx-auto rounded-full" />
         </div>
 
