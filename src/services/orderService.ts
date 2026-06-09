@@ -469,3 +469,45 @@ export const applyPromoTier = async (
 
   if (error) throw error;
 };
+
+
+export type OrderPriceLevel = "garantizado" | "super";
+
+/**
+ * Set a COLLECTIVE order's price level using the per-item prices already stored on the order:
+ *   garantizado -> guaranteed_price_per_unit (Precio Garantizado, the default for group members)
+ *   super       -> super_price_per_unit (Súper-Precio)
+ * Recomputes subtotal / discount (vs retail) / total. No catalog lookup, no legacy tiers.
+ */
+export const setOrderPriceLevel = async (
+  order: { id: string; items: any[]; delivery_cost: number | null },
+  level: OrderPriceLevel,
+  options?: { code?: string | null },
+): Promise<void> => {
+  const updatedItems = (order.items ?? []).map((raw: any) => {
+    const item = raw as any;
+    const pg = Number(item.guaranteed_price_per_unit ?? item.price_per_unit);
+    const sp = Number(item.super_price_per_unit ?? pg);
+    return { ...item, price_per_unit: level === "super" ? sp : pg };
+  });
+  const subtotal = updatedItems.reduce((acc: number, it: any) => acc + Number(it.price_per_unit) * it.quantity, 0);
+  const fullPrice = updatedItems.reduce(
+    (acc: number, it: any) => acc + Number(it.retail_price_per_unit ?? it.price_per_unit) * it.quantity,
+    0,
+  );
+  const discountAmount = Math.max(fullPrice - subtotal, 0);
+  const totalAmount = subtotal + (Number(order.delivery_cost) || 0);
+  const { error } = await supabase
+    .from("user_orders")
+    .update({
+      items: updatedItems as any,
+      subtotal,
+      discount_amount: discountAmount,
+      total_amount: totalAmount,
+      is_promo: level === "super",
+      promo_code: options?.code ?? null,
+      promo_tier: null,
+    } as any)
+    .eq("id", order.id);
+  if (error) throw error;
+};
