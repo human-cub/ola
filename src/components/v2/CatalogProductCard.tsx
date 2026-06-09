@@ -77,7 +77,6 @@ export const CatalogProductCard = ({
                   </span>
                 )}
               </div>
-              <p className="text-[10px] text-muted-foreground leading-tight">(Comprar ahora)</p>
             </>
           ) : (
             <>
