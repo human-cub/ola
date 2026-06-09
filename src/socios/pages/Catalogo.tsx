@@ -4,16 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useBrands } from "@/hooks/useBrands";
 import { useCategories } from "@/hooks/useCategories";
+import { searchProducts } from "@/lib/productSearch";
+import type { CatalogProduct } from "@/hooks/useCatalogProducts";
 import { useSociosProducts, type SociosProduct } from "../hooks/useSociosProducts";
 import { useSociosCartCtx } from "../SociosCartProvider";
 import type { SociosCartItem } from "../hooks/useSociosCart";
 import { formatARS } from "../lib/format";
 import { SociosHeader } from "../SociosHeader";
 import { BrandBar } from "../BrandBar";
-
-// Normaliza string para búsqueda: minúsculas, sin acentos, trim
-const norm = (s: string) =>
-  s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 
 // Tamaño -> número comparable (kg/l -> x1000, lb -> x453.6, g/ml/caps/unid -> tal cual)
 const sizeToNumber = (s: string | null | undefined): number => {
@@ -142,81 +140,101 @@ const Catalogo = () => {
   const effectiveBrandId =
     selectedBrandId === undefined ? brands[0]?.id ?? undefined : selectedBrandId;
 
-  // Indexamos categorías y marcas por id/slug para enriquecer el haystack del buscador
-  const categoryById = useMemo(() => {
-    const m = new Map<string, { name: string }>();
-    categories.forEach((c: any) => {
-      if (c.slug) m.set(String(c.slug).toLowerCase(), { name: c.name ?? "" });
-      if (c.id) m.set(String(c.id).toLowerCase(), { name: c.name ?? "" });
-    });
-    return m;
-  }, [categories]);
-
-  const brandById = useMemo(() => {
-    const m = new Map<string, { name: string }>();
+  // Nombre de marca por id: fallback para enriquecer la búsqueda cuando un
+  // producto no trae brand_name.
+  const brandNameById = useMemo(() => {
+    const m = new Map<string, string>();
     brands.forEach((b: any) => {
-      if (b.id) m.set(String(b.id), { name: b.name ?? "" });
+      if (b.id) m.set(String(b.id), b.name ?? "");
     });
     return m;
   }, [brands]);
 
+  // Nombre de categoría por slug: alimenta el haystack del buscador compartido.
+  const categoryNameBySlug = useMemo(() => {
+    const m = new Map<string, string>();
+    categories.forEach((c: any) => {
+      if (c.slug) m.set(String(c.slug), c.name ?? c.slug);
+    });
+    return m;
+  }, [categories]);
+
+  // Adaptamos cada SKU a la forma mínima que entiende searchProducts para usar
+  // EXACTAMENTE el mismo motor que la tienda retail (sinónimos AR + tolerancia a
+  // tipeo + ranking por relevancia) en vez de un filtro por substring.
+  const searchable = useMemo<CatalogProduct[]>(
+    () =>
+      products.map(
+        (p) =>
+          ({
+            urlSlug: p.url_slug || p.sku,
+            name: p.name,
+            nameShort: p.name_short,
+            size: p.size,
+            brandName:
+              p.brand_name ?? (p.brand_id ? brandNameById.get(p.brand_id) ?? null : null),
+            categorySlug: p.category_slug,
+            tags: Array.isArray(p.tags) ? p.tags : [],
+            sortOrder: p.sort_order,
+            variants: [{ sku: p.sku, flavor: p.flavor }],
+          }) as unknown as CatalogProduct,
+      ),
+    [products, brandNameById],
+  );
+
+  const searchActive = search.trim().length > 0;
+
+  // Cuando hay búsqueda: posición por relevancia (sku -> índice) del motor
+  // compartido. null = sin búsqueda (usamos el orden por categoría de siempre).
+  const rankBySku = useMemo(() => {
+    if (!searchActive) return null;
+    const ranked = searchProducts(searchable, search, categoryNameBySlug);
+    const order = new Map<string, number>();
+    ranked.forEach((r, i) => order.set(r.product.variants[0].sku, i));
+    return order;
+  }, [searchActive, searchable, search, categoryNameBySlug]);
+
   const filtered = useMemo(() => {
+    // Búsqueda activa: ignoramos el filtro de marca (buscamos en todo el
+    // catálogo) y ordenamos por relevancia, igual que /catalogo?q= en retail.
+    if (rankBySku) {
+      return products
+        .filter((p) => rankBySku.has(p.sku))
+        .sort((a, b) => (rankBySku.get(a.sku) ?? 0) - (rankBySku.get(b.sku) ?? 0));
+    }
+
+    // Sin búsqueda: filtro por marca + orden categoría -> nombre -> tamaño ->
+    // sabor -> sku.
     const categoryOrder = new Map<string, number>();
     categories.forEach((category, index) => {
       if (category.id) categoryOrder.set(category.id.toLowerCase().trim(), index);
       if (category.slug) categoryOrder.set(category.slug.toLowerCase().trim(), index);
       if (category.name) categoryOrder.set(category.name.toLowerCase().trim(), index);
     });
+    const categoryKey = (value: string | null | undefined) =>
+      value?.toLowerCase().trim() ?? "";
 
-    const categoryKey = (value: string | null | undefined) => value?.toLowerCase().trim() ?? "";
-
-    const tokens = norm(search).split(/\s+/).filter(Boolean);
-    const searchActive = tokens.length > 0;
-
-    return products.filter((p) => {
-      // Cuando hay búsqueda, ignoramos el filtro de marca para buscar en todo el catálogo
-      if (!searchActive && effectiveBrandId && p.brand_id !== effectiveBrandId) return false;
-      if (searchActive) {
-        const catKey = (p.category_slug ?? "").toLowerCase();
-        const cat = categoryById.get(catKey);
-        const brand = p.brand_id ? brandById.get(p.brand_id) : undefined;
-        const tagsStr = Array.isArray(p.tags) ? p.tags.join(" ") : "";
-        const hay = norm(
-          [
-            p.name,
-            p.name_short ?? "",
-            p.flavor ?? "",
-            p.size ?? "",
-            p.sku,
-            p.brand_name ?? brand?.name ?? "",
-            p.category_slug ?? "",
-            cat?.name ?? "",
-            tagsStr,
-          ].join(" "),
-        );
-        // Todos los tokens deben aparecer en alguna parte (AND multipalabra)
-        if (!tokens.every((t) => hay.includes(t))) return false;
-      }
-      return true;
-    }).sort((a, b) => {
-      const ak = categoryKey(a.category_slug);
-      const bk = categoryKey(b.category_slug);
-      const ai = categoryOrder.get(ak) ?? Number.MAX_SAFE_INTEGER;
-      const bi = categoryOrder.get(bk) ?? Number.MAX_SAFE_INTEGER;
-      if (ai !== bi) return ai - bi;
-      if (ak !== bk) return ak.localeCompare(bk, "es-AR");
-      const an = (a.name_short || a.name).trim();
-      const bn = (b.name_short || b.name).trim();
-      const nameCmp = an.localeCompare(bn, "es-AR");
-      if (nameCmp !== 0) return nameCmp;
-      const asz = sizeToNumber(a.size);
-      const bsz = sizeToNumber(b.size);
-      if (asz !== bsz) return asz - bsz;
-      const fl = (a.flavor ?? "").localeCompare(b.flavor ?? "", "es-AR");
-      if (fl !== 0) return fl;
-      return a.sku.localeCompare(b.sku);
-    });
-  }, [products, effectiveBrandId, search, categories, categoryById, brandById]);
+    return products
+      .filter((p) => !(effectiveBrandId && p.brand_id !== effectiveBrandId))
+      .sort((a, b) => {
+        const ak = categoryKey(a.category_slug);
+        const bk = categoryKey(b.category_slug);
+        const ai = categoryOrder.get(ak) ?? Number.MAX_SAFE_INTEGER;
+        const bi = categoryOrder.get(bk) ?? Number.MAX_SAFE_INTEGER;
+        if (ai !== bi) return ai - bi;
+        if (ak !== bk) return ak.localeCompare(bk, "es-AR");
+        const an = (a.name_short || a.name).trim();
+        const bn = (b.name_short || b.name).trim();
+        const nameCmp = an.localeCompare(bn, "es-AR");
+        if (nameCmp !== 0) return nameCmp;
+        const asz = sizeToNumber(a.size);
+        const bsz = sizeToNumber(b.size);
+        if (asz !== bsz) return asz - bsz;
+        const fl = (a.flavor ?? "").localeCompare(b.flavor ?? "", "es-AR");
+        if (fl !== 0) return fl;
+        return a.sku.localeCompare(b.sku);
+      });
+  }, [products, rankBySku, effectiveBrandId, categories]);
 
   void items; // ensure rerender on cart change
 
