@@ -116,7 +116,7 @@ export const BrandCollectiveCarousel = () => {
   return (
     <section className="py-8 overflow-hidden" id="colectas-semana">
       <div className="text-center mb-1">
-        <h2 className="text-xl md:text-2xl font-bold text-foreground">
+        <h2 className="text-lg md:text-xl font-bold text-foreground">
           <Link to="/marcas" className="hover:opacity-80 transition-opacity">
             Grupos de la semana
           </Link>
