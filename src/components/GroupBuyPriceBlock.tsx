@@ -389,7 +389,7 @@ export const GroupBuyPriceBlock = ({
 
             {/* Price Comparison */}
             <div className="px-6 py-6 bg-card">
-              <div className={`grid ${brandStats.goalReached ? "grid-cols-2" : "grid-cols-3"} gap-2 text-center items-start`}>
+              <div className="grid grid-cols-3 gap-2 text-center items-start">
                 {priceComparisonItems.map((item) => (
                   <div key={item.label} className="flex flex-col items-center gap-1">
                     <div className={`text-[13px] font-bold ${item.labelClassName}`} style={item.style}>
@@ -410,10 +410,11 @@ export const GroupBuyPriceBlock = ({
             <div className="px-6 pb-6 space-y-4 bg-card">
               <button
                 onClick={handleWaitForDiscount}
-                className="w-full py-4 rounded-2xl font-bold text-white text-[17px] flex items-center justify-center gap-2 shadow-lg transform transition active:scale-95 bg-gradient-primary"
+                className={`w-full py-4 rounded-2xl font-bold text-white text-[17px] flex items-center justify-center gap-2 shadow-lg transform transition active:scale-95 ${brandStats.goalReached ? "" : "bg-gradient-primary"}`}
+                style={brandStats.goalReached ? groupBuyAccentBackgroundStyle : undefined}
               >
                 <GroupIcon className="w-6 h-6" />
-                Sumate al grupo
+                {brandStats.goalReached ? `Sumate al grupo · ${formatPrice(superPrice)}` : "Sumate al grupo"}
               </button>
               <button
                 onClick={handleBuyNow}
