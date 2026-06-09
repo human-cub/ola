@@ -92,7 +92,7 @@ interface WeeklyPriceSet {
 
 const fetchThisWeekPrices = async (): Promise<Map<string, WeeklyPriceSet>> => {
   const { data, error } = await supabase
-    .from("sku_price_snapshots")
+    .from("sku_prices_public")
     .select("sku, this_week_prices")
     .not("this_week_prices", "is", null);
   if (error) throw error;
