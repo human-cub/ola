@@ -173,8 +173,9 @@ export const AddToCartDialog = ({
     try {
       const { data: { session } } = await supabase.auth.getSession();
 
-      // Auth-gate: for guests, redirect to auth and perform add after login
-      if (!session?.user) {
+      // Auth-gate: only group/waiting-list joins require auth up front.
+      // Retail "Comprar ahora" lets guests add to the session cart and check out later.
+      if (!session?.user && isWaitingList) {
         if (isWaitingList) {
           setPendingAddAction({
             kind: "waiting_list",

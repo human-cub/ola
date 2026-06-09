@@ -1,8 +1,9 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -61,6 +62,14 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
   const [deliveryZone, setDeliveryZone] = useState<'caba' | 'gba' | 'other'>('caba');
   const { appliedPromo, setAppliedPromo, removePromo } = usePromoCode();
   const { isMayorista } = useUserRole();
+  const [isGuest, setIsGuest] = useState(false);
+  const [guestEmail, setGuestEmail] = useState("");
+  const [guestPassword, setGuestPassword] = useState("");
+
+  useEffect(() => {
+    if (isCollective) { setIsGuest(false); return; }
+    supabase.auth.getSession().then(({ data }) => setIsGuest(!data.session));
+  }, [isCollective]);
 
   const form = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutSchema),
@@ -102,6 +111,8 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
     promoCode: appliedPromo?.code ?? null,
     promoTierBonus: appliedPromo?.tier_bonus ?? null,
     clearItems: isCollective ? clearWaitingList : clearCart,
+    isGuest,
+    guestCredentials: isGuest ? { email: guestEmail, password: guestPassword } : null,
     onSuccess: (data) => {
       amplitude.track('Checkout Complete', {
         button_label: 'Finalizar pedido',
@@ -189,7 +200,14 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
 
               <Separator className="mb-6" />
 
-              <CheckoutContactForm form={form} />
+              <CheckoutContactForm
+                form={form}
+                isGuest={isGuest}
+                guestEmail={guestEmail}
+                setGuestEmail={setGuestEmail}
+                guestPassword={guestPassword}
+                setGuestPassword={setGuestPassword}
+              />
 
               <Separator className="mb-6" />
 
