@@ -318,6 +318,9 @@ const UsersTable = () => {
                         {passwordSet[user.user_id] === false && (
                             <Badge variant="outline" className="ml-1 border-amber-500 text-amber-600">Sin clave</Badge>
                           )}
+                        {(user as any).registration_method === "guest_checkout" && (
+                            <Badge variant="outline" className="ml-1 border-sky-500 text-sky-600">Guest</Badge>
+                          )}
                           </TableCell>
                         <TableCell className="text-right space-x-2">
                           <Button
