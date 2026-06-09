@@ -1,6 +1,6 @@
 import { Header } from "@/components/Header";
 import { HeroSection } from "@/components/HeroSection";
-import { MainProductCarousel } from "@/components/MainProductCarousel";
+import { RecommendedProductsGrid } from "@/components/RecommendedProductsGrid";
 import { BrandCollectiveCarousel } from "@/components/BrandCollectiveCarousel";
 import { Benefits } from "@/components/Benefits";
 import { ProcessSteps } from "@/components/ProcessSteps";
@@ -19,7 +19,7 @@ const Index = () => {
       <main>
         <HeroSection />
         <BrandCollectiveCarousel />
-        <MainProductCarousel />
+        <RecommendedProductsGrid />
         <Benefits />
         <ProcessSteps />
         <Testimonials />
