@@ -29,7 +29,10 @@ const ComoComprar = () => {
               Elegí tus productos
             </h2>
             <p className="text-muted-foreground">
-              Elegí tus productos y sumate a la compra grupal de cada marca — apretá "Sumate al grupo". Podés estar en varios grupos a la vez. Desde que entrás ya tenés el Precio Garantizado. También está "Comprar ahora", la opción para llevarlos ya, sin esperar, al precio más alto.
+              Elegí tus productos y sumate a la compra grupal de cada marca — apretá <strong className="font-semibold text-foreground">"Sumate al grupo"</strong>. Podés estar en varios grupos a la vez. Desde que entrás ya tenés el <strong className="font-semibold text-foreground">Precio Garantizado</strong>.
+            </p>
+            <p className="text-muted-foreground mt-2">
+              También está <strong className="font-semibold text-foreground">"Comprar ahora"</strong>, la opción para llevarlos ya, sin esperar.
             </p>
           </section>
 
@@ -51,7 +54,7 @@ const ComoComprar = () => {
               El lunes conocés tu precio
             </h2>
             <p className="text-muted-foreground">
-              Si la marca llegó a la meta pagás el Súper-Precio, y si no, te queda el Precio Garantizado igual. Esperar siempre te conviene. Después confirmás tu pedido.
+              Si la marca llegó a la meta pagás el Súper-Precio, y si no, te queda el <strong className="font-semibold text-foreground">Precio Garantizado</strong> igual. Esperar siempre te conviene. Después confirmás tu pedido.
             </p>
           </section>
 
