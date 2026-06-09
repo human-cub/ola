@@ -153,6 +153,23 @@ export const syncWaitingListOrder = async (userId: string) => {
 
     if (!existingOrder) return;
 
+    // Read the customer's applied promo (client-side) so the synced order carries it
+    // and the admin sees it. Collective promo = one level up: PG -> SP.
+    let promoCode: string | null = null;
+    let promoBonus = 0;
+    try {
+      const raw = typeof localStorage !== "undefined" ? localStorage.getItem("ola_applied_promo") : null;
+      if (raw) { const pj = JSON.parse(raw); promoCode = pj?.code ?? null; promoBonus = Number(pj?.tier_bonus ?? 0); }
+    } catch { /* ignore */ }
+    // Referrer reward: a pending one-time Super discount on the referrer's group order.
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("has_referral_reward")
+      .eq("user_id", userId)
+      .maybeSingle();
+    const hasReward = !!(prof as any)?.has_referral_reward;
+    const hasPromo = (!!promoCode && promoBonus > 0) || hasReward;
+
     if (!waitingListData || waitingListData.length === 0) {
       await supabase
         .from("user_orders")
@@ -168,7 +185,9 @@ export const syncWaitingListOrder = async (userId: string) => {
         product_name: item.product_name,
         flavor: item.flavor,
         quantity: item.quantity,
-        price_per_unit: Number(item.current_price_per_unit),
+        price_per_unit: hasPromo
+          ? Number(item.super_price_per_unit ?? item.guaranteed_price_per_unit ?? item.current_price_per_unit)
+          : Number(item.current_price_per_unit),
         product_image: item.product_image,
         brand_slug: item.brand_slug ?? null,
         retail_price_per_unit: item.retail_price_per_unit == null ? null : Number(item.retail_price_per_unit),
@@ -198,6 +217,9 @@ export const syncWaitingListOrder = async (userId: string) => {
         subtotal,
         total_amount: subtotal,
         discount_amount: discountAmount,
+        is_promo: hasPromo,
+        promo_code: hasPromo ? (promoCode ?? (hasReward ? "REFERIDO" : null)) : null,
+        promo_tier: hasPromo ? (promoBonus || null) : null,
       })
       .eq("id", existingOrder.id);
   } catch (error) {
@@ -471,24 +493,30 @@ export const applyPromoTier = async (
 };
 
 
-export type OrderPriceLevel = "garantizado" | "super";
+export type OrderPriceLevel = "ca" | "garantizado" | "super";
 
 /**
- * Set a COLLECTIVE order's price level using the per-item prices already stored on the order:
- *   garantizado -> guaranteed_price_per_unit (Precio Garantizado, the default for group members)
- *   super       -> super_price_per_unit (Súper-Precio)
- * Recomputes subtotal / discount (vs retail) / total. No catalog lookup, no legacy tiers.
+ * Set an order's price level. Sources each item's prices from the stored fields, falling back
+ * to the catalog priceMap (CA=t1, PG=t3, SP=t4) so immediate orders (no stored PG/SP) work too.
+ *   ca          -> Comprar Ahora (t1)  [base for immediate]
+ *   garantizado -> Precio Garantizado (t3)  [base for collective]
+ *   super       -> Super-Precio (t4)
+ * is_promo = level above the order's base. Recomputes subtotal / discount (vs retail) / total.
  */
 export const setOrderPriceLevel = async (
-  order: { id: string; items: any[]; delivery_cost: number | null },
+  order: { id: string; items: any[]; delivery_cost: number | null; order_type?: string },
   level: OrderPriceLevel,
-  options?: { code?: string | null },
+  opts?: { priceMap?: Map<string, { t1?: number; t3?: number; t4?: number }>; code?: string | null },
 ): Promise<void> => {
+  const priceMap = opts?.priceMap;
   const updatedItems = (order.items ?? []).map((raw: any) => {
     const item = raw as any;
-    const pg = Number(item.guaranteed_price_per_unit ?? item.price_per_unit);
-    const sp = Number(item.super_price_per_unit ?? pg);
-    return { ...item, price_per_unit: level === "super" ? sp : pg };
+    const info = priceMap?.get(item.product_id);
+    const ca = Number(item.comprar_ahora_price_per_unit ?? info?.t1 ?? item.price_per_unit);
+    const pg = Number(item.guaranteed_price_per_unit ?? info?.t3 ?? item.price_per_unit);
+    const sp = Number(item.super_price_per_unit ?? info?.t4 ?? pg);
+    const price = level === "super" ? sp : level === "ca" ? ca : pg;
+    return { ...item, price_per_unit: price };
   });
   const subtotal = updatedItems.reduce((acc: number, it: any) => acc + Number(it.price_per_unit) * it.quantity, 0);
   const fullPrice = updatedItems.reduce(
@@ -497,6 +525,7 @@ export const setOrderPriceLevel = async (
   );
   const discountAmount = Math.max(fullPrice - subtotal, 0);
   const totalAmount = subtotal + (Number(order.delivery_cost) || 0);
+  const base = order.order_type === "immediate" ? "ca" : "garantizado";
   const { error } = await supabase
     .from("user_orders")
     .update({
@@ -504,8 +533,8 @@ export const setOrderPriceLevel = async (
       subtotal,
       discount_amount: discountAmount,
       total_amount: totalAmount,
-      is_promo: level === "super",
-      promo_code: options?.code ?? null,
+      is_promo: level !== base,
+      promo_code: opts?.code ?? null,
       promo_tier: null,
     } as any)
     .eq("id", order.id);

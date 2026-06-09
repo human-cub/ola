@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { usePromoCode } from "@/hooks/usePromoCode";
+import { useAppSetting } from "@/hooks/useAppSetting";
 
 const registerSchema = z.object({
   email: z.string().email("Email inválido"),
@@ -24,6 +26,8 @@ const registerSchema = z.object({
 
 export const RegisterForm = () => {
   const navigate = useNavigate();
+  const { setAppliedPromo } = usePromoCode();
+  const { value: viralEnabled } = useAppSetting<boolean>("viral_enabled", false);
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -76,6 +80,9 @@ export const RegisterForm = () => {
       }
 
       amplitude.track('Sign Up', { button_label: 'Crear Cuenta', method: 'email' });
+
+      // Welcome promo for every new account (gated). One-time use is enforced at order time.
+      if (viralEnabled) setAppliedPromo({ code: "HOLAOLA", tier_bonus: 1 });
 
       // Welcome email (fire and forget)
       supabase.functions.invoke("send-email", { body: { type: "welcome", to: email } }).catch(() => {});

@@ -4,12 +4,15 @@ import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, ArrowLeft, User, Shield, LogOut, Package } from "lucide-react";
+import { Loader2, ArrowLeft, User, Shield, LogOut, Package, Copy, Share2 } from "lucide-react";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import OrdersTab from "@/components/profile/OrdersTab";
 import { ProfileEditForm } from "@/components/profile/ProfileEditForm";
 import { SecurityForm } from "@/components/profile/SecurityForm";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useAppSetting } from "@/hooks/useAppSetting";
+import { ShareBlock } from "@/components/ShareBlock";
+import { toast } from "sonner";
 import type { AddressData } from "@/lib/address";
 import logoOlaSocios from "@/assets/logo-ola-socios.png";
 import logoOla from "@/assets/logo-ola.png";
@@ -91,6 +94,7 @@ const profileDefaults = {
 const Profile = () => {
   const navigate = useNavigate();
   const { isMayorista, isAdmin } = useUserRole();
+  const { value: viralEnabled } = useAppSetting<boolean>("viral_enabled", false);
 
   const { data, isLoading } = useQuery({
     queryKey: ['profile'],
@@ -98,6 +102,9 @@ const Profile = () => {
   });
 
   const email = data?.session?.user?.email || "";
+  const refCode = (data?.profile as any)?.referral_code as string | undefined;
+  const refLink = refCode ? `https://alaola.com.ar/?ref=${refCode}` : null;
+  const showInvite = !!(viralEnabled && refLink);
 
   useEffect(() => {
     if (!isLoading && !data) navigate("/ingresar");
@@ -164,8 +171,14 @@ const Profile = () => {
           </Button>
         </div>
 
-        <Tabs defaultValue="orders">
-          <TabsList className="grid w-full grid-cols-3 mb-6">
+        <Tabs defaultValue={showInvite ? "invite" : "orders"} key={showInvite ? "with-invite" : "no-invite"}>
+          <TabsList className={`grid w-full ${showInvite ? "grid-cols-4" : "grid-cols-3"} mb-6`}>
+            {showInvite && (
+              <TabsTrigger value="invite" className="flex items-center gap-2">
+                <Share2 className="w-4 h-4" />
+                <span>Invitar</span>
+              </TabsTrigger>
+            )}
             <TabsTrigger value="orders" className="flex items-center gap-2">
               <Package className="w-4 h-4" />
               <span className="hidden sm:inline">Mis Pedidos</span>
@@ -182,6 +195,28 @@ const Profile = () => {
               <span className="sm:hidden">Clave</span>
             </TabsTrigger>
           </TabsList>
+
+          {showInvite && (
+            <TabsContent value="invite">
+              <div className="rounded-lg border border-primary/20 bg-gradient-primary/10 p-4">
+                <p className="text-sm font-semibold text-primary mb-1">Tu link de invitación</p>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Invitá amigos: cuando se suman a un grupo, todos pagamos menos.
+                </p>
+                <div className="flex items-center gap-2 mb-4">
+                  <code className="flex-1 truncate rounded bg-background/60 px-3 py-2 text-xs">{refLink}</code>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => { navigator.clipboard.writeText(refLink!); toast.success("\u00a1Link copiado!"); }}
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                </div>
+                <ShareBlock refLink={refLink!} />
+              </div>
+            </TabsContent>
+          )}
 
           <TabsContent value="orders">
             <OrdersTab />
