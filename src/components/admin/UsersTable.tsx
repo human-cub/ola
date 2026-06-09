@@ -28,7 +28,7 @@ import {
   Ban,
   CheckCircle,
   Download,
-  Eye, ArrowUpCircle } from "lucide-react";
+  Eye } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { UserDetailDialog } from "./UserDetailDialog";
@@ -51,12 +51,13 @@ interface UserProfile {
 
 const ITEMS_PER_PAGE = 50;
 
-type UserRole = "admin" | "mayorista" | "cliente";
+type UserRole = "admin" | "mayorista" | "cliente" | "guest";
 
 const roleLabel: Record<UserRole, string> = {
   admin: "Admin",
   mayorista: "Mayorista",
   cliente: "Cliente",
+  guest: "Invitado",
 };
 
 const UsersTable = () => {
@@ -122,6 +123,7 @@ const UsersTable = () => {
           // admin overrides mayorista; mayorista overrides cliente
           if (r.role === "admin") map[r.user_id] = "admin";
           else if (r.role === "mayorista" && map[r.user_id] !== "admin") map[r.user_id] = "mayorista";
+          else if (r.role === "guest" && map[r.user_id] === "cliente") map[r.user_id] = "guest";
         });
         setUserRoles(map);
       } else {
@@ -161,20 +163,6 @@ const UsersTable = () => {
     }
   };
 
-  const handlePromoteGuest = async (user: UserProfile) => {
-    try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ is_guest: false } as any)
-        .eq("id", user.id);
-      if (error) throw error;
-      toast.success("Cuenta promovida a miembro");
-      fetchUsers();
-    } catch {
-      toast.error("Error al promover la cuenta");
-    }
-  };
-
   const handleExportCSV = () => {
     const headers = ["ID", "Nombre", "Apellido", "Teléfono", "Dirección", "Estado", "Email", "Fecha registro"];
     const rows = users.map(u => [
@@ -206,7 +194,7 @@ const UsersTable = () => {
         .from("user_roles")
         .delete()
         .eq("user_id", userId)
-        .in("role", ["admin", "mayorista"]);
+        .in("role", ["admin", "mayorista", "guest"]);
       if (delError) throw delError;
 
       // Insert the new role unless it's "cliente" (no row needed)
@@ -317,6 +305,7 @@ const UsersTable = () => {
                               <SelectItem value="cliente">Cliente</SelectItem>
                               <SelectItem value="mayorista">Mayorista</SelectItem>
                               <SelectItem value="admin">Admin</SelectItem>
+                              <SelectItem value="guest">Invitado</SelectItem>
                             </SelectContent>
                           </Select>
                         </TableCell>
@@ -331,9 +320,6 @@ const UsersTable = () => {
                         {passwordSet[user.user_id] === false && (
                             <Badge variant="outline" className="ml-1 border-amber-500 text-amber-600">Sin clave</Badge>
                           )}
-                        {(user as any).is_guest && (
-                            <Badge variant="outline" className="ml-1 border-sky-500 text-sky-600">Guest</Badge>
-                          )}
                           </TableCell>
                         <TableCell className="text-right space-x-2">
                           <Button
@@ -343,16 +329,6 @@ const UsersTable = () => {
                           >
                             <Eye className="w-4 h-4" />
                           </Button>
-                          {(user as any).is_guest && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              title="Promover a miembro (ver precios de grupo)"
-                              onClick={() => handlePromoteGuest(user)}
-                            >
-                              <ArrowUpCircle className="w-4 h-4 text-sky-600" />
-                            </Button>
-                          )}
                           <Button
                             variant="ghost"
                             size="icon"

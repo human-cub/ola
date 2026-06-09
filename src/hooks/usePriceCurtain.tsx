@@ -18,7 +18,7 @@ const Ctx = createContext<PriceCurtainValue>({
 
 /**
  * Computes the group-price curtain once per app. Anonymous visitors AND
- * guest-checkout accounts (profiles.is_guest) are curtained until an admin
+ * guest-checkout accounts (role 'guest') are curtained until an admin
  * promotes the guest to a full member.
  */
 export const PriceCurtainProvider = ({ children }: { children: ReactNode }) => {
@@ -49,11 +49,12 @@ export const PriceCurtainProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
       const { data } = await supabase
-        .from("profiles")
-        .select("is_guest")
+        .from("user_roles")
+        .select("role")
         .eq("user_id", user.id)
+        .eq("role", "guest")
         .maybeSingle();
-      if (mounted) setIsFullMember(!(data as any)?.is_guest); // guest accounts are NOT full members
+      if (mounted) setIsFullMember(!data); // a 'guest' role row => not a full member
     };
     void supabase.auth.getSession().then(({ data }) => evaluate(data.session));
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
