@@ -47,12 +47,12 @@ export const CatalogProductCard = ({
       <div className={`flex flex-col flex-1 ${compact ? "pt-2" : "pt-4"}`}>
         {/* Precio arriba (Súper-Precio en naranja + retail tachado a la derecha) */}
         <div className={compact ? "mb-1.5" : "mb-2"}>
-          <div className="flex items-baseline gap-2 flex-wrap">
-            <span className={`${compact ? "text-base" : "text-lg"} font-bold leading-tight`} style={ACCENT}>
+          <div className="flex items-baseline gap-1.5 flex-wrap">
+            <span className={`${compact ? "text-sm md:text-base" : "text-base md:text-lg"} font-bold leading-tight`} style={ACCENT}>
               {formatPrice(priceSuper)}
             </span>
             {hasRetail && (
-              <span className="text-xs text-muted-foreground/70 line-through leading-tight">
+              <span className="text-[11px] md:text-xs text-muted-foreground/70 line-through leading-tight">
                 {formatPrice(priceRetailDisplay)}
               </span>
             )}
