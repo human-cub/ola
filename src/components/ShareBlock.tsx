@@ -12,33 +12,38 @@ const SHARE_URL = 'https://alaola.com.ar/';
 
 interface ShareBlockProps {
   showQR?: boolean;
+  refLink?: string;
 }
 
-export const ShareBlock = ({ showQR = false }: ShareBlockProps) => {
+export const ShareBlock = ({ showQR = false, refLink }: ShareBlockProps) => {
+  const shareUrl = refLink || SHARE_URL;
+  const shareText = refLink
+    ? `Mirá estos descuentos de suplementos 🎉 Sumate a mi grupo en Ola y pagamos todos menos 🤑 ${refLink}`
+    : SHARE_TEXT;
   const handleShare = () => {
     amplitude.track('Referral Shared', { method: 'native' });
     if (navigator.share) {
-      navigator.share({ text: SHARE_TEXT }).catch(() => {});
+      navigator.share({ text: shareText }).catch(() => {});
     } else {
-      navigator.clipboard.writeText(SHARE_TEXT);
+      navigator.clipboard.writeText(shareText);
       toast.success("¡Texto copiado!");
     }
   };
 
   const handleWhatsApp = () => {
     amplitude.track('Referral Shared', { method: 'whatsapp' });
-    window.open(`https://wa.me/?text=${encodeURIComponent(SHARE_TEXT)}`, '_blank');
+    window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
   };
 
   const handleCopyInvitation = () => {
     amplitude.track('Referral Shared', { method: 'copy_invitation' });
-    navigator.clipboard.writeText(SHARE_TEXT);
+    navigator.clipboard.writeText(shareText);
     toast.success("¡Invitación copiada!");
   };
 
   const handleCopyLink = () => {
     amplitude.track('Referral Shared', { method: 'copy_link' });
-    navigator.clipboard.writeText(SHARE_URL);
+    navigator.clipboard.writeText(shareUrl);
     toast.success("¡Enlace copiado!");
   };
 
