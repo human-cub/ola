@@ -75,33 +75,38 @@ export const BrandCollectiveCarousel = () => {
     let downX = 0;
     let lastX = 0;
     let moved = false;
+    // Drag con listeners en window. SIN setPointerCapture: el pointer-capture
+    // retargetea el evento `click` al contenedor y rompía la navegación al
+    // hacer clic en una marca.
+    const onWinPointerMove = (e: PointerEvent) => {
+      if (!dragging) return;
+      const dx = e.clientX - lastX;
+      lastX = e.clientX;
+      if (Math.abs(e.clientX - downX) > 4) moved = true;
+      // Incremental: mover desde la posición ACTUAL para que normalize()
+      // envuelva el loop infinito sin saltos ni topes.
+      el.scrollLeft -= dx;
+      normalize();
+    };
+    const onWinPointerUp = () => {
+      if (!dragging) return;
+      dragging = false;
+      el.style.cursor = "grab";
+      pausedUntil = performance.now() + 1200; // breve pausa tras soltar, luego sigue
+      window.removeEventListener("pointermove", onWinPointerMove);
+      window.removeEventListener("pointerup", onWinPointerUp);
+    };
     const onPointerDown = (e: PointerEvent) => {
       if (e.pointerType !== "mouse" || e.button !== 0) return;
       dragging = true;
       moved = false;
       downX = e.clientX;
       lastX = e.clientX;
-      try { el.setPointerCapture(e.pointerId); } catch {}
       el.style.cursor = "grabbing";
+      window.addEventListener("pointermove", onWinPointerMove);
+      window.addEventListener("pointerup", onWinPointerUp);
     };
-    const onPointerMove = (e: PointerEvent) => {
-      if (!dragging) return;
-      const dx = e.clientX - lastX;
-      lastX = e.clientX;
-      if (Math.abs(e.clientX - downX) > 4) moved = true;
-      // Incremental: mover desde la posición ACTUAL (no desde un ancla fija),
-      // así normalize() envuelve el loop infinito sin saltos ni topes.
-      el.scrollLeft -= dx;
-      normalize();
-    };
-    const onPointerUp = (e: PointerEvent) => {
-      if (!dragging) return;
-      dragging = false;
-      try { el.releasePointerCapture(e.pointerId); } catch {}
-      el.style.cursor = "grab";
-      pausedUntil = performance.now() + 1200; // breve pausa tras soltar, luego sigue
-    };
-    // Evitar que un arrastre dispare la navegación del logo (Link).
+    // Sólo bloquear el click si hubo arrastre real (un clic normal navega).
     const onClickCapture = (e: MouseEvent) => {
       if (moved) {
         e.preventDefault();
@@ -111,9 +116,6 @@ export const BrandCollectiveCarousel = () => {
     };
 
     el.addEventListener("pointerdown", onPointerDown);
-    el.addEventListener("pointermove", onPointerMove);
-    el.addEventListener("pointerup", onPointerUp);
-    el.addEventListener("pointercancel", onPointerUp);
     el.addEventListener("click", onClickCapture, true);
     // Cancelar el drag nativo (fantasma de la imagen/enlace) durante el arrastre.
     const onDragStart = (e: Event) => e.preventDefault();
@@ -137,11 +139,10 @@ export const BrandCollectiveCarousel = () => {
       el.removeEventListener("touchmove", pauseBriefly);
       el.removeEventListener("wheel", pauseBriefly);
       el.removeEventListener("pointerdown", onPointerDown);
-      el.removeEventListener("pointermove", onPointerMove);
-      el.removeEventListener("pointerup", onPointerUp);
-      el.removeEventListener("pointercancel", onPointerUp);
       el.removeEventListener("click", onClickCapture, true);
       el.removeEventListener("dragstart", onDragStart);
+      window.removeEventListener("pointermove", onWinPointerMove);
+      window.removeEventListener("pointerup", onWinPointerUp);
       window.removeEventListener("resize", onResize);
     };
   }, [copyLen, loop.length]);
