@@ -115,27 +115,12 @@ export const BrandCollectiveCarousel = () => {
 
   return (
     <section className="py-8 overflow-hidden" id="colectas-semana">
-      <div className="text-center mb-6">
-        <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
+      <div className="text-center mb-1">
+        <h2 className="text-2xl md:text-3xl font-bold text-foreground">
           <Link to="/marcas" className="hover:opacity-80 transition-opacity">
             Grupos de la semana
           </Link>
         </h2>
-        <div className="w-20 h-1 bg-gradient-primary mx-auto rounded-full" />
-        <div className="mt-4 flex flex-col items-center gap-2">
-          <span
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-white font-bold shadow-md"
-            style={{ backgroundColor: "hsl(var(--group-buy-accent))" }}
-          >
-            <Timer className="w-4 h-4 shrink-0" />
-            <span className="font-mono tabular-nums text-sm tracking-wide">
-              {timeLeft.days}d {String(timeLeft.hours).padStart(2, "0")}h {String(timeLeft.minutes).padStart(2, "0")}m {String(timeLeft.seconds).padStart(2, "0")}s
-            </span>
-          </span>
-          <span className="text-xs sm:text-sm text-muted-foreground">
-            Cierran el domingo — sumate antes de que termine la semana
-          </span>
-        </div>
       </div>
       <div className="relative">
         {/* py-3 deja aire para el ring/sombra de la tarjeta destacada
@@ -156,6 +141,20 @@ export const BrandCollectiveCarousel = () => {
         </div>
         <div className="pointer-events-none absolute inset-y-0 left-0 w-10 md:w-16 bg-gradient-to-r from-background to-transparent z-10" />
         <div className="pointer-events-none absolute inset-y-0 right-0 w-10 md:w-16 bg-gradient-to-l from-background to-transparent z-10" />
+      </div>
+      <div className="mt-5 flex flex-col items-center gap-2">
+        <span
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-white font-bold shadow-md"
+          style={{ backgroundColor: "hsl(var(--group-buy-accent))" }}
+        >
+          <Timer className="w-4 h-4 shrink-0" />
+          <span className="font-mono tabular-nums text-sm tracking-wide">
+            {timeLeft.days}d {String(timeLeft.hours).padStart(2, "0")}h {String(timeLeft.minutes).padStart(2, "0")}m {String(timeLeft.seconds).padStart(2, "0")}s
+          </span>
+        </span>
+        <span className="text-xs sm:text-sm text-muted-foreground">
+          Cierran el domingo — sumate antes de que termine la semana
+        </span>
       </div>
     </section>
   );
