@@ -14,7 +14,8 @@ export function useCheckoutProfile(
     const loadProfile = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        navigate("/ingresar?redirect=" + (isCollective ? "/finalizar-compra-grupal" : "/finalizar-compra"));
+        // Immediate checkout allows guests (account created at finalize); collective stays members-only.
+        if (isCollective) navigate("/ingresar?redirect=/finalizar-compra-grupal");
         return;
       }
 

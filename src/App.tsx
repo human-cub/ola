@@ -43,7 +43,9 @@ import { FloatingWhatsApp } from "./components/FloatingWhatsApp";
 import { ScrollToTop } from "./components/ScrollToTop";
 import { captureRefFromUrl } from "@/lib/referral";
 import { useReferralClaim } from "@/hooks/useReferralClaim";
+import { useCurtainGuard } from "@/hooks/useCurtainGuard";
 import { CartProvider } from "./contexts/CartContext";
+import { PriceCurtainProvider } from "@/hooks/usePriceCurtain";
 import { isSociosHost } from "./socios/lib/host";
 import SociosApp from "./socios/SociosApp";
 
@@ -107,6 +109,8 @@ const App = () => {
 
   // Record who referred this user once they are signed in (email or Google).
   useReferralClaim();
+  // Close the Google sign-in bypass of the price curtain.
+  useCurtainGuard();
 
   if (isSociosHost()) {
     const pathname = typeof window !== "undefined" ? window.location.pathname : "/";
@@ -132,6 +136,7 @@ const App = () => {
       <Sonner />
       <BrowserRouter>
         <CartProvider>
+        <PriceCurtainProvider>
         <ScrollToTop />
         <Suspense fallback={<RouteFallback />}>
         <Routes>
@@ -189,6 +194,7 @@ const App = () => {
         </Routes>
         </Suspense>
         <FloatingWhatsApp />
+        </PriceCurtainProvider>
         </CartProvider>
       </BrowserRouter>
     </TooltipProvider>

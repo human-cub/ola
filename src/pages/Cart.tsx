@@ -59,12 +59,8 @@ const Cart = () => {
   };
 
   const handleCheckout = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      navigate("/ingresar?redirect=/finalizar-compra");
-    } else {
-      navigate("/finalizar-compra");
-    }
+    // Guests can check out; the account is created at finalize.
+    navigate("/finalizar-compra");
   };
 
   if (isLoading) {

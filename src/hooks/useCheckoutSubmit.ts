@@ -15,6 +15,8 @@ interface SubmitOptions {
   promoTierBonus?: number | null;
   onSuccess: (data: { orderNumber: string; orderId: string; total: number }) => void;
   clearItems: () => Promise<void>;
+  isGuest?: boolean;
+  guestCredentials?: { email: string; password: string } | null;
 }
 
 interface CheckoutFormData {
@@ -38,7 +40,36 @@ export function useCheckoutSubmit(options: SubmitOptions) {
     setLoading(true);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      let session = (await supabase.auth.getSession()).data.session;
+      let createdGuest = false;
+      if (!session) {
+        const creds = options.guestCredentials;
+        if (!options.isGuest || !creds) throw new Error("No session");
+        const gEmail = creds.email.trim().toLowerCase();
+        const gPwd = creds.password;
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(gEmail)) {
+          toast.error("Email inválido"); setLoading(false); return;
+        }
+        if (gPwd.length < 8 || !/[a-zA-Z]/.test(gPwd) || !/[0-9]/.test(gPwd)) {
+          toast.error("La contraseña debe tener al menos 8 caracteres, con letras y números");
+          setLoading(false); return;
+        }
+        const { error: suErr } = await supabase.functions.invoke("signup-with-email", {
+          body: { email: gEmail, password: gPwd, redirectTo: `${window.location.origin}/mi-cuenta` },
+        });
+        if (suErr) {
+          let message = "No se pudo crear la cuenta";
+          if (suErr.context instanceof Response) {
+            const p = await suErr.context.json().catch(() => null);
+            message = p?.error || message;
+          }
+          toast.error(message); setLoading(false); return;
+        }
+        const { error: siErr } = await supabase.auth.signInWithPassword({ email: gEmail, password: gPwd });
+        if (siErr) { toast.error("Cuenta creada. Iniciá sesión para finalizar."); setLoading(false); return; }
+        session = (await supabase.auth.getSession()).data.session;
+        createdGuest = true;
+      }
       if (!session) throw new Error("No session");
 
       // Validate promo uniqueness per user (one-time use per user per code)
@@ -165,7 +196,8 @@ export function useCheckoutSubmit(options: SubmitOptions) {
           phone: formData.phone,
           address: JSON.stringify(addressData),
           profile_completed: true,
-        })
+          ...(createdGuest ? { registration_method: "guest_checkout", is_guest: true } : {}),
+        } as any)
         .eq("user_id", session.user.id);
 
       const customerName = formatFullName(formData.firstName, formData.lastName, 'Sin nombre');

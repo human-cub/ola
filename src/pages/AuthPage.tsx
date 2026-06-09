@@ -5,6 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { RegisterForm } from "@/components/auth/RegisterForm";
+import { ContactGateBody } from "@/components/ContactGateDialog";
+import { usePriceCurtain } from "@/hooks/usePriceCurtain";
+import { getStoredRef } from "@/lib/referral";
 import { ArrowLeft } from "lucide-react";
 import { consumePendingAddAction, PendingAddAction } from "@/lib/postAuthAction";
 import { toast } from "sonner";
@@ -14,6 +17,9 @@ const AuthPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState("login");
+  const { enabled: curtainOn } = usePriceCurtain();
+  // Curtain on + no member referral link => registration is gated behind our contacts.
+  const gateRegister = curtainOn && !getStoredRef();
   
   const redirectTo = searchParams.get("redirect") || "/";
 
@@ -127,11 +133,13 @@ const AuthPage = () => {
               />
             </div>
             <CardTitle className="text-2xl">
-              {activeTab === "login" ? "Iniciá sesión" : "Creá tu cuenta"}
+              {activeTab === "login" ? "Iniciá sesión" : gateRegister ? "Sumate al grupo" : "Creá tu cuenta"}
             </CardTitle>
             <CardDescription>
               {activeTab === "login"
                 ? "Ingresá a tu cuenta para ver tus pedidos"
+                : gateRegister
+                ? "Acceso exclusivo: registrate con el link de un miembro o escribinos"
                 : "Registrate para acceder a descuentos exclusivos"}
             </CardDescription>
           </CardHeader>
@@ -145,7 +153,7 @@ const AuthPage = () => {
                 <LoginForm onSuccess={() => {}} />
               </TabsContent>
               <TabsContent value="register">
-                <RegisterForm />
+                {gateRegister ? <ContactGateBody /> : <RegisterForm />}
               </TabsContent>
             </Tabs>
           </CardContent>

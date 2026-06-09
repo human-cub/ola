@@ -116,6 +116,7 @@ const CategoriaV2 = () => {
                   image={p.images[0]}
                   priceRetailDisplay={p.priceRetailDisplay}
                   priceSuper={p.priceT4}
+                  priceBuyNow={p.priceT1}
                 />
                 ))}
               </div>
