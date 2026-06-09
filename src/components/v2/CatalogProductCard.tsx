@@ -14,6 +14,9 @@ interface Props {
   compact?: boolean;
 }
 
+// Фирменный оранжевый (тот же акцент, что у Súper-Precio/таймера).
+const ACCENT = { color: "hsl(var(--group-buy-accent))" } as const;
+
 export const CatalogProductCard = ({
   urlSlug,
   name,
@@ -24,6 +27,7 @@ export const CatalogProductCard = ({
   priceSuper,
   compact = false,
 }: Props) => {
+  const hasRetail = !!priceRetailDisplay && priceRetailDisplay > priceSuper;
   return (
     <Link
       to={`/productos/${urlSlug}`}
@@ -41,22 +45,34 @@ export const CatalogProductCard = ({
         />
       </div>
       <div className={`flex flex-col flex-1 ${compact ? "pt-2" : "pt-4"}`}>
+        {/* Precio arriba (Súper-Precio en naranja + retail tachado a la derecha) */}
+        <div className={compact ? "mb-1.5" : "mb-2"}>
+          <div className="flex items-baseline gap-1.5 flex-wrap">
+            <span className={`${compact ? "text-sm md:text-base" : "text-base md:text-lg"} font-bold leading-tight`} style={ACCENT}>
+              {formatPrice(priceSuper)}
+            </span>
+            {hasRetail && (
+              <span className="text-[11px] md:text-xs text-muted-foreground/70 line-through leading-tight">
+                {formatPrice(priceRetailDisplay)}
+              </span>
+            )}
+          </div>
+          <p className="text-[10px] text-muted-foreground leading-tight">(Súper-Precio)</p>
+        </div>
+
         {brandName && (
-          <p className="text-[10px] uppercase tracking-wider text-primary font-semibold mb-1">
+          <p className="text-xs uppercase tracking-wider text-primary font-semibold mb-1">
             {brandName}
           </p>
         )}
-        <h3 className={`font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors ${compact ? "min-h-0 mb-0.5" : "min-h-[2.8em] mb-1"}`}>
+        <h3
+          className={`font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors ${
+            compact ? "min-h-0" : "min-h-[2.6em]"
+          }`}
+        >
           {name}
           {size && <span className="ml-1">{size}</span>}
         </h3>
-        <div className={`mt-auto ${compact ? "pt-0.5" : "pt-2"}`}>
-          <p className="text-xs text-muted-foreground/70 line-through leading-tight min-h-[1rem]">
-            {priceRetailDisplay && priceRetailDisplay > priceSuper ? formatPrice(priceRetailDisplay) : "\u00A0"}
-          </p>
-          <p className={`${compact ? "text-base" : "text-lg"} font-bold text-primary leading-tight`}>{formatPrice(priceSuper)}</p>
-          <p className="text-[10px] text-muted-foreground">(Súper-Precio)</p>
-        </div>
       </div>
     </Link>
   );
