@@ -330,8 +330,8 @@ const WaitingList = () => {
 
               <PromoCodeInput
                 appliedPromo={appliedPromo}
-                onApply={setAppliedPromo}
-                onRemove={removePromo}
+                onApply={(p) => { setAppliedPromo(p); void syncPendingOrderPrices(); }}
+                onRemove={() => { removePromo(); void syncPendingOrderPrices(); }}
               />
 
               <WaitingListSummary

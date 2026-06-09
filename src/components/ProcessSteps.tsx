@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Users, Share2, FileCheck, Truck, ShoppingCart, ClipboardCheck, CreditCard } from "lucide-react";
+import { GroupIcon } from "@/components/icons/GroupIcon";
+import { Share2, FileCheck, Truck, ShoppingCart, ClipboardCheck, CreditCard } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const waitingListSteps = [
   {
-    icon: Users,
-    title: "Elegí tus productos",
-    description: "Sumate al grupo de cada marca. Podés estar en varios a la vez y ya tenés el Precio Garantizado."
+    icon: GroupIcon,
+    title: "Sumate al grupo",
+    description: "Elegí tus productos y sumate al grupo de cada marca. Podés estar en varios a la vez y ya tenés el Precio Garantizado."
   },
   {
     icon: Share2,
@@ -104,19 +105,18 @@ export const ProcessSteps = () => {
         <div
           className={cn(
             "relative mx-auto flex max-w-md flex-col gap-6 items-center",
-            "md:grid md:max-w-none md:grid-cols-2 md:gap-8 md:px-6 md:w-fit",
-            "lg:px-[88px]",
-            "xl:grid-cols-3"
+            "md:grid md:max-w-none md:grid-cols-2 md:gap-6 md:px-6 md:w-fit",
+            "lg:w-full lg:max-w-[1180px] lg:grid-cols-4 lg:gap-4 lg:px-2 lg:items-stretch"
           )}
         >
           {steps.map((step, index) => {
             const IconComponent = step.icon;
 
             return (
-              <div key={`${isWaitingList ? 'wait' : 'buy'}-${index}`} className="relative min-w-0 w-full h-full max-w-[360px]">
+              <div key={`${isWaitingList ? 'wait' : 'buy'}-${index}`} className="relative min-w-0 w-full h-full max-w-[360px] lg:max-w-none">
                 {/* Step Block */}
                 <div
-                  className="relative h-full bg-background rounded-xl p-4 shadow-sm transition-all duration-300 border border-border/50 animate-fade-in lg:p-5"
+                  className="relative h-full bg-background rounded-xl p-4 shadow-sm transition-all duration-300 border border-border/50 animate-fade-in lg:p-3.5"
                   style={{ animationDelay: `${index * 0.1}s`, animationFillMode: 'both' }}
                 >
                   {/* Step Number */}
@@ -127,7 +127,7 @@ export const ProcessSteps = () => {
                   {/* Icon */}
                   <div className="mb-3 flex justify-center">
                     <div className="bg-gradient-primary/10 rounded-full flex items-center justify-center">
-                      <IconComponent className="size-14 my-4 text-primary" />
+                      <IconComponent className="size-14 my-4 text-primary lg:size-12 lg:my-2" />
                     </div>
                   </div>
 

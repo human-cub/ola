@@ -35,10 +35,10 @@ const QuienesSomos = () => {
               Precios que construimos juntos
             </h4>
             <p className="text-muted-foreground leading-relaxed mb-3">
-              Más personas, precio más bajo — así de simple.
+              Más pedidos en la marca, precio más bajo para todos — así de simple.
             </p>
             <p className="text-muted-foreground leading-relaxed">
-              Para orientarte, mostramos tres referencias: <strong className="text-foreground">Retail</strong> es el precio de mercado, <strong className="text-foreground">Ya bajó</strong> es lo que ya logramos en grupo, y <strong className="text-foreground">Súper-Precio</strong> es el mínimo que podemos alcanzar. En la barra vas a ver todos los precios posibles y cómo van cayendo a medida que se suman más personas. El sistema te indica exactamente cuántas unidades faltan para destrabar el próximo nivel de descuento.
+              Para orientarte, mostramos tres referencias: <strong className="text-foreground">Retail</strong> es el precio de mercado, <strong className="text-foreground">Precio Garantizado</strong> es el que te llevás sí o sí por sumarte al grupo (siempre por debajo del retail, llegues o no a la meta), y <strong className="text-foreground">Súper-Precio</strong> es el mínimo que se destraba cuando el grupo llega a la meta. Cada pedido de la marca suma, y cuando entre todos llegamos al monto, el Súper-Precio queda activado para todos.
             </p>
           </section>
 
@@ -47,7 +47,7 @@ const QuienesSomos = () => {
               Cero pagos por adelantado
             </h4>
             <p className="text-muted-foreground leading-relaxed">
-              Participar de la colecta no tiene costo previo. Pagás recién cuando recibís y revisás el producto en tus manos, ya sea en efectivo o por transferencia.
+              Participar en el grupo no tiene costo previo. Pagás recién cuando recibís y revisás el producto en tus manos, ya sea en efectivo o por transferencia.
             </p>
           </section>
 
@@ -56,7 +56,7 @@ const QuienesSomos = () => {
               Ciclos de lunes a domingo
             </h4>
             <p className="text-muted-foreground leading-relaxed">
-              Las colectas van de lunes a domingo. Al cerrar la semana, se fija el precio final alcanzado, confirmás tu pedido y arrancamos con la logística.
+              Cada grupo corre de lunes a domingo a medianoche. Llegando a la meta te llevás el Súper-Precio; si no, igual te queda el Precio Garantizado. Confirmás el pedido en tu cuenta y salen las entregas.
             </p>
           </section>
 

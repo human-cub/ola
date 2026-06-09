@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const STORAGE_KEY = "ola_applied_promo";
 
@@ -24,6 +25,14 @@ export function usePromoCode() {
     } else {
       localStorage.removeItem(STORAGE_KEY);
     }
+    // Mirror the applied/removed promo onto the user's pending collective order
+    // so the admin sees it and the order total matches (fire-and-forget).
+    supabase
+      .rpc("set_pending_collective_promo" as any, {
+        _code: promo?.code ?? null,
+        _tier: promo?.tier_bonus ?? null,
+      })
+      .then(() => {}, () => {});
   }, []);
 
   const removePromo = useCallback(() => setAppliedPromo(null), [setAppliedPromo]);
