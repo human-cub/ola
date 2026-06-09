@@ -196,7 +196,7 @@ export function useCheckoutSubmit(options: SubmitOptions) {
           phone: formData.phone,
           address: JSON.stringify(addressData),
           profile_completed: true,
-          ...(createdGuest ? { registration_method: "guest_checkout" } : {}),
+          ...(createdGuest ? { registration_method: "guest_checkout", is_guest: true } : {}),
         } as any)
         .eq("user_id", session.user.id);
 
