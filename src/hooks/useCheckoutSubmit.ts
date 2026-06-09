@@ -55,7 +55,7 @@ export function useCheckoutSubmit(options: SubmitOptions) {
           setLoading(false); return;
         }
         const { error: suErr } = await supabase.functions.invoke("signup-with-email", {
-          body: { email: gEmail, password: gPwd, redirectTo: `${window.location.origin}/mi-cuenta` },
+          body: { email: gEmail, password: gPwd, role: "guest", redirectTo: `${window.location.origin}/mi-cuenta` },
         });
         if (suErr) {
           let message = "No se pudo crear la cuenta";
@@ -196,7 +196,6 @@ export function useCheckoutSubmit(options: SubmitOptions) {
           phone: formData.phone,
           address: JSON.stringify(addressData),
           profile_completed: true,
-          ...(createdGuest ? { registration_method: "guest_checkout", is_guest: true } : {}),
         } as any)
         .eq("user_id", session.user.id);
 

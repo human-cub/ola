@@ -34,6 +34,7 @@ Deno.serve(async (req) => {
 
   const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : ''
   const password = body.password
+  const role = typeof body.role === 'string' ? body.role.trim() : ''
 
   if (!isEmail(email)) return json({ error: 'Email inválido' }, 400)
   if (!isPassword(password)) {
@@ -43,7 +44,7 @@ Deno.serve(async (req) => {
   const supabase = createClient(supabaseUrl, serviceRoleKey)
 
   // Email confirmation disabled: create the account already confirmed, no email sent.
-  const { error } = await supabase.auth.admin.createUser({
+  const { data: created, error } = await supabase.auth.admin.createUser({
     email,
     password: password as string,
     email_confirm: true,
@@ -55,6 +56,13 @@ Deno.serve(async (req) => {
       error.message.includes('already registered') ||
       error.message.includes('already exists')
     return json({ error: already ? 'Este email ya está registrado' : error.message }, already ? 409 : 400)
+  }
+
+  // Guest-checkout accounts get the 'guest' role (curtained until an admin changes the role).
+  if (role === 'guest' && created?.user?.id) {
+    await supabase
+      .from('user_roles')
+      .upsert({ user_id: created.user.id, role: 'guest' }, { onConflict: 'user_id,role', ignoreDuplicates: true })
   }
 
   return json({ success: true })
