@@ -7,8 +7,8 @@ import { cn } from "@/lib/utils";
 const waitingListSteps = [
   {
     icon: GroupIcon,
-    title: "Elegí tus productos",
-    description: "Sumate al grupo de cada marca. Podés estar en varios a la vez y ya tenés el Precio Garantizado."
+    title: "Sumate al grupo",
+    description: "Elegí tus productos y sumate al grupo de cada marca. Podés estar en varios a la vez y ya tenés el Precio Garantizado."
   },
   {
     icon: Share2,
