@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { HowToBuyVideo } from "@/components/HowToBuyVideo";
 import { useScrollHeader } from "@/hooks/useScrollHeader";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import * as amplitude from "@amplitude/analytics-browser";
@@ -18,8 +17,6 @@ const ComoComprar = () => {
           Cómo Comprar
         </h1>
         <div className="w-20 h-1 bg-gradient-primary mx-auto rounded-full mb-8" />
-
-        <HowToBuyVideo />
 
         <div className="space-y-8 mt-10">
           {/* Step 1 */}
