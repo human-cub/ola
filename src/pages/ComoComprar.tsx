@@ -43,7 +43,7 @@ const ComoComprar = () => {
               Invitá y compartí para llegar al Súper-Precio
             </h2>
             <p className="text-muted-foreground">
-              El Súper-Precio se activa cuando los pedidos del grupo suman la meta de la marca. Cada uno paga su producto, y cada persona que sumás acerca el mínimo para todos.
+              El <strong className="font-semibold text-foreground">Súper-Precio</strong> se activa cuando los pedidos del grupo suman la meta de la marca. Cada uno paga su producto, y cada persona que sumás acerca el mínimo para todos.
             </p>
           </section>
 
@@ -54,7 +54,7 @@ const ComoComprar = () => {
               El lunes conocés tu precio
             </h2>
             <p className="text-muted-foreground">
-              Si la marca llegó a la meta pagás el Súper-Precio, y si no, te queda el <strong className="font-semibold text-foreground">Precio Garantizado</strong> igual. Esperar siempre te conviene. Después confirmás tu pedido.
+              Si la marca llegó a la meta pagás el <strong className="font-semibold text-foreground">Súper-Precio</strong>, y si no, te queda el <strong className="font-semibold text-foreground">Precio Garantizado</strong> igual. Esperar siempre te conviene. Después confirmás tu pedido.
             </p>
           </section>
 
