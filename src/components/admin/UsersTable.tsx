@@ -57,7 +57,7 @@ const roleLabel: Record<UserRole, string> = {
   admin: "Admin",
   mayorista: "Mayorista",
   cliente: "Cliente",
-  guest: "Invitado",
+  guest: "Guest",
 };
 
 const UsersTable = () => {
@@ -302,10 +302,10 @@ const UsersTable = () => {
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
+                              <SelectItem value="guest">Guest</SelectItem>
                               <SelectItem value="cliente">Cliente</SelectItem>
                               <SelectItem value="mayorista">Mayorista</SelectItem>
                               <SelectItem value="admin">Admin</SelectItem>
-                              <SelectItem value="guest">Invitado</SelectItem>
                             </SelectContent>
                           </Select>
                         </TableCell>
