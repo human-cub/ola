@@ -104,7 +104,7 @@ export const Testimonials = () => {
     <section className="py-12 bg-foreground/[0.03] overflow-hidden">
       <div className="container mx-auto">
         <div className="text-center mb-10">
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
             Lo Que Dicen Nuestros Clientes
           </h2>
           <div className="w-20 h-1 bg-gradient-primary mx-auto rounded-full" />

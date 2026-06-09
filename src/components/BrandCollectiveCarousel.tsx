@@ -2,9 +2,12 @@ import { useEffect, useMemo, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useBrands } from "@/hooks/useBrands";
 import { BrandProgressBar, useBrandProgress } from "@/components/BrandProgressBar";
+import { useCollectiveCountdown } from "@/hooks/useCollectiveCountdown";
+import { Timer } from "lucide-react";
 
 export const BrandCollectiveCarousel = () => {
   const { data: brands = [] } = useBrands();
+  const { timeLeft } = useCollectiveCountdown(null, null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const sorted = useMemo(
@@ -113,12 +116,26 @@ export const BrandCollectiveCarousel = () => {
   return (
     <section className="py-8 overflow-hidden" id="colectas-semana">
       <div className="text-center mb-6">
-        <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+        <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
           <Link to="/marcas" className="hover:opacity-80 transition-opacity">
             Grupos de la semana
           </Link>
         </h2>
         <div className="w-20 h-1 bg-gradient-primary mx-auto rounded-full" />
+        <div className="mt-4 flex flex-col items-center gap-2">
+          <span
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-white font-bold shadow-md"
+            style={{ backgroundColor: "hsl(var(--group-buy-accent))" }}
+          >
+            <Timer className="w-4 h-4 shrink-0" />
+            <span className="font-mono tabular-nums text-sm tracking-wide">
+              {timeLeft.days}d {String(timeLeft.hours).padStart(2, "0")}h {String(timeLeft.minutes).padStart(2, "0")}m {String(timeLeft.seconds).padStart(2, "0")}s
+            </span>
+          </span>
+          <span className="text-xs sm:text-sm text-muted-foreground">
+            Cierran el domingo — sumate antes de que termine la semana
+          </span>
+        </div>
       </div>
       <div className="relative">
         {/* py-3 deja aire para el ring/sombra de la tarjeta destacada
