@@ -105,19 +105,18 @@ export const ProcessSteps = () => {
         <div
           className={cn(
             "relative mx-auto flex max-w-md flex-col gap-6 items-center",
-            "md:grid md:max-w-none md:grid-cols-2 md:gap-8 md:px-6 md:w-fit",
-            "lg:px-[88px]",
-            "xl:grid-cols-3"
+            "md:grid md:max-w-none md:grid-cols-2 md:gap-6 md:px-6 md:w-fit",
+            "lg:w-full lg:max-w-[1180px] lg:grid-cols-4 lg:gap-4 lg:px-2 lg:items-stretch"
           )}
         >
           {steps.map((step, index) => {
             const IconComponent = step.icon;
 
             return (
-              <div key={`${isWaitingList ? 'wait' : 'buy'}-${index}`} className="relative min-w-0 w-full h-full max-w-[360px]">
+              <div key={`${isWaitingList ? 'wait' : 'buy'}-${index}`} className="relative min-w-0 w-full h-full max-w-[360px] lg:max-w-none">
                 {/* Step Block */}
                 <div
-                  className="relative h-full bg-background rounded-xl p-4 shadow-sm transition-all duration-300 border border-border/50 animate-fade-in lg:p-5"
+                  className="relative h-full bg-background rounded-xl p-4 shadow-sm transition-all duration-300 border border-border/50 animate-fade-in lg:p-3.5"
                   style={{ animationDelay: `${index * 0.1}s`, animationFillMode: 'both' }}
                 >
                   {/* Step Number */}
@@ -128,11 +127,11 @@ export const ProcessSteps = () => {
                   {/* Icon */}
                   <div className="mb-3 flex justify-center">
                     <div className="bg-gradient-primary/10 rounded-full flex items-center justify-center">
-                      <IconComponent className="size-14 my-4 text-primary" />
+                      <IconComponent className="size-14 my-4 text-primary lg:size-10 lg:my-2" />
                     </div>
                   </div>
 
-                  <h3 className="text-lg font-semibold text-foreground mb-2 text-center leading-[1.15] text-balance">
+                  <h3 className="text-lg lg:text-base font-semibold text-foreground mb-2 lg:mb-1.5 text-center leading-[1.15] text-balance">
                     {step.title}
                     {'subtitle' in step && step.subtitle && (
                       <span className="block text-sm font-normal text-muted-foreground mt-1">
@@ -140,7 +139,7 @@ export const ProcessSteps = () => {
                       </span>
                     )}
                   </h3>
-                  <p className="text-muted-foreground text-center text-sm leading-relaxed whitespace-pre-line">
+                  <p className="text-muted-foreground text-center text-sm lg:text-xs leading-relaxed whitespace-pre-line">
                     {step.description}
                   </p>
                 </div>
