@@ -4,28 +4,27 @@ import { supabase } from "@/integrations/supabase/client";
 interface PriceCurtainValue {
   /** Master flag: app_settings.price_curtain_enabled */
   enabled: boolean;
-  /** Visitor is authenticated */
-  isAuthenticated: boolean;
-  /** enabled && !isAuthenticated — hide group prices / gate joining */
+  /** A full member = authenticated AND not a guest-checkout account. */
+  isFullMember: boolean;
+  /** enabled && !isFullMember — hide group prices / gate joining (anon AND guests). */
   curtained: boolean;
 }
 
 const Ctx = createContext<PriceCurtainValue>({
   enabled: false,
-  isAuthenticated: false,
+  isFullMember: false,
   curtained: false,
 });
 
 /**
- * Computes the group-price curtain state ONCE per app (one app_settings read +
- * one auth subscription) and exposes it via context, so each product card can
- * read it without firing its own query.
+ * Computes the group-price curtain once per app. Anonymous visitors AND
+ * guest-checkout accounts (profiles.is_guest) are curtained until an admin
+ * promotes the guest to a full member.
  */
 export const PriceCurtainProvider = ({ children }: { children: ReactNode }) => {
   const [enabled, setEnabled] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isFullMember, setIsFullMember] = useState(false);
 
-  // master flag — single read on load
   useEffect(() => {
     let mounted = true;
     void (async () => {
@@ -41,14 +40,24 @@ export const PriceCurtainProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  // session — initial + reactive
   useEffect(() => {
     let mounted = true;
-    void supabase.auth.getSession().then(({ data }) => {
-      if (mounted) setIsAuthenticated(!!data.session);
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsAuthenticated(!!session);
+    const evaluate = async (session: { user?: { id: string } } | null) => {
+      const user = session?.user;
+      if (!user) {
+        if (mounted) setIsFullMember(false);
+        return;
+      }
+      const { data } = await supabase
+        .from("profiles")
+        .select("is_guest")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (mounted) setIsFullMember(!(data as any)?.is_guest); // guest accounts are NOT full members
+    };
+    void supabase.auth.getSession().then(({ data }) => evaluate(data.session));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+      void evaluate(session);
     });
     return () => {
       mounted = false;
@@ -56,10 +65,10 @@ export const PriceCurtainProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  const curtained = enabled && !isAuthenticated;
+  const curtained = enabled && !isFullMember;
 
   return (
-    <Ctx.Provider value={{ enabled, isAuthenticated, curtained }}>
+    <Ctx.Provider value={{ enabled, isFullMember, curtained }}>
       {children}
     </Ctx.Provider>
   );

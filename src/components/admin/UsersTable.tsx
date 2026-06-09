@@ -28,8 +28,7 @@ import {
   Ban,
   CheckCircle,
   Download,
-  Eye,
-} from "lucide-react";
+  Eye, ArrowUpCircle } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { UserDetailDialog } from "./UserDetailDialog";
@@ -159,6 +158,20 @@ const UsersTable = () => {
       }
     } catch (error: any) {
       toast.error("Error al actualizar usuario");
+    }
+  };
+
+  const handlePromoteGuest = async (user: UserProfile) => {
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ is_guest: false } as any)
+        .eq("id", user.id);
+      if (error) throw error;
+      toast.success("Cuenta promovida a miembro");
+      fetchUsers();
+    } catch {
+      toast.error("Error al promover la cuenta");
     }
   };
 
@@ -318,7 +331,7 @@ const UsersTable = () => {
                         {passwordSet[user.user_id] === false && (
                             <Badge variant="outline" className="ml-1 border-amber-500 text-amber-600">Sin clave</Badge>
                           )}
-                        {(user as any).registration_method === "guest_checkout" && (
+                        {(user as any).is_guest && (
                             <Badge variant="outline" className="ml-1 border-sky-500 text-sky-600">Guest</Badge>
                           )}
                           </TableCell>
@@ -330,6 +343,16 @@ const UsersTable = () => {
                           >
                             <Eye className="w-4 h-4" />
                           </Button>
+                          {(user as any).is_guest && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              title="Promover a miembro (ver precios de grupo)"
+                              onClick={() => handlePromoteGuest(user)}
+                            >
+                              <ArrowUpCircle className="w-4 h-4 text-sky-600" />
+                            </Button>
+                          )}
                           <Button
                             variant="ghost"
                             size="icon"
