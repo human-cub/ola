@@ -114,6 +114,9 @@ export function useCheckoutSubmit(options: SubmitOptions) {
         if (updateError) throw updateError;
         order = { id: pendingOrder.id, order_number: pendingOrder.order_number };
 
+        // Consume a one-time referral reward if the buyer had one (no-op otherwise).
+        await supabase.rpc("consume_referral_reward" as any).then(() => {}, () => {});
+
         const { data: verifiedOrder } = await supabase
           .from("user_orders")
           .select("id")

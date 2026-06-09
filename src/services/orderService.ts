@@ -161,7 +161,14 @@ export const syncWaitingListOrder = async (userId: string) => {
       const raw = typeof localStorage !== "undefined" ? localStorage.getItem("ola_applied_promo") : null;
       if (raw) { const pj = JSON.parse(raw); promoCode = pj?.code ?? null; promoBonus = Number(pj?.tier_bonus ?? 0); }
     } catch { /* ignore */ }
-    const hasPromo = !!promoCode && promoBonus > 0;
+    // Referrer reward: a pending one-time Super discount on the referrer's group order.
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("has_referral_reward")
+      .eq("user_id", userId)
+      .maybeSingle();
+    const hasReward = !!(prof as any)?.has_referral_reward;
+    const hasPromo = (!!promoCode && promoBonus > 0) || hasReward;
 
     if (!waitingListData || waitingListData.length === 0) {
       await supabase
@@ -211,8 +218,8 @@ export const syncWaitingListOrder = async (userId: string) => {
         total_amount: subtotal,
         discount_amount: discountAmount,
         is_promo: hasPromo,
-        promo_code: hasPromo ? promoCode : null,
-        promo_tier: hasPromo ? promoBonus : null,
+        promo_code: hasPromo ? (promoCode ?? (hasReward ? "REFERIDO" : null)) : null,
+        promo_tier: hasPromo ? (promoBonus || null) : null,
       })
       .eq("id", existingOrder.id);
   } catch (error) {
