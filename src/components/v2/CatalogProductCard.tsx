@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { formatPrice } from "@/lib/formatting";
+import { usePriceCurtain } from "@/hooks/usePriceCurtain";
 
 interface Props {
   urlSlug: string;
@@ -10,6 +11,8 @@ interface Props {
   priceRetailDisplay?: number;
   /** Súper-Precio (t4) */
   priceSuper: number;
+  /** Comprar ahora (t1) — shown instead of Súper when the curtain hides group prices */
+  priceBuyNow?: number;
   /** Компактный вид (блок Otros Productos): меньше паддинги и зазор имя-цена */
   compact?: boolean;
 }
@@ -25,9 +28,14 @@ export const CatalogProductCard = ({
   image,
   priceRetailDisplay,
   priceSuper,
+  priceBuyNow,
   compact = false,
 }: Props) => {
-  const hasRetail = !!priceRetailDisplay && priceRetailDisplay > priceSuper;
+  const { curtained } = usePriceCurtain();
+  const showBuyNow = curtained && !!priceBuyNow && priceBuyNow > 0;
+  const headlinePrice = showBuyNow ? (priceBuyNow as number) : priceSuper;
+  const headlineLabel = showBuyNow ? "(Comprar ahora)" : "(Súper-Precio)";
+  const hasRetail = !!priceRetailDisplay && priceRetailDisplay > headlinePrice;
   return (
     <Link
       to={`/productos/${urlSlug}`}
@@ -49,7 +57,7 @@ export const CatalogProductCard = ({
         <div className={compact ? "mb-1.5" : "mb-2"}>
           <div className="flex items-baseline gap-1.5 flex-wrap">
             <span className={`${compact ? "text-sm md:text-base" : "text-base md:text-lg"} font-bold leading-tight`} style={ACCENT}>
-              {formatPrice(priceSuper)}
+              {formatPrice(headlinePrice)}
             </span>
             {hasRetail && (
               <span className="text-[11px] md:text-xs text-muted-foreground/70 line-through leading-tight">
@@ -57,7 +65,7 @@ export const CatalogProductCard = ({
               </span>
             )}
           </div>
-          <p className="text-[10px] text-muted-foreground leading-tight">(Súper-Precio)</p>
+          <p className="text-[10px] text-muted-foreground leading-tight">{headlineLabel}</p>
         </div>
 
         {brandName && (
