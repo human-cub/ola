@@ -1,7 +1,7 @@
 import { useState, useEffect, type CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
 import * as amplitude from "@amplitude/analytics-browser";
-import { Sparkles, Timer, AlertTriangle, ShoppingCart } from "lucide-react";
+import { Sparkles, Timer, AlertTriangle, ShoppingCart, Lock } from "lucide-react";
 import { GroupIcon } from "@/components/icons/GroupIcon";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +16,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useBrandCollection } from "@/hooks/useBrandCollection";
 import { getLastSundayClose } from "@/lib/collectivePricing";
 import { useCollectiveClock } from "@/hooks/useCollectiveClock";
+import { usePriceCurtain } from "@/hooks/usePriceCurtain";
+import { ContactGateDialog } from "@/components/ContactGateDialog";
 
 interface PriceData {
   people: number;
@@ -44,6 +46,7 @@ interface PriceComparisonItem {
   labelClassName: string;
   priceClassName: string;
   style?: CSSProperties;
+  locked?: boolean;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -237,6 +240,8 @@ export const GroupBuyPriceBlock = ({
     handleWaitForDiscount,
     goToWaitingList,
   } = useGroupBuyBlock(priceData, productName, productId);
+  const { curtained } = usePriceCurtain();
+  const [contactOpen, setContactOpen] = useState(false);
 
   useEffect(() => {
     setDisplayWaitingCount(waitingCount);
@@ -301,6 +306,7 @@ export const GroupBuyPriceBlock = ({
       price: guaranteedPrice,
       labelClassName: "text-primary",
       priceClassName: "text-primary",
+      locked: curtained,
     },
     {
       label: "Súper-Precio",
@@ -308,6 +314,7 @@ export const GroupBuyPriceBlock = ({
       labelClassName: "",
       priceClassName: "",
       style: groupBuyAccentStyle,
+      locked: curtained,
     },
   ].filter((item) => !(brandStats.goalReached && item.label === "Precio Garantizado"));
 
@@ -395,26 +402,43 @@ export const GroupBuyPriceBlock = ({
                     <div className={`text-[13px] font-bold ${item.labelClassName}`} style={item.style}>
                       {item.label}
                     </div>
-                    <div
-                      className={`text-[20px] sm:text-[24px] font-bold leading-none ${item.priceClassName}`}
-                      style={item.style}
-                    >
-                      {formatPrice(item.price)}
-                    </div>
+                    {item.locked ? (
+                      <div className="relative flex items-center justify-center h-[24px] sm:h-[28px]">
+                        <span
+                          className={`text-[20px] sm:text-[24px] font-bold leading-none blur-[7px] select-none ${item.priceClassName}`}
+                          style={item.style}
+                        >
+                          {formatPrice(item.price)}
+                        </span>
+                        <Lock className="w-4 h-4 absolute text-foreground/70" />
+                      </div>
+                    ) : (
+                      <div
+                        className={`text-[20px] sm:text-[24px] font-bold leading-none ${item.priceClassName}`}
+                        style={item.style}
+                      >
+                        {formatPrice(item.price)}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
+              {curtained && (
+                <p className="mt-4 text-center text-xs text-muted-foreground">
+                  Precios de grupo exclusivos para miembros.
+                </p>
+              )}
             </div>
 
             {/* CTA Buttons */}
             <div className="px-6 pb-6 space-y-4 bg-card">
               <button
-                onClick={handleWaitForDiscount}
+                onClick={curtained ? () => setContactOpen(true) : handleWaitForDiscount}
                 className={`w-full py-4 rounded-2xl font-bold text-white text-[17px] flex items-center justify-center gap-2 shadow-lg transform transition active:scale-95 ${brandStats.goalReached ? "" : "bg-gradient-primary"}`}
                 style={brandStats.goalReached ? groupBuyAccentBackgroundStyle : undefined}
               >
                 <GroupIcon className="w-6 h-6" />
-                {brandStats.goalReached ? `Sumate al grupo · ${formatPrice(superPrice)}` : "Sumate al grupo"}
+                {brandStats.goalReached && !curtained ? `Sumate al grupo · ${formatPrice(superPrice)}` : "Sumate al grupo"}
               </button>
               <button
                 onClick={handleBuyNow}
@@ -450,6 +474,12 @@ export const GroupBuyPriceBlock = ({
         open={conflictDialogOpen}
         onClose={() => setConflictDialogOpen(false)}
         onGoToWaitingList={goToWaitingList}
+      />
+
+      <ContactGateDialog
+        open={contactOpen}
+        onOpenChange={setContactOpen}
+        productName={productName}
       />
     </>
   );

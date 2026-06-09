@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import WholesaleLeadsTable from "@/components/admin/WholesaleLeadsTable";
@@ -14,6 +15,8 @@ export const AdminSettings = () => {
   const [minOrder, setMinOrder] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [curtain, setCurtain] = useState(false);
+  const [curtainSaving, setCurtainSaving] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -27,6 +30,17 @@ export const AdminSettings = () => {
       setLoading(false);
     };
     void load();
+  }, []);
+
+  useEffect(() => {
+    void (async () => {
+      const { data } = await supabase
+        .from("app_settings" as any)
+        .select("value")
+        .eq("key", "price_curtain_enabled")
+        .maybeSingle();
+      setCurtain((data as any)?.value === true);
+    })();
   }, []);
 
   const handleSave = async () => {
@@ -49,6 +63,21 @@ export const AdminSettings = () => {
     }
   };
 
+  const toggleCurtain = async (next: boolean) => {
+    setCurtain(next);
+    setCurtainSaving(true);
+    const { error } = await supabase
+      .from("app_settings" as any)
+      .upsert({ key: "price_curtain_enabled", value: next as any }, { onConflict: "key" });
+    if (error) {
+      toast.error("Error al guardar");
+      setCurtain(!next);
+    } else {
+      toast.success(next ? "Cortina activada" : "Cortina desactivada");
+    }
+    setCurtainSaving(false);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center py-8">
@@ -59,6 +88,30 @@ export const AdminSettings = () => {
 
   return (
     <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Cortina de precios de grupo</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 max-w-md">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <Label htmlFor="curtain-toggle">Ocultar precios de grupo a visitantes</Label>
+              <p className="text-xs text-muted-foreground mt-1">
+                Con la cortina activada, quien no inició sesión ve solo «Comprar ahora». El Precio
+                Garantizado y el Súper-Precio quedan ocultos; al intentar sumarse al grupo se le
+                muestra cómo pedir acceso (WhatsApp / Instagram o link de un miembro).
+              </p>
+            </div>
+            <Switch
+              id="curtain-toggle"
+              checked={curtain}
+              disabled={curtainSaving}
+              onCheckedChange={toggleCurtain}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>Configuración Mayorista</CardTitle>
