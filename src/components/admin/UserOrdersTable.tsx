@@ -44,7 +44,7 @@ import {
   ORDER_TYPE_LABELS,
 } from "@/lib/types";
 import { formatPrice } from "@/lib/formatting";
-import { applyPromoTier } from "@/services/orderService";
+import { setOrderPriceLevel } from "@/services/orderService";
 import { fetchServerTime } from "@/lib/serverClock";
 import { OrderFilters } from "./OrderFilters";
 import { OrderStats } from "./OrderStats";
@@ -283,16 +283,16 @@ const UserOrdersTable = () => {
     }
   };
 
-  const handleApplyPromo = async (orderId: string, tier: number | null) => {
+  const handleSetLevel = async (orderId: string, level: "garantizado" | "super") => {
     const order = orders.find(o => o.id === orderId);
     if (!order) return;
 
     try {
-      await applyPromoTier(order, tier);
-      toast.success(tier === null ? "Promoción cancelada - precios restaurados" : `Promoción tier ${tier} aplicada`);
+      await setOrderPriceLevel(order, level);
+      toast.success(level === "super" ? "S\u00faper-Precio aplicado" : "Precio Garantizado aplicado");
       fetchOrders();
     } catch {
-      toast.error(tier === null ? "Error al cancelar promoción" : "Error al aplicar promoción");
+      toast.error("Error al actualizar el precio");
     }
   };
 
@@ -427,23 +427,21 @@ const UserOrdersTable = () => {
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      <Select
-                        value={order.promo_tier?.toString() || "-"}
-                        onValueChange={(value) => handleApplyPromo(order.id, value === "-" ? null : parseInt(value))}
-                      >
-                        <SelectTrigger className="w-[70px]">
-                          <Tag className="w-3 h-3 mr-1" />
-                          {order.promo_tier || "-"}
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="-">-</SelectItem>
-                          {[1, 2, 3, 4].map((tier) => (
-                            <SelectItem key={tier} value={tier.toString()}>
-                              Tier {tier}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      {order.order_type === "collective" && (
+                        <Select
+                          value={order.is_promo ? "super" : "garantizado"}
+                          onValueChange={(value) => handleSetLevel(order.id, value as "garantizado" | "super")}
+                        >
+                          <SelectTrigger className="w-[150px]">
+                            <Tag className="w-3 h-3 mr-1" />
+                            {order.is_promo ? "S\u00faper" : "Garantizado"}
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="garantizado">Precio Garantizado</SelectItem>
+                            <SelectItem value="super">Súper-Precio</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
                       <Button
                         variant="ghost"
                         size="icon"
