@@ -64,7 +64,7 @@ const ForgotPassword = () => {
           <CardHeader className="text-center pb-4">
             <div className="flex justify-center mb-1">
               <img 
-                src="/lovable-uploads/f61342f0-4c86-4d5f-8e4a-6f6380460a50.png" 
+                src="/ola-logo-auth.webp" 
                 alt="Ola Logo" 
                 className="w-10 h-10"
                 loading="eager"
