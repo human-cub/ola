@@ -23,6 +23,7 @@ import { WaitingListSummary } from "@/components/waiting-list/WaitingListSummary
 import { WaitingListActions } from "@/components/waiting-list/WaitingListActions";
 import { PromoCodeInput } from "@/components/checkout/PromoCodeInput";
 import { usePromoCode } from "@/hooks/usePromoCode";
+import { useReferralReward } from "@/hooks/useReferralReward";
 
 const WaitingList = () => {
   const navigate = useNavigate();
@@ -40,6 +41,7 @@ const WaitingList = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isMovingToCart, setIsMovingToCart] = useState(false);
   const { appliedPromo, setAppliedPromo, removePromo } = usePromoCode();
+  const { hasReward } = useReferralReward();
 
   const { hasExistingOrder, profileCompleted, pendingOrderCreatedAt, collectiveCloseDate, frozenOrderData } =
     usePendingOrder(waitingListItems);
@@ -62,7 +64,7 @@ const WaitingList = () => {
     isCollectionEnded,
     hasExistingOrder,
     frozenOrderData,
-    promoTierBonus: appliedPromo?.tier_bonus ?? 0,
+    promoTierBonus: hasReward ? Math.max(appliedPromo?.tier_bonus ?? 0, 1) : (appliedPromo?.tier_bonus ?? 0),
     priceMap,
     brandReached,
   });
@@ -333,6 +335,12 @@ const WaitingList = () => {
                 onApply={(p) => { setAppliedPromo(p); void syncPendingOrderPrices(); }}
                 onRemove={() => { removePromo(); void syncPendingOrderPrices(); }}
               />
+
+              {hasReward && !appliedPromo && (
+                <div className="mt-3 rounded-lg border border-primary/30 bg-primary/5 p-3 text-center text-sm font-medium text-primary">
+                  🎉 Recompensa de referido aplicada: Súper-Precio en este grupo.
+                </div>
+              )}
 
               <WaitingListSummary
                 isCollectionEnded={isCollectionEnded}
