@@ -2,6 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatPrice, formatFullName } from "@/lib/formatting";
+import { applyCashRounding } from "@/lib/cashRounding";
 
 interface SubmitOptions {
   isCollective: boolean;
@@ -99,6 +100,12 @@ export function useCheckoutSubmit(options: SubmitOptions) {
         references: formData.references || null,
       };
 
+      // Cash rounding: efectivo paga el total redondeado.
+      const baseTotal = options.isCollective
+        ? options.subtotal + (options.deliveryCost || 0)
+        : options.total;
+      const payableTotal = applyCashRounding(baseTotal, formData.paymentMethod);
+
       const orderItems = options.items.map(item => ({
         product_id: item.product_id,
         product_name: item.product_name,
@@ -123,8 +130,6 @@ export function useCheckoutSubmit(options: SubmitOptions) {
 
         if (fetchError || !pendingOrder) throw fetchError || new Error("No pending collective order found");
 
-        const collectiveTotal = options.subtotal + (options.deliveryCost || 0);
-
         const { error: updateError } = await supabase
           .from("user_orders")
           .update({
@@ -134,7 +139,7 @@ export function useCheckoutSubmit(options: SubmitOptions) {
             items: orderItems as any,
             subtotal: options.subtotal,
             discount_amount: options.discount,
-            total_amount: collectiveTotal,
+            total_amount: payableTotal,
             payment_method: formData.paymentMethod,
             ...(options.promoCode
               ? { is_promo: true, promo_code: options.promoCode, promo_tier: options.promoTierBonus ?? null }
@@ -169,7 +174,7 @@ export function useCheckoutSubmit(options: SubmitOptions) {
             items: orderItems as any,
             subtotal: options.subtotal,
             discount_amount: options.discount,
-            total_amount: options.total,
+            total_amount: payableTotal,
             delivery_cost: options.deliveryCost || 0,
             delivery_address: addressData as any,
             payment_method: formData.paymentMethod,
@@ -211,7 +216,7 @@ export function useCheckoutSubmit(options: SubmitOptions) {
             order_type: options.isCollective ? 'Compra Colectiva Confirmada' : 'Compra Inmediata',
             customer_name: customerName,
             phone: formData.phone,
-            total: formatPrice(options.total),
+            total: formatPrice(payableTotal),
             order_url: orderUrl,
             waiting_for_discount: options.isCollective,
           },
@@ -230,7 +235,7 @@ export function useCheckoutSubmit(options: SubmitOptions) {
                 order_id: order.id,
                 order_number: order.order_number,
                 items: orderItems,
-                total: options.total,
+                total: payableTotal,
                 delivery_cost: options.deliveryCost,
                 payment_method: formData.paymentMethod,
                 address: addressStr,
@@ -247,7 +252,7 @@ export function useCheckoutSubmit(options: SubmitOptions) {
       options.onSuccess({
         orderNumber: order.order_number,
         orderId: order.id,
-        total: options.total,
+        total: payableTotal,
       });
     } catch (error: any) {
       toast.error(error.message || "Error al procesar el pedido");
