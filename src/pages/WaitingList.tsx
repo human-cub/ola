@@ -338,7 +338,7 @@ const WaitingList = () => {
 
               {hasReward && !appliedPromo && (
                 <div className="mt-3 rounded-lg border border-primary/30 bg-primary/5 p-3 text-center text-sm font-medium text-primary">
-                  🎉 Recompensa de referido aplicada: Súper-Precio en este grupo.
+                  🎉 Recompensa de referido aplicada: Súper-Precio.
                 </div>
               )}
 
