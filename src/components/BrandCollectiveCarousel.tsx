@@ -151,7 +151,7 @@ export const BrandCollectiveCarousel = () => {
 
   return (
     <section className="py-8 overflow-hidden" id="colectas-semana">
-      <div className="text-center mb-1">
+      <div className="text-center mb-1 px-4">
         <h2 className="text-lg md:text-xl font-bold text-foreground">
           <Link to="/marcas" className="hover:opacity-80 transition-opacity">
             Grupos de la semana
@@ -178,7 +178,7 @@ export const BrandCollectiveCarousel = () => {
         <div className="pointer-events-none absolute inset-y-0 left-0 w-10 md:w-16 bg-gradient-to-r from-background to-transparent z-10" />
         <div className="pointer-events-none absolute inset-y-0 right-0 w-10 md:w-16 bg-gradient-to-l from-background to-transparent z-10" />
       </div>
-      <div className="mt-5 flex flex-col items-center gap-2">
+      <div className="mt-5 flex flex-col items-center gap-2 px-4">
         <span
           className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-white font-bold shadow-md"
           style={{ backgroundColor: "hsl(var(--group-buy-accent))" }}
