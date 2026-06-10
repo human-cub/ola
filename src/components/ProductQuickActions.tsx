@@ -1,4 +1,4 @@
-import { useState, type MouseEvent } from "react";
+import { useMemo, useState, type MouseEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import * as amplitude from "@amplitude/analytics-browser";
 import { ShoppingCart } from "lucide-react";
@@ -27,6 +27,19 @@ export const ProductQuickActions = ({ product }: { product: CatalogProduct }) =>
   const { curtained } = usePriceCurtain();
   const { goalReached } = useBrandCollection(product.brandSlug);
   const navigate = useNavigate();
+
+  // Стабильные ссылки: новый массив на каждый рендер заставлял попап
+  // сбрасывать состояние (см. reset-эффект в AddToCartDialog).
+  const variantOptions = useMemo(
+    () =>
+      product.variants.map((v) => ({
+        productId: v.productId,
+        flavor: v.flavor,
+        image: v.images[0] ?? product.images[0] ?? null,
+        prices: buildLegacyPriceTiers(v),
+      })),
+    [product],
+  );
 
   const first = product.variants[0];
   if (!first) return null;
@@ -74,13 +87,6 @@ export const ProductQuickActions = ({ product }: { product: CatalogProduct }) =>
     setIsWaitingList(true);
     setDialogOpen(true);
   };
-
-  const variantOptions = product.variants.map((v) => ({
-    productId: v.productId,
-    flavor: v.flavor,
-    image: v.images[0] ?? product.images[0] ?? null,
-    prices: buildLegacyPriceTiers(v),
-  }));
 
   return (
     <>

@@ -100,7 +100,10 @@ export const AddToCartDialog = ({
   // В v2 (variantOptions) предвыбор есть всегда — null значит «Sin sabor»
   const hasPreselect = variantOptions ? true : preselectedFlavor != null;
 
-  // Reset state when dialog opens
+  // Reset state ONLY on open transition. Depending on flavors/variantOptions
+  // references here caused a nasty bug: any parent re-render that recreated
+  // those arrays (e.g. the optimistic collecta-delta right after adding to a
+  // group) reset the dialog mid-flight and wiped the success/share screen.
   useEffect(() => {
     if (open) {
       if (variantOptions) {
@@ -114,7 +117,8 @@ export const AddToCartDialog = ({
       setError("");
       setSuccess(false);
     }
-  }, [open, flavors, preselectedFlavor, variantOptions]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
 
   // Calculate price based on quantity for waiting list
@@ -265,37 +269,58 @@ export const AddToCartDialog = ({
     }
   };
 
-  const productUrl = `https://alaola.com.ar${location.pathname}`;
+  const productUrl = productLink ?? `https://alaola.com.ar${location.pathname}`;
   const shareText = `Mirá este producto con descuento en Ola 🎉 ${productName} — comprá ahora o esperá y pagá menos 🤑 ${productUrl}`;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md rounded-2xl">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-3 text-xl font-bold">
             {isWaitingList ? (
               <>
-                <GroupIcon className="w-5 h-5 text-primary" />
-                Agregar el producto
+                <span
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-white shrink-0"
+                  style={{ backgroundColor: "hsl(var(--group-buy-accent))" }}
+                >
+                  <GroupIcon className="w-6 h-6" />
+                </span>
+                Compra Grupal
               </>
             ) : (
               <>
-                <ShoppingCart className="w-5 h-5 text-primary" />
-                Agregar al Carrito
+                <span className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center text-white shrink-0">
+                  <ShoppingCart className="w-5 h-5" />
+                </span>
+                Compra Inmediata
               </>
             )}
           </DialogTitle>
         </DialogHeader>
 
         {success ? (
-          <div className="flex flex-col items-center justify-center py-6 gap-4">
+          <div className="flex flex-col items-center justify-center py-4 gap-3">
             <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
               <Check className="w-8 h-8 text-green-600" />
             </div>
-            <p className="text-lg font-medium text-center">¡Producto agregado!</p>
+            <p className="text-lg font-bold text-center">
+              {isWaitingList ? "¡Ya estás en el grupo!" : "¡Producto agregado!"}
+            </p>
+            {isWaitingList && (
+              <p className="text-sm text-muted-foreground text-center -mt-1">
+                Tu Precio Garantizado quedó asegurado.
+              </p>
+            )}
 
             {isWaitingList && (
-              <div className="w-full flex flex-col gap-2 mt-2">
+              <div className="w-full bg-gradient-primary/10 rounded-xl p-4 border border-primary/20 mt-1">
+                <p className="text-sm font-semibold text-primary text-center mb-1">
+                  ¡Seamos más pagamos menos!
+                </p>
+                <p className="text-sm text-center text-muted-foreground mb-4">
+                  Compartí con tus amigos para llegar al Súper-Precio.
+                </p>
+                <div className="flex flex-col gap-2">
                 <Button
                   onClick={() => {
                     if (navigator.share) {
@@ -346,25 +371,28 @@ export const AddToCartDialog = ({
                   <Copy className="h-4 w-4" />
                   <span>Copiar enlace</span>
                 </Button>
+                </div>
               </div>
             )}
           </div>
         ) : (
           <div className="space-y-4">
             {/* Product Info */}
-            <div className="flex gap-4 items-start">
+            <div className="flex gap-4 items-center">
               {effImage && (
-                <img
-                  src={effImage}
-                  alt={productName}
-                  className="w-20 h-20 object-cover rounded-lg"
-                  loading="lazy"
-                  decoding="async"
-                />
+                <div className="w-20 h-20 bg-slate-50 rounded-xl border border-border overflow-hidden shrink-0">
+                  <img
+                    src={effImage}
+                    alt={productName}
+                    className="w-full h-full object-contain"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </div>
               )}
               <div className="flex-1">
-                <h3 className="font-semibold text-lg leading-[1.15]">{productName}</h3>
-                <p className="text-muted-foreground text-sm">
+                <h3 className="font-semibold text-base leading-[1.2]">{productName}</h3>
+                <p className="text-muted-foreground text-sm mt-0.5">
                   {formatPrice(pricePerUnit)} c/u
                 </p>
               </div>
@@ -421,18 +449,27 @@ export const AddToCartDialog = ({
             </div>
 
             {/* Price Summary */}
-            <div className="bg-muted rounded-lg p-4 space-y-2">
+            <div className="bg-muted/60 rounded-xl border border-border p-4 space-y-2">
               <div className="flex justify-between text-sm">
-                <span>{isWaitingList ? "Precio Garantizado:" : "Precio unitario:"}</span>
-                <span>{formatPrice(pricePerUnit)}</span>
+                <span className={isWaitingList ? "font-semibold text-primary" : ""}>
+                  {isWaitingList ? "Precio Garantizado:" : "Precio unitario:"}
+                </span>
+                <span className={isWaitingList ? "font-semibold text-primary" : ""}>
+                  {formatPrice(pricePerUnit)}
+                </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span>Envío:</span>
                 <span>{deliveryEstimate === 0 ? "Gratis" : formatPrice(deliveryEstimate)}</span>
               </div>
-              <div className="flex justify-between font-semibold text-lg">
-                <span>{isWaitingList ? "Súper-Precio:" : "Total:"}</span>
-                <span className="text-primary">
+              <div className="flex justify-between font-bold text-lg">
+                <span style={isWaitingList ? { color: "hsl(var(--group-buy-accent))" } : undefined}>
+                  {isWaitingList ? "Súper-Precio:" : "Total:"}
+                </span>
+                <span
+                  className={isWaitingList ? undefined : "text-primary"}
+                  style={isWaitingList ? { color: "hsl(var(--group-buy-accent))" } : undefined}
+                >
                   {isWaitingList
                     ? formatPrice((effPrices[effPrices.length - 1]?.price ?? pricePerUnit) * quantity)
                     : formatPrice(totalPrice)}
@@ -450,24 +487,28 @@ export const AddToCartDialog = ({
             )}
 
             {/* Action Buttons */}
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                className="flex-1 ml-auto mr-0"
-                disabled={loading}
-              >
-                Cancelar
-              </Button>
-              <Button
+            <div className="space-y-2 pt-1">
+              <button
                 type="button"
                 onClick={handleSubmit}
-                className="flex-1"
                 disabled={loading}
+                className="w-full py-3.5 rounded-2xl font-bold text-white text-[16px] flex items-center justify-center gap-2 shadow-lg bg-gradient-primary transform transition active:scale-95 disabled:opacity-60"
               >
-                {loading ? "Agregando..." : "Agregar"}
-              </Button>
+                {isWaitingList ? <GroupIcon className="w-5 h-5" /> : <ShoppingCart className="w-5 h-5" />}
+                {loading
+                  ? "Agregando..."
+                  : isWaitingList
+                    ? "Sumate al grupo"
+                    : "Agregar al carrito"}
+              </button>
+              <button
+                type="button"
+                onClick={() => onOpenChange(false)}
+                disabled={loading}
+                className="w-full py-3 rounded-2xl font-semibold text-muted-foreground border-2 border-border bg-card hover:bg-muted transform transition active:scale-95"
+              >
+                Cancelar
+              </button>
             </div>
           </div>
         )}

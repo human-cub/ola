@@ -70,7 +70,7 @@ describe('AddToCartDialog Component', () => {
         renderAddToCartDialog();
 
         // The dialog should be visible
-        expect(screen.getByText('Agregar al Carrito')).toBeInTheDocument();
+        expect(screen.getByText('Compra Inmediata')).toBeInTheDocument();
 
         // The product name should be visible
         expect(screen.getByText('Test Pre Workout')).toBeInTheDocument();
