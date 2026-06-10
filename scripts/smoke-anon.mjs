@@ -34,7 +34,7 @@ const rest = async (path) => {
 };
 
 try {
-  const r = await fetch(CATALOG_FN, { headers: H });
+  const r = await fetch(CATALOG_FN, { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
   const j = await r.json().catch(() => null);
   const n = Array.isArray(j?.products) ? j.products.length : 0;
   const priced = (j?.products ?? []).filter((p) => (p.price_t4 ?? 0) > 0).length;
@@ -71,7 +71,7 @@ for (const fn of ["fetch-external-brands", "fetch-external-categories"]) {
 }
 
 try {
-  const r = await fetch(CATALOG_FN, { headers: H });
+  const r = await fetch(CATALOG_FN, { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
   const j = await r.json().catch(() => null);
   const leaked = (j?.products ?? []).filter((p) => (p.buy_price ?? 0) > 0).length;
   add("no buy_price leak", leaked === 0, leaked === 0 ? "ok" : `LEAK: ${leaked} con buy_price>0`);

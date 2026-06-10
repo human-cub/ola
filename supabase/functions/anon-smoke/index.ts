@@ -26,7 +26,7 @@ async function run(): Promise<Check[]> {
 
   // 1. Catálogo (pim-pum edge fn): debe traer productos con precio.
   try {
-    const r = await fetch(CATALOG_PRODUCTS_URL, { headers: { apikey: anon, Authorization: `Bearer ${anon}` } });
+    const r = await fetch(CATALOG_PRODUCTS_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
     const j = await r.json().catch(() => null);
     const n = Array.isArray(j?.products) ? j.products.length : 0;
     const priced = (j?.products ?? []).filter((p: any) => (p.price_t4 ?? 0) > 0).length;
