@@ -17,8 +17,8 @@ export function useReferralClick() {
       if (!raw) return;
       const code = raw.trim().toUpperCase();
       if (!REF_RE.test(code)) return;
-      void supabase
-        .rpc("record_referral_click" as any, { _ref_code: code, _visitor_hash: getVisitorId() })
+      void supabase.functions
+        .invoke("record-referral-click", { body: { ref_code: code, visitor_hash: getVisitorId() } })
         .then(() => {}, () => {});
     } catch {
       /* ignore */
