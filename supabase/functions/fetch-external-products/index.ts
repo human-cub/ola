@@ -194,6 +194,11 @@ Deno.serve(async (req) => {
         const t2 = toNum(p.price_t2);
         const t3 = toNum(p.price_t3);
         const retailDisplay = toNum(p.price_retail_display) || retail;
+        // v2 ladder: t1/t3/t4 are fed from price_ca/price_pg/price_sp
+        // (cost-plus + competitor-aware); fallback to legacy t-prices while empty.
+        const ca = toNum(p.price_ca);
+        const pg = toNum(p.price_pg);
+        const spv = toNum(p.price_sp);
         return {
           sku: String(p.sku ?? ""),
           name: String(p.name ?? ""),
@@ -215,10 +220,10 @@ Deno.serve(async (req) => {
           seo_title: (p.seo_title as string) ?? null,
           seo_description: (p.seo_description as string) ?? null,
           price_retail_display: retailDisplay,
-          price_t1: t1,
-          price_t2: t2,
-          price_t3: t3,
-          price_t4: t4,
+          price_t1: ca > 0 ? ca : t1,
+          price_t2: pg > 0 ? pg : t2,
+          price_t3: pg > 0 ? pg : t3,
+          price_t4: spv > 0 ? spv : t4,
         };
       })
       .filter((p) => p.sku && p.name && p.buy_price > 0);
