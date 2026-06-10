@@ -12,6 +12,7 @@ interface Row {
   referrer_email: string | null;
   referrals: number;
   purchasers: number;
+  clicks: number;
 }
 
 const ReferralsTable = () => {
@@ -28,6 +29,7 @@ const ReferralsTable = () => {
 
   const totalReferrals = rows.reduce((s, r) => s + (r.referrals || 0), 0);
   const totalPurchasers = rows.reduce((s, r) => s + (r.purchasers || 0), 0);
+  const totalClicks = rows.reduce((s, r) => s + (r.clicks || 0), 0);
 
   return (
     <Card>
@@ -48,6 +50,7 @@ const ReferralsTable = () => {
             <div className="mb-4 flex flex-wrap gap-6 text-sm">
               <span><strong>{rows.length}</strong> referidores</span>
               <span><strong>{totalReferrals}</strong> registros</span>
+              <span><strong>{totalClicks}</strong> clics</span>
               <span><strong>{totalPurchasers}</strong> compraron</span>
             </div>
             <Table>
@@ -55,6 +58,7 @@ const ReferralsTable = () => {
                 <TableRow>
                   <TableHead>Referidor</TableHead>
                   <TableHead className="text-right">Invitados</TableHead>
+                  <TableHead className="text-right">Clics</TableHead>
                   <TableHead className="text-right">Compraron</TableHead>
                 </TableRow>
               </TableHeader>
@@ -66,6 +70,7 @@ const ReferralsTable = () => {
                       <div className="text-xs text-muted-foreground">{r.referrer_email}</div>
                     </TableCell>
                     <TableCell className="text-right">{r.referrals}</TableCell>
+                    <TableCell className="text-right">{r.clicks}</TableCell>
                     <TableCell className="text-right">{r.purchasers}</TableCell>
                   </TableRow>
                 ))}
