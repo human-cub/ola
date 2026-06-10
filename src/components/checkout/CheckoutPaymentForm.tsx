@@ -1,4 +1,5 @@
 import { UseFormReturn } from "react-hook-form";
+import { formatPrice } from "@/lib/formatting";
 import {
   Select,
   SelectContent,
@@ -15,9 +16,14 @@ import {
 
 interface CheckoutPaymentFormProps {
   form: UseFormReturn<any>;
+  /** Total redondeado para pagos cash (transferencia/efectivo); se muestra junto a esas opciones. */
+  cashTotal?: number;
 }
 
-export const CheckoutPaymentForm = ({ form }: CheckoutPaymentFormProps) => {
+export const CheckoutPaymentForm = ({ form, cashTotal }: CheckoutPaymentFormProps) => {
+  const cashHint = cashTotal && cashTotal > 0 ? (
+    <span className="ml-3 text-xs font-medium text-green-600 tabular-nums">{formatPrice(cashTotal)}</span>
+  ) : null;
   return (
     <div className="mb-6">
       <h2 className="text-lg font-semibold mb-4">Forma de pago</h2>
@@ -33,8 +39,18 @@ export const CheckoutPaymentForm = ({ form }: CheckoutPaymentFormProps) => {
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                <SelectItem value="efectivo">Efectivo</SelectItem>
-                <SelectItem value="transferencia">Transferencia</SelectItem>
+                <SelectItem value="transferencia">
+                  <span className="flex w-full items-center justify-between">
+                    <span>Transferencia</span>
+                    {cashHint}
+                  </span>
+                </SelectItem>
+                <SelectItem value="efectivo">
+                  <span className="flex w-full items-center justify-between">
+                    <span>Efectivo</span>
+                    {cashHint}
+                  </span>
+                </SelectItem>
                 <SelectItem value="tarjeta" disabled>Tarjeta (Próximamente)</SelectItem>
               </SelectContent>
             </Select>
