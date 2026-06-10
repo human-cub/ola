@@ -16,7 +16,7 @@ import {
 
 interface CheckoutPaymentFormProps {
   form: UseFormReturn<any>;
-  /** Total redondeado para pagos cash (transferencia/efectivo); se muestra junto a esas opciones. */
+  /** Total redondeado para pago en efectivo; se muestra junto a esa opción. */
   cashTotal?: number;
 }
 
@@ -39,19 +39,13 @@ export const CheckoutPaymentForm = ({ form, cashTotal }: CheckoutPaymentFormProp
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                <SelectItem value="transferencia">
-                  <span className="flex w-full items-center justify-between">
-                    <span>Transferencia</span>
-                    {cashHint}
-                  </span>
-                </SelectItem>
+                <SelectItem value="transferencia">Transferencia</SelectItem>
                 <SelectItem value="efectivo">
                   <span className="flex w-full items-center justify-between">
                     <span>Efectivo</span>
                     {cashHint}
                   </span>
                 </SelectItem>
-                <SelectItem value="tarjeta" disabled>Tarjeta (Próximamente)</SelectItem>
               </SelectContent>
             </Select>
             <FormMessage />

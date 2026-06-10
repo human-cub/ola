@@ -100,7 +100,7 @@ export function useCheckoutSubmit(options: SubmitOptions) {
         references: formData.references || null,
       };
 
-      // Cash rounding: transferencia/efectivo pagan el total redondeado.
+      // Cash rounding: efectivo paga el total redondeado.
       const baseTotal = options.isCollective
         ? options.subtotal + (options.deliveryCost || 0)
         : options.total;

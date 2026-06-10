@@ -1,12 +1,11 @@
 /**
- * Redondeo del total para pagos "cash" (transferencia / efectivo) — incentivo
- * para evitar comisiones de tarjeta. Baja el total al múltiplo de $10.000 —
- * o $5.000 — si el descuento implícito queda dentro del 2% del total; si no
- * alcanza, $1.000 (también dentro del 2%) y como último recurso $500.
- * Nunca sube el total.
+ * Redondeo del total para pago en EFECTIVO — incentivo para pagar cash.
+ * Baja el total al múltiplo de $10.000 — o $5.000 — si el descuento implícito
+ * queda dentro del 2% del total; si no alcanza, $1.000 (también dentro del 2%)
+ * y como último recurso $500. Nunca sube el total.
  */
 export const isCashMethod = (method: string | null | undefined): boolean =>
-  method === "transferencia" || method === "efectivo";
+  method === "efectivo";
 
 export const cashRoundedTotal = (total: number): number => {
   // Pedidos minúsculos: no redondear (el paso de $500 sería un % enorme).
