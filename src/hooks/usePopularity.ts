@@ -31,14 +31,19 @@ const writeCache = (data: PopRecord) => {
 };
 
 const fetchPopularity = async (): Promise<PopRecord> => {
-  const rec: PopRecord = {};
   const { data, error } = await supabase
     .from("product_popularity" as any)
     .select("product_id, orders_count");
-  if (!error && data) {
-    for (const r of data as Array<{ product_id: string; orders_count: number }>) {
-      if (r.product_id) rec[r.product_id] = r.orders_count ?? 0;
-    }
+  if (error) {
+    // NO cachear un mapa vacío en caso de error (p.ej. permisos rotos):
+    // envenena localStorage por 24h y "apaga" el orden por popularidad en
+    // todas las páginas sin ninguna señal visible. Mantener el último bueno.
+    console.error("product_popularity:", error.message);
+    return readCache() ?? {};
+  }
+  const rec: PopRecord = {};
+  for (const r of (data ?? []) as Array<{ product_id: string; orders_count: number }>) {
+    if (r.product_id) rec[r.product_id] = r.orders_count ?? 0;
   }
   writeCache(rec);
   return rec;
