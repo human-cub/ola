@@ -105,7 +105,7 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
   const { subtotal, fullPrice, discount, deliveryCost, total, getUnitPrice } =
     useCheckoutPricing(items, deliveryZone, effPromoBonus, isCollective);
 
-  // Redondeo cash: incentivo para pagar por transferencia/efectivo.
+  // Redondeo cash: incentivo para pagar en efectivo.
   const cashTotal = cashRoundedTotal(total);
   const cashSelected = isCashMethod(paymentMethod);
   const payableTotal = cashSelected ? cashTotal : total;
