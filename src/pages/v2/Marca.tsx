@@ -152,6 +152,7 @@ const MarcaV2 = () => {
                   priceRetailDisplay={p.priceRetailDisplay}
                   priceSuper={p.priceT4}
                   priceBuyNow={p.priceT1}
+                  product={p}
                 />
                 ))}
               </div>

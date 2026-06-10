@@ -2,6 +2,8 @@ import { Link } from "react-router-dom";
 import { formatPrice } from "@/lib/formatting";
 import { usePriceCurtain } from "@/hooks/usePriceCurtain";
 import { Lock } from "lucide-react";
+import { ProductQuickActions } from "@/components/ProductQuickActions";
+import type { CatalogProduct } from "@/hooks/useCatalogProducts";
 
 interface Props {
   urlSlug: string;
@@ -16,6 +18,8 @@ interface Props {
   priceBuyNow?: number;
   /** Компактный вид (блок Otros Productos): меньше паддинги и зазор имя-цена */
   compact?: boolean;
+  /** Полный продукт: включает кнопки быстрого добавления (корзина/grupo) на фото */
+  product?: CatalogProduct;
 }
 
 // Фирменный оранжевый (тот же акцент, что у Súper-Precio/таймера).
@@ -31,6 +35,7 @@ export const CatalogProductCard = ({
   priceSuper,
   priceBuyNow,
   compact = false,
+  product,
 }: Props) => {
   const { curtained } = usePriceCurtain();
   const showCurtain = curtained && !!priceBuyNow && priceBuyNow > 0;
@@ -42,7 +47,7 @@ export const CatalogProductCard = ({
       to={`/productos/${urlSlug}`}
       className={`group bg-card rounded-xl border hover:shadow-lg transition-all duration-300 hover:-translate-y-1 flex flex-col ${compact ? "p-3" : "p-4"}`}
     >
-      <div className="aspect-square bg-slate-50 rounded-xl overflow-hidden">
+      <div className="relative aspect-square bg-slate-50 rounded-xl overflow-hidden">
         <img
           src={image || "/placeholder.svg"}
           alt={name}
@@ -52,6 +57,7 @@ export const CatalogProductCard = ({
           width={400}
           height={400}
         />
+        {product && <ProductQuickActions product={product} />}
       </div>
       <div className={`flex flex-col flex-1 ${compact ? "pt-2" : "pt-4"}`}>
         {/* Precio arriba (Súper-Precio en naranja + retail tachado a la derecha) */}

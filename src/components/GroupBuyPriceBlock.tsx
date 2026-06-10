@@ -67,7 +67,7 @@ function getTierPrice(prices: PriceData[], index: number): number | null {
   return prices[prices.length - 1].price;
 }
 
-async function hasPendingConflict(
+export async function hasPendingConflict(
   userId: string,
   now: Date,
   nextCollectiveClose: Date | null
@@ -175,7 +175,7 @@ function useGroupBuyBlock(prices: PriceData[], productName: string, productId: s
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function ConflictDialog({
+export function ConflictDialog({
   open,
   onClose,
   onGoToWaitingList,

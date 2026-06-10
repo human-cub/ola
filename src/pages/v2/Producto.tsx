@@ -268,6 +268,7 @@ const RelatedV2Products = ({
             priceRetailDisplay={p.priceRetailDisplay}
             priceSuper={p.priceT4}
             priceBuyNow={p.priceT1}
+                  product={p}
             compact
           />
         ))}

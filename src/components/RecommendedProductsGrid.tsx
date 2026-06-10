@@ -36,6 +36,7 @@ export const RecommendedProductsGrid = () => {
                   priceRetailDisplay={p.priceRetailDisplay}
                   priceSuper={p.priceT4}
                   priceBuyNow={p.priceT1}
+                  product={p}
                 />
               </div>
             ))}
