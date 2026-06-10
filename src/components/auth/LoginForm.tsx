@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import * as amplitude from "@amplitude/analytics-browser";
 import { Button } from "@/components/ui/button";
@@ -37,7 +37,13 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
-  const redirectTo = `${window.location.origin}/mi-cuenta`;
+  // Tras Google: volver a donde se pidió el login (?redirect=...) o al inicio.
+  // Antes iba siempre a /mi-cuenta.
+  const [searchParams] = useSearchParams();
+  const redirectParam = searchParams.get("redirect") || "/";
+  const safeRedirect =
+    redirectParam.startsWith("/") && !redirectParam.startsWith("//") ? redirectParam : "/";
+  const redirectTo = `${window.location.origin}${safeRedirect}`;
 
   const handleGoogle = async () => {
     setGoogleLoading(true);
