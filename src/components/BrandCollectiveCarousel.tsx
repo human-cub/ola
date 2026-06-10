@@ -188,7 +188,7 @@ export const BrandCollectiveCarousel = () => {
             {timeLeft.days}d {String(timeLeft.hours).padStart(2, "0")}h {String(timeLeft.minutes).padStart(2, "0")}m {String(timeLeft.seconds).padStart(2, "0")}s
           </span>
         </span>
-        <span className="text-xs sm:text-sm text-muted-foreground">
+        <span className="text-xs sm:text-sm text-muted-foreground text-center text-balance">
           Cierran el domingo — sumate antes de que termine la semana
         </span>
       </div>
