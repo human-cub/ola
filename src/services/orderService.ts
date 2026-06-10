@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { applyCashRounding } from "@/lib/cashRounding";
 import { getCollectiveTierPrice, getFirstTierPrice, isCollectiveOrderClosed } from "@/lib/collectivePricing";
 import { formatPrice, formatFullName } from "@/lib/formatting";
 import { parseAddress } from "@/lib/address";
@@ -245,7 +246,7 @@ export const updateClosedOrderItem = async (
 
   const { data: order } = await supabase
     .from("user_orders")
-    .select("id, items, delivery_cost, status")
+    .select("id, items, delivery_cost, status, payment_method")
     .eq("id", orderId)
     .maybeSingle();
 
@@ -310,7 +311,7 @@ export const updateClosedOrderItem = async (
     .update({
       items: updatedItems,
       subtotal,
-      total_amount: subtotal + Number(order.delivery_cost || 0),
+      total_amount: applyCashRounding(subtotal + Number(order.delivery_cost || 0), (order as any).payment_method),
       discount_amount: fullPrice - subtotal,
     })
     .eq("id", orderId);
@@ -327,7 +328,7 @@ export const removeClosedOrderItem = async (
 ): Promise<void> => {
   const { data: order } = await supabase
     .from("user_orders")
-    .select("id, items, delivery_cost, status")
+    .select("id, items, delivery_cost, status, payment_method")
     .eq("id", orderId)
     .maybeSingle();
 
@@ -364,7 +365,7 @@ export const removeClosedOrderItem = async (
     .update({
       items: updatedItems,
       subtotal,
-      total_amount: subtotal + Number(order.delivery_cost || 0),
+      total_amount: applyCashRounding(subtotal + Number(order.delivery_cost || 0), (order as any).payment_method),
       discount_amount: fullPrice - subtotal,
     })
     .eq("id", orderId);
@@ -382,6 +383,7 @@ export const applyPromoTier = async (
     participants_count: number | null;
     status: OrderStatus;
     delivery_cost: number;
+    payment_method?: string | null;
   },
   tier: number | null,
   options?: { bonus?: number; code?: string | null },
@@ -428,7 +430,7 @@ export const applyPromoTier = async (
       return sum + (prices[0]?.price || item.price_per_unit) * item.quantity;
     }, 0);
     const restoredDiscount = firstTierTotal - restoredSubtotal;
-    const restoredTotal = restoredSubtotal + order.delivery_cost;
+    const restoredTotal = applyCashRounding(restoredSubtotal + order.delivery_cost, order.payment_method);
 
     const { error } = await supabase
       .from("user_orders")
@@ -474,7 +476,7 @@ export const applyPromoTier = async (
     return sum + firstPrice * item.quantity;
   }, 0);
   const discountAmount = firstTierTotal - newSubtotal;
-  const newTotal = newSubtotal + order.delivery_cost;
+  const newTotal = applyCashRounding(newSubtotal + order.delivery_cost, order.payment_method);
 
   const { error } = await supabase
     .from("user_orders")
@@ -504,7 +506,7 @@ export type OrderPriceLevel = "ca" | "garantizado" | "super";
  * is_promo = level above the order's base. Recomputes subtotal / discount (vs retail) / total.
  */
 export const setOrderPriceLevel = async (
-  order: { id: string; items: any[]; delivery_cost: number | null; order_type?: string },
+  order: { id: string; items: any[]; delivery_cost: number | null; order_type?: string; payment_method?: string | null },
   level: OrderPriceLevel,
   opts?: { priceMap?: Map<string, { t1?: number; t3?: number; t4?: number }>; code?: string | null },
 ): Promise<void> => {
@@ -524,7 +526,7 @@ export const setOrderPriceLevel = async (
     0,
   );
   const discountAmount = Math.max(fullPrice - subtotal, 0);
-  const totalAmount = subtotal + (Number(order.delivery_cost) || 0);
+  const totalAmount = applyCashRounding(subtotal + (Number(order.delivery_cost) || 0), order.payment_method);
   const base = order.order_type === "immediate" ? "ca" : "garantizado";
   const { error } = await supabase
     .from("user_orders")

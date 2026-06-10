@@ -7,6 +7,8 @@ interface CheckoutPriceSummaryProps {
   subtotal: number;
   deliveryCost: number;
   total: number;
+  /** Descuento por redondeo de pago cash (transferencia/efectivo), ya restado de `total`. */
+  cashDiscount?: number;
 }
 
 export const CheckoutPriceSummary = ({
@@ -15,6 +17,7 @@ export const CheckoutPriceSummary = ({
   subtotal,
   deliveryCost,
   total,
+  cashDiscount = 0,
 }: CheckoutPriceSummaryProps) => {
   return (
     <div className="mb-6 space-y-2">
@@ -36,6 +39,12 @@ export const CheckoutPriceSummary = ({
         <span className="text-muted-foreground">Envío:</span>
         <span>{deliveryCost === 0 ? "Gratis" : formatPrice(deliveryCost)}</span>
       </div>
+      {cashDiscount > 0 && (
+        <div className="flex justify-between text-sm text-green-600">
+          <span>Redondeo por pago cash:</span>
+          <span>-{formatPrice(cashDiscount)}</span>
+        </div>
+      )}
       <Separator />
       <div className="flex justify-between text-xl font-bold pt-2">
         <span>TOTAL:</span>

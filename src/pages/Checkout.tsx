@@ -27,6 +27,7 @@ import { CheckoutPriceSummary } from "@/components/checkout/CheckoutPriceSummary
 import { PromoCodeInput } from "@/components/checkout/PromoCodeInput";
 import { usePromoCode } from "@/hooks/usePromoCode";
 import { useUserRole } from "@/hooks/useUserRole";
+import { cashRoundedTotal, isCashMethod } from "@/lib/cashRounding";
 
 const checkoutSchema = z.object({
   firstName: z.string().trim().min(1, "El nombre es requerido").max(100),
@@ -103,6 +104,12 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
 
   const { subtotal, fullPrice, discount, deliveryCost, total, getUnitPrice } =
     useCheckoutPricing(items, deliveryZone, effPromoBonus, isCollective);
+
+  // Redondeo cash: incentivo para pagar por transferencia/efectivo.
+  const cashTotal = cashRoundedTotal(total);
+  const cashSelected = isCashMethod(paymentMethod);
+  const payableTotal = cashSelected ? cashTotal : total;
+  const cashDiscount = cashSelected ? Math.max(total - cashTotal, 0) : 0;
 
   const { loading, handleSubmit } = useCheckoutSubmit({
     isCollective,
@@ -215,7 +222,7 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
 
               <Separator className="mb-6" />
 
-              <CheckoutPaymentForm form={form} />
+              <CheckoutPaymentForm form={form} cashTotal={cashTotal} />
 
               <Separator className="mb-6" />
 
@@ -230,7 +237,8 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
                 discount={discount}
                 subtotal={subtotal}
                 deliveryCost={deliveryCost}
-                total={total}
+                total={payableTotal}
+                cashDiscount={cashDiscount}
               />
 
               {validationErrors.length > 0 && (
