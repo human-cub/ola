@@ -17,6 +17,7 @@ import { useScrollHeader } from "@/hooks/useScrollHeader";
 import * as amplitude from "@amplitude/analytics-browser";
 import { useCheckoutProfile } from "@/hooks/useCheckoutProfile";
 import { useCheckoutPricing } from "@/hooks/useCheckoutPricing";
+import { useReferralReward } from "@/hooks/useReferralReward";
 import { useCheckoutSubmit } from "@/hooks/useCheckoutSubmit";
 import { CheckoutSuccessDialog } from "@/components/checkout/CheckoutSuccessDialog";
 import { CheckoutOrderSummary } from "@/components/checkout/CheckoutOrderSummary";
@@ -61,6 +62,9 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
   const [finalTotal, setFinalTotal] = useState(0);
   const [deliveryZone, setDeliveryZone] = useState<'caba' | 'gba' | 'other'>('caba');
   const { appliedPromo, setAppliedPromo, removePromo } = usePromoCode();
+  const { hasReward } = useReferralReward();
+  // Referral reward = +1 collective bonus (PG->SP), mirrors syncWaitingListOrder.
+  const effPromoBonus = (isCollective && hasReward) ? Math.max(appliedPromo?.tier_bonus ?? 0, 1) : (appliedPromo?.tier_bonus ?? 0);
   const { isMayorista } = useUserRole();
   const [isGuest, setIsGuest] = useState(false);
   const [guestEmail, setGuestEmail] = useState("");
@@ -98,7 +102,7 @@ const Checkout = ({ isCollective = false }: CheckoutProps) => {
   useCheckoutProfile(form, isCollective);
 
   const { subtotal, fullPrice, discount, deliveryCost, total, getUnitPrice } =
-    useCheckoutPricing(items, deliveryZone, appliedPromo?.tier_bonus ?? 0, isCollective);
+    useCheckoutPricing(items, deliveryZone, effPromoBonus, isCollective);
 
   const { loading, handleSubmit } = useCheckoutSubmit({
     isCollective,
