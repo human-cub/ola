@@ -141,12 +141,12 @@ export const DynamicProductCarousel = ({ images, productName }: DynamicProductCa
       </section>
 
       <Dialog open={selectedIndex !== null} onOpenChange={() => setSelectedIndex(null)}>
-        <DialogContent className="max-w-[95vw] max-h-[95vh] p-2 sm:p-4 bg-white border-none shadow-none [&>button]:rounded-full [&>button]:p-1 [&>button]:z-50">
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] p-2 sm:p-4 bg-white border-none shadow-none [&>button]:rounded-full [&>button]:p-1 [&>button]:z-50">
           <div className="flex flex-col items-center justify-center w-full h-full">
             <Carousel
               opts={{ loop: true, startIndex: selectedIndex ?? 0 }}
               setApi={setModalApi}
-              className="w-full max-w-[90vw]"
+              className="w-full"
             >
               <CarouselContent>
                 {displayImages.map((image, index) => (

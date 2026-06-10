@@ -135,13 +135,13 @@ const AuthPage = () => {
             <CardTitle className="text-2xl">
               {activeTab === "login" ? "Iniciá sesión" : gateRegister ? "Sumate al grupo" : "Creá tu cuenta"}
             </CardTitle>
-            <CardDescription>
-              {activeTab === "login"
-                ? "Ingresá a tu cuenta para ver tus pedidos"
-                : gateRegister
-                ? "Acceso exclusivo: registrate con el link de un miembro o escribinos"
-                : "Registrate para acceder a descuentos exclusivos"}
-            </CardDescription>
+            {activeTab !== "login" && (
+              <CardDescription>
+                {gateRegister
+                  ? "Acceso exclusivo: registrate con el link de un miembro o escribinos"
+                  : "Registrate para acceder a descuentos exclusivos"}
+              </CardDescription>
+            )}
           </CardHeader>
           <CardContent>
             <Tabs value={activeTab} onValueChange={setActiveTab}>
