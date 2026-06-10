@@ -103,6 +103,10 @@ export const ProductQuickActions = ({ product }: { product: CatalogProduct }) =>
         <GroupIcon className="w-5 h-5" />
       </button>
 
+      {/* Los portales de Radix se renderizan en <body>, pero los eventos sintéticos
+          suben por el árbol de React hasta el <Link> de la tarjeta — sin esta
+          envoltura un click en "Cancelar" navegaba a la página del producto. */}
+      <span className="contents" onClick={stop}>
       {dialogOpen && (
         <AddToCartDialog
           open={dialogOpen}
@@ -137,6 +141,7 @@ export const ProductQuickActions = ({ product }: { product: CatalogProduct }) =>
           }}
         />
       )}
+      </span>
     </>
   );
 };
