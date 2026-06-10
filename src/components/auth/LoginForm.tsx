@@ -137,7 +137,7 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <Button type="button" variant="outline" className="w-full" onClick={handleGoogle} disabled={googleLoading}>
         {googleLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <span className="mr-2"><GoogleIcon /></span>}
         Continuar con Google
@@ -148,7 +148,7 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
         <div className="relative flex justify-center text-xs"><span className="bg-background px-2 text-muted-foreground">o con tu email</span></div>
       </div>
 
-      <form onSubmit={handleLogin} className="space-y-4">
+      <form onSubmit={handleLogin} className="space-y-3">
         <div className="space-y-2">
           <Label htmlFor="login-email">Email</Label>
           <Input id="login-email" type="email" placeholder="tu@email.com" value={email} onChange={(e) => setEmail(e.target.value)} className={errors.email ? "border-destructive" : ""} />
