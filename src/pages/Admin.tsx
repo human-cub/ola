@@ -13,6 +13,7 @@ import WeeklyPricesCard from "@/components/admin/WeeklyPricesCard";
 import AdminSettings from "@/components/admin/AdminSettings";
 import ProductsV2Table from "@/components/admin/ProductsV2Table";
 import ReferralsTable from "@/components/admin/ReferralsTable";
+import ViralStats from "@/components/admin/ViralStats";
 import { ExternalLink } from "lucide-react";
 
 const Admin = () => {
@@ -121,6 +122,7 @@ const Admin = () => {
             <AdminSettings />
           </TabsContent>
           <TabsContent value="referrals">
+            <ViralStats />
             <ReferralsTable />
           </TabsContent>
         </Tabs>
