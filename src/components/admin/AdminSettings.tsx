@@ -17,6 +17,8 @@ export const AdminSettings = () => {
   const [saving, setSaving] = useState(false);
   const [curtain, setCurtain] = useState(false);
   const [curtainSaving, setCurtainSaving] = useState(false);
+  const [unlockClicks, setUnlockClicks] = useState<string>("");
+  const [unlockSaving, setUnlockSaving] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -40,6 +42,18 @@ export const AdminSettings = () => {
         .eq("key", "price_curtain_enabled")
         .maybeSingle();
       setCurtain((data as any)?.value === true);
+    })();
+  }, []);
+
+  useEffect(() => {
+    void (async () => {
+      const { data } = await supabase
+        .from("app_settings" as any)
+        .select("value")
+        .eq("key", "referral_unlock_clicks")
+        .maybeSingle();
+      const v = (data as any)?.value;
+      setUnlockClicks(v !== undefined && v !== null ? String(v) : "1");
     })();
   }, []);
 
@@ -78,6 +92,21 @@ export const AdminSettings = () => {
     setCurtainSaving(false);
   };
 
+  const handleSaveUnlock = async () => {
+    const parsed = Math.trunc(Number(unlockClicks));
+    if (!Number.isFinite(parsed) || parsed < 1) {
+      toast.error("Ingresá un número mayor o igual a 1");
+      return;
+    }
+    setUnlockSaving(true);
+    const { error } = await supabase
+      .from("app_settings" as any)
+      .upsert({ key: "referral_unlock_clicks", value: parsed as any }, { onConflict: "key" });
+    if (error) toast.error("Error al guardar");
+    else toast.success("Configuración guardada");
+    setUnlockSaving(false);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center py-8">
@@ -109,6 +138,33 @@ export const AdminSettings = () => {
               onCheckedChange={toggleCurtain}
             />
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Programa de referidos</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 max-w-md">
+          <div className="space-y-2">
+            <Label htmlFor="unlock-clicks">Clics únicos para la recompensa por compartir</Label>
+            <Input
+              id="unlock-clicks"
+              type="number"
+              min={1}
+              step={1}
+              value={unlockClicks}
+              onChange={(e) => setUnlockClicks(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Cuando el link personal de alguien suma esta cantidad de clics únicos, recibe la
+              recompensa (Súper-Precio en su próxima compra grupal). La recompensa por registrar un
+              invitado sigue funcionando por separado.
+            </p>
+          </div>
+          <Button onClick={handleSaveUnlock} disabled={unlockSaving}>
+            {unlockSaving ? "Guardando..." : "Guardar"}
+          </Button>
         </CardContent>
       </Card>
 

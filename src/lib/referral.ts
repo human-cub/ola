@@ -30,3 +30,15 @@ export function clearStoredRef(): void {
     /* ignore */
   }
 }
+
+const VISITOR_KEY = "ola_visitor_id";
+/** Stable per-browser id used to dedup unique referral-link clicks. */
+export function getVisitorId(): string {
+  try {
+    let v = localStorage.getItem(VISITOR_KEY);
+    if (!v) { v = crypto.randomUUID(); localStorage.setItem(VISITOR_KEY, v); }
+    return v;
+  } catch {
+    return "anon";
+  }
+}
