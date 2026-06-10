@@ -106,7 +106,7 @@ export const RegisterForm = () => {
   // Email verification page removed - auth auto-confirms
 
   return (
-    <form onSubmit={handleRegister} className="space-y-4">
+    <form onSubmit={handleRegister} className="space-y-3">
       <div className="space-y-2">
         <Label htmlFor="register-email">Email</Label>
         <Input

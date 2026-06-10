@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { signOutAndRedirect } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, ArrowLeft, User, Shield, LogOut, Package, Copy, Share2 } from "lucide-react";
@@ -110,10 +111,7 @@ const Profile = () => {
     if (!isLoading && !data) navigate("/ingresar");
   }, [isLoading, data, navigate]);
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    window.location.href = "/ingresar";
-  };
+  const handleLogout = () => signOutAndRedirect();
 
   if (isLoading) {
     return (

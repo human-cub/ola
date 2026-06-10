@@ -14,6 +14,8 @@ const { mockNavigate, mockToast, mockSupabase } = vi.hoisted(() => ({
       signInWithPassword: vi.fn(),
       updateUser: vi.fn(),
       signOut: vi.fn(),
+      // useUserRole subscribes to auth changes on mount
+      onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } })),
     },
     from: vi.fn(),
   },
@@ -42,6 +44,16 @@ vi.mock("@/components/AddressForm", () => ({
 
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: mockSupabase,
+}));
+
+// Isolate page-level hooks that grew after these tests were written:
+// role comes from user_roles, viral flag from app_settings — both irrelevant
+// to what this suite asserts (viral off => the classic 3 tabs).
+vi.mock("@/hooks/useUserRole", () => ({
+  useUserRole: () => ({ role: null, loading: false, isAdmin: false, isMayorista: false }),
+}));
+vi.mock("@/hooks/useAppSetting", () => ({
+  useAppSetting: <T,>(_key: string, defaultValue: T) => ({ value: defaultValue, loading: false }),
 }));
 
 function buildProfileChain(profileData: Record<string, unknown> | null) {
@@ -621,7 +633,7 @@ describe("Profile", () => {
   });
 
   describe("logout", () => {
-    it("signs out and navigates to home", async () => {
+    it("signs out and redirects to login", async () => {
       setupAuthenticatedSession();
       setupProfileData({
         first_name: "Juan",
@@ -636,12 +648,25 @@ describe("Profile", () => {
       const logoutButton = await screen.findByRole("button", {
         name: /cerrar sesión/i,
       });
-      await user.click(logoutButton);
 
-      await waitFor(() => {
-        expect(mockSupabase.auth.signOut).toHaveBeenCalled();
+      // The page redirects via window.location.href (full reload), not navigate()
+      const originalLocation = window.location;
+      Object.defineProperty(window, "location", {
+        value: { ...originalLocation, href: "" },
+        writable: true,
       });
-      expect(mockNavigate).toHaveBeenCalledWith("/");
+      try {
+        await user.click(logoutButton);
+
+        await waitFor(() => {
+          expect(mockSupabase.auth.signOut).toHaveBeenCalled();
+        });
+        await waitFor(() => {
+          expect(window.location.href).toBe("/ingresar");
+        });
+      } finally {
+        Object.defineProperty(window, "location", { value: originalLocation, writable: true });
+      }
     });
   });
 

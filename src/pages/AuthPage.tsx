@@ -115,19 +115,19 @@ const AuthPage = () => {
       <div className="w-full max-w-md">
         <Link 
           to="/" 
-          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
+          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Volver al inicio
         </Link>
 
         <Card>
-          <CardHeader className="text-center">
-            <div className="flex justify-center mb-2">
+          <CardHeader className="text-center pb-4">
+            <div className="flex justify-center mb-1">
               <img 
-                src="/lovable-uploads/f61342f0-4c86-4d5f-8e4a-6f6380460a50.png" 
+                src="/ola-logo-auth.webp" 
                 alt="Ola Logo" 
-                className="w-12 h-12"
+                className="w-10 h-10"
                 loading="eager"
                 decoding="async"
               />
@@ -135,17 +135,17 @@ const AuthPage = () => {
             <CardTitle className="text-2xl">
               {activeTab === "login" ? "Iniciá sesión" : gateRegister ? "Sumate al grupo" : "Creá tu cuenta"}
             </CardTitle>
-            <CardDescription>
-              {activeTab === "login"
-                ? "Ingresá a tu cuenta para ver tus pedidos"
-                : gateRegister
-                ? "Acceso exclusivo: registrate con el link de un miembro o escribinos"
-                : "Registrate para acceder a descuentos exclusivos"}
-            </CardDescription>
+            {activeTab !== "login" && (
+              <CardDescription>
+                {gateRegister
+                  ? "Acceso exclusivo: registrate con el link de un miembro o escribinos"
+                  : "Registrate para acceder a descuentos exclusivos"}
+              </CardDescription>
+            )}
           </CardHeader>
           <CardContent>
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsList className="grid w-full grid-cols-2 mb-3">
                 <TabsTrigger value="login">Iniciar Sesión</TabsTrigger>
                 <TabsTrigger value="register">Registrarse</TabsTrigger>
               </TabsList>
