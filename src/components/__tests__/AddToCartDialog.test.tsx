@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { AddToCartDialog } from '../AddToCartDialog';
 import { useCart } from '@/contexts/CartContext';
 import { BrowserRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 // 1. Mock the CartContext hook
@@ -33,10 +34,15 @@ const renderAddToCartDialog = (props = {}) => {
         ...props,
     };
 
+    const queryClient = new QueryClient({
+        defaultOptions: { queries: { retry: false } },
+    });
     return render(
-        <BrowserRouter>
-            <AddToCartDialog {...defaultProps} />
-        </BrowserRouter>
+        <QueryClientProvider client={queryClient}>
+            <BrowserRouter>
+                <AddToCartDialog {...defaultProps} />
+            </BrowserRouter>
+        </QueryClientProvider>
     );
 };
 
@@ -50,6 +56,9 @@ describe('AddToCartDialog Component', () => {
         // Setup default mock returns
         (useCart as any).mockReturnValue({
             addToCart: mockAddToCart,
+            addToWaitingList: vi.fn(),
+            cartItems: [],
+            waitingListItems: [],
         });
 
         (supabase.auth.getSession as any).mockResolvedValue({
@@ -117,6 +126,7 @@ describe('AddToCartDialog Component', () => {
                 quantity: 3,
                 price_per_unit: 1000,
                 product_image: 'https://example.com/image.jpg',
+                product_link: null,
             });
         });
 
