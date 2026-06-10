@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, X, Tag } from "lucide-react";
+import { Loader2, X, Gift } from "lucide-react";
 
 interface AppliedPromo {
   code: string;
@@ -69,12 +69,40 @@ export const PromoCodeInput = ({ appliedPromo, onApply, onRemove }: PromoCodeInp
   if (appliedPromo) {
     return (
       <div className="mb-6">
-      <div className="flex items-center gap-2 p-3 rounded-lg border border-primary/30 bg-primary/5">
-          <Tag className="w-4 h-4 text-primary" />
-          <span className="text-sm text-foreground flex-1">
-            Promoción aplicada: <strong>{appliedPromo.code}</strong> — +{appliedPromo.tier_bonus} nivel{appliedPromo.tier_bonus > 1 ? "es" : ""} de precio
+        <div
+          className="flex items-center gap-3 p-3 rounded-xl"
+          style={{
+            backgroundColor: "hsl(var(--group-buy-accent) / 0.1)",
+            border: "1px solid hsl(var(--group-buy-accent) / 0.4)",
+          }}
+        >
+          <span
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
+            style={{ backgroundColor: "hsl(var(--group-buy-accent) / 0.18)" }}
+          >
+            <Gift className="w-4 h-4" style={{ color: "hsl(var(--group-buy-accent))" }} />
           </span>
-          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onRemove}>
+          <div className="flex-1 leading-tight">
+            <p
+              className="text-sm font-semibold"
+              style={{ color: "hsl(var(--group-buy-accent-foreground))" }}
+            >
+              ¡{appliedPromo.code} aplicado!
+            </p>
+            <p
+              className="text-xs"
+              style={{ color: "hsl(var(--group-buy-accent-foreground))", opacity: 0.85 }}
+            >
+              +{appliedPromo.tier_bonus} nivel{appliedPromo.tier_bonus > 1 ? "es" : ""} de descuento
+            </p>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 shrink-0"
+            onClick={onRemove}
+            aria-label="Quitar promoción"
+          >
             <X className="w-4 h-4" />
           </Button>
         </div>
