@@ -1,31 +1,25 @@
-import { Share2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useBrandProgress } from "@/components/BrandProgressBar";
 import { formatPrice } from "@/lib/formatting";
 
 interface Props {
   brandSlug: string;
   brandName: string;
-  onShare: () => void;
 }
 
 /**
- * Шапка бренд-блока в листе ожидания: имя марки + кнопка шаринга колекты
- * + общий прогресс-бар сбора с «Faltan $X para Súper-Precio».
+ * Шапка бренд-блока в листе ожидания: имя марки и общий прогресс-бар сбора
+ * на одной строке; ниже — «Faltan $X para Súper-Precio» + призыв поделиться.
  */
-export const BrandGroupHeader = ({ brandSlug, brandName, onShare }: Props) => {
+export const BrandGroupHeader = ({ brandSlug, brandName }: Props) => {
   const { collected, target, pct, reached } = useBrandProgress(brandSlug);
   return (
     <div className="mb-3">
-      <div className="flex items-center justify-between gap-2 mb-2">
-        <h2 className="text-base font-bold uppercase tracking-wider text-primary">{brandName}</h2>
-        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onShare}>
-          <Share2 className="w-4 h-4" />
-        </Button>
-      </div>
-      {target > 0 && (
-        <div>
-          <div className="relative h-3.5 bg-muted rounded-full overflow-hidden">
+      <div className="flex items-center gap-3 mb-2">
+        <h2 className="text-base font-bold uppercase tracking-wider text-primary whitespace-nowrap">
+          {brandName}
+        </h2>
+        {target > 0 && (
+          <div className="relative h-3.5 flex-1 bg-muted rounded-full overflow-hidden">
             <div
               className="absolute top-0 left-0 h-full rounded-full transition-all duration-1000"
               style={{
@@ -35,17 +29,30 @@ export const BrandGroupHeader = ({ brandSlug, brandName, onShare }: Props) => {
               }}
             />
           </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            {reached ? (
-              <span className="font-semibold text-primary">¡Meta alcanzada! Súper-Precio activo</span>
-            ) : (
-              <>
-                Faltan <span className="font-semibold text-primary">{formatPrice(target - collected)}</span> para Súper-Precio
-              </>
-            )}
+        )}
+      </div>
+      {target > 0 &&
+        (reached ? (
+          <p className="text-sm font-bold text-primary">
+            ¡Meta alcanzada! Súper-Precio activo
           </p>
-        </div>
-      )}
+        ) : (
+          <div className="leading-snug">
+            <p className="text-sm font-semibold text-foreground">
+              Faltan{" "}
+              <span className="font-extrabold text-primary">
+                {formatPrice(target - collected)}
+              </span>{" "}
+              para Súper-Precio
+            </p>
+            <p
+              className="text-xs font-semibold mt-0.5"
+              style={{ color: "hsl(var(--group-buy-accent-foreground))" }}
+            >
+              Compartí y llevate un descuento
+            </p>
+          </div>
+        ))}
     </div>
   );
 };

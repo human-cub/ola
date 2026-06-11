@@ -142,29 +142,6 @@ const WaitingList = () => {
     return undefined;
   }, [syncPendingOrderPrices]);
 
-  const handleShare = (productId: string, productName: string) => {
-    const info = priceMap.get(productId);
-    const link = `${window.location.origin}${info ? `/productos/${info.urlSlug}` : ""}`;
-    const text = `¡Sumate a la compra colectiva de ${productName}! Seamos más, pagamos menos. ${link}`;
-    if (navigator.share) {
-      navigator.share({ title: productName, text, url: link });
-    } else {
-      navigator.clipboard.writeText(text);
-      toast.success("Enlace copiado al portapapeles");
-    }
-  };
-
-  const handleShareBrand = (slug: string, name: string) => {
-    const link = `${window.location.origin}/marcas/${slug}`;
-    const text = `¡Sumate a la colecta de ${name} en Ola! Cuanto más juntamos, más barato pagamos. ${link}`;
-    if (navigator.share) {
-      navigator.share({ title: name, text, url: link });
-    } else {
-      navigator.clipboard.writeText(text);
-      toast.success("Enlace copiado al portapapeles");
-    }
-  };
-
   const handleQuantityChange = async (id: string, delta: number, currentQty: number) => {
     const newQty = currentQty + delta;
     if (newQty >= 1 && newQty <= 99) {
@@ -297,7 +274,6 @@ const WaitingList = () => {
                       <BrandGroupHeader
                         brandSlug={group.brandSlug}
                         brandName={group.brandName ?? group.brandSlug}
-                        onShare={() => handleShareBrand(group.brandSlug!, group.brandName ?? group.brandSlug!)}
                       />
                     )}
                     {group.items.map((item, index) => {
@@ -318,7 +294,6 @@ const WaitingList = () => {
                             isCollectionEnded={isCollectionEnded}
                             onQuantityChange={handleQuantityChange}
                             onDelete={() => setDeleteGroup({ productName: item.productName, itemIds: item.itemIds })}
-                            onShare={() => handleShare(item.productId, item.productName)}
                           />
                           {index < group.items.length - 1 && <Separator />}
                         </div>
