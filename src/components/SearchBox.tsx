@@ -360,7 +360,7 @@ export const SearchBox = ({ className, autoFocus }: SearchBoxProps) => {
                     active === i ? "bg-muted" : "hover:bg-muted/60"
                   }`}
                 >
-                  <div className="w-10 h-10 shrink-0 rounded-md bg-muted/40 overflow-hidden flex items-center justify-center">
+                  <div className="w-10 h-10 shrink-0 rounded-md bg-white overflow-hidden flex items-center justify-center">
                     {row.image ? (
                       <img
                         src={row.image}

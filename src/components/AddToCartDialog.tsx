@@ -324,7 +324,7 @@ export const AddToCartDialog = ({
             {/* Product Info */}
             <div className="flex gap-4 items-center">
               {effImage && (
-                <div className="w-24 h-24 bg-muted rounded-md overflow-hidden shrink-0">
+                <div className="w-24 h-24 bg-white rounded-md overflow-hidden shrink-0">
                   <img
                     src={effImage}
                     alt={productName}
