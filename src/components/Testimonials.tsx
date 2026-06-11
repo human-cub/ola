@@ -137,7 +137,7 @@ export const Testimonials = () => {
             {testimonials.map((t, i) => (
               <CarouselItem
                 key={i}
-                className="pl-5 basis-full md:basis-1/2 lg:basis-1/3"
+                className="pl-5 basis-full md:basis-1/2 lg:basis-1/3 aspect-auto overflow-visible"
               >
                 <div className="relative flex flex-col bg-background rounded-2xl shadow-floating">
                   {/* Avatar */}
