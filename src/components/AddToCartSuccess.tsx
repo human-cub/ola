@@ -204,9 +204,9 @@ export const GroupAddSuccess = ({
               amplitude.track("Whatsapp Opened", { source: "add_to_cart_success", product_name: productName });
               window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, "_blank");
             }}
-            className="w-full py-2.5 border-[#25D366] text-[#25D366] hover:bg-[#25D366]/10 hover:text-[#25D366]"
+            className="w-full py-2.5 border-[#25D366] hover:bg-[#25D366]/10"
           >
-            <WhatsAppIcon className="h-4 w-4" />
+            <WhatsAppIcon className="h-4 w-4 text-[#25D366]" />
             <span>Compartir por WhatsApp</span>
           </Button>
 
