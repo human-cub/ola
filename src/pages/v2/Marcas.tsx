@@ -21,7 +21,7 @@ const MarcasV2 = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header isVisible={headerVisible} />
-      <main className="pb-[24px] pt-[120px] sm:pt-[104px]">
+      <main className="pb-[24px] pt-[112px] sm:pt-[64px]">
         <Breadcrumb items={[{ label: "Marcas" }]} />
         <div className="container mx-auto px-4 py-8">
           <h1 className="text-2xl md:text-3xl font-bold text-center mb-2 bg-gradient-primary bg-clip-text text-transparent">
