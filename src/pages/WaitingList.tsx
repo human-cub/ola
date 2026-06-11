@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { WaitingListProductItem } from "@/components/WaitingListProductItem";
+import { ProductLineItem } from "@/components/ProductLineItem";
 import { BrandGroupHeader } from "@/components/waiting-list/BrandGroupHeader";
 import { useScrollHeader } from "@/hooks/useScrollHeader";
 import { useCollectiveCountdown } from "@/hooks/useCollectiveCountdown";
@@ -288,7 +288,7 @@ const WaitingList = () => {
                       const dynamicPrice = getCurrentPrice(item.productId) || fallbackPrice;
                       return (
                         <div key={item.productId}>
-                          <WaitingListProductItem
+                          <ProductLineItem
                             id={item.productId}
                             productName={item.productName}
                             productImage={item.productImage}

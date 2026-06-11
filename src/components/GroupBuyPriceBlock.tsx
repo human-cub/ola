@@ -361,7 +361,7 @@ export const GroupBuyPriceBlock = ({
                   />
                   {goalReachedVisual ? (
                     <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-white whitespace-nowrap">
-                      ¡Meta alcanzada! 🎉
+                      ¡Meta alcanzada!
                     </span>
                   ) : (
                     collectedDisplay > 0 && (
