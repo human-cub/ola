@@ -83,7 +83,11 @@ const WaitingList = () => {
     }>();
 
     waitingListItems.forEach((item) => {
-      const existing = grouped.get(item.product_id);
+      // Agrupar todas las variantes de sabor del mismo producto en un solo
+      // bloque: cada sabor es un product_id distinto (esquema SKU -V2/-V3) pero
+      // comparten urlSlug, así que agrupamos por urlSlug.
+      const groupKey = priceMap.get(item.product_id)?.urlSlug ?? item.product_id;
+      const existing = grouped.get(groupKey);
 
       if (existing) {
         existing.itemIds.push(item.id);
@@ -96,7 +100,7 @@ const WaitingList = () => {
         return;
       }
 
-      grouped.set(item.product_id, {
+      grouped.set(groupKey, {
         productId: item.product_id,
         productName: item.product_name,
         productImage: item.product_image,
@@ -113,7 +117,7 @@ const WaitingList = () => {
     });
 
     return Array.from(grouped.values());
-  }, [waitingListItems]);
+  }, [waitingListItems, priceMap]);
 
   const brandGroups = useMemo(() => {
     type Group = {
@@ -271,7 +275,7 @@ const WaitingList = () => {
             <>
               <div className="mb-6 space-y-4">
                 {brandGroups.map((group) => (
-                  <div key={group.key} className="rounded-2xl border bg-card px-4 sm:px-5 py-4">
+                  <div key={group.key} className="rounded-xl border bg-card px-4 sm:px-5 py-4">
                     {group.brandSlug && (
                       <BrandGroupHeader
                         brandSlug={group.brandSlug}
