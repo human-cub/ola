@@ -9,6 +9,7 @@ interface Stats {
   referred_signups: number;
   unique_clicks: number;
   purchasers: number;
+  rewarded: number;
   k_factor: number | string;
 }
 
@@ -67,17 +68,19 @@ const ViralStats = () => {
           </span>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
           <Cell label="Usuarios totales" value={s.total_users} />
           <Cell label="Clics únicos (IP)" value={s.unique_clicks} sub={`${invitesPerUser.toFixed(2)} por usuario`} />
           <Cell label="Registros por referido" value={s.referred_signups} sub={`${s.referrers} referidores`} />
           <Cell label="Compraron" value={s.purchasers} />
+          <Cell label="Premios otorgados" value={s.rewarded} />
         </div>
 
         <div className="text-sm text-muted-foreground">
           Embudo: <strong>{s.unique_clicks}</strong> clics →{" "}
           <strong>{s.referred_signups}</strong> registros ({pct(s.referred_signups, s.unique_clicks)}) →{" "}
-          <strong>{s.purchasers}</strong> compraron ({pct(s.purchasers, s.referred_signups)}).
+          <strong>{s.purchasers}</strong> compraron ({pct(s.purchasers, s.referred_signups)}) ·{" "}
+          <strong>{s.rewarded}</strong> premios otorgados.
         </div>
       </CardContent>
     </Card>
