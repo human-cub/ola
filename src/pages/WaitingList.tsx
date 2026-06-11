@@ -141,7 +141,6 @@ const WaitingList = () => {
     return groups;
   }, [groupedWaitingListItems, priceMap]);
 
-  const displayedProductCount = groupedWaitingListItems.length;
   useEffect(() => {
     void syncPendingOrderPrices();
 
@@ -253,9 +252,6 @@ const WaitingList = () => {
                 <span className="text-primary text-lg font-medium">— ¡Ya participás! 🎉</span>
               )}
             </h1>
-            <p className="text-muted-foreground">
-              {displayedProductCount} {displayedProductCount === 1 ? "producto" : "productos"}
-            </p>
           </div>
 
           <CountdownBanner isCollectionEnded={isCollectionEnded} timeLeft={timeLeft} />
