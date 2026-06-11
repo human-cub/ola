@@ -271,7 +271,7 @@ const WaitingList = () => {
             <>
               <div className="mb-6 space-y-4">
                 {brandGroups.map((group) => (
-                  <div key={group.key} className="rounded-xl border bg-card px-4 sm:px-5 py-4">
+                  <div key={group.key} className="rounded-xl border border-primary bg-card px-4 sm:px-5 py-4">
                     {group.brandSlug && (
                       <BrandGroupHeader
                         brandSlug={group.brandSlug}
