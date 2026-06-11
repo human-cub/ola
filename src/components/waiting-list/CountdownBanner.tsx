@@ -51,7 +51,7 @@ export const CountdownBanner = ({ isCollectionEnded, timeLeft }: CountdownBanner
         </div>
       </div>
       <p className="text-center text-sm mt-2 opacity-90">
-        El pedido se cerrará el domingo a las 23:59
+        El pedido cierra el domingo a las 23:59
       </p>
     </div>
   );

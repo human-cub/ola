@@ -73,10 +73,6 @@ export const WaitingListActions = ({
         {isMovingToCart ? "Moviendo al carrito..." : `Comprar ahora ${formatPrice(buyNowTotal)}`}
       </Button>
 
-      <p className="text-sm text-center text-muted-foreground">
-        Tu lista se guardará hasta que se cierre la compra colectiva el domingo a las 23:59
-      </p>
-
       <Separator className="my-4" />
       <ShareBlock />
     </div>
