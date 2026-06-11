@@ -8,7 +8,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Check, FileText } from "lucide-react";
-import { ShareButtons } from "@/components/ShareButtons";
+import { ShareIconButtons } from "@/components/ShareIconButtons";
 import { formatPrice } from "@/lib/formatting";
 
 interface CheckoutSuccessDialogProps {
@@ -34,7 +34,7 @@ export const CheckoutSuccessDialog = ({
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="rounded-2xl max-w-[90vw] sm:max-w-md">
+      <AlertDialogContent className="rounded-2xl max-w-[90vw] sm:max-w-md max-h-[90dvh] overflow-y-auto">
         <AlertDialogHeader>
           <AlertDialogTitle className="text-center">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 flex items-center justify-center">
@@ -71,10 +71,12 @@ export const CheckoutSuccessDialog = ({
           <p className="text-sm font-semibold text-primary text-center mb-1">
             ¡Seguí ahorrando!
           </p>
-          <p className="text-sm text-center text-muted-foreground mb-4">
+          <p className="text-sm text-center text-muted-foreground mb-3">
             Compartí Ola con tus amigos y obtené un descuento en tu próximo pedido 🎉
           </p>
-          <ShareButtons source="checkout_success" />
+          <div className="flex justify-center">
+            <ShareIconButtons source="checkout_success" showCopyLink />
+          </div>
         </div>
 
         <div className="flex flex-col gap-2 pt-2">
