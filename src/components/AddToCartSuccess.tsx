@@ -161,7 +161,7 @@ export const GroupAddSuccess = ({
         <p className="text-sm font-semibold text-primary text-center">
           Invitá a un amigo y los dos obtienen el Súper-Precio
         </p>
-        <ShareIconButtons source="group_add_success" />
+        <ShareIconButtons source="group_add_success" showCopyLink />
       </div>
     </div>
   );
