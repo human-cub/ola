@@ -197,12 +197,12 @@ const Profile = () => {
           {showInvite && (
             <TabsContent value="invite">
               <div className="rounded-lg border border-primary/20 bg-gradient-primary/10 p-4">
-                <p className="text-sm font-semibold text-primary mb-1">Tu link de invitación</p>
-                <p className="text-xs text-muted-foreground mb-3">
+                <p className="text-base font-semibold text-primary mb-1">Tu link de invitación</p>
+                <p className="text-sm text-muted-foreground mb-3">
                   Invitá amigos: cuando se suman a un grupo, todos pagamos menos.
                 </p>
                 <div className="flex items-center gap-2 mb-4">
-                  <code className="flex-1 truncate rounded bg-background/60 px-3 py-2 text-xs">{refLink}</code>
+                  <code className="flex-1 truncate rounded bg-background/60 px-3 py-2 text-sm">{refLink}</code>
                   <Button
                     size="sm"
                     variant="outline"
