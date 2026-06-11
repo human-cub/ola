@@ -382,11 +382,13 @@ export const AddToCartDialog = ({
             {/* Quantity Selector */}
             <div className="space-y-2">
               <Label>Cantidad</Label>
-              <QuantityStepper
-                quantity={quantity}
-                onMinus={() => handleQuantityChange(-1)}
-                onPlus={() => handleQuantityChange(1)}
-              />
+              <div>
+                <QuantityStepper
+                  quantity={quantity}
+                  onMinus={() => handleQuantityChange(-1)}
+                  onPlus={() => handleQuantityChange(1)}
+                />
+              </div>
             </div>
 
             {/* Price Summary */}
