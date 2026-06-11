@@ -25,6 +25,40 @@ interface WaitingListProductItemProps {
   onDelete: (id: string) => void;
 }
 
+const Stepper = ({
+  quantity,
+  onMinus,
+  onPlus,
+}: {
+  quantity: number;
+  onMinus: () => void;
+  onPlus: () => void;
+}) => (
+  <div className="flex items-center rounded-md border border-input flex-shrink-0 overflow-hidden">
+    <button
+      type="button"
+      className="h-8 px-3 flex items-center justify-center text-muted-foreground hover:bg-muted disabled:opacity-40 disabled:hover:bg-transparent"
+      onClick={onMinus}
+      disabled={quantity <= 1}
+      aria-label="Restar"
+    >
+      <Minus className="w-3.5 h-3.5" />
+    </button>
+    <span className="w-9 text-center font-semibold text-sm border-x border-input leading-8">
+      {quantity}
+    </span>
+    <button
+      type="button"
+      className="h-8 px-3 flex items-center justify-center text-muted-foreground hover:bg-muted disabled:opacity-40 disabled:hover:bg-transparent"
+      onClick={onPlus}
+      disabled={quantity >= 99}
+      aria-label="Sumar"
+    >
+      <Plus className="w-3.5 h-3.5" />
+    </button>
+  </div>
+);
+
 export const WaitingListProductItem = ({
   id,
   productName,
@@ -40,106 +74,85 @@ export const WaitingListProductItem = ({
   onDelete,
 }: WaitingListProductItemProps) => {
   const showRetail = retailPerUnit > pricePerUnit;
-  const multipleFlavors = flavorEntries.length > 1;
+  const showUnitPrice = flavorEntries.length > 1 || totalQuantity > 1;
 
   return (
-    <div className="flex gap-3.5 py-4">
-      {/* Imagen */}
-      <Link to={productLink} className="flex-shrink-0">
-        <div className="w-24 h-24 rounded-md overflow-hidden bg-muted">
-          {productImage && (
-            <img
-              src={productImage}
-              alt={productName}
-              className="w-full h-full object-contain"
-              loading="lazy"
-              decoding="async"
-            />
+    <div className="py-4">
+      {/* Fila superior: imagen + nombre/tamaño + eliminar */}
+      <div className="flex items-center gap-3">
+        <Link to={productLink} className="flex-shrink-0">
+          <div className="w-24 h-24 rounded-md overflow-hidden bg-muted">
+            {productImage && (
+              <img
+                src={productImage}
+                alt={productName}
+                className="w-full h-full object-contain"
+                loading="lazy"
+                decoding="async"
+              />
+            )}
+          </div>
+        </Link>
+
+        <Link to={productLink} className="hover:underline flex-1 min-w-0">
+          <h3 className="font-semibold text-base leading-snug line-clamp-2">
+            {productName}
+          </h3>
+          {productSize && (
+            <p className="text-sm text-muted-foreground mt-0.5">{productSize}</p>
           )}
-        </div>
-      </Link>
+        </Link>
 
-      {/* Contenido */}
-      <div className="flex-1 min-w-0 flex flex-col">
-        {/* Nombre + tamaño + eliminar */}
-        <div className="flex justify-between items-start gap-2">
-          <Link to={productLink} className="hover:underline flex-1 min-w-0">
-            <h3 className="font-semibold text-base leading-snug line-clamp-2">
-              {productName}
-            </h3>
-            {productSize && (
-              <p className="text-sm text-muted-foreground mt-0.5">{productSize}</p>
-            )}
-          </Link>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 flex-shrink-0 rounded-md"
-            onClick={() => onDelete(id)}
-            aria-label="Eliminar"
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
-        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 flex-shrink-0 rounded-md self-start"
+          onClick={() => onDelete(id)}
+          aria-label="Eliminar"
+        >
+          <Trash2 className="w-4 h-4" />
+        </Button>
+      </div>
 
-        {/* Sabores con su contador */}
-        {flavorEntries.length > 0 && (
-          <div className="mt-2.5 space-y-2">
-            {flavorEntries.map((entry) => (
-              <div key={entry.id} className="flex items-center justify-between gap-3">
-                <p className="text-sm text-muted-foreground truncate min-w-0">
-                  {entry.flavor || "Sin sabor"}
-                </p>
-                <div className="flex items-center rounded-md border border-input flex-shrink-0 overflow-hidden">
-                  <button
-                    type="button"
-                    className="h-8 px-2.5 flex items-center justify-center text-muted-foreground hover:bg-muted disabled:opacity-40 disabled:hover:bg-transparent"
-                    onClick={() => onQuantityChange(entry.id, -1, entry.quantity)}
-                    disabled={entry.quantity <= 1}
-                    aria-label="Restar"
-                  >
-                    <Minus className="w-3.5 h-3.5" />
-                  </button>
-                  <span className="w-8 text-center font-semibold text-sm border-x border-input leading-8">
-                    {entry.quantity}
-                  </span>
-                  <button
-                    type="button"
-                    className="h-8 px-2.5 flex items-center justify-center text-muted-foreground hover:bg-muted disabled:opacity-40 disabled:hover:bg-transparent"
-                    onClick={() => onQuantityChange(entry.id, 1, entry.quantity)}
-                    disabled={entry.quantity >= 99}
-                    aria-label="Sumar"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Pie: total + precio (retail tachado + total actual + c/u si hay más de una unidad) */}
-        <div className="mt-3 pt-3 border-t flex items-end justify-between gap-3">
-          <span className="text-sm text-muted-foreground whitespace-nowrap">
-            {totalQuantity} {totalQuantity === 1 ? "unidad" : "unidades"}
-          </span>
-          <div className="text-right leading-tight">
-            <div>
-              {showRetail && (
-                <span className="line-through text-muted-foreground text-xs mr-1.5">
-                  {formatPrice(retailPerUnit * totalQuantity)}
-                </span>
-              )}
-              <span className="font-bold text-base">
-                {formatPrice(pricePerUnit * totalQuantity)}
-              </span>
+      {/* Sabores (ancho completo): nombre del sabor + su contador */}
+      {flavorEntries.length > 0 && (
+        <div className="mt-3 space-y-2">
+          {flavorEntries.map((entry) => (
+            <div key={entry.id} className="flex items-center justify-between gap-3">
+              <p className="text-sm text-foreground truncate min-w-0 flex-1">
+                {entry.flavor || "Sin sabor"}
+              </p>
+              <Stepper
+                quantity={entry.quantity}
+                onMinus={() => onQuantityChange(entry.id, -1, entry.quantity)}
+                onPlus={() => onQuantityChange(entry.id, 1, entry.quantity)}
+              />
             </div>
-            {(multipleFlavors || totalQuantity > 1) && (
-              <div className="text-xs text-muted-foreground mt-0.5">
-                {formatPrice(pricePerUnit)} c/u
-              </div>
+          ))}
+        </div>
+      )}
+
+      {/* Pie (ancho completo): total + precio */}
+      <div className="mt-3 pt-3 border-t flex items-end justify-between gap-3">
+        <span className="text-sm text-muted-foreground whitespace-nowrap">
+          {totalQuantity} {totalQuantity === 1 ? "unidad" : "unidades"}
+        </span>
+        <div className="text-right">
+          <div>
+            {showRetail && (
+              <span className="line-through text-muted-foreground text-sm mr-2">
+                {formatPrice(retailPerUnit * totalQuantity)}
+              </span>
             )}
+            <span className="font-bold text-base">
+              {formatPrice(pricePerUnit * totalQuantity)}
+            </span>
           </div>
+          {showUnitPrice && (
+            <div className="text-xs text-muted-foreground mt-0.5">
+              {formatPrice(pricePerUnit)} c/u
+            </div>
+          )}
         </div>
       </div>
     </div>
