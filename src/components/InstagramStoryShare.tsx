@@ -133,8 +133,8 @@ const drawStory = async (brands: StoryBrand[]): Promise<Blob> => {
 
   ctx.fillStyle = "rgba(255,255,255,0.92)";
   ctx.font = `600 42px ${sans}`;
-  ctx.fillText("Registrate con mi enlace y conseguí", W / 2, pillY + 200);
-  ctx.fillText("el Súper-Precio en tu primer pedido", W / 2, pillY + 260);
+  ctx.fillText("Sumate a una compra grupal con mi", W / 2, pillY + 200);
+  ctx.fillText("enlace y conseguí el Súper-Precio", W / 2, pillY + 260);
 
   return new Promise((resolve, reject) =>
     canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("toBlob"))), "image/png"),

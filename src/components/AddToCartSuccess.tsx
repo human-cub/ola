@@ -70,7 +70,7 @@ export const GroupAddSuccess = ({
 }: GroupSuccessProps) => {
   const { data: refLink } = useReferralLink();
   const shareLink = refLink ?? FALLBACK_LINK;
-  const shareText = `Ola! Compras Grupales. Registrate con mi enlace y conseguí el Súper-Precio en tu primer pedido ${shareLink}`;
+  const shareText = `Ola! Compras Grupales. Sumate a una compra grupal con mi enlace y conseguí el Súper-Precio. ${shareLink}`;
 
   const newCollected = prevCollected + addedAmount;
   const prevPct = target > 0 ? Math.min(100, (prevCollected / target) * 100) : 0;
