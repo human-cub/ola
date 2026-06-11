@@ -120,6 +120,7 @@ export const ProductQuickActions = ({ product }: { product: CatalogProduct }) =>
           productId={first.productId}
           productName={product.name}
           productImage={first.images[0] ?? product.images[0] ?? null}
+          productSize={product.size}
           flavors={[]}
           prices={buildLegacyPriceTiers(first)}
           isWaitingList={isWaitingList}

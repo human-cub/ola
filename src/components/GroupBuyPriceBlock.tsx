@@ -28,6 +28,8 @@ interface GroupBuyPriceBlockProps {
   productName: string;
   productId: string;
   productImage?: string | null;
+  /** Tamaño/presentación — se muestra en el popup de agregar */
+  productSize?: string | null;
   flavors?: string[];
   priceData: PriceData[];
   waitingCount?: number;
@@ -216,6 +218,7 @@ export const GroupBuyPriceBlock = ({
   productName,
   productId,
   productImage = null,
+  productSize = null,
   flavors = [],
   priceData = [],
   waitingCount = 0,
@@ -458,6 +461,7 @@ export const GroupBuyPriceBlock = ({
         productId={productId}
         productName={productName}
         productImage={productImage}
+        productSize={productSize}
         flavors={flavors}
         prices={priceData}
         isWaitingList={isWaitingList}

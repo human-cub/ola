@@ -48,6 +48,8 @@ interface AddToCartDialogProps {
   productId: string;
   productName: string;
   productImage: string | null;
+  /** Tamaño/presentación (peso, volumen, unidades) — se muestra bajo el nombre */
+  productSize?: string | null;
   flavors: string[];
   prices: PriceData[];
   isWaitingList: boolean;
@@ -67,6 +69,7 @@ export const AddToCartDialog = ({
   productId,
   productName,
   productImage,
+  productSize = null,
   flavors,
   prices,
   isWaitingList,
@@ -305,6 +308,7 @@ export const AddToCartDialog = ({
               productName={productName}
               productImage={effImage}
               flavor={selectedFlavor === FLAVORLESS_KEY ? null : selectedFlavor || null}
+              size={productSize}
               quantity={quantity}
               unitPrice={pricePerUnit}
               onGoToCart={() => {
@@ -329,21 +333,24 @@ export const AddToCartDialog = ({
                   />
                 </div>
               )}
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-base leading-[1.2]">{productName}</h3>
-                <div className="flex items-baseline gap-2 mt-1 flex-wrap">
-                  <span
-                    className={`text-2xl font-bold leading-none ${isWaitingList ? "text-primary" : "text-foreground"}`}
-                  >
-                    {formatPrice(pricePerUnit)}
-                  </span>
-                  <span className="text-xs text-muted-foreground">c/u</span>
-                  {(effPrices[0]?.price ?? 0) > pricePerUnit && (
-                    <span className="text-xs text-muted-foreground/70 line-through">
-                      {formatPrice(effPrices[0].price)}
-                    </span>
-                  )}
-                </div>
+                {productSize && (
+                  <p className="text-sm text-muted-foreground mt-0.5">{productSize}</p>
+                )}
+              </div>
+              <div className="text-right shrink-0">
+                <p
+                  className={`text-lg font-bold leading-none ${isWaitingList ? "text-primary" : "text-foreground"}`}
+                >
+                  {formatPrice(pricePerUnit)}
+                </p>
+                {(effPrices[0]?.price ?? 0) > pricePerUnit && (
+                  <p className="text-xs text-muted-foreground/70 line-through mt-1">
+                    {formatPrice(effPrices[0].price)}
+                  </p>
+                )}
+                <p className="text-[11px] text-muted-foreground mt-0.5">c/u</p>
               </div>
             </div>
 

@@ -208,6 +208,7 @@ const ProductoV2 = () => {
                   productName={product.name}
                   productId={selectedVariant.productId}
                   productImage={images[0] ?? null}
+                  productSize={product.size}
                   flavors={allFlavors}
                   preselectedFlavor={selectedVariant.flavor}
                   variantOptions={variantOptions}

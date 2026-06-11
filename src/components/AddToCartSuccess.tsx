@@ -176,11 +176,8 @@ export const GroupAddSuccess = ({
 
       {/* Compartir */}
       <div className="w-full bg-gradient-primary/10 rounded-xl p-4 border border-primary/20 mt-1">
-        <p className="text-sm font-semibold text-primary text-center mb-1">
+        <p className="text-sm font-semibold text-primary text-center mb-4">
           Invitá a un amigo y los dos obtienen el Súper-Precio
-        </p>
-        <p className="text-sm text-center text-muted-foreground mb-4">
-          Compartí y desbloqueá el Súper-Precio
         </p>
         <div className="flex flex-col gap-2">
           <Button
@@ -207,7 +204,7 @@ export const GroupAddSuccess = ({
               amplitude.track("Whatsapp Opened", { source: "add_to_cart_success", product_name: productName });
               window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, "_blank");
             }}
-            className="w-full py-2.5"
+            className="w-full py-2.5 border-[#25D366] text-[#25D366] hover:bg-[#25D366]/10 hover:text-[#25D366]"
           >
             <WhatsAppIcon className="h-4 w-4" />
             <span>Compartir por WhatsApp</span>
@@ -249,6 +246,7 @@ interface CartSuccessProps {
   productName: string;
   productImage: string | null;
   flavor: string | null;
+  size?: string | null;
   quantity: number;
   unitPrice: number;
   onGoToCart: () => void;
@@ -259,6 +257,7 @@ export const CartAddSuccess = ({
   productName,
   productImage,
   flavor,
+  size = null,
   quantity,
   unitPrice,
   onGoToCart,
@@ -279,8 +278,9 @@ export const CartAddSuccess = ({
       <div className="flex-1 min-w-0">
         <p className="font-semibold text-sm leading-tight line-clamp-2">{productName}</p>
         <p className="text-xs text-muted-foreground mt-0.5">
-          {flavor ? `${flavor} · ` : ""}
-          {quantity} × {formatPrice(unitPrice)}
+          {[flavor, size, quantity > 1 ? `×${quantity}` : null]
+            .filter(Boolean)
+            .join(" · ")}
         </p>
       </div>
       <span className="font-bold text-base text-primary whitespace-nowrap">
