@@ -7,9 +7,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Check, Share2, MessageCircle, FileText } from "lucide-react";
-import * as amplitude from "@amplitude/analytics-browser";
-import { toast } from "sonner";
+import { Check, FileText } from "lucide-react";
+import { ShareButtons } from "@/components/ShareButtons";
 import { formatPrice } from "@/lib/formatting";
 
 interface CheckoutSuccessDialogProps {
@@ -22,8 +21,6 @@ interface CheckoutSuccessDialogProps {
   addressSummary: string;
 }
 
-const SHARE_TEXT = 'Mirá - descuentos increíbles de suplementos 🎉 Podés comprar ahora con 20% de descuento o esperar y pagar aún menos 🤑 https://alaola.com.ar/';
-
 export const CheckoutSuccessDialog = ({
   open,
   onOpenChange,
@@ -34,28 +31,6 @@ export const CheckoutSuccessDialog = ({
   addressSummary,
 }: CheckoutSuccessDialogProps) => {
   const navigate = useNavigate();
-
-  const handleNativeShare = async () => {
-    amplitude.track('Referral Shared', { method: 'native', source: 'checkout_success' });
-    if (navigator.share) {
-      try {
-        await navigator.share({ text: SHARE_TEXT });
-      } catch (error) {
-        if ((error as Error).name !== 'AbortError') {
-          navigator.clipboard.writeText(SHARE_TEXT);
-          toast.success("¡Texto copiado!");
-        }
-      }
-    } else {
-      navigator.clipboard.writeText(SHARE_TEXT);
-      toast.success("¡Texto copiado!");
-    }
-  };
-
-  const handleWhatsAppShare = () => {
-    amplitude.track('Referral Shared', { method: 'whatsapp', source: 'checkout_success' });
-    window.open(`https://wa.me/?text=${encodeURIComponent(SHARE_TEXT)}`, '_blank');
-  };
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -68,44 +43,41 @@ export const CheckoutSuccessDialog = ({
             ¡Pedido confirmado!
           </AlertDialogTitle>
           <AlertDialogDescription className="text-center space-y-4">
-            <p>Tu pedido ha sido registrado exitosamente</p>
-            <p className="text-xl font-bold text-foreground">Pedido #{orderNumber}</p>
-            <p className="text-sm">
+            <span className="block">Tu pedido ha sido registrado exitosamente</span>
+            <span className="block text-xl font-bold text-foreground">Pedido #{orderNumber}</span>
+            <span className="block text-sm">
               Nos pondremos en contacto en las próximas horas para confirmar los detalles.
-            </p>
+            </span>
 
-            <div className="bg-muted rounded-lg p-4 text-left text-sm space-y-1">
-              <div className="flex justify-between">
+            <span className="block bg-muted rounded-lg p-4 text-left text-sm space-y-1">
+              <span className="flex justify-between">
                 <span>Total:</span>
                 <span className="font-bold">{formatPrice(total)}</span>
-              </div>
-              <div className="flex justify-between">
+              </span>
+              <span className="flex justify-between">
                 <span>Forma de pago:</span>
                 <span className="capitalize">{paymentMethod}</span>
-              </div>
-              <div className="flex justify-between">
+              </span>
+              <span className="flex justify-between">
                 <span>Dirección:</span>
                 <span className="text-right text-xs">{addressSummary}</span>
-              </div>
-            </div>
-
-            <div className="pt-4 border-t">
-              <p className="font-semibold mb-3">¡Comparte con tus amigos!</p>
-              <div className="flex gap-2 justify-center">
-                <Button variant="outline" size="sm" onClick={handleNativeShare}>
-                  <Share2 className="w-4 h-4 mr-1" />
-                  Compartir
-                </Button>
-                <Button variant="outline" size="sm" onClick={handleWhatsAppShare}>
-                  <MessageCircle className="w-4 h-4 mr-1" />
-                  WhatsApp
-                </Button>
-              </div>
-            </div>
+              </span>
+            </span>
           </AlertDialogDescription>
         </AlertDialogHeader>
 
-        <div className="flex flex-col gap-2 pt-4">
+        {/* Compartir / referir: set completo, igual que en el resto del sitio */}
+        <div className="rounded-xl bg-gradient-primary/10 border border-primary/20 p-4">
+          <p className="text-sm font-semibold text-primary text-center mb-1">
+            ¡Seguí ahorrando!
+          </p>
+          <p className="text-sm text-center text-muted-foreground mb-4">
+            Compartí Ola con tus amigos y obtené un descuento en tu próximo pedido 🎉
+          </p>
+          <ShareButtons source="checkout_success" />
+        </div>
+
+        <div className="flex flex-col gap-2 pt-2">
           <Button onClick={() => navigate(`/mi-cuenta/pedidos/${orderId}`)} className="w-full">
             <FileText className="w-4 h-4 mr-2" />
             Ver comprobante
