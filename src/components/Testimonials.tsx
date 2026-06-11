@@ -45,6 +45,7 @@ const testimonials: Testimonial[] = [
     name: "Javier",
     quote:
       "Todo de 10. Volvería a comprar. Me contacté, me lo dejaron en la puerta de casa, en el día",
+    avatar: "/testimonial-javier.webp",
   },
   {
     name: "Felipe",
