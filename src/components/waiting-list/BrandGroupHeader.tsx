@@ -1,4 +1,5 @@
 import { useBrandProgress } from "@/components/BrandProgressBar";
+import { ShareIconButtons } from "@/components/ShareIconButtons";
 import { formatPrice } from "@/lib/formatting";
 
 interface Props {
@@ -7,8 +8,9 @@ interface Props {
 }
 
 /**
- * Шапка бренд-блока в листе ожидания: имя марки и общий прогресс-бар сбора
- * на одной строке; ниже — «Faltan $X para Súper-Precio» + призыв поделиться.
+ * Шапка бренд-блока в листе ожидания: имя марки и прогресс-бар сбора на одной
+ * строке; ниже — «Faltan $X para Súper-Precio. Compartí y llevate un descuento»
+ * в одну строку с кнопками шаринга, прижатыми вправо.
  */
 export const BrandGroupHeader = ({ brandSlug, brandName }: Props) => {
   const { collected, target, pct, reached } = useBrandProgress(brandSlug);
@@ -31,28 +33,32 @@ export const BrandGroupHeader = ({ brandSlug, brandName }: Props) => {
           </div>
         )}
       </div>
-      {target > 0 &&
-        (reached ? (
-          <p className="text-sm font-bold text-primary">
-            ¡Meta alcanzada! Súper-Precio activo
-          </p>
-        ) : (
-          <div className="leading-snug">
-            <p className="text-sm font-semibold text-foreground">
-              Faltan{" "}
-              <span className="font-extrabold text-primary">
-                {formatPrice(target - collected)}
+      {target > 0 && (
+        <div className="flex items-center justify-between gap-2">
+          {reached ? (
+            <p className="text-sm font-bold text-primary leading-snug">
+              ¡Meta alcanzada! Súper-Precio activo
+            </p>
+          ) : (
+            <p className="text-sm leading-snug">
+              <span className="font-semibold text-foreground">
+                Faltan{" "}
+                <span className="font-extrabold text-primary">
+                  {formatPrice(target - collected)}
+                </span>{" "}
+                para Súper-Precio.
               </span>{" "}
-              para Súper-Precio
+              <span
+                className="font-semibold"
+                style={{ color: "hsl(var(--group-buy-accent-foreground))" }}
+              >
+                Compartí y llevate un descuento
+              </span>
             </p>
-            <p
-              className="text-xs font-semibold mt-0.5"
-              style={{ color: "hsl(var(--group-buy-accent-foreground))" }}
-            >
-              Compartí y llevate un descuento
-            </p>
-          </div>
-        ))}
+          )}
+          <ShareIconButtons source="mis_grupos_brand" className="flex-shrink-0" />
+        </div>
+      )}
     </div>
   );
 };
