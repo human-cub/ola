@@ -1,5 +1,4 @@
 import { useEffect, useState, type CSSProperties } from "react";
-import { useQuery } from "@tanstack/react-query";
 import * as amplitude from "@amplitude/analytics-browser";
 import { Check, Copy, ShoppingCart } from "lucide-react";
 import { toast } from "sonner";
@@ -7,26 +6,8 @@ import { Button } from "@/components/ui/button";
 import { ShareIcon } from "@/components/icons/ShareIcon";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { InstagramStoryShare } from "@/components/InstagramStoryShare";
+import { useReferralLink, FALLBACK_LINK } from "@/hooks/useReferralLink";
 import { formatPrice } from "@/lib/formatting";
-import { supabase } from "@/integrations/supabase/client";
-
-const FALLBACK_LINK = "https://alaola.com.ar/";
-
-// ── Enlace de referido del usuario (los clics con ?ref= se trackean) ─────────
-const fetchReferralLink = async (): Promise<string | null> => {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return null;
-  const { data } = await supabase
-    .from("profiles")
-    .select("referral_code")
-    .eq("user_id", session.user.id)
-    .maybeSingle();
-  const code = (data as { referral_code?: string | null } | null)?.referral_code;
-  return code ? `https://alaola.com.ar/?ref=${code}` : null;
-};
-
-export const useReferralLink = () =>
-  useQuery({ queryKey: ["referral-link"], queryFn: fetchReferralLink, staleTime: 5 * 60_000 });
 
 // ── Fuegos artificiales alrededor de la barra de progreso ────────────────────
 const BURST_COLORS = ["#FFD400", "#FF8A00", "#33BBFF", "#22C55E", "#FF5478"];
