@@ -34,22 +34,22 @@ export const CheckoutSuccessDialog = ({
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="rounded-2xl max-w-[90vw] sm:max-w-md max-h-[90dvh] overflow-y-auto">
+      <AlertDialogContent className="rounded-2xl max-w-[90vw] sm:max-w-md p-4 gap-3">
         <AlertDialogHeader>
           <AlertDialogTitle className="text-center">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 flex items-center justify-center">
-              <Check className="w-8 h-8 text-green-600" />
+            <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-green-100 flex items-center justify-center">
+              <Check className="w-6 h-6 text-green-600" />
             </div>
             ¡Pedido confirmado!
           </AlertDialogTitle>
-          <AlertDialogDescription className="text-center space-y-4">
+          <AlertDialogDescription className="text-center space-y-2.5">
             <span className="block">Tu pedido ha sido registrado exitosamente</span>
-            <span className="block text-xl font-bold text-foreground">Pedido #{orderNumber}</span>
+            <span className="block text-lg font-bold text-foreground">Pedido #{orderNumber}</span>
             <span className="block text-sm">
               Nos pondremos en contacto en las próximas horas para confirmar los detalles.
             </span>
 
-            <span className="block bg-muted rounded-lg p-4 text-left text-sm space-y-1">
+            <span className="block bg-muted rounded-lg p-3 text-left text-sm space-y-1">
               <span className="flex justify-between">
                 <span>Total:</span>
                 <span className="font-bold">{formatPrice(total)}</span>
@@ -67,7 +67,7 @@ export const CheckoutSuccessDialog = ({
         </AlertDialogHeader>
 
         {/* Compartir / referir: set completo, igual que en el resto del sitio */}
-        <div className="rounded-xl bg-gradient-primary/10 border border-primary/20 p-4">
+        <div className="rounded-xl bg-gradient-primary/10 border border-primary/20 p-3">
           <p className="text-sm font-semibold text-primary text-center mb-1">
             ¡Seguí ahorrando!
           </p>
@@ -79,7 +79,7 @@ export const CheckoutSuccessDialog = ({
           </div>
         </div>
 
-        <div className="flex flex-col gap-2 pt-2">
+        <div className="flex flex-col gap-2 pt-1">
           <Button onClick={() => navigate(`/mi-cuenta/pedidos/${orderId}`)} className="w-full">
             <FileText className="w-4 h-4 mr-2" />
             Ver comprobante
