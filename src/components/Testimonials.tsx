@@ -13,7 +13,7 @@ type Testimonial = {
   name: string;
   role?: string;
   quote: string;
-  avatar: string;
+  avatar?: string;
 };
 
 const testimonials: Testimonial[] = [
@@ -35,13 +35,28 @@ const testimonials: Testimonial[] = [
       "Muy buenos los productos. Buen precio y gran servicio de entrega hasta el domicilio. Cliente muy conforme",
     avatar: "/testimonial-eduardo.png",
   },
-  // {
-  //   name: "Tomás Herrera",
-  //   role: "Cliente frecuente",
-  //   quote:
-  //     "Probé por recomendación de un amigo y no me arrepiento. Los precios grupales son una genialidad, y los productos siempre llegan impecables.",
-  //   avatar: "https://i.pravatar.cc/150?img=53",
-  // },
+  {
+    name: "Tomás",
+    quote:
+      "Muchas gracias!! Muy buen servicio. La aplicación es fácil e intuitiva para usar. Es realmente muy buena la idea y siempre tienen los mejores precios para una gran variedad de suplementos! La atención es genial y siempre muestran una gran predisposición! Realmente un gran servicio que sin dudas seguiré usando 💪🏼💪🏼💪🏼💪🏼",
+    avatar: "/testimonial-tomas.webp",
+  },
+  {
+    name: "Javier",
+    quote:
+      "Todo de 10. Volvería a comprar. Me contacté, me lo dejaron en la puerta de casa, en el día",
+  },
+  {
+    name: "Felipe",
+    quote:
+      "Buenisimo la verdad, llega al toque y precio muchisimo mas barato que en otros lugares como mercado libre, ni te digo en farmacias!! Muy seguro",
+  },
+  {
+    name: "Alfredo",
+    quote:
+      "Muy buenos descuentos. Son muy puntuales y amables. Les deseo muchos éxitos!!!!",
+    avatar: "/testimonial-alfredo.webp",
+  },
 ];
 
 const AUTOPLAY_INTERVAL = 5000;
@@ -145,13 +160,19 @@ export const Testimonials = () => {
                   {/* Avatar */}
                   <div className="absolute -top-10 left-1/2 -translate-x-1/2 z-10">
                     <div className="w-20 h-20 rounded-full border-4 border-background shadow-soft overflow-hidden">
-                      <img
-                        src={t.avatar}
-                        alt={t.name}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                        decoding="async"
-                      />
+                      {t.avatar ? (
+                        <img
+                          src={t.avatar}
+                          alt={t.name}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-primary text-primary-foreground text-2xl font-bold">
+                          {t.name.charAt(0)}
+                        </div>
+                      )}
                     </div>
                   </div>
 
