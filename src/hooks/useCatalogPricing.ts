@@ -12,6 +12,7 @@ export interface CatalogPriceInfo {
   brandName: string | null;
   urlSlug: string;
   flavors: string[];
+  size: string | null;
 }
 
 /**
@@ -37,6 +38,7 @@ export const useCatalogPricing = () => {
           brandName: p.brandName,
           urlSlug: p.urlSlug,
           flavors,
+          size: p.size,
         });
       });
     });

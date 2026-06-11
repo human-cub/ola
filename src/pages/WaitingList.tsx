@@ -289,7 +289,9 @@ const WaitingList = () => {
                             id={item.productId}
                             productName={item.productName}
                             productImage={item.productImage}
+                            productSize={brandInfo?.size ?? null}
                             pricePerUnit={dynamicPrice}
+                            retailPerUnit={brandInfo?.retail ?? 0}
                             totalQuantity={item.totalQuantity}
                             flavorEntries={item.flavorEntries}
                             productLink={brandInfo ? `/productos/${brandInfo.urlSlug}` : ((sourceItem as any)?.product_link || "#")}
