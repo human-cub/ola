@@ -25,7 +25,7 @@ export const QuantityStepper = ({
   const removeOnMinus = allowZero && quantity <= 1;
   return (
     <div
-      className={`flex items-center rounded-md border border-input flex-shrink-0 overflow-hidden${
+      className={`inline-flex items-center rounded-md border border-input flex-shrink-0 overflow-hidden${
         className ? ` ${className}` : ""
       }`}
     >

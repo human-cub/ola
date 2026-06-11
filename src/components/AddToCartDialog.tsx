@@ -320,7 +320,7 @@ export const AddToCartDialog = ({
             />
           )
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {/* Product Info */}
             <div className="flex gap-4 items-center">
               {effImage && (
@@ -390,7 +390,7 @@ export const AddToCartDialog = ({
             </div>
 
             {/* Price Summary */}
-            <div className="bg-muted/60 rounded-xl border border-border p-4 space-y-2">
+            <div className="bg-muted/60 rounded-xl border border-border p-3 space-y-1.5">
               <div className="flex justify-between text-sm">
                 <span>Cantidad:</span>
                 <span className="font-semibold">
