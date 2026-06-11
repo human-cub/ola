@@ -69,7 +69,7 @@ export const ShareButtons = ({ source, shareText, refLink, className }: ShareBut
       <Button
         variant="outline"
         onClick={handleWhatsApp}
-        className="w-full py-2.5 border-[#25D366] hover:bg-[#25D366]/10"
+        className="w-full py-2.5 border-2 border-[#25D366] hover:bg-[#25D366]/10"
       >
         <WhatsAppIcon className="h-5 w-5 shrink-0 text-[#25D366]" />
         <span>Compartir por WhatsApp</span>
