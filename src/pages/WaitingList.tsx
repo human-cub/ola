@@ -149,7 +149,10 @@ const WaitingList = () => {
 
   const handleQuantityChange = async (id: string, delta: number, currentQty: number) => {
     const newQty = currentQty + delta;
-    if (newQty >= 1 && newQty <= 99) {
+    if (newQty <= 0) {
+      // Poner en 0 = quitar ese sabor del grupo (sólo habilitado cuando hay varios).
+      await removeFromWaitingList(id);
+    } else if (newQty <= 99) {
       await updateWaitingListItemQuantity(id, newQty);
     }
   };
