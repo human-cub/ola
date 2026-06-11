@@ -38,14 +38,13 @@ const testimonials: Testimonial[] = [
   {
     name: "Tomás",
     quote:
-      "Muy buen servicio. La aplicación es fácil e intuitiva. Siempre tienen los mejores precios para una gran variedad de suplementos y la atención es genial. Un gran servicio que sin dudas seguiré usando 💪🏼💪🏼",
+      "Muy buen servicio. La app es fácil e intuitiva, siempre con los mejores precios y una atención genial. Un gran servicio que sin dudas seguiré usando 💪🏼",
     avatar: "/testimonial-tomas.webp",
   },
   {
     name: "Javier",
     quote:
       "Todo de 10. Volvería a comprar. Me contacté, me lo dejaron en la puerta de casa, en el día",
-    avatar: "/testimonial-javier.webp",
   },
   {
     name: "Felipe",
@@ -151,10 +150,10 @@ export const Testimonials = () => {
               key={i}
               className="pl-6 basis-[85%] sm:basis-[70%] max-w-[400px]"
             >
-              <div className="py-10 h-full">
+              <div className="py-10">
                 <div
                   className={cn(
-                    "relative bg-background rounded-2xl shadow-floating overflow-visible transition-opacity duration-300 h-full flex flex-col",
+                    "relative bg-background rounded-2xl shadow-floating overflow-visible transition-opacity duration-300 flex flex-col",
                     // !canScroll || i === current ? "opacity-100" : "opacity-40"
                   )}
                 >
@@ -178,15 +177,15 @@ export const Testimonials = () => {
                   </div>
 
                   {/* Quote area */}
-                  <div className="bg-muted/40 rounded-t-2xl px-6 pt-6 pb-6">
-                    <Quote className="w-8 h-8 text-primary/40 mb-3 -scale-x-100" />
-                    <p className="text-foreground text-base leading-relaxed italic line-clamp-6">
+                  <div className="bg-muted/40 rounded-t-2xl px-6 pt-7 pb-5 h-[184px] overflow-hidden flex flex-col justify-center">
+                    <Quote className="w-7 h-7 text-primary/40 mb-2 -scale-x-100 shrink-0" />
+                    <p className="text-foreground text-[15px] leading-relaxed italic line-clamp-4">
                       {t.quote}
                     </p>
                   </div>
 
                   {/* Name area */}
-                  <div className="px-6 py-5 text-center mt-auto">
+                  <div className="px-6 py-4 text-center">
                     <h3 className="text-xl font-bold text-foreground">
                       {t.name}
                     </h3>
