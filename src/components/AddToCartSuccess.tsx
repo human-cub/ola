@@ -197,7 +197,7 @@ export const CartAddSuccess = ({
 
     <div className="w-full flex gap-3 items-center bg-muted/60 rounded-xl border border-border p-3">
       {productImage && (
-        <div className="w-14 h-14 bg-slate-50 rounded-lg border border-border overflow-hidden shrink-0">
+        <div className="w-14 h-14 bg-white rounded-lg border border-border overflow-hidden shrink-0">
           <img src={productImage} alt={productName} className="w-full h-full object-contain" />
         </div>
       )}

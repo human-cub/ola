@@ -47,7 +47,7 @@ const CatalogRow = memo(({ p, line, onAdd, onSetQuantity }: RowProps) => {
 
   return (
     <div className="flex items-center gap-3 bg-card border rounded-lg p-2 sm:p-3 [content-visibility:auto] [contain-intrinsic-size:auto_84px]">
-      <div className="w-16 h-16 shrink-0 bg-muted/30 rounded-md overflow-hidden flex items-center justify-center">
+      <div className="w-16 h-16 shrink-0 bg-white rounded-md overflow-hidden flex items-center justify-center">
         {displayImage ? (
           <img
             src={displayImage}
