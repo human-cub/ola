@@ -43,7 +43,7 @@ export const BrandProgressBar = ({
       {showLabels && (
         <div className="relative mb-1 text-xs font-bold min-h-[1rem]">
           {reached ? (
-            <span className="block text-center text-primary">¡Meta alcanzada! 🎉</span>
+            <span className="block text-center text-primary">¡Meta alcanzada!</span>
           ) : (
             collected > 0 && (
               <span

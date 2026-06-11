@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useDeliveryEstimate } from "@/hooks/useDeliveryEstimate";
 import { useNavigate, Link } from "react-router-dom";
 import { Header } from "@/components/Header";
@@ -6,17 +6,15 @@ import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { ShoppingBag, ArrowLeft, ArrowRight } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
-import { supabase } from "@/integrations/supabase/client";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import { Separator } from "@/components/ui/separator";
-import { CartProductItem } from "@/components/CartProductItem";
+import { ProductLineItem } from "@/components/ProductLineItem";
 import { useScrollHeader } from "@/hooks/useScrollHeader";
 import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import { CartSummary } from "@/components/cart/CartSummary";
 import { PromoCodeInput } from "@/components/checkout/PromoCodeInput";
 import { useCheckoutPricing } from "@/hooks/useCheckoutPricing";
 import { usePromoCode } from "@/hooks/usePromoCode";
-import { useUserRole } from "@/hooks/useUserRole";
 import { useCatalogPricing } from "@/hooks/useCatalogPricing";
 
 const Cart = () => {
@@ -26,13 +24,11 @@ const Cart = () => {
     cartCount,
     isLoading,
     updateCartItemQuantity,
-    updateCartItemFlavor,
     removeFromCart,
   } = useCart();
   const headerVisible = useScrollHeader();
-  const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
+  const [deleteGroup, setDeleteGroup] = useState<{ productName: string; itemIds: string[] } | null>(null);
   const { appliedPromo, setAppliedPromo, removePromo } = usePromoCode();
-  const { isMayorista } = useUserRole();
 
   const { priceMap } = useCatalogPricing();
 
@@ -44,17 +40,52 @@ const Cart = () => {
     false,
   );
 
+  // Agrupar los sabores del mismo producto en una sola tarjeta (igual que Mis grupos).
+  const groupedCartItems = useMemo(() => {
+    const grouped = new Map<string, {
+      productId: string;
+      productName: string;
+      productImage: string | null;
+      itemIds: string[];
+      totalQuantity: number;
+      flavorEntries: Array<{ id: string; flavor: string | null; quantity: number }>;
+    }>();
+    cartItems.forEach((item) => {
+      const groupKey = priceMap.get(item.product_id)?.urlSlug ?? item.product_id;
+      const existing = grouped.get(groupKey);
+      if (existing) {
+        existing.itemIds.push(item.id);
+        existing.totalQuantity += item.quantity;
+        existing.flavorEntries.push({ id: item.id, flavor: item.flavor, quantity: item.quantity });
+        return;
+      }
+      grouped.set(groupKey, {
+        productId: item.product_id,
+        productName: item.product_name,
+        productImage: item.product_image,
+        itemIds: [item.id],
+        totalQuantity: item.quantity,
+        flavorEntries: [{ id: item.id, flavor: item.flavor, quantity: item.quantity }],
+      });
+    });
+    return Array.from(grouped.values());
+  }, [cartItems, priceMap]);
+
   const handleQuantityChange = async (id: string, delta: number, currentQty: number) => {
     const newQty = currentQty + delta;
-    if (newQty >= 1 && newQty <= 99) {
+    if (newQty <= 0) {
+      await removeFromCart(id);
+    } else if (newQty <= 99) {
       await updateCartItemQuantity(id, newQty);
     }
   };
 
   const handleDeleteConfirm = async () => {
-    if (deleteItemId) {
-      await removeFromCart(deleteItemId);
-      setDeleteItemId(null);
+    if (deleteGroup) {
+      for (const itemId of deleteGroup.itemIds) {
+        await removeFromCart(itemId);
+      }
+      setDeleteGroup(null);
     }
   };
 
@@ -110,26 +141,30 @@ const Cart = () => {
             </div>
           ) : (
             <>
-              <div className="space-y-0 mb-6">
-                {cartItems.map((item, index) => (
-                  <div key={item.id}>
-                    <CartProductItem
-                      id={item.id}
-                      productId={item.product_id}
-                      productName={item.product_name}
-                      productImage={item.product_image}
-                      pricePerUnit={getUnitPrice(item)}
-                      quantity={item.quantity}
-                      flavor={item.flavor}
-                      flavors={priceMap.get(item.product_id)?.flavors || []}
-                      productLink={priceMap.get(item.product_id) ? `/productos/${priceMap.get(item.product_id)!.urlSlug}` : "#"}
-                      onQuantityChange={handleQuantityChange}
-                      onFlavorChange={updateCartItemFlavor}
-                      onDelete={(id) => setDeleteItemId(id)}
-                    />
-                    {index < cartItems.length - 1 && <Separator />}
-                  </div>
-                ))}
+              <div className="rounded-xl border border-primary bg-card px-4 sm:px-5 py-4 mb-6">
+                {groupedCartItems.map((group, index) => {
+                  const info = priceMap.get(group.productId);
+                  const firstItem = cartItems.find((i) => i.id === group.itemIds[0]);
+                  const unit = firstItem ? getUnitPrice(firstItem) : 0;
+                  return (
+                    <div key={group.productId}>
+                      <ProductLineItem
+                        id={group.productId}
+                        productName={group.productName}
+                        productImage={group.productImage}
+                        productSize={info?.size ?? null}
+                        pricePerUnit={unit}
+                        retailPerUnit={info?.retail ?? 0}
+                        totalQuantity={group.totalQuantity}
+                        flavorEntries={group.flavorEntries}
+                        productLink={info ? `/productos/${info.urlSlug}` : "#"}
+                        onQuantityChange={handleQuantityChange}
+                        onDelete={() => setDeleteGroup({ productName: group.productName, itemIds: group.itemIds })}
+                      />
+                      {index < groupedCartItems.length - 1 && <Separator />}
+                    </div>
+                  );
+                })}
               </div>
 
               <Separator className="my-6" />
@@ -161,10 +196,12 @@ const Cart = () => {
       </main>
 
       <ConfirmDeleteDialog
-        open={!!deleteItemId}
-        onOpenChange={() => setDeleteItemId(null)}
+        open={!!deleteGroup}
+        onOpenChange={() => setDeleteGroup(null)}
         title="¿Eliminar producto?"
-        description="¿Estás seguro de que querés eliminar este producto del carrito?"
+        description={deleteGroup
+          ? `¿Estás seguro de que querés eliminar ${deleteGroup.productName} del carrito?`
+          : ""}
         onConfirm={handleDeleteConfirm}
       />
 

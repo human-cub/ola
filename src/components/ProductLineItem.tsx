@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Plus, Minus, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
+import { QuantityStepper } from "@/components/QuantityStepper";
 import { formatPrice } from "@/lib/formatting";
 
 interface FlavorEntry {
@@ -9,7 +10,7 @@ interface FlavorEntry {
   quantity: number;
 }
 
-interface WaitingListProductItemProps {
+interface ProductLineItemProps {
   id: string;
   productName: string;
   productImage: string | null;
@@ -25,51 +26,7 @@ interface WaitingListProductItemProps {
   onDelete: (id: string) => void;
 }
 
-const Stepper = ({
-  quantity,
-  onMinus,
-  onPlus,
-  allowZero = false,
-}: {
-  quantity: number;
-  onMinus: () => void;
-  onPlus: () => void;
-  /** Permite bajar a 0 (quitar el sabor). En 1 el botón "menos" se vuelve papelera. */
-  allowZero?: boolean;
-}) => {
-  const removeOnMinus = allowZero && quantity <= 1;
-  return (
-    <div className="flex items-center rounded-md border border-input flex-shrink-0 overflow-hidden">
-      <button
-        type="button"
-        className="h-8 px-3 flex items-center justify-center text-muted-foreground hover:bg-muted disabled:opacity-40 disabled:hover:bg-transparent"
-        onClick={onMinus}
-        disabled={!allowZero && quantity <= 1}
-        aria-label={removeOnMinus ? "Quitar sabor" : "Restar"}
-      >
-        {removeOnMinus ? (
-          <Trash2 className="w-3.5 h-3.5" />
-        ) : (
-          <Minus className="w-3.5 h-3.5" />
-        )}
-      </button>
-      <span className="w-9 text-center font-semibold text-sm border-x border-input leading-8">
-        {quantity}
-      </span>
-      <button
-        type="button"
-        className="h-8 px-3 flex items-center justify-center text-muted-foreground hover:bg-muted disabled:opacity-40 disabled:hover:bg-transparent"
-        onClick={onPlus}
-        disabled={quantity >= 99}
-        aria-label="Sumar"
-      >
-        <Plus className="w-3.5 h-3.5" />
-      </button>
-    </div>
-  );
-};
-
-export const WaitingListProductItem = ({
+export const ProductLineItem = ({
   id,
   productName,
   productImage,
@@ -82,7 +39,7 @@ export const WaitingListProductItem = ({
   isCollectionEnded = false,
   onQuantityChange,
   onDelete,
-}: WaitingListProductItemProps) => {
+}: ProductLineItemProps) => {
   const showRetail = retailPerUnit > pricePerUnit;
   const showUnitPrice = totalQuantity > 1;
 
@@ -127,19 +84,30 @@ export const WaitingListProductItem = ({
       {/* Sabores (ancho completo): nombre del sabor + su contador */}
       {flavorEntries.length > 0 && (
         <div className="mt-3 space-y-2">
-          {flavorEntries.map((entry) => (
-            <div key={entry.id} className="flex items-center justify-between gap-3">
-              <p className="text-sm text-foreground truncate min-w-0 flex-1">
-                {entry.flavor || "Sin sabor"}
-              </p>
-              <Stepper
-                quantity={entry.quantity}
-                onMinus={() => onQuantityChange(entry.id, -1, entry.quantity)}
-                onPlus={() => onQuantityChange(entry.id, 1, entry.quantity)}
-                allowZero={flavorEntries.length > 1}
-              />
-            </div>
-          ))}
+          {flavorEntries.map((entry) => {
+            // "Sin sabor" sólo cuando el producto tiene varias variantes (una sin sabor);
+            // si el producto no tiene sabor (una sola entrada nula), no mostramos etiqueta.
+            const label = entry.flavor
+              ? entry.flavor
+              : flavorEntries.length > 1
+                ? "Sin sabor"
+                : null;
+            return (
+              <div key={entry.id} className="flex items-center justify-between gap-3">
+                {label ? (
+                  <p className="text-sm text-foreground truncate min-w-0 flex-1">{label}</p>
+                ) : (
+                  <span className="flex-1" />
+                )}
+                <QuantityStepper
+                  quantity={entry.quantity}
+                  onMinus={() => onQuantityChange(entry.id, -1, entry.quantity)}
+                  onPlus={() => onQuantityChange(entry.id, 1, entry.quantity)}
+                  allowZero={flavorEntries.length > 1}
+                />
+              </div>
+            );
+          })}
         </div>
       )}
 

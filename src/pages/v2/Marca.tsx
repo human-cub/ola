@@ -89,7 +89,7 @@ const MarcaV2 = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header isVisible={headerVisible} />
-      <main className="pb-[24px] pt-[120px] sm:pt-[104px]">
+      <main className="pb-[24px] pt-[112px] sm:pt-[64px]">
         <Breadcrumb
           items={[
             { label: "Marcas", href: "/marcas" },

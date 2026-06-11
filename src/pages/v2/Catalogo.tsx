@@ -47,7 +47,7 @@ const CatalogoV2 = () => {
     <div className="min-h-screen bg-background">
       <Header isVisible={headerVisible} />
 
-      <div className="pt-[120px] sm:pt-[104px]">
+      <div className="pt-[112px] sm:pt-[64px]">
         <Breadcrumb items={[{ label: "Catálogo" }]} />
       </div>
 

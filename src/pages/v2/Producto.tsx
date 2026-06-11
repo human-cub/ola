@@ -126,7 +126,7 @@ const ProductoV2 = () => {
     <div className="min-h-screen bg-background">
       <Header isVisible={headerVisible} />
 
-      <main className="pb-[24px] pt-[64px]">
+      <main className="pb-[24px] pt-[112px] sm:pt-[64px]">
         <Breadcrumb items={breadcrumbItems} />
         <div className="max-w-[1088px] px-4 mx-auto gap-4 grid grid-cols-1 lg:grid-cols-[20fr_12fr] lg:justify-center lg:pt-10">
           <div className="contents lg:block">
