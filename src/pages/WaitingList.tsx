@@ -65,6 +65,8 @@ const WaitingList = () => {
     hasExistingOrder,
     frozenOrderData,
     promoTierBonus: hasReward ? Math.max(appliedPromo?.tier_bonus ?? 0, 1) : (appliedPromo?.tier_bonus ?? 0),
+    // Referral reward only lifts the collective price; "Comprar ahora" stays at its normal CA price.
+    buyNowTierBonus: appliedPromo?.tier_bonus ?? 0,
     priceMap,
     brandReached,
   });

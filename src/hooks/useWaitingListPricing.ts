@@ -27,6 +27,10 @@ interface WaitingListPricingParams {
   hasExistingOrder: boolean;
   frozenOrderData: FrozenOrderData | null;
   promoTierBonus?: number;
+  /** Tier bonus para "Comprar ahora". La recompensa de referido NO aplica al pago
+   *  inmediato (sólo al pedido colectivo), así que aquí se pasa el bonus de promo solo.
+   *  Si se omite, cae a promoTierBonus. */
+  buyNowTierBonus?: number;
   priceMap: Map<string, CatalogPriceInfo>;
   brandReached: Map<string, boolean>;
 }
@@ -43,9 +47,11 @@ export const useWaitingListPricing = ({
   hasExistingOrder,
   frozenOrderData,
   promoTierBonus = 0,
+  buyNowTierBonus,
   priceMap,
   brandReached,
 }: WaitingListPricingParams) => {
+  const buyNowBonus = buyNowTierBonus ?? promoTierBonus;
   const hasPromo = promoTierBonus > 0;
 
   const storedPriceFor = (productId: string): number => {
@@ -104,7 +110,7 @@ export const useWaitingListPricing = ({
   const getBuyNowTotal = (): number => {
     return waitingListItems.reduce((sum, item) => {
       const info = priceMap.get(item.product_id);
-      const price = buyNowPriceFor(info, promoTierBonus, item.current_price_per_unit || 0);
+      const price = buyNowPriceFor(info, buyNowBonus, item.current_price_per_unit || 0);
       return sum + price * item.quantity;
     }, 0);
   };
