@@ -8,11 +8,8 @@ interface ShareBlockProps {
 export const ShareBlock = ({ showQR = false, refLink }: ShareBlockProps) => {
   return (
     <div className="bg-gradient-primary/10 rounded-lg p-4 border border-primary/20">
-      <p className="text-sm font-semibold text-primary text-center mb-1">
-        ¡Seamos más pagamos menos!
-      </p>
-      <p className="text-sm text-center text-muted-foreground mb-4">
-        Vamos a conseguir el mejor descuento — compartilo con tus amigos.
+      <p className="text-sm font-semibold text-primary text-center mb-4">
+        Invitá a un amigo y los dos obtienen el Súper-Precio
       </p>
 
       <ShareButtons source="share_block" refLink={refLink} />
