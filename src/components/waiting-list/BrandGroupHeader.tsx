@@ -42,14 +42,14 @@ export const BrandGroupHeader = ({ brandSlug, brandName }: Props) => {
       {hasGoal && (
         <div className="flex items-center justify-between gap-2">
           {reached ? (
-            <p className="text-sm font-bold text-primary leading-snug">
+            <p className="text-sm font-bold text-primary leading-snug flex-1 text-right">
               ¡Meta alcanzada! Súper-Precio activo
             </p>
           ) : (
-            <p className="text-sm leading-snug">
+            <p className="text-sm leading-snug flex-1 text-right">
               <span className="font-semibold text-foreground">
                 Faltan{" "}
-                <span className="font-extrabold" style={{ color: "hsl(34 100% 47%)" }}>
+                <span className="font-extrabold" style={{ color: "hsl(var(--group-buy-accent))" }}>
                   {formatPrice(target - collected)}
                 </span>
                 .
