@@ -74,13 +74,18 @@ export const WaitingListSummary = ({
         <span>Total actual:</span>
         <span>{formatPrice(subtotal + deliveryCost)}</span>
       </div>
-      <div
-        className="flex justify-between text-lg font-bold"
-        style={{ color: "hsl(var(--group-buy-accent))" }}
-      >
-        <span>Total con Súper-Precio:</span>
-        <span>{formatPrice(estimatedTotal + deliveryCost)}</span>
-      </div>
+      {estimatedTotal < subtotal && (
+        <>
+          <div className="flex justify-between text-sm text-primary font-medium pt-2">
+            <span>Descuento estimado al cierre:</span>
+            <span>-{formatPrice(estimatedDiscount)}</span>
+          </div>
+          <div className="flex justify-between text-sm text-primary font-medium">
+            <span>Total estimado al cierre:</span>
+            <span>{formatPrice(estimatedTotal)}</span>
+          </div>
+        </>
+      )}
       <p className="text-xs text-muted-foreground text-center">
         El precio final se calculará al cerrar la compra colectiva el domingo 23:59
       </p>
