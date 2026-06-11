@@ -60,7 +60,7 @@ export const ShareButtons = ({ source, shareText, refLink, className }: ShareBut
   return (
     <div className={`flex flex-col gap-2${className ? ` ${className}` : ""}`}>
       <Button onClick={handleNativeShare} className="w-full py-2.5">
-        <ShareIcon className="h-4 w-4" />
+        <ShareIcon className="h-5 w-5 shrink-0" />
         <span>Compartir con amigos</span>
       </Button>
 
@@ -69,19 +69,19 @@ export const ShareButtons = ({ source, shareText, refLink, className }: ShareBut
       <Button
         variant="outline"
         onClick={handleWhatsApp}
-        className="w-full py-2.5 border-[#25D366] hover:bg-[#25D366]/10"
+        className="w-full py-2.5 border-2 border-[#25D366] hover:bg-[#25D366]/10"
       >
-        <WhatsAppIcon className="h-4 w-4 text-[#25D366]" />
+        <WhatsAppIcon className="h-5 w-5 shrink-0 text-[#25D366]" />
         <span>Compartir por WhatsApp</span>
       </Button>
 
       <Button variant="outline" onClick={handleCopyInvitation} className="w-full py-2.5">
-        <Copy className="h-4 w-4" />
+        <Copy className="h-5 w-5 shrink-0" />
         <span>Copiar invitación</span>
       </Button>
 
       <Button variant="outline" onClick={handleCopyLink} className="w-full py-2.5">
-        <Copy className="h-4 w-4" />
+        <Copy className="h-5 w-5 shrink-0" />
         <span>Copiar enlace</span>
       </Button>
     </div>
