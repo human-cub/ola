@@ -70,7 +70,7 @@ export const GroupAddSuccess = ({
 }: GroupSuccessProps) => {
   const { data: refLink } = useReferralLink();
   const shareLink = refLink ?? FALLBACK_LINK;
-  const shareText = `Ola! Compras Grupales. Registrate con mi enlace y conseguí el Súper-Precio en tu primer pedido ${shareLink}`;
+  const shareText = `Ola! Compras Grupales. Sumate a una compra grupal con mi enlace y conseguí el Súper-Precio. ${shareLink}`;
 
   const newCollected = prevCollected + addedAmount;
   const prevPct = target > 0 ? Math.min(100, (prevCollected / target) * 100) : 0;
@@ -197,7 +197,7 @@ export const CartAddSuccess = ({
 
     <div className="w-full flex gap-3 items-center bg-muted/60 rounded-xl border border-border p-3">
       {productImage && (
-        <div className="w-14 h-14 bg-slate-50 rounded-lg border border-border overflow-hidden shrink-0">
+        <div className="w-14 h-14 bg-white rounded-lg border border-border overflow-hidden shrink-0">
           <img src={productImage} alt={productName} className="w-full h-full object-contain" />
         </div>
       )}

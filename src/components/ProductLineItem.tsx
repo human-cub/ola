@@ -48,7 +48,7 @@ export const ProductLineItem = ({
       {/* Fila superior: imagen + nombre/tamaño + eliminar */}
       <div className="flex items-center gap-3">
         <Link to={productLink} className="flex-shrink-0">
-          <div className="w-24 h-24 rounded-md overflow-hidden bg-muted">
+          <div className="w-24 h-24 rounded-md overflow-hidden bg-white">
             {productImage && (
               <img
                 src={productImage}

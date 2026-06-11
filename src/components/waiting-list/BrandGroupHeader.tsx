@@ -71,10 +71,9 @@ export const BrandGroupHeader = ({ brandSlug, brandName }: Props) => {
               </span>
             </p>
           )}
-          <ShareIconButtons
-            source="mis_grupos_brand"
-            className="absolute right-0 top-1/2 -translate-y-1/2 shrink-0"
-          />
+          <div className="flex justify-center mt-1.5 sm:mt-0 sm:absolute sm:right-0 sm:top-1/2 sm:-translate-y-1/2">
+            <ShareIconButtons source="mis_grupos_brand" />
+          </div>
         </div>
       )}
     </div>

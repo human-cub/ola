@@ -21,7 +21,7 @@ interface ShareIconButtonsProps {
 }
 
 const defaultText = (link: string) =>
-  `Mirá estos descuentos de suplementos 🎉 Sumate a mi grupo en Ola y pagamos todos menos 🤑 ${link}`;
+  `Ola! Compras Grupales. Sumate a una compra grupal con mi enlace y conseguí el Súper-Precio. ${link}`;
 
 /**
  * Versión compacta (solo íconos) del set de compartir/referir: Instagram story,

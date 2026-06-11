@@ -38,7 +38,7 @@ const Carrito = () => {
             <div className="space-y-2">
               {items.map((it) => (
                 <div key={it.id} className="flex items-center gap-3 bg-card border rounded-lg p-3">
-                  <div className="w-14 h-14 shrink-0 bg-muted/30 rounded-md overflow-hidden">
+                  <div className="w-14 h-14 shrink-0 bg-white rounded-md overflow-hidden">
                     {it.product_image && (
                       <img
                         src={it.product_image}
