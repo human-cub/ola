@@ -40,7 +40,7 @@ export const BrandGroupHeader = ({ brandSlug, brandName }: Props) => {
         )}
       </div>
       {hasGoal && (
-        <div className="relative">
+        <div>
           {reached ? (
             <p className="text-sm font-bold text-primary leading-snug text-center">
               ¡Meta alcanzada! Súper-Precio activo
@@ -71,10 +71,9 @@ export const BrandGroupHeader = ({ brandSlug, brandName }: Props) => {
               </span>
             </p>
           )}
-          <ShareIconButtons
-            source="mis_grupos_brand"
-            className="absolute right-0 top-1/2 -translate-y-1/2 shrink-0"
-          />
+          <div className="flex justify-center mt-1.5">
+            <ShareIconButtons source="mis_grupos_brand" />
+          </div>
         </div>
       )}
     </div>

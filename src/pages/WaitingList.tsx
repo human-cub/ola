@@ -248,11 +248,11 @@ const WaitingList = () => {
           </Link>
 
           <div className="mb-6">
-            <h1 className="text-2xl font-bold flex items-center gap-2 flex-wrap">
-              <GroupIcon className="w-6 h-6 text-primary" />
+            <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
+              <GroupIcon className="w-5 h-5 sm:w-6 sm:h-6 text-primary shrink-0" />
               Mis grupos
               {hasExistingOrder && profileCompleted && !isCollectionEnded && (
-                <span className="text-primary text-lg font-medium">— ¡Ya participás! 🎉</span>
+                <span className="text-primary text-sm sm:text-lg font-medium whitespace-nowrap">— ¡Ya participás! 🎉</span>
               )}
             </h1>
           </div>
