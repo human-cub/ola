@@ -206,7 +206,7 @@ export const InstagramStoryShare = ({ refLink }: Props) => {
       <GradientBorderButton
         gradient={IG_GRADIENT}
         glowColor={IG_GLOW}
-        className="h-10 w-full"
+        className="h-10 w-full max-w-[400px] mx-auto"
         onClick={handleOpen}
       >
         <img src={instagramIcon} alt="" className="h-5 w-5 flex-shrink-0" />
