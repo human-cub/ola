@@ -10,7 +10,7 @@ interface FlavorEntry {
   quantity: number;
 }
 
-interface WaitingListProductItemProps {
+interface ProductLineItemProps {
   id: string;
   productName: string;
   productImage: string | null;
@@ -26,7 +26,7 @@ interface WaitingListProductItemProps {
   onDelete: (id: string) => void;
 }
 
-export const WaitingListProductItem = ({
+export const ProductLineItem = ({
   id,
   productName,
   productImage,
@@ -39,7 +39,7 @@ export const WaitingListProductItem = ({
   isCollectionEnded = false,
   onQuantityChange,
   onDelete,
-}: WaitingListProductItemProps) => {
+}: ProductLineItemProps) => {
   const showRetail = retailPerUnit > pricePerUnit;
   const showUnitPrice = totalQuantity > 1;
 

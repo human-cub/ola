@@ -8,6 +8,7 @@ import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { InstagramStoryShare } from "@/components/InstagramStoryShare";
 import { useReferralLink, FALLBACK_LINK } from "@/hooks/useReferralLink";
 import { formatPrice } from "@/lib/formatting";
+import { ShareIconButtons } from "@/components/ShareIconButtons";
 
 // ── Fuegos artificiales alrededor de la barra de progreso ────────────────────
 const BURST_COLORS = ["#FFD400", "#FF8A00", "#33BBFF", "#22C55E", "#FF5478"];
@@ -118,7 +119,7 @@ export const GroupAddSuccess = ({
               />
               {celebrate ? (
                 <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-white whitespace-nowrap">
-                  ¡Meta alcanzada! 🎉
+                  ¡Meta alcanzada!
                 </span>
               ) : (
                 <span
@@ -155,68 +156,12 @@ export const GroupAddSuccess = ({
         </div>
       )}
 
-      {/* Compartir */}
-      <div className="w-full bg-gradient-primary/10 rounded-xl p-4 border border-primary/20 mt-1">
-        <p className="text-sm font-semibold text-primary text-center mb-4">
+      {/* Compartir: set estándar compacto (mismo componente que Mis grupos) */}
+      <div className="w-full bg-gradient-primary/10 rounded-xl p-3 border border-primary/20 mt-1 flex flex-col items-center gap-2">
+        <p className="text-sm font-semibold text-primary text-center">
           Invitá a un amigo y los dos obtienen el Súper-Precio
         </p>
-        <div className="flex flex-col gap-2">
-          <Button
-            onClick={() => {
-              amplitude.track("Referral Shared", { method: "native", source: "add_success" });
-              if (navigator.share) {
-                navigator.share({ text: shareText }).catch(() => {});
-              } else {
-                navigator.clipboard.writeText(shareText);
-                toast.success("¡Texto copiado!");
-              }
-            }}
-            className="w-full py-2.5"
-          >
-            <ShareIcon className="h-4 w-4" />
-            <span>Compartir con amigos</span>
-          </Button>
-
-          <InstagramStoryShare refLink={shareLink} />
-
-          <Button
-            variant="outline"
-            onClick={() => {
-              amplitude.track("Whatsapp Opened", { source: "add_to_cart_success", product_name: productName });
-              window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, "_blank");
-            }}
-            className="w-full py-2.5 border-[#25D366] hover:bg-[#25D366]/10"
-          >
-            <WhatsAppIcon className="h-4 w-4 text-[#25D366]" />
-            <span>Compartir por WhatsApp</span>
-          </Button>
-
-          <Button
-            variant="outline"
-            onClick={() => {
-              amplitude.track("Referral Shared", { method: "copy_invitation", source: "add_success" });
-              navigator.clipboard.writeText(shareText);
-              toast.success("¡Invitación copiada!");
-            }}
-            className="w-full py-2.5"
-          >
-            <Copy className="h-4 w-4" />
-            <span>Copiar invitación</span>
-          </Button>
-
-          <Button
-            variant="outline"
-            onClick={() => {
-              amplitude.track("Referral Shared", { method: "copy_link", source: "add_success" });
-              navigator.clipboard.writeText(shareLink);
-              toast.success("¡Enlace copiado!");
-            }}
-            className="w-full py-2.5"
-          >
-            <Copy className="h-4 w-4" />
-            <span>Copiar enlace</span>
-          </Button>
-        </div>
+        <ShareIconButtons source="group_add_success" />
       </div>
     </div>
   );
