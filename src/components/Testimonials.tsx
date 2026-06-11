@@ -179,8 +179,8 @@ export const Testimonials = () => {
           </CarouselContent>
           {canScroll && (
             <>
-              <CarouselArrowButton direction="prev" onClick={() => api?.scrollPrev()} className="-left-2 sm:-left-4" />
-              <CarouselArrowButton direction="next" onClick={() => api?.scrollNext()} className="-right-2 sm:-right-4" />
+              <CarouselArrowButton direction="prev" onClick={() => api?.scrollPrev()} className="hidden sm:inline-flex -left-2 sm:-left-4" />
+              <CarouselArrowButton direction="next" onClick={() => api?.scrollNext()} className="hidden sm:inline-flex -right-2 sm:-right-4" />
             </>
           )}
         </Carousel>
