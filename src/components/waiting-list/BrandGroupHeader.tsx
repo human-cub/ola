@@ -18,7 +18,7 @@ export const BrandGroupHeader = ({ brandSlug, brandName }: Props) => {
   const hasGoal = target > 0;
   return (
     <div className="mb-3">
-      <div className="flex items-center gap-3 mb-2">
+      <div className="flex items-center gap-3 mb-1">
         <Link to={`/marcas/${brandSlug}`} className="min-w-0 flex-shrink-0">
           <h2 className="text-base font-bold uppercase tracking-wider text-primary whitespace-nowrap hover:underline">
             {brandName}
@@ -47,9 +47,9 @@ export const BrandGroupHeader = ({ brandSlug, brandName }: Props) => {
             </p>
           ) : (
             <p className="text-sm leading-snug flex-1 text-right">
-              <span className="font-semibold text-foreground">
+              <span className="text-foreground">
                 Faltan{" "}
-                <span className="font-extrabold" style={{ color: "hsl(var(--group-buy-accent))" }}>
+                <span style={{ color: "hsl(var(--group-buy-accent))" }}>
                   {formatPrice(target - collected)}
                 </span>
                 .
