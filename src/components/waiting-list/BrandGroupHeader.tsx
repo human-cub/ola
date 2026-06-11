@@ -43,14 +43,23 @@ export const BrandGroupHeader = ({ brandSlug, brandName }: Props) => {
             <p className="text-sm leading-snug">
               <span className="font-semibold text-foreground">
                 Faltan{" "}
-                <span className="font-extrabold text-primary">
+                <span className="font-extrabold" style={{ color: "hsl(34 100% 47%)" }}>
                   {formatPrice(target - collected)}
                 </span>{" "}
                 para Súper-Precio.
               </span>{" "}
               <span
-                className="font-semibold"
-                style={{ color: "hsl(var(--group-buy-accent-foreground))" }}
+                className="font-semibold animate-shimmer"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(90deg, hsl(42 100% 28%), hsl(45 95% 55%), hsl(42 100% 28%))",
+                  backgroundSize: "200% auto",
+                  WebkitBackgroundClip: "text",
+                  backgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  color: "transparent",
+                  animationDuration: "4s",
+                }}
               >
                 Compartí y llevate un descuento
               </span>
