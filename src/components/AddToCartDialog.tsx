@@ -272,7 +272,7 @@ export const AddToCartDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md rounded-2xl max-h-[90dvh] overflow-y-auto">
+      <DialogContent className="sm:max-w-md rounded-2xl p-4 gap-3">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3 text-xl font-bold">
             {isWaitingList ? (
@@ -320,9 +320,9 @@ export const AddToCartDialog = ({
             />
           )
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {/* Product Info */}
-            <div className="flex gap-4 items-center">
+            <div className="flex gap-3 items-center">
               {effImage && (
                 <div className="w-24 h-24 bg-white rounded-md overflow-hidden shrink-0">
                   <img
@@ -392,7 +392,7 @@ export const AddToCartDialog = ({
             </div>
 
             {/* Price Summary */}
-            <div className="bg-muted/60 rounded-xl border border-border p-3 space-y-1.5">
+            <div className="bg-muted/60 rounded-xl border border-border p-2.5 space-y-1">
               <div className="flex justify-between text-sm">
                 <span>Cantidad:</span>
                 <span className="font-semibold">
@@ -423,7 +423,7 @@ export const AddToCartDialog = ({
                 </div>
               )}
               {isWaitingList && (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-[11px] leading-snug text-muted-foreground">
                   * El Precio Garantizado está asegurado en todos los casos. Para alcanzar el Súper-Precio, compartí en redes sociales e invitá a tus amigos
                 </p>
               )}
@@ -434,12 +434,12 @@ export const AddToCartDialog = ({
             )}
 
             {/* Action Buttons */}
-            <div className="space-y-2 pt-1">
+            <div className="space-y-2 pt-0">
               <button
                 type="button"
                 onClick={handleSubmit}
                 disabled={loading}
-                className="w-full py-3.5 rounded-2xl font-bold text-white text-[16px] flex items-center justify-center gap-2 shadow-lg bg-gradient-primary transform transition active:scale-95 disabled:opacity-60"
+                className="w-full py-3 rounded-2xl font-bold text-white text-[16px] flex items-center justify-center gap-2 shadow-lg bg-gradient-primary transform transition active:scale-95 disabled:opacity-60"
               >
                 {isWaitingList ? <GroupIcon className="w-5 h-5" /> : <ShoppingCart className="w-5 h-5" />}
                 {loading
@@ -452,7 +452,7 @@ export const AddToCartDialog = ({
                 type="button"
                 onClick={() => onOpenChange(false)}
                 disabled={loading}
-                className="w-full py-3 rounded-2xl font-semibold text-muted-foreground border-2 border-border bg-card hover:bg-muted transform transition active:scale-95"
+                className="w-full py-2.5 rounded-2xl font-semibold text-muted-foreground border-2 border-border bg-card hover:bg-muted transform transition active:scale-95"
               >
                 Cancelar
               </button>
