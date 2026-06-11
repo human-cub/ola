@@ -110,7 +110,7 @@ const Cart = () => {
             </div>
           ) : (
             <>
-              <div className="space-y-0 mb-6">
+              <div className="rounded-xl border border-primary bg-card px-4 sm:px-5 py-4 mb-6">
                 {cartItems.map((item, index) => (
                   <div key={item.id}>
                     <CartProductItem
