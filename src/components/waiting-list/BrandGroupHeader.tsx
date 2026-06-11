@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useBrandProgress } from "@/components/BrandProgressBar";
 import { ShareIconButtons } from "@/components/ShareIconButtons";
 import { formatPrice } from "@/lib/formatting";
@@ -8,9 +9,9 @@ interface Props {
 }
 
 /**
- * Шапка бренд-блока: имя марки + прогресс-бар сбора в одну строку; ниже —
- * «Faltan $X para Súper-Precio. Compartí…» с кнопками шаринга справа.
- * Если у марки нет цели сбора — кнопки шаринга всё равно показываем (справа от имени).
+ * Шапка бренд-блока: кликабельное имя марки + прогресс-бар сбора в одну строку;
+ * ниже — «Faltan $X. Compartí y llevate el Súper-Precio» с кнопками шаринга справа.
+ * Если у марки нет цели сбора — кнопки шаринга показываем справа от имени.
  */
 export const BrandGroupHeader = ({ brandSlug, brandName }: Props) => {
   const { collected, target, pct, reached } = useBrandProgress(brandSlug);
@@ -18,9 +19,11 @@ export const BrandGroupHeader = ({ brandSlug, brandName }: Props) => {
   return (
     <div className="mb-3">
       <div className="flex items-center gap-3 mb-2">
-        <h2 className="text-base font-bold uppercase tracking-wider text-primary whitespace-nowrap">
-          {brandName}
-        </h2>
+        <Link to={`/marcas/${brandSlug}`} className="min-w-0 flex-shrink-0">
+          <h2 className="text-base font-bold uppercase tracking-wider text-primary whitespace-nowrap hover:underline">
+            {brandName}
+          </h2>
+        </Link>
         {hasGoal ? (
           <div className="relative h-3.5 flex-1 bg-muted rounded-full overflow-hidden">
             <div
@@ -48,8 +51,8 @@ export const BrandGroupHeader = ({ brandSlug, brandName }: Props) => {
                 Faltan{" "}
                 <span className="font-extrabold" style={{ color: "hsl(34 100% 47%)" }}>
                   {formatPrice(target - collected)}
-                </span>{" "}
-                para Súper-Precio.
+                </span>
+                .
               </span>{" "}
               <span
                 className="font-semibold animate-shimmer"
@@ -64,7 +67,7 @@ export const BrandGroupHeader = ({ brandSlug, brandName }: Props) => {
                   animationDuration: "4s",
                 }}
               >
-                Compartí y llevate un descuento
+                Compartí y llevate el Súper-Precio
               </span>
             </p>
           )}

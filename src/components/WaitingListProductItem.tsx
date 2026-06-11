@@ -74,7 +74,7 @@ export const WaitingListProductItem = ({
   onDelete,
 }: WaitingListProductItemProps) => {
   const showRetail = retailPerUnit > pricePerUnit;
-  const showUnitPrice = flavorEntries.length > 1 || totalQuantity > 1;
+  const showUnitPrice = totalQuantity > 1;
 
   return (
     <div className="py-4">
@@ -132,13 +132,19 @@ export const WaitingListProductItem = ({
         </div>
       )}
 
-      {/* Pie (ancho completo): total + precio */}
-      <div className="mt-3 pt-3 border-t flex items-end justify-between gap-3">
-        <span className="text-sm text-muted-foreground whitespace-nowrap">
-          {totalQuantity} {totalQuantity === 1 ? "unidad" : "unidades"}
-        </span>
-        <div className="text-right">
-          <div>
+      {/* Pie (ancho completo): c/u arriba (si hay varias unidades); luego cantidad
+          en la misma fila que el retail tachado y el total */}
+      <div className="mt-3 pt-3 border-t">
+        {showUnitPrice && (
+          <div className="text-right text-xs text-muted-foreground mb-0.5">
+            {formatPrice(pricePerUnit)} c/u
+          </div>
+        )}
+        <div className="flex items-end justify-between gap-3">
+          <span className="text-sm text-muted-foreground whitespace-nowrap">
+            {totalQuantity} {totalQuantity === 1 ? "unidad" : "unidades"}
+          </span>
+          <div className="text-right">
             {showRetail && (
               <span className="line-through text-muted-foreground text-sm mr-2">
                 {formatPrice(retailPerUnit * totalQuantity)}
@@ -148,11 +154,6 @@ export const WaitingListProductItem = ({
               {formatPrice(pricePerUnit * totalQuantity)}
             </span>
           </div>
-          {showUnitPrice && (
-            <div className="text-xs text-muted-foreground mt-0.5">
-              {formatPrice(pricePerUnit)} c/u
-            </div>
-          )}
         </div>
       </div>
     </div>
