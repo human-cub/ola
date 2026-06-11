@@ -139,7 +139,7 @@ export const Testimonials = () => {
                 key={i}
                 className="pl-5 basis-full md:basis-1/2 lg:basis-1/3"
               >
-                <div className="relative h-full flex flex-col bg-background rounded-2xl shadow-floating">
+                <div className="relative flex flex-col bg-background rounded-2xl shadow-floating">
                   {/* Avatar */}
                   <div className="absolute -top-10 left-1/2 -translate-x-1/2 z-10">
                     <div className="w-20 h-20 rounded-full border-4 border-background shadow-soft overflow-hidden bg-background">
@@ -160,9 +160,9 @@ export const Testimonials = () => {
                   </div>
 
                   {/* Quote grows so every card matches the tallest review */}
-                  <div className="flex-1 bg-muted/40 rounded-t-2xl px-6 pt-12 pb-5 flex flex-col justify-center">
+                  <div className="h-[256px] overflow-hidden bg-muted/40 rounded-t-2xl px-6 pt-12 pb-5 flex flex-col justify-center">
                     <Quote className="w-7 h-7 text-primary/40 mb-3 -scale-x-100 shrink-0" />
-                    <p className="text-foreground text-sm leading-relaxed italic">
+                    <p className={`text-foreground leading-relaxed italic ${t.quote.length > 220 ? "text-xs" : "text-sm"}`}>
                       {t.quote}
                     </p>
                   </div>
