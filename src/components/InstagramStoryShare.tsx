@@ -143,6 +143,8 @@ const drawStory = async (brands: StoryBrand[]): Promise<Blob> => {
 
 interface Props {
   refLink: string;
+  /** Trigger personalizado (p. ej. un botón-ícono). Recibe la fn para abrir el diálogo. */
+  renderTrigger?: (open: () => void) => React.ReactNode;
 }
 
 const IG_GRADIENT = "linear-gradient(to right, #f09433, #dc2743, #bc1888)";
@@ -157,7 +159,7 @@ const Step = ({ n, children }: { n: number; children: React.ReactNode }) => (
   </div>
 );
 
-export const InstagramStoryShare = ({ refLink }: Props) => {
+export const InstagramStoryShare = ({ refLink, renderTrigger }: Props) => {
   const { data: brands = [] } = useBrands();
   const [open, setOpen] = useState(false);
   const [imgUrl, setImgUrl] = useState<string | null>(null);
@@ -203,15 +205,19 @@ export const InstagramStoryShare = ({ refLink }: Props) => {
 
   return (
     <>
-      <GradientBorderButton
-        gradient={IG_GRADIENT}
-        glowColor={IG_GLOW}
-        className="h-10 w-full max-w-[400px] mx-auto"
-        onClick={handleOpen}
-      >
-        <img src={instagramIcon} alt="" className="h-5 w-5 flex-shrink-0" />
-        <span className="whitespace-nowrap">Compartir en Instagram</span>
-      </GradientBorderButton>
+      {renderTrigger ? (
+        renderTrigger(handleOpen)
+      ) : (
+        <GradientBorderButton
+          gradient={IG_GRADIENT}
+          glowColor={IG_GLOW}
+          className="h-10 w-full max-w-[400px] mx-auto"
+          onClick={handleOpen}
+        >
+          <img src={instagramIcon} alt="" className="h-5 w-5 flex-shrink-0" />
+          <span className="whitespace-nowrap">Compartir en Instagram</span>
+        </GradientBorderButton>
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md rounded-2xl">

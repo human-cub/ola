@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Plus, Minus, Trash2, Share2 } from "lucide-react";
+import { Plus, Minus, Trash2 } from "lucide-react";
 import { formatPrice } from "@/lib/formatting";
 
 interface FlavorEntry {
@@ -20,7 +20,6 @@ interface WaitingListProductItemProps {
   isCollectionEnded?: boolean;
   onQuantityChange: (id: string, delta: number, currentQty: number) => void;
   onDelete: (id: string) => void;
-  onShare: () => void;
 }
 
 export const WaitingListProductItem = ({
@@ -34,7 +33,6 @@ export const WaitingListProductItem = ({
   isCollectionEnded = false,
   onQuantityChange,
   onDelete,
-  onShare,
 }: WaitingListProductItemProps) => {
   return (
     <div className="flex gap-3 py-4">
@@ -63,14 +61,6 @@ export const WaitingListProductItem = ({
             </h3>
           </Link>
           <div className="flex items-center gap-0.5 flex-shrink-0">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7"
-              onClick={onShare}
-            >
-              <Share2 className="w-4 h-4" />
-            </Button>
             <Button
               variant="ghost"
               size="icon"
