@@ -18,7 +18,7 @@ interface ShareButtonsProps {
 }
 
 const defaultText = (link: string) =>
-  `Mirá estos descuentos de suplementos 🎉 Sumate a mi grupo en Ola y pagamos todos menos 🤑 ${link}`;
+  `Ola! Compras Grupales. Sumate a una compra grupal con mi enlace y conseguí el Súper-Precio. ${link}`;
 
 /**
  * Bloque reutilizable de botones para compartir / referir. Mismo set en todos
