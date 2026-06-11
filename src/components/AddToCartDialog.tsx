@@ -20,6 +20,7 @@ import {
 import { Plus, Minus, ShoppingCart } from "lucide-react";
 import { GroupIcon } from "@/components/icons/GroupIcon";
 import { CartAddSuccess, GroupAddSuccess } from "@/components/AddToCartSuccess";
+import { QuantityStepper } from "@/components/QuantityStepper";
 import { useCart } from "@/contexts/CartContext";
 import { useBrandCollection } from "@/hooks/useBrandCollection";
 import { useDeliveryEstimate } from "@/hooks/useDeliveryEstimate";
@@ -323,7 +324,7 @@ export const AddToCartDialog = ({
             {/* Product Info */}
             <div className="flex gap-4 items-center">
               {effImage && (
-                <div className="w-20 h-20 bg-slate-50 rounded-xl border border-border overflow-hidden shrink-0">
+                <div className="w-24 h-24 bg-muted rounded-md overflow-hidden shrink-0">
                   <img
                     src={effImage}
                     alt={productName}
@@ -381,27 +382,11 @@ export const AddToCartDialog = ({
             {/* Quantity Selector */}
             <div className="space-y-2">
               <Label>Cantidad</Label>
-              <div className="flex items-center gap-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => handleQuantityChange(-1)}
-                  disabled={quantity <= 1}
-                >
-                  <Minus className="w-4 h-4" />
-                </Button>
-                <span className="text-xl font-semibold w-12 text-center">{quantity}</span>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => handleQuantityChange(1)}
-                  disabled={quantity >= 99}
-                >
-                  <Plus className="w-4 h-4" />
-                </Button>
-              </div>
+              <QuantityStepper
+                quantity={quantity}
+                onMinus={() => handleQuantityChange(-1)}
+                onPlus={() => handleQuantityChange(1)}
+              />
             </div>
 
             {/* Price Summary */}

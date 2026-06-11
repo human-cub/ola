@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Plus, Minus, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
+import { QuantityStepper } from "@/components/QuantityStepper";
 import { formatPrice } from "@/lib/formatting";
 
 interface FlavorEntry {
@@ -24,50 +25,6 @@ interface WaitingListProductItemProps {
   onQuantityChange: (id: string, delta: number, currentQty: number) => void;
   onDelete: (id: string) => void;
 }
-
-const Stepper = ({
-  quantity,
-  onMinus,
-  onPlus,
-  allowZero = false,
-}: {
-  quantity: number;
-  onMinus: () => void;
-  onPlus: () => void;
-  /** Permite bajar a 0 (quitar el sabor). En 1 el botón "menos" se vuelve papelera. */
-  allowZero?: boolean;
-}) => {
-  const removeOnMinus = allowZero && quantity <= 1;
-  return (
-    <div className="flex items-center rounded-md border border-input flex-shrink-0 overflow-hidden">
-      <button
-        type="button"
-        className="h-8 px-3 flex items-center justify-center text-muted-foreground hover:bg-muted disabled:opacity-40 disabled:hover:bg-transparent"
-        onClick={onMinus}
-        disabled={!allowZero && quantity <= 1}
-        aria-label={removeOnMinus ? "Quitar sabor" : "Restar"}
-      >
-        {removeOnMinus ? (
-          <Trash2 className="w-3.5 h-3.5" />
-        ) : (
-          <Minus className="w-3.5 h-3.5" />
-        )}
-      </button>
-      <span className="w-9 text-center font-semibold text-sm border-x border-input leading-8">
-        {quantity}
-      </span>
-      <button
-        type="button"
-        className="h-8 px-3 flex items-center justify-center text-muted-foreground hover:bg-muted disabled:opacity-40 disabled:hover:bg-transparent"
-        onClick={onPlus}
-        disabled={quantity >= 99}
-        aria-label="Sumar"
-      >
-        <Plus className="w-3.5 h-3.5" />
-      </button>
-    </div>
-  );
-};
 
 export const WaitingListProductItem = ({
   id,
@@ -142,7 +99,7 @@ export const WaitingListProductItem = ({
                 ) : (
                   <span className="flex-1" />
                 )}
-                <Stepper
+                <QuantityStepper
                   quantity={entry.quantity}
                   onMinus={() => onQuantityChange(entry.id, -1, entry.quantity)}
                   onPlus={() => onQuantityChange(entry.id, 1, entry.quantity)}

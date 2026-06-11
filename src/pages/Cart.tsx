@@ -118,7 +118,9 @@ const Cart = () => {
                       productId={item.product_id}
                       productName={item.product_name}
                       productImage={item.product_image}
+                      productSize={priceMap.get(item.product_id)?.size ?? null}
                       pricePerUnit={getUnitPrice(item)}
+                      retailPerUnit={priceMap.get(item.product_id)?.retail ?? 0}
                       quantity={item.quantity}
                       flavor={item.flavor}
                       flavors={priceMap.get(item.product_id)?.flavors || []}

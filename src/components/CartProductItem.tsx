@@ -7,7 +7,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Minus, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
+import { QuantityStepper } from "@/components/QuantityStepper";
 import { formatPrice } from "@/lib/formatting";
 
 interface CartProductItemProps {
@@ -15,7 +16,10 @@ interface CartProductItemProps {
   productId: string;
   productName: string;
   productImage: string | null;
+  productSize?: string | null;
   pricePerUnit: number;
+  /** Precio retail (tachado) por unidad; se muestra sólo si es mayor al actual. */
+  retailPerUnit?: number;
   quantity: number;
   flavor?: string | null;
   flavors: string[];
@@ -30,7 +34,9 @@ export const CartProductItem = ({
   productId,
   productName,
   productImage,
+  productSize = null,
   pricePerUnit,
+  retailPerUnit = 0,
   quantity,
   flavor,
   flavors,
@@ -39,49 +45,50 @@ export const CartProductItem = ({
   onFlavorChange,
   onDelete,
 }: CartProductItemProps) => {
+  const showRetail = retailPerUnit > pricePerUnit;
   return (
-    <div className="flex gap-3 py-4">
-      {/* Fixed square image container */}
-      <Link to={productLink} className="flex-shrink-0">
-        {productImage && (
-          <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted">
-            <img
-              src={productImage}
-              alt={productName}
-              className="w-full h-full object-contain"
-              loading="lazy"
-              decoding="async"
-            />
+    <div className="py-4">
+      {/* Fila superior: imagen + nombre/tamaño + eliminar */}
+      <div className="flex items-center gap-3">
+        <Link to={productLink} className="flex-shrink-0">
+          <div className="w-24 h-24 rounded-md overflow-hidden bg-muted">
+            {productImage && (
+              <img
+                src={productImage}
+                alt={productName}
+                className="w-full h-full object-contain"
+                loading="lazy"
+                decoding="async"
+              />
+            )}
           </div>
-        )}
-      </Link>
+        </Link>
 
-      {/* Content */}
-      <div className="flex-1 min-w-0 flex flex-col">
-        {/* Row 1: Name and delete button */}
-        <div className="flex justify-between items-start gap-2 mb-1">
-          <Link to={productLink} className="hover:underline flex-1 min-w-0">
-            <h3 className="font-semibold text-sm leading-tight line-clamp-2">
-              {productName}
-            </h3>
-          </Link>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0 h-7 w-7"
-            onClick={() => onDelete(id)}
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
-        </div>
+        <Link to={productLink} className="hover:underline flex-1 min-w-0">
+          <h3 className="font-semibold text-base leading-snug line-clamp-2">
+            {productName}
+          </h3>
+          {productSize && (
+            <p className="text-sm text-muted-foreground mt-0.5">{productSize}</p>
+          )}
+        </Link>
 
-        {/* Row 2: Flavor selector if available */}
-        {flavors.length > 0 && (
-          <Select
-            value={flavor || ""}
-            onValueChange={(value) => onFlavorChange(id, value)}
-          >
-            <SelectTrigger className="w-full h-7 text-xs mb-2 max-w-[200px]">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0 h-8 w-8 rounded-md self-start"
+          onClick={() => onDelete(id)}
+          aria-label="Eliminar"
+        >
+          <Trash2 className="w-4 h-4" />
+        </Button>
+      </div>
+
+      {/* Selector de sabor (si aplica) */}
+      {flavors.length > 0 && (
+        <div className="mt-3">
+          <Select value={flavor || ""} onValueChange={(value) => onFlavorChange(id, value)}>
+            <SelectTrigger className="h-8 text-sm w-full max-w-[220px]">
               <SelectValue placeholder="Seleccionar sabor" />
             </SelectTrigger>
             <SelectContent>
@@ -92,41 +99,31 @@ export const CartProductItem = ({
               ))}
             </SelectContent>
           </Select>
-        )}
+        </div>
+      )}
 
-        {/* Row 3: Quantity controls and price - always at bottom */}
-        <div className="flex items-center justify-between mt-auto">
-          <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-7 w-7"
-              onClick={() => onQuantityChange(id, -1, quantity)}
-              disabled={quantity <= 1}
-            >
-              <Minus className="w-3 h-3" />
-            </Button>
-            <span className="w-6 text-center font-medium text-sm">
-              {quantity}
-            </span>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-7 w-7"
-              onClick={() => onQuantityChange(id, 1, quantity)}
-              disabled={quantity >= 99}
-            >
-              <Plus className="w-3 h-3" />
-            </Button>
+      {/* Pie: contador (izq) + precio (c/u arriba si qty>1; retail tachado + total) */}
+      <div className="mt-3 pt-3 border-t">
+        {quantity > 1 && (
+          <div className="text-right text-xs text-muted-foreground mb-0.5">
+            {formatPrice(pricePerUnit)} c/u
           </div>
-
+        )}
+        <div className="flex items-end justify-between gap-3">
+          <QuantityStepper
+            quantity={quantity}
+            onMinus={() => onQuantityChange(id, -1, quantity)}
+            onPlus={() => onQuantityChange(id, 1, quantity)}
+          />
           <div className="text-right">
-            <p className="text-xs text-muted-foreground whitespace-nowrap">
-              {formatPrice(pricePerUnit)} c/u
-            </p>
-            <p className="font-semibold text-sm">
+            {showRetail && (
+              <span className="line-through text-muted-foreground text-sm mr-2">
+                {formatPrice(retailPerUnit * quantity)}
+              </span>
+            )}
+            <span className="font-bold text-base">
               {formatPrice(pricePerUnit * quantity)}
-            </p>
+            </span>
           </div>
         </div>
       </div>
