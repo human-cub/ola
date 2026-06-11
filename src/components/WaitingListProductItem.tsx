@@ -127,19 +127,30 @@ export const WaitingListProductItem = ({
       {/* Sabores (ancho completo): nombre del sabor + su contador */}
       {flavorEntries.length > 0 && (
         <div className="mt-3 space-y-2">
-          {flavorEntries.map((entry) => (
-            <div key={entry.id} className="flex items-center justify-between gap-3">
-              <p className="text-sm text-foreground truncate min-w-0 flex-1">
-                {entry.flavor || "Sin sabor"}
-              </p>
-              <Stepper
-                quantity={entry.quantity}
-                onMinus={() => onQuantityChange(entry.id, -1, entry.quantity)}
-                onPlus={() => onQuantityChange(entry.id, 1, entry.quantity)}
-                allowZero={flavorEntries.length > 1}
-              />
-            </div>
-          ))}
+          {flavorEntries.map((entry) => {
+            // "Sin sabor" sólo cuando el producto tiene varias variantes (una sin sabor);
+            // si el producto no tiene sabor (una sola entrada nula), no mostramos etiqueta.
+            const label = entry.flavor
+              ? entry.flavor
+              : flavorEntries.length > 1
+                ? "Sin sabor"
+                : null;
+            return (
+              <div key={entry.id} className="flex items-center justify-between gap-3">
+                {label ? (
+                  <p className="text-sm text-foreground truncate min-w-0 flex-1">{label}</p>
+                ) : (
+                  <span className="flex-1" />
+                )}
+                <Stepper
+                  quantity={entry.quantity}
+                  onMinus={() => onQuantityChange(entry.id, -1, entry.quantity)}
+                  onPlus={() => onQuantityChange(entry.id, 1, entry.quantity)}
+                  allowZero={flavorEntries.length > 1}
+                />
+              </div>
+            );
+          })}
         </div>
       )}
 
