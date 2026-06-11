@@ -9,9 +9,8 @@ interface Props {
 }
 
 /**
- * Шапка бренд-блока: кликабельное имя марки + прогресс-бар сбора в одну строку;
- * ниже — «Faltan $X. Compartí y llevate el Súper-Precio» с кнопками шаринга справа.
- * Если у марки нет цели сбора — кнопки шаринга показываем справа от имени.
+ * Шапка бренд-блока: кликабельное имя марки + прогресс-бар + кнопки шаринга
+ * (всегда справа) в одну строку; ниже — «Faltan $X. Compartí…» по центру всего бокса.
  */
 export const BrandGroupHeader = ({ brandSlug, brandName }: Props) => {
   const { collected, target, pct, reached } = useBrandProgress(brandSlug);
@@ -24,7 +23,7 @@ export const BrandGroupHeader = ({ brandSlug, brandName }: Props) => {
             {brandName}
           </h2>
         </Link>
-        {hasGoal ? (
+        {hasGoal && (
           <div className="relative h-3.5 flex-1 bg-muted rounded-full overflow-hidden">
             <div
               className="absolute top-0 left-0 h-full rounded-full transition-all duration-1000"
@@ -35,45 +34,40 @@ export const BrandGroupHeader = ({ brandSlug, brandName }: Props) => {
               }}
             />
           </div>
-        ) : (
-          <ShareIconButtons source="mis_grupos_brand" className="shrink-0 ml-auto" />
         )}
+        <ShareIconButtons source="mis_grupos_brand" className="shrink-0 ml-auto" />
       </div>
-      {hasGoal && (
-        <div className="flex items-center justify-between gap-2">
-          {reached ? (
-            <p className="text-sm font-bold text-primary leading-snug flex-1 text-center">
-              ¡Meta alcanzada! Súper-Precio activo
-            </p>
-          ) : (
-            <p className="text-sm leading-snug flex-1 text-center">
-              <span className="text-foreground">
-                Faltan{" "}
-                <span style={{ color: "hsl(var(--group-buy-accent))" }}>
-                  {formatPrice(target - collected)}
-                </span>
-                .
-              </span>{" "}
-              <span
-                className="font-semibold animate-shimmer"
-                style={{
-                  backgroundImage:
-                    "linear-gradient(90deg, hsl(42 100% 28%), hsl(45 95% 55%), hsl(42 100% 28%))",
-                  backgroundSize: "200% auto",
-                  WebkitBackgroundClip: "text",
-                  backgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  color: "transparent",
-                  animationDuration: "4s",
-                }}
-              >
-                Compartí y llevate el Súper-Precio
+      {hasGoal &&
+        (reached ? (
+          <p className="text-sm font-bold text-primary leading-snug text-center">
+            ¡Meta alcanzada! Súper-Precio activo
+          </p>
+        ) : (
+          <p className="text-sm leading-snug text-center">
+            <span className="text-foreground">
+              Faltan{" "}
+              <span style={{ color: "hsl(var(--group-buy-accent))" }}>
+                {formatPrice(target - collected)}
               </span>
-            </p>
-          )}
-          <ShareIconButtons source="mis_grupos_brand" className="shrink-0" />
-        </div>
-      )}
+              .
+            </span>{" "}
+            <span
+              className="font-semibold animate-shimmer"
+              style={{
+                backgroundImage:
+                  "linear-gradient(90deg, hsl(42 100% 28%), hsl(45 95% 55%), hsl(42 100% 28%))",
+                backgroundSize: "200% auto",
+                WebkitBackgroundClip: "text",
+                backgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                color: "transparent",
+                animationDuration: "4s",
+              }}
+            >
+              Compartí y llevate el Súper-Precio
+            </span>
+          </p>
+        ))}
     </div>
   );
 };
