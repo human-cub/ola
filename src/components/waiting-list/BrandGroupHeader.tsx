@@ -8,19 +8,20 @@ interface Props {
 }
 
 /**
- * Шапка бренд-блока в листе ожидания: имя марки и прогресс-бар сбора на одной
- * строке; ниже — «Faltan $X para Súper-Precio. Compartí y llevate un descuento»
- * в одну строку с кнопками шаринга, прижатыми вправо.
+ * Шапка бренд-блока: имя марки + прогресс-бар сбора в одну строку; ниже —
+ * «Faltan $X para Súper-Precio. Compartí…» с кнопками шаринга справа.
+ * Если у марки нет цели сбора — кнопки шаринга всё равно показываем (справа от имени).
  */
 export const BrandGroupHeader = ({ brandSlug, brandName }: Props) => {
   const { collected, target, pct, reached } = useBrandProgress(brandSlug);
+  const hasGoal = target > 0;
   return (
     <div className="mb-3">
       <div className="flex items-center gap-3 mb-2">
         <h2 className="text-base font-bold uppercase tracking-wider text-primary whitespace-nowrap">
           {brandName}
         </h2>
-        {target > 0 && (
+        {hasGoal ? (
           <div className="relative h-3.5 flex-1 bg-muted rounded-full overflow-hidden">
             <div
               className="absolute top-0 left-0 h-full rounded-full transition-all duration-1000"
@@ -31,9 +32,11 @@ export const BrandGroupHeader = ({ brandSlug, brandName }: Props) => {
               }}
             />
           </div>
+        ) : (
+          <ShareIconButtons source="mis_grupos_brand" className="shrink-0 ml-auto" />
         )}
       </div>
-      {target > 0 && (
+      {hasGoal && (
         <div className="flex items-center justify-between gap-2">
           {reached ? (
             <p className="text-sm font-bold text-primary leading-snug">
@@ -65,7 +68,7 @@ export const BrandGroupHeader = ({ brandSlug, brandName }: Props) => {
               </span>
             </p>
           )}
-          <ShareIconButtons source="mis_grupos_brand" className="flex-shrink-0" />
+          <ShareIconButtons source="mis_grupos_brand" className="shrink-0" />
         </div>
       )}
     </div>
