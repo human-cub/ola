@@ -84,7 +84,7 @@ const CategoriaV2 = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header isVisible={headerVisible} />
-      <main className="pb-[24px] pt-[120px] sm:pt-[104px]">
+      <main className="pb-[24px] pt-[112px] sm:pt-[64px]">
         <Breadcrumb items={[{ label: "Catálogo", href: "/catalogo" }, { label: name }]} />
         <div className="container mx-auto px-4 py-8">
           <h1 className="text-2xl font-bold text-center mb-8 flex items-center justify-center gap-2">

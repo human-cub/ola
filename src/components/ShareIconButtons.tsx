@@ -1,4 +1,5 @@
 import * as amplitude from "@amplitude/analytics-browser";
+import { Copy } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ShareIcon } from "@/components/icons/ShareIcon";
@@ -14,6 +15,8 @@ interface ShareIconButtonsProps {
   shareText?: string;
   /** Enlace de referido explícito. Si se omite, usa el del usuario logueado. */
   refLink?: string;
+  /** Muestra además un botón para copiar el enlace de referido. */
+  showCopyLink?: boolean;
   className?: string;
 }
 
@@ -25,7 +28,7 @@ const defaultText = (link: string) =>
  * WhatsApp y compartir nativo. Mismo enlace de referido y analítica que ShareButtons,
  * pensada para ir alineada a la derecha de una línea (p. ej. la barra de marca).
  */
-export const ShareIconButtons = ({ source, shareText, refLink, className }: ShareIconButtonsProps) => {
+export const ShareIconButtons = ({ source, shareText, refLink, showCopyLink = false, className }: ShareIconButtonsProps) => {
   const { data: ownLink } = useReferralLink();
   const shareLink = refLink ?? ownLink ?? FALLBACK_LINK;
   const text = shareText ?? defaultText(shareLink);
@@ -43,6 +46,12 @@ export const ShareIconButtons = ({ source, shareText, refLink, className }: Shar
   const handleWhatsApp = () => {
     amplitude.track("Referral Shared", { method: "whatsapp", source });
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+  };
+
+  const handleCopyLink = () => {
+    amplitude.track("Referral Shared", { method: "copy_link", source });
+    navigator.clipboard.writeText(shareLink);
+    toast.success("¡Enlace copiado!");
   };
 
   return (
@@ -82,6 +91,18 @@ export const ShareIconButtons = ({ source, shareText, refLink, className }: Shar
       >
         <ShareIcon className="h-[18px] w-[18px] text-primary" />
       </Button>
+      {showCopyLink && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 rounded-full"
+          onClick={handleCopyLink}
+          aria-label="Copiar enlace"
+        >
+          <Copy className="h-[18px] w-[18px] text-primary" />
+        </Button>
+      )}
     </div>
   );
 };
