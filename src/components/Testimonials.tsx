@@ -38,7 +38,7 @@ const testimonials: Testimonial[] = [
   {
     name: "Tomás",
     quote:
-      "Muchas gracias!! Muy buen servicio. La aplicación es fácil e intuitiva para usar. Es realmente muy buena la idea y siempre tienen los mejores precios para una gran variedad de suplementos! La atención es genial y siempre muestran una gran predisposición! Realmente un gran servicio que sin dudas seguiré usando 💪🏼💪🏼💪🏼💪🏼",
+      "Muy buen servicio. La aplicación es fácil e intuitiva. Siempre tienen los mejores precios para una gran variedad de suplementos y la atención es genial. Un gran servicio que sin dudas seguiré usando 💪🏼💪🏼",
     avatar: "/testimonial-tomas.webp",
   },
   {
@@ -151,10 +151,10 @@ export const Testimonials = () => {
               key={i}
               className="pl-6 basis-[85%] sm:basis-[70%] max-w-[400px]"
             >
-              <div className="py-10">
+              <div className="py-10 h-full">
                 <div
                   className={cn(
-                    "relative bg-background rounded-2xl shadow-floating overflow-visible transition-opacity duration-300",
+                    "relative bg-background rounded-2xl shadow-floating overflow-visible transition-opacity duration-300 h-full flex flex-col",
                     // !canScroll || i === current ? "opacity-100" : "opacity-40"
                   )}
                 >
@@ -166,7 +166,7 @@ export const Testimonials = () => {
                           src={t.avatar}
                           alt={t.name}
                           className="w-full h-full object-cover"
-                          loading="lazy"
+                          loading="eager"
                           decoding="async"
                         />
                       ) : (
@@ -180,13 +180,13 @@ export const Testimonials = () => {
                   {/* Quote area */}
                   <div className="bg-muted/40 rounded-t-2xl px-6 pt-6 pb-6">
                     <Quote className="w-8 h-8 text-primary/40 mb-3 -scale-x-100" />
-                    <p className="text-foreground text-base leading-relaxed italic">
+                    <p className="text-foreground text-base leading-relaxed italic line-clamp-6">
                       {t.quote}
                     </p>
                   </div>
 
                   {/* Name area */}
-                  <div className="px-6 py-5 text-center">
+                  <div className="px-6 py-5 text-center mt-auto">
                     <h3 className="text-xl font-bold text-foreground">
                       {t.name}
                     </h3>
