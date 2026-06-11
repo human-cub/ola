@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { Copy } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { formatPrice } from "@/lib/formatting";
 import * as amplitude from "@amplitude/analytics-browser";
 import { Button } from "@/components/ui/button";
@@ -18,12 +17,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Minus, ShoppingCart, Check } from "lucide-react";
+import { Plus, Minus, ShoppingCart } from "lucide-react";
 import { GroupIcon } from "@/components/icons/GroupIcon";
-import { ShareIcon } from "./icons/ShareIcon";
-import { WhatsAppIcon } from "./icons/WhatsAppIcon";
-import { toast } from "sonner";
+import { CartAddSuccess, GroupAddSuccess } from "@/components/AddToCartSuccess";
 import { useCart } from "@/contexts/CartContext";
+import { useBrandCollection } from "@/hooks/useBrandCollection";
 import { useDeliveryEstimate } from "@/hooks/useDeliveryEstimate";
 import { supabase } from "@/integrations/supabase/client";
 import { setPendingAddAction } from "@/lib/postAuthAction";
@@ -83,13 +81,16 @@ export const AddToCartDialog = ({
   const { addToCart, addToWaitingList, cartItems, waitingListItems } = useCart();
   const { costFor } = useDeliveryEstimate();
   const navigate = useNavigate();
-  const location = useLocation();
   // selectedFlavor хранит КЛЮЧ опции: имя вкуса или FLAVORLESS_KEY («Sin sabor»)
   const [selectedFlavor, setSelectedFlavor] = useState<string>("");
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  // Recaudación de la marca ANTES de agregar — la barra del éxito se llena
+  // desde este nivel con el aporte del pedido
+  const [groupSnapshot, setGroupSnapshot] = useState<{ collected: number; target: number } | null>(null);
+  const { collectedRaw: brandCollected, target: brandTarget } = useBrandCollection(brandSlug);
 
   const flavorOptions = variantOptions
     ? variantOptions.map((v) => ({
@@ -220,6 +221,7 @@ export const AddToCartDialog = ({
       }
 
       if (isWaitingList) {
+        setGroupSnapshot({ collected: brandCollected, target: brandTarget });
         await addToWaitingList({
           product_id: effProductId,
           product_name: productName,
@@ -257,20 +259,12 @@ export const AddToCartDialog = ({
       });
 
       setSuccess(true);
-      if (!isWaitingList) {
-        setTimeout(() => {
-          onOpenChange(false);
-        }, 1500);
-      }
     } catch (err) {
       setError("Error al agregar el producto");
     } finally {
       setLoading(false);
     }
   };
-
-  const productUrl = productLink ?? `https://alaola.com.ar${location.pathname}`;
-  const shareText = `Mirá este producto con descuento en Ola 🎉 ${productName} — comprá ahora o esperá y pagá menos 🤑 ${productUrl}`;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -299,82 +293,27 @@ export const AddToCartDialog = ({
         </DialogHeader>
 
         {success ? (
-          <div className="flex flex-col items-center justify-center py-4 gap-3">
-            <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
-              <Check className="w-8 h-8 text-green-600" />
-            </div>
-            <p className="text-lg font-bold text-center">
-              {isWaitingList ? "¡Ya estás en el grupo!" : "¡Producto agregado!"}
-            </p>
-            {isWaitingList && (
-              <p className="text-sm text-muted-foreground text-center -mt-1">
-                Tu Precio Garantizado quedó asegurado.
-              </p>
-            )}
-
-            {isWaitingList && (
-              <div className="w-full bg-gradient-primary/10 rounded-xl p-4 border border-primary/20 mt-1">
-                <p className="text-sm font-semibold text-primary text-center mb-1">
-                  ¡Seamos más pagamos menos!
-                </p>
-                <p className="text-sm text-center text-muted-foreground mb-4">
-                  Compartí con tus amigos para llegar al Súper-Precio.
-                </p>
-                <div className="flex flex-col gap-2">
-                <Button
-                  onClick={() => {
-                    if (navigator.share) {
-                      navigator.share({ text: shareText }).catch(() => {});
-                    } else {
-                      navigator.clipboard.writeText(shareText);
-                      toast.success("¡Texto copiado!");
-                    }
-                  }}
-                  className="w-full py-2.5"
-                >
-                  <ShareIcon className="h-4 w-4" />
-                  <span>Compartir con amigos</span>
-                </Button>
-
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    amplitude.track('Whatsapp Opened', { source: 'add_to_cart_success', product_name: productName });
-                    window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
-                  }}
-                  className="w-full py-2.5"
-                >
-                  <WhatsAppIcon className="h-4 w-4" />
-                  <span>Compartir por WhatsApp</span>
-                </Button>
-
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    navigator.clipboard.writeText(shareText);
-                    toast.success("¡Invitación copiada!");
-                  }}
-                  className="w-full py-2.5"
-                >
-                  <Copy className="h-4 w-4" />
-                  <span>Copiar invitación</span>
-                </Button>
-
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    navigator.clipboard.writeText(productUrl);
-                    toast.success("¡Enlace copiado!");
-                  }}
-                  className="w-full py-2.5"
-                >
-                  <Copy className="h-4 w-4" />
-                  <span>Copiar enlace</span>
-                </Button>
-                </div>
-              </div>
-            )}
-          </div>
+          isWaitingList ? (
+            <GroupAddSuccess
+              productName={productName}
+              prevCollected={groupSnapshot?.collected ?? 0}
+              target={groupSnapshot?.target ?? 0}
+              addedAmount={pricePerUnit * quantity}
+            />
+          ) : (
+            <CartAddSuccess
+              productName={productName}
+              productImage={effImage}
+              flavor={selectedFlavor === FLAVORLESS_KEY ? null : selectedFlavor || null}
+              quantity={quantity}
+              unitPrice={pricePerUnit}
+              onGoToCart={() => {
+                onOpenChange(false);
+                navigate("/carrito");
+              }}
+              onClose={() => onOpenChange(false)}
+            />
+          )
         ) : (
           <div className="space-y-4">
             {/* Product Info */}
@@ -392,9 +331,19 @@ export const AddToCartDialog = ({
               )}
               <div className="flex-1">
                 <h3 className="font-semibold text-base leading-[1.2]">{productName}</h3>
-                <p className="text-muted-foreground text-sm mt-0.5">
-                  {formatPrice(pricePerUnit)} c/u
-                </p>
+                <div className="flex items-baseline gap-2 mt-1 flex-wrap">
+                  <span
+                    className={`text-2xl font-bold leading-none ${isWaitingList ? "text-primary" : "text-foreground"}`}
+                  >
+                    {formatPrice(pricePerUnit)}
+                  </span>
+                  <span className="text-xs text-muted-foreground">c/u</span>
+                  {(effPrices[0]?.price ?? 0) > pricePerUnit && (
+                    <span className="text-xs text-muted-foreground/70 line-through">
+                      {formatPrice(effPrices[0].price)}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -451,30 +400,34 @@ export const AddToCartDialog = ({
             {/* Price Summary */}
             <div className="bg-muted/60 rounded-xl border border-border p-4 space-y-2">
               <div className="flex justify-between text-sm">
-                <span className={isWaitingList ? "font-semibold text-primary" : ""}>
-                  {isWaitingList ? "Precio Garantizado:" : "Precio unitario:"}
-                </span>
-                <span className={isWaitingList ? "font-semibold text-primary" : ""}>
-                  {formatPrice(pricePerUnit)}
+                <span>Cantidad:</span>
+                <span className="font-semibold">
+                  {quantity} × {formatPrice(pricePerUnit)}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span>Envío:</span>
                 <span>{deliveryEstimate === 0 ? "Gratis" : formatPrice(deliveryEstimate)}</span>
               </div>
-              <div className="flex justify-between font-bold text-lg">
-                <span style={isWaitingList ? { color: "hsl(var(--group-buy-accent))" } : undefined}>
-                  {isWaitingList ? "Súper-Precio:" : "Total:"}
-                </span>
-                <span
-                  className={isWaitingList ? undefined : "text-primary"}
-                  style={isWaitingList ? { color: "hsl(var(--group-buy-accent))" } : undefined}
-                >
-                  {isWaitingList
-                    ? formatPrice((effPrices[effPrices.length - 1]?.price ?? pricePerUnit) * quantity)
-                    : formatPrice(totalPrice)}
+              <div
+                className={`flex justify-between ${isWaitingList ? "text-sm font-semibold text-primary" : "font-bold text-lg"}`}
+              >
+                <span>{isWaitingList ? "Precio Garantizado:" : "Total:"}</span>
+                <span className={isWaitingList ? undefined : "text-primary"}>
+                  {formatPrice(totalPrice)}
                 </span>
               </div>
+              {isWaitingList && (
+                <div
+                  className="flex justify-between font-bold text-lg"
+                  style={{ color: "hsl(var(--group-buy-accent))" }}
+                >
+                  <span>Súper-Precio:</span>
+                  <span>
+                    {formatPrice((effPrices[effPrices.length - 1]?.price ?? pricePerUnit) * quantity)}
+                  </span>
+                </div>
+              )}
               {isWaitingList && (
                 <p className="text-xs text-muted-foreground">
                   * El Precio Garantizado está asegurado en todos los casos. Para alcanzar el Súper-Precio, compartí en redes sociales e invitá a tus amigos

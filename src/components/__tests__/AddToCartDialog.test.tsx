@@ -17,6 +17,15 @@ vi.mock('@/integrations/supabase/client', () => ({
         auth: {
             getSession: vi.fn(),
         },
+        // useBrandCollection (barra de progreso del éxito) usa estos métodos
+        from: vi.fn(() => ({
+            select: vi.fn().mockResolvedValue({ data: [] }),
+        })),
+        channel: vi.fn(() => ({
+            on: vi.fn().mockReturnThis(),
+            subscribe: vi.fn().mockReturnThis(),
+        })),
+        removeChannel: vi.fn(),
     },
 }));
 
@@ -130,7 +139,7 @@ describe('AddToCartDialog Component', () => {
             });
         });
 
-        // Test pessimistic update: The success screen ("¡Producto agregado!") should appear AFTER the network requests succeed
-        expect(await screen.findByText('¡Producto agregado!')).toBeInTheDocument();
+        // Test pessimistic update: The success screen ("¡Agregado al carrito!") should appear AFTER the network requests succeed
+        expect(await screen.findByText('¡Agregado al carrito!')).toBeInTheDocument();
     });
 });
