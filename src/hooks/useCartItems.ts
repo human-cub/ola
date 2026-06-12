@@ -30,20 +30,99 @@ export const useCartItems = (
   const tempIdMap = useRef(new Map<string, string>());
   const writeChain = useRef(new Map<string, Promise<void>>());
 
+  // --- Capa de datos: usuario autenticado -> tabla directa (RLS por user_id);
+  // invitado -> RPC SECURITY DEFINER acotada por session_id (bearer-token).
+  // Asi un anonimo solo toca SU carrito y no puede leer/modificar el de otros.
+  const dbListCart = useCallback(async (userId: string | null): Promise<any[]> => {
+    if (userId) {
+      const { data, error } = await supabase
+        .from('cart_items').select('*')
+        .eq('mode', 'retail').eq('user_id', userId)
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      return data ?? [];
+    }
+    const { data, error } = await (supabase.rpc as any)('guest_cart_list', { _session_id: getSessionId() } as any);
+    if (error) throw error;
+    return (data ?? []) as any[];
+  }, [getSessionId]);
+
+  const dbFindCart = useCallback(async (userId: string | null, productId: string, flavor: string | null): Promise<any[]> => {
+    if (userId) {
+      let q: any = supabase.from('cart_items').select('id, quantity')
+        .eq('mode', 'retail').eq('product_id', productId).eq('user_id', userId);
+      q = flavor ? q.eq('flavor', flavor) : q.is('flavor', null);
+      const { data } = await q.order('created_at', { ascending: true });
+      return (data ?? []) as any[];
+    }
+    const { data } = await (supabase.rpc as any)('guest_cart_find', {
+      _session_id: getSessionId(), _product_id: productId, _flavor: flavor,
+    } as any);
+    return (data ?? []) as any[];
+  }, [getSessionId]);
+
+  const dbInsertCart = useCallback(async (userId: string | null, item: Omit<CartItem, 'id'>, quantity: number): Promise<string> => {
+    if (userId) {
+      const { data, error } = await supabase.from('cart_items').insert({
+        user_id: userId,
+        product_id: item.product_id,
+        product_name: item.product_name,
+        flavor: item.flavor,
+        quantity,
+        price_per_unit: item.price_per_unit,
+        product_image: item.product_image,
+        product_link: item.product_link ?? null,
+        mode: 'retail',
+      } as any).select('id').single();
+      if (error || !data) throw error ?? new Error('insert failed');
+      return (data as any).id as string;
+    }
+    const { data, error } = await (supabase.rpc as any)('guest_cart_insert', {
+      _session_id: getSessionId(),
+      _product_id: item.product_id,
+      _product_name: item.product_name,
+      _flavor: item.flavor ?? null,
+      _quantity: quantity,
+      _price_per_unit: item.price_per_unit,
+      _product_image: item.product_image ?? null,
+      _product_link: item.product_link ?? null,
+    } as any);
+    if (error || !data) throw error ?? new Error('insert failed');
+    return data as string;
+  }, [getSessionId]);
+
+  const dbSetQuantity = useCallback(async (userId: string | null, id: string, qty: number): Promise<{ error: any }> => {
+    if (userId) {
+      return await supabase.from('cart_items').update({ quantity: Math.min(qty, MAX_QTY) }).eq('id', id);
+    }
+    return await (supabase.rpc as any)('guest_cart_set_quantity', { _session_id: getSessionId(), _id: id, _quantity: Math.min(qty, MAX_QTY) } as any);
+  }, [getSessionId]);
+
+  const dbDeleteCart = useCallback(async (userId: string | null, ids: string[]): Promise<{ error: any }> => {
+    if (userId) {
+      return await supabase.from('cart_items').delete().in('id', ids);
+    }
+    return await (supabase.rpc as any)('guest_cart_delete', { _session_id: getSessionId(), _ids: ids } as any);
+  }, [getSessionId]);
+
+  const dbSetFlavor = useCallback(async (userId: string | null, id: string, flavor: string): Promise<{ error: any }> => {
+    if (userId) {
+      return await supabase.from('cart_items').update({ flavor }).eq('id', id);
+    }
+    return await (supabase.rpc as any)('guest_cart_set_flavor', { _session_id: getSessionId(), _id: id, _flavor: flavor } as any);
+  }, [getSessionId]);
+
+  const dbClearCart = useCallback(async (userId: string | null): Promise<void> => {
+    if (userId) {
+      await supabase.from('cart_items').delete().eq('mode', 'retail').eq('user_id', userId);
+      return;
+    }
+    await (supabase.rpc as any)('guest_cart_clear', { _session_id: getSessionId() } as any);
+  }, [getSessionId]);
+
   const fetchCartItems = useCallback(async (userId: string | null): Promise<CartItem[]> => {
     try {
-      let query: any = supabase.from('cart_items').select('*').eq('mode', 'retail');
-
-      if (userId) {
-        query = query.eq('user_id', userId);
-      } else {
-        query = query.eq('session_id', getSessionId());
-      }
-
-      const { data, error } = await query.order('created_at', { ascending: true });
-
-      if (error) throw error;
-
+      const data = await dbListCart(userId);
       return (data || []).map((raw) => {
         const item = raw as any;
         return {
@@ -61,7 +140,7 @@ export const useCartItems = (
       console.error('Error fetching cart:', error);
       return [];
     }
-  }, [getSessionId]);
+  }, [dbListCart]);
 
   const failSync = useCallback(
     async (msg: string) => {
@@ -72,7 +151,7 @@ export const useCartItems = (
     [fetchCartItems],
   );
 
-  // Persiste (debounced) la última cantidad deseada de una línea. 0 = borrar.
+  // Persiste (debounced) la ultima cantidad deseada de una linea. 0 = borrar.
   const scheduleWrite = useCallback(
     (lineId: string, delay = WRITE_DEBOUNCE_MS) => {
       const timers = writeTimers.current;
@@ -82,7 +161,7 @@ export const useCartItems = (
       const flush = () => {
         const realId = tempIdMap.current.get(lineId) ?? lineId;
         if (realId.startsWith("tmp-")) {
-          // El INSERT de esta línea sigue en vuelo: reintentar en breve
+          // El INSERT de esta linea sigue en vuelo: reintentar en breve
           timers.set(lineId, setTimeout(flush, 200));
           return;
         }
@@ -93,11 +172,8 @@ export const useCartItems = (
         const doWrite = async () => {
           const { error } =
             qty <= 0
-              ? await supabase.from('cart_items').delete().eq('id', realId)
-              : await supabase
-                  .from('cart_items')
-                  .update({ quantity: Math.min(qty, MAX_QTY) })
-                  .eq('id', realId);
+              ? await dbDeleteCart(userIdRef.current, [realId])
+              : await dbSetQuantity(userIdRef.current, realId, qty);
           if (error) {
             console.error('cart write failed', error);
             await failSync('Error al actualizar el carrito');
@@ -113,7 +189,7 @@ export const useCartItems = (
 
       timers.set(lineId, setTimeout(flush, delay));
     },
-    [failSync],
+    [failSync, dbDeleteCart, dbSetQuantity],
   );
 
   const addToCart = async (item: Omit<CartItem, 'id'>) => {
@@ -127,7 +203,7 @@ export const useCartItems = (
         mode: "retail",
       });
 
-      // Si la línea (producto+sabor) ya existe localmente, es un incremento
+      // Si la linea (producto+sabor) ya existe localmente, es un incremento
       const existingLocal = itemsRef.current.find(
         (i) => i.product_id === item.product_id && (i.flavor ?? null) === (item.flavor ?? null),
       );
@@ -142,7 +218,7 @@ export const useCartItems = (
         return;
       }
 
-      // Optimista: la línea aparece ya mismo con un id temporal
+      // Optimista: la linea aparece ya mismo con un id temporal
       const tempId = `tmp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
       setCartItems((prev) => [
         ...prev,
@@ -159,49 +235,16 @@ export const useCartItems = (
       ]);
       toast.success('Producto agregado al carrito');
 
-      // Persistencia en segundo plano
+      // Persistencia en segundo plano. user_id desde la sesion actual;
+      // invitado -> RPC por session_id.
       const { data: { session } } = await supabase.auth.getSession();
+      const ownerId = session?.user?.id ?? null;
 
-      const insertData: any = {
-        product_id: item.product_id,
-        product_name: item.product_name,
-        flavor: item.flavor,
-        quantity: addQty,
-        price_per_unit: item.price_per_unit,
-        product_image: item.product_image,
-        product_link: item.product_link ?? null,
-        mode: 'retail',
-      };
-
-      if (session?.user) {
-        insertData.user_id = session.user.id;
-      } else {
-        insertData.session_id = getSessionId();
-      }
-
-      // Check if same product+flavor exists (otra sesión / duplicados viejos)
-      let existingQuery: any = supabase
-        .from('cart_items')
-        .select('id, quantity')
-        .eq('mode', 'retail')
-        .eq('product_id', item.product_id);
-
-      if (item.flavor) {
-        existingQuery = existingQuery.eq('flavor', item.flavor);
-      } else {
-        existingQuery = existingQuery.is('flavor', null);
-      }
-
-      if (session?.user) {
-        existingQuery = existingQuery.eq('user_id', session.user.id);
-      } else {
-        existingQuery = existingQuery.eq('session_id', getSessionId());
-      }
-
-      const { data: existingRows } = await existingQuery.order('created_at', { ascending: true });
+      // Check if same product+flavor exists (otra sesion / duplicados viejos)
+      const existingRows = await dbFindCart(ownerId, item.product_id, item.flavor ?? null);
 
       if (existingRows && existingRows.length > 0) {
-        // Суммируем все совпадающие строки (включая возможные дубли) и схлопываем в одну
+        // Suma todas las filas coincidentes (incl. duplicados) y colapsa en una
         const totalExisting = existingRows.reduce((s: number, r: any) => s + (r.quantity ?? 0), 0);
         const localPending = pendingQty.current.get(tempId);
         const newQty = Math.min(localPending ?? (totalExisting + addQty), MAX_QTY);
@@ -210,26 +253,17 @@ export const useCartItems = (
         setCartItems((prev) =>
           prev.map((i) => (i.id === tempId ? { ...i, id: keep.id, quantity: newQty } : i)),
         );
-        const { error } = await supabase
-          .from('cart_items')
-          .update({ quantity: newQty })
-          .eq('id', keep.id);
+        const { error } = await dbSetQuantity(ownerId, keep.id, newQty);
         if (error) throw error;
         if (extras.length > 0) {
-          await supabase.from('cart_items').delete().in('id', extras.map((r: any) => r.id));
+          await dbDeleteCart(ownerId, extras.map((r: any) => r.id));
         }
       } else {
         const insertQty = Math.min(pendingQty.current.get(tempId) ?? addQty, MAX_QTY);
-        insertData.quantity = insertQty;
-        const { data: created, error } = await supabase
-          .from('cart_items')
-          .insert(insertData)
-          .select('id')
-          .single();
-        if (error || !created) throw error ?? new Error('insert failed');
-        tempIdMap.current.set(tempId, (created as any).id);
+        const newId = await dbInsertCart(ownerId, item, insertQty);
+        tempIdMap.current.set(tempId, newId);
         setCartItems((prev) =>
-          prev.map((i) => (i.id === tempId ? { ...i, id: (created as any).id } : i)),
+          prev.map((i) => (i.id === tempId ? { ...i, id: newId } : i)),
         );
         if (
           pendingQty.current.get(tempId) === insertQty &&
@@ -260,10 +294,7 @@ export const useCartItems = (
         if (attempt < 25) setTimeout(() => void write(attempt + 1), 200);
         return;
       }
-      const { error } = await supabase
-        .from('cart_items')
-        .update({ flavor })
-        .eq('id', realId);
+      const { error } = await dbSetFlavor(userIdRef.current, realId, flavor);
       if (error) {
         console.error('Error updating cart item flavor:', error);
         await failSync('Error al actualizar sabor');
@@ -285,19 +316,8 @@ export const useCartItems = (
       writeTimers.current.clear();
       pendingQty.current.clear();
       setCartItems([]);
-
-      const { data: { session } } = await supabase.auth.getSession();
-
-      // mode-фильтр: не трогаем строки mayorista того же юзера
-      let query = supabase.from('cart_items').delete().eq('mode', 'retail');
-
-      if (session?.user) {
-        query = query.eq('user_id', session.user.id);
-      } else {
-        query = query.eq('session_id', getSessionId());
-      }
-
-      await query;
+      // mode-filtro dentro de dbClearCart: no toca filas mayorista del mismo user
+      await dbClearCart(userIdRef.current);
     } catch (error) {
       console.error('Error clearing cart:', error);
     }
