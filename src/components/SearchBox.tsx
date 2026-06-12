@@ -13,6 +13,7 @@ import {
   pushRecentSearch,
   clearRecentSearches,
 } from "@/lib/productSearch";
+import { track } from "@/lib/analytics";
 
 const MAX_PRODUCTS = 6;
 const MAX_QUICK = 3;
@@ -112,6 +113,19 @@ export const SearchBox = ({ className, autoFocus }: SearchBoxProps) => {
     if (!q) return [];
     return searchProducts(products, q, categoryNameBySlug);
   }, [q, products, categoryNameBySlug]);
+
+  // Analytics: búsqueda (debounce; cuenta de resultados vía ref para no re-disparar)
+  const matchesCountRef = useRef(0);
+  matchesCountRef.current = matches.length;
+  useEffect(() => {
+    const term = q;
+    if (!term || term.length < 2) return;
+    const t = setTimeout(() => {
+      track("Search", { query: term.slice(0, 80), results: matchesCountRef.current });
+    }, 900);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q]);
 
   // categorías / marcas que coinciden por nombre (atajos)
   const quickCategories = useMemo(() => {

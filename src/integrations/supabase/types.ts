@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      analytics_events: {
+        Row: {
+          created_at: string
+          device: string | null
+          event: string
+          id: number
+          path: string | null
+          props: Json
+          referrer: string | null
+          session_id: string
+          user_id: string | null
+          utm: Json | null
+          visitor_id: string
+        }
+        Insert: {
+          created_at?: string
+          device?: string | null
+          event: string
+          id?: never
+          path?: string | null
+          props?: Json
+          referrer?: string | null
+          session_id: string
+          user_id?: string | null
+          utm?: Json | null
+          visitor_id: string
+        }
+        Update: {
+          created_at?: string
+          device?: string | null
+          event?: string
+          id?: never
+          path?: string | null
+          props?: Json
+          referrer?: string | null
+          session_id?: string
+          user_id?: string | null
+          utm?: Json | null
+          visitor_id?: string
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           key: string
@@ -939,6 +981,43 @@ export type Database = {
       }
     }
     Functions: {
+      admin_analytics_report: {
+        Args: { p_from: string; p_to: string }
+        Returns: Json
+      }
+      admin_referral_overview: {
+        Args: never
+        Returns: {
+          clicks: number
+          last_activity: string
+          purchasers: number
+          referrals: number
+          referred_revenue: number
+          referrer_email: string
+          referrer_id: string
+          referrer_name: string
+          registered: number
+          rewarded: number
+        }[]
+      }
+      admin_referral_weekly: {
+        Args: { p_weeks?: number }
+        Returns: {
+          clicks: number
+          orders: number
+          revenue: number
+          signups: number
+          week_start: string
+        }[]
+      }
+      admin_share_breakdown: {
+        Args: { p_days?: number }
+        Returns: {
+          cnt: number
+          method: string
+          source: string
+        }[]
+      }
       assign_admin_role: { Args: { user_email: string }; Returns: string }
       claim_wholesale_invite: { Args: { _token: string }; Returns: boolean }
       delete_email: {

@@ -15,6 +15,8 @@ interface Row {
   purchasers: number;
   clicks: number;
   rewarded: number;
+  referred_revenue: number;
+  last_activity: string | null;
 }
 
 const ReferralsTable = () => {
@@ -34,6 +36,10 @@ const ReferralsTable = () => {
   const totalPurchasers = rows.reduce((s, r) => s + (r.purchasers || 0), 0);
   const totalClicks = rows.reduce((s, r) => s + (r.clicks || 0), 0);
   const totalRewarded = rows.reduce((s, r) => s + (r.rewarded || 0), 0);
+  const totalRevenue = rows.reduce((s, r) => s + Number(r.referred_revenue || 0), 0);
+  const fmtMoney = (n: number) =>
+    new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(n || 0);
+  const fmtDate = (d: string | null) => (d ? new Date(d).toLocaleDateString("es-AR") : "—");
 
   return (
     <Card>
@@ -58,6 +64,7 @@ const ReferralsTable = () => {
               <span><strong>{totalClicks}</strong> clics</span>
               <span><strong>{totalPurchasers}</strong> compraron</span>
               <span><strong>{totalRewarded}</strong> premios</span>
+              <span><strong>{fmtMoney(totalRevenue)}</strong> facturación referida</span>
             </div>
             <Table>
               <TableHeader>
@@ -68,6 +75,8 @@ const ReferralsTable = () => {
                   <TableHead className="text-right">Clics</TableHead>
                   <TableHead className="text-right">Compraron</TableHead>
                   <TableHead className="text-right">Premios</TableHead>
+                  <TableHead className="text-right">Facturación</TableHead>
+                  <TableHead className="text-right">Últ. actividad</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -82,6 +91,8 @@ const ReferralsTable = () => {
                     <TableCell className="text-right">{r.clicks}</TableCell>
                     <TableCell className="text-right">{r.purchasers}</TableCell>
                     <TableCell className="text-right font-medium">{r.rewarded}</TableCell>
+                    <TableCell className="text-right font-medium">{fmtMoney(Number(r.referred_revenue || 0))}</TableCell>
+                    <TableCell className="text-right text-muted-foreground">{fmtDate(r.last_activity)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

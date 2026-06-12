@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
+import { track } from "@/lib/analytics";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { CartItem } from "@/contexts/CartContext";
@@ -194,6 +195,13 @@ export const useCartItems = (
   const addToCart = async (item: Omit<CartItem, 'id'>) => {
     try {
       const addQty = Math.min(Math.max(item.quantity, 1), MAX_QTY);
+      track("Add to Cart", {
+        name: item.product_name,
+        flavor: item.flavor,
+        qty: addQty,
+        price: item.price_per_unit,
+        mode: "retail",
+      });
 
       // Si la linea (producto+sabor) ya existe localmente, es un incremento
       const existingLocal = itemsRef.current.find(

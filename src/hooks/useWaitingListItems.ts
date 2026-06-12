@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
+import { track } from "@/lib/analytics";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ensurePendingCollectiveOrder, syncWaitingListOrder } from "@/services/orderService";
@@ -182,6 +183,14 @@ export const useWaitingListItems = (
   );
 
   const addToWaitingList = async (item: Omit<WaitingListItem, 'id'>) => {
+    track("Group Joined", {
+      name: item.product_name,
+      flavor: item.flavor,
+      qty: item.quantity,
+      price: item.current_price_per_unit,
+      brand: item.brand_slug ?? null,
+      mode: "collective",
+    });
     // Si la línea (producto+sabor) ya existe localmente, es un incremento optimista
     const existingLocal = itemsRef.current.find(
       (i) => i.product_id === item.product_id && (i.flavor ?? null) === (item.flavor ?? null),
