@@ -324,7 +324,7 @@ export const GroupBuyPriceBlock = ({
       style: groupBuyAccentStyle,
       locked: curtained,
     },
-  ].filter((item) => !(brandStats.goalReached && item.label === "Precio Garantizado"));
+  ].filter((item) => !(superActive && item.label === "Precio Garantizado"));
 
   return (
     <>
