@@ -40,10 +40,9 @@ export const CheckoutSuccessDialog = ({
             <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-green-100 flex items-center justify-center">
               <Check className="w-6 h-6 text-green-600" />
             </div>
-            ¡Pedido confirmado!
+            <span className="sr-only">Pedido confirmado</span>
           </AlertDialogTitle>
           <AlertDialogDescription className="text-center space-y-2.5">
-            <span className="block">Tu pedido ha sido registrado exitosamente</span>
             <span className="block text-lg font-bold text-foreground">Pedido #{orderNumber}</span>
             <span className="block text-sm">
               Nos pondremos en contacto en las próximas horas para confirmar los detalles.
