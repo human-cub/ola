@@ -17,6 +17,8 @@ import { useBrandCollection } from "@/hooks/useBrandCollection";
 import { getLastSundayClose } from "@/lib/collectivePricing";
 import { useCollectiveClock } from "@/hooks/useCollectiveClock";
 import { usePriceCurtain } from "@/hooks/usePriceCurtain";
+import { useReferralReward } from "@/hooks/useReferralReward";
+import { usePromoCode } from "@/hooks/usePromoCode";
 import { ContactGateDialog } from "@/components/ContactGateDialog";
 
 interface PriceData {
@@ -244,6 +246,9 @@ export const GroupBuyPriceBlock = ({
     goToWaitingList,
   } = useGroupBuyBlock(priceData, productName, productId);
   const { curtained } = usePriceCurtain();
+  const { hasReward } = useReferralReward();
+  const { appliedPromo } = usePromoCode();
+  const superActive = brandStats.goalReached || hasReward || (appliedPromo?.tier_bonus ?? 0) > 0;
   const [contactOpen, setContactOpen] = useState(false);
 
   useEffect(() => {
@@ -319,7 +324,7 @@ export const GroupBuyPriceBlock = ({
       style: groupBuyAccentStyle,
       locked: curtained,
     },
-  ].filter((item) => !(brandStats.goalReached && item.label === "Precio Garantizado"));
+  ].filter((item) => !(superActive && item.label === "Precio Garantizado"));
 
   return (
     <>
@@ -437,11 +442,11 @@ export const GroupBuyPriceBlock = ({
             <div className="px-6 pb-6 space-y-4 bg-card">
               <button
                 onClick={curtained ? () => setContactOpen(true) : handleWaitForDiscount}
-                className={`w-full py-4 rounded-2xl font-bold text-white text-[17px] flex items-center justify-center gap-2 shadow-lg transform transition active:scale-95 ${brandStats.goalReached ? "" : "bg-gradient-primary"}`}
-                style={brandStats.goalReached ? groupBuyAccentBackgroundStyle : undefined}
+                className={`w-full py-4 rounded-2xl font-bold text-white text-[17px] flex items-center justify-center gap-2 shadow-lg transform transition active:scale-95 ${superActive ? "" : "bg-gradient-primary"}`}
+                style={superActive ? groupBuyAccentBackgroundStyle : undefined}
               >
                 <GroupIcon className="w-6 h-6" />
-                {brandStats.goalReached && !curtained ? `Sumate al grupo · ${formatPrice(superPrice)}` : "Sumate al grupo"}
+                {superActive && !curtained ? `Sumate al grupo · ${formatPrice(superPrice)}` : "Sumate al grupo"}
               </button>
               <button
                 onClick={handleBuyNow}

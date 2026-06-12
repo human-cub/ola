@@ -24,6 +24,7 @@ import { QuantityStepper } from "@/components/QuantityStepper";
 import { useCart } from "@/contexts/CartContext";
 import { useBrandCollection } from "@/hooks/useBrandCollection";
 import { useReferralReward } from "@/hooks/useReferralReward";
+import { usePromoCode } from "@/hooks/usePromoCode";
 import { useDeliveryEstimate } from "@/hooks/useDeliveryEstimate";
 import { supabase } from "@/integrations/supabase/client";
 import { setPendingAddAction } from "@/lib/postAuthAction";
@@ -97,6 +98,8 @@ export const AddToCartDialog = ({
   const [groupSnapshot, setGroupSnapshot] = useState<{ collected: number; target: number } | null>(null);
   const { collectedRaw: brandCollected, target: brandTarget } = useBrandCollection(brandSlug);
   const { hasReward } = useReferralReward();
+  const { appliedPromo } = usePromoCode();
+  const hasPromo = (appliedPromo?.tier_bonus ?? 0) > 0;
 
   const flavorOptions = variantOptions
     ? variantOptions.map((v) => ({
@@ -137,7 +140,7 @@ export const AddToCartDialog = ({
     const buyNowPrice = list.length > 1 ? list[1].price : list[0].price;
 
     if (isWaitingList) {
-      return (isBrandGoalReached || hasReward)
+      return (isBrandGoalReached || hasReward || hasPromo)
         ? (list[3]?.price ?? list[list.length - 1]?.price ?? buyNowPrice)
         : (list[2]?.price ?? buyNowPrice);
     } else {
@@ -155,7 +158,7 @@ export const AddToCartDialog = ({
   const pricePerUnit = calculatePrice(quantity);
   const totalPrice = pricePerUnit * quantity;
   // Súper-Precio ya operativo: meta de la marca alcanzada o el usuario tiene la recompensa de referido.
-  const superActive = isWaitingList && (isBrandGoalReached || hasReward);
+  const superActive = isWaitingList && (isBrandGoalReached || hasReward || hasPromo);
 
   // Оценка доставки: Gratis по умолчанию; адрес платной зоны в кабинете —
   // её тариф (порог бесплатной доставки считается от суммы списка + этого товара)
@@ -453,13 +456,16 @@ export const AddToCartDialog = ({
                 type="button"
                 onClick={handleSubmit}
                 disabled={loading}
-                className="w-full py-3 rounded-2xl font-bold text-white text-[16px] flex items-center justify-center gap-2 shadow-lg bg-gradient-primary transform transition active:scale-95 disabled:opacity-60"
+                className={`w-full py-3 rounded-2xl font-bold text-white text-[16px] flex items-center justify-center gap-2 shadow-lg transform transition active:scale-95 disabled:opacity-60 ${superActive ? "" : "bg-gradient-primary"}`}
+                style={superActive ? { backgroundColor: "hsl(var(--group-buy-accent))" } : undefined}
               >
                 {isWaitingList ? <GroupIcon className="w-5 h-5" /> : <ShoppingCart className="w-5 h-5" />}
                 {loading
                   ? "Agregando..."
                   : isWaitingList
-                    ? "Sumate al grupo"
+                    ? superActive
+                      ? `Sumate al grupo · ${formatPrice(totalPrice)}`
+                      : "Sumate al grupo"
                     : "Agregar al carrito"}
               </button>
               <button
