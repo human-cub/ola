@@ -344,14 +344,14 @@ export const AddToCartDialog = ({
                 <p
                   className={`text-lg font-bold leading-none ${isWaitingList ? "text-primary" : "text-foreground"}`}
                 >
-                  {formatPrice(pricePerUnit)}
+                  {formatPrice(pricePerUnit)}{" "}
+                  <span className="text-[11px] font-normal text-muted-foreground">c/u</span>
                 </p>
                 {(effPrices[0]?.price ?? 0) > pricePerUnit && (
                   <p className="text-xs text-muted-foreground/70 line-through mt-1">
                     {formatPrice(effPrices[0].price)}
                   </p>
                 )}
-                <p className="text-[11px] text-muted-foreground mt-0.5">c/u</p>
               </div>
             </div>
 
