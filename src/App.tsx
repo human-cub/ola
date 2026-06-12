@@ -41,6 +41,7 @@ const RouteFallback = () => (
 );
 import { FloatingWhatsApp } from "./components/FloatingWhatsApp";
 import { ScrollToTop } from "./components/ScrollToTop";
+import { AnalyticsTracker } from "./components/AnalyticsTracker";
 import { captureRefFromUrl } from "@/lib/referral";
 import { useReferralClaim } from "@/hooks/useReferralClaim";
 import { useCurtainGuard } from "@/hooks/useCurtainGuard";
@@ -125,6 +126,7 @@ const App = () => {
           <Sonner />
           <BrowserRouter basename={useBasename ? "/socios" : undefined}>
             <ScrollToTop />
+            <AnalyticsTracker />
             <SociosApp />
           </BrowserRouter>
         </TooltipProvider>
@@ -141,6 +143,7 @@ const App = () => {
         <CartProvider>
         <PriceCurtainProvider>
         <ScrollToTop />
+        <AnalyticsTracker />
         <Suspense fallback={<RouteFallback />}>
         <Routes>
           <Route path="/" element={<Index />} />

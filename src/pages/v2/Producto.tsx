@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { track } from "@/lib/analytics";
 import { useParams, Link, useSearchParams } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Breadcrumb } from "@/components/Breadcrumb";
@@ -49,6 +50,17 @@ const ProductoV2 = () => {
     if (!product) return null;
     return product.variants.find((v) => v.sku === selectedSku) ?? product.variants[0] ?? null;
   }, [product, selectedSku]);
+
+  // Analytics: vista de producto (una vez por slug)
+  useEffect(() => {
+    if (!product) return;
+    track("Product View", {
+      sku: product.variants[0]?.sku ?? null,
+      name: product.name,
+      brand: product.brandName ?? product.brandSlug ?? null,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product?.urlSlug]);
 
   // SEO
   useEffect(() => {

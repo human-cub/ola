@@ -15,15 +15,37 @@ interface Stats {
 
 const pct = (n: number, d: number) => (d > 0 ? `${Math.round((n / d) * 1000) / 10}%` : "—");
 
+interface WeekRow {
+  week_start: string;
+  clicks: number;
+  signups: number;
+  orders: number;
+  revenue: number;
+}
+
+interface ShareRow {
+  method: string;
+  source: string;
+  cnt: number;
+}
+
 const ViralStats = () => {
   const [s, setS] = useState<Stats | null>(null);
+  const [weeks, setWeeks] = useState<WeekRow[]>([]);
+  const [shares, setShares] = useState<ShareRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase.rpc("admin_viral_stats" as any);
-      const row = Array.isArray(data) ? (data as any)[0] : (data as any);
+      const [stats, weekly, sb] = await Promise.all([
+        supabase.rpc("admin_viral_stats" as any),
+        supabase.rpc("admin_referral_weekly" as any, { p_weeks: 8 }),
+        supabase.rpc("admin_share_breakdown" as any, { p_days: 30 }),
+      ]);
+      const row = Array.isArray(stats.data) ? (stats.data as any)[0] : (stats.data as any);
       setS((row as Stats) ?? null);
+      setWeeks(((weekly.data as any) ?? []) as WeekRow[]);
+      setShares(((sb.data as any) ?? []) as ShareRow[]);
       setLoading(false);
     })();
   }, []);
@@ -82,6 +104,51 @@ const ViralStats = () => {
           <strong>{s.purchasers}</strong> compraron ({pct(s.purchasers, s.referred_signups)}) ·{" "}
           <strong>{s.rewarded}</strong> premios otorgados.
         </div>
+
+        {weeks.length > 0 && (
+          <div>
+            <h4 className="text-sm font-semibold mb-2">Por semana (últimas 8)</h4>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-muted-foreground text-left">
+                    <th className="py-1 pr-4 font-normal">Semana</th>
+                    <th className="py-1 pr-4 font-normal text-right">Clics</th>
+                    <th className="py-1 pr-4 font-normal text-right">Registros</th>
+                    <th className="py-1 pr-4 font-normal text-right">Pedidos ref.</th>
+                    <th className="py-1 font-normal text-right">Facturación ref.</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {weeks.map((w) => (
+                    <tr key={w.week_start} className="border-t border-border">
+                      <td className="py-1 pr-4">{new Date(w.week_start).toLocaleDateString("es-AR")}</td>
+                      <td className="py-1 pr-4 text-right">{w.clicks}</td>
+                      <td className="py-1 pr-4 text-right">{w.signups}</td>
+                      <td className="py-1 pr-4 text-right">{w.orders}</td>
+                      <td className="py-1 text-right">
+                        {new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(Number(w.revenue || 0))}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {shares.length > 0 && (
+          <div>
+            <h4 className="text-sm font-semibold mb-2">Cómo comparten (30 días)</h4>
+            <div className="flex flex-wrap gap-2">
+              {shares.map((sh) => (
+                <span key={`${sh.method}-${sh.source}`} className="text-xs rounded-full border border-border px-3 py-1">
+                  {sh.method} · {sh.source} · <strong>{sh.cnt}</strong>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
