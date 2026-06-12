@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { User, LogIn, ShoppingCart } from "lucide-react";
 import { GroupIcon } from "@/components/icons/GroupIcon";
 import olaLogo from "@/assets/ola-logo-new.webp";
@@ -17,6 +17,7 @@ interface HeaderProps {
 }
 
 export const Header = ({ isVisible }: HeaderProps) => {
+  const location = useLocation();
   const [user, setUser] = useState<any>(null);
   const { cartItems, waitingListItems } = useCart();
   const { isMayorista } = useUserRole();
@@ -100,7 +101,7 @@ export const Header = ({ isVisible }: HeaderProps) => {
           </Link>
 
           {/* User Account */}
-          <Link to={user ? "/mi-cuenta" : "/ingresar"}>
+          <Link to={user ? "/mi-cuenta" : `/ingresar?redirect=${encodeURIComponent(location.pathname + location.search)}`}>
             <Button
               variant="outline"
               size="sm"
