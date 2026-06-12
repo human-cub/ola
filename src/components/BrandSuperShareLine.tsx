@@ -16,13 +16,13 @@ export const BrandSuperShareLine = ({ brandSlug, source, className = "" }: Props
   const { collected, target, reached } = useBrandProgress(brandSlug);
   if (target <= 0) return null;
   return (
-    <div className={`flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 ${className}`}>
+    <div className={`flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1 ${className}`}>
       {reached ? (
-        <p className="text-sm font-bold text-primary leading-snug text-center">
+        <p className="text-xs sm:text-sm font-bold text-primary leading-snug text-center">
           ¡Meta alcanzada! Súper-Precio activo
         </p>
       ) : (
-        <p className="text-sm leading-snug text-center">
+        <p className="text-xs sm:text-sm leading-snug text-center">
           <span className="text-foreground">
             Faltan{" "}
             <span style={{ color: "hsl(var(--group-buy-accent))" }}>
