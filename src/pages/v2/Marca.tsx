@@ -9,6 +9,7 @@ import { useBrands } from "@/hooks/useBrands";
 import { useCatalogProducts } from "@/hooks/useCatalogProducts";
 import { useCategories } from "@/hooks/useCategories";
 import { BrandProgressBar } from "@/components/BrandProgressBar";
+import { BrandSuperShareLine } from "@/components/BrandSuperShareLine";
 import { CatalogProductCard } from "@/components/v2/CatalogProductCard";
 import { CatalogFilters, SortKey, sortProducts } from "@/components/v2/CatalogFilters";
 import { usePopularity } from "@/hooks/usePopularity";
@@ -115,6 +116,7 @@ const MarcaV2 = () => {
               {brand?.slug && (
                 <div className="w-full max-w-md mt-2">
                   <BrandProgressBar brandSlug={brand.slug} />
+                  <BrandSuperShareLine brandSlug={brand.slug} source="marca_page" className="mt-2.5" />
                 </div>
               )}
             </div>
