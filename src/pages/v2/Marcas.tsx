@@ -72,11 +72,11 @@ const BrandIndexCard = ({
         reached ? "ring-2 ring-primary border-primary shadow-md" : ""
       }`}
     >
-      <div className="flex items-center gap-3 h-16">
+      <div className="flex items-center gap-3 h-20">
         {logoUrl ? (
-          <img src={logoUrl} alt={`Logo ${name}`} className="h-12 w-auto object-contain" loading="lazy" decoding="async" />
+          <img src={logoUrl} alt={`Logo ${name}`} className="h-16 w-auto object-contain" loading="lazy" decoding="async" />
         ) : (
-          <span className="text-2xl">{emoji || "🏷️"}</span>
+          <span className="text-4xl">{emoji || "🏷️"}</span>
         )}
         <span className="font-semibold text-foreground group-hover:text-primary transition-colors">
           {name}
