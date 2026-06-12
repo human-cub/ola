@@ -100,18 +100,18 @@ const MarcaV2 = () => {
         <div className="container mx-auto px-4 py-4">
           {!notFound && (
             <div className="flex flex-col items-center mb-4 gap-1">
-              <div className="flex items-end gap-1.5 sm:gap-3 w-full max-w-2xl">
+              <div className="flex items-center gap-2 sm:gap-3 w-full max-w-2xl">
                 {brand?.logo_url && (
                   <img
                     src={brand.logo_url}
                     alt={`Logo ${brand.name}`}
-                    className="h-8 sm:h-12 w-auto object-contain shrink-0"
+                    className="h-8 sm:h-14 w-auto object-contain shrink-0"
                     loading="eager"
                     width={200}
                     height={80}
                   />
                 )}
-                <h1 className="text-sm sm:text-2xl font-bold text-foreground whitespace-nowrap shrink-0 leading-tight">
+                <h1 className="text-sm sm:text-lg font-bold text-foreground whitespace-nowrap shrink-0 leading-tight">
                   {brand?.name || "Marca"}
                 </h1>
                 {brand?.slug && (
