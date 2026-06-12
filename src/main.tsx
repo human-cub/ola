@@ -19,7 +19,7 @@ amplitude.add(mirrorToOwnAnalytics())
 
 // Microsoft Clarity (session replay + heatmaps). Пустой ID = выключено.
 // Дима создаёт проект на clarity.microsoft.com и вписывает Project ID сюда.
-const CLARITY_PROJECT_ID = ""
+const CLARITY_PROJECT_ID = "x5zhj63jbj"
 if (CLARITY_PROJECT_ID) {
   ;(function (c: any, l: Document, a: string, r: string, i: string) {
     c[a] = c[a] || function (...args: unknown[]) { (c[a].q = c[a].q || []).push(args) }
