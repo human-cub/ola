@@ -9,6 +9,7 @@ import { useBrands } from "@/hooks/useBrands";
 import { useCatalogProducts } from "@/hooks/useCatalogProducts";
 import { useCategories } from "@/hooks/useCategories";
 import { BrandProgressBar } from "@/components/BrandProgressBar";
+import { BrandSuperShareLine } from "@/components/BrandSuperShareLine";
 import { CatalogProductCard } from "@/components/v2/CatalogProductCard";
 import { CatalogFilters, SortKey, sortProducts } from "@/components/v2/CatalogFilters";
 import { usePopularity } from "@/hooks/usePopularity";
@@ -96,26 +97,21 @@ const MarcaV2 = () => {
             { label: brand?.name || "Marca" },
           ]}
         />
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-4">
           {!notFound && (
-            <div className="flex flex-col items-center mb-8 gap-3">
-              {brand?.logo_url && (
-                <img
-                  src={brand.logo_url}
-                  alt={`Logo ${brand.name}`}
-                  className="h-20 w-auto object-contain"
-                  loading="eager"
-                  width={200}
-                  height={80}
-                />
-              )}
-              <h1 className="text-2xl font-bold text-center bg-gradient-primary bg-clip-text text-transparent">
-                {brand?.name || "Marca"}
-              </h1>
+            <div className="flex flex-col items-center mb-4 gap-1">
+              <div className="flex items-center gap-2 sm:gap-3 w-full max-w-2xl">
+                <h1 className="text-sm sm:text-lg font-bold text-foreground whitespace-nowrap shrink-0 leading-tight">
+                  {brand?.name || "Marca"}
+                </h1>
+                {brand?.slug && (
+                  <div className="flex-1 min-w-0">
+                    <BrandProgressBar brandSlug={brand.slug} showLabels={false} />
+                  </div>
+                )}
+              </div>
               {brand?.slug && (
-                <div className="w-full max-w-md mt-2">
-                  <BrandProgressBar brandSlug={brand.slug} />
-                </div>
+                <BrandSuperShareLine brandSlug={brand.slug} source="marca_page" />
               )}
             </div>
           )}

@@ -33,15 +33,15 @@ export const CatalogFilters = ({
 }: Props) => {
   const showFilter = !!filterOptions && !!onFilterChange;
   return (
-    <div className="flex flex-wrap items-center justify-end gap-3 mb-6">
+    <div className="flex items-center justify-end gap-2 mb-6">
       {showFilter && (
-        <label className="flex items-center gap-2 text-sm">
-          <Filter className="h-4 w-4 text-muted-foreground" />
+        <label className="flex items-center gap-1.5 text-xs sm:text-sm min-w-0 flex-1 sm:flex-initial">
+          <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
           <span className="sr-only">{filterLabel}</span>
           <select
             value={filter ?? "all"}
             onChange={(e) => onFilterChange!(e.target.value)}
-            className="h-9 rounded-md border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+            className="h-9 w-full sm:w-auto min-w-0 rounded-md border bg-background px-2 sm:px-3 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
           >
             <option value="all">{filterLabel ?? "Todos"}</option>
             {filterOptions!.map((o) => (
@@ -52,13 +52,13 @@ export const CatalogFilters = ({
           </select>
         </label>
       )}
-      <label className="flex items-center gap-2 text-sm">
-        <ArrowDownUp className="h-4 w-4 text-muted-foreground" />
+      <label className="flex items-center gap-1.5 text-xs sm:text-sm min-w-0 flex-1 sm:flex-initial">
+        <ArrowDownUp className="h-4 w-4 text-muted-foreground shrink-0" />
         <span className="sr-only">Ordenar</span>
         <select
           value={sort}
           onChange={(e) => onSortChange(e.target.value as SortKey)}
-          className="h-9 rounded-md border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+          className="h-9 w-full sm:w-auto min-w-0 rounded-md border bg-background px-2 sm:px-3 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
         >
           {SORT_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>
