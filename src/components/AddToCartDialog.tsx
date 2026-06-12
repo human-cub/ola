@@ -23,6 +23,7 @@ import { CartAddSuccess, GroupAddSuccess } from "@/components/AddToCartSuccess";
 import { QuantityStepper } from "@/components/QuantityStepper";
 import { useCart } from "@/contexts/CartContext";
 import { useBrandCollection } from "@/hooks/useBrandCollection";
+import { useReferralReward } from "@/hooks/useReferralReward";
 import { useDeliveryEstimate } from "@/hooks/useDeliveryEstimate";
 import { supabase } from "@/integrations/supabase/client";
 import { setPendingAddAction } from "@/lib/postAuthAction";
@@ -95,6 +96,7 @@ export const AddToCartDialog = ({
   // desde este nivel con el aporte del pedido
   const [groupSnapshot, setGroupSnapshot] = useState<{ collected: number; target: number } | null>(null);
   const { collectedRaw: brandCollected, target: brandTarget } = useBrandCollection(brandSlug);
+  const { hasReward } = useReferralReward();
 
   const flavorOptions = variantOptions
     ? variantOptions.map((v) => ({
@@ -135,7 +137,7 @@ export const AddToCartDialog = ({
     const buyNowPrice = list.length > 1 ? list[1].price : list[0].price;
 
     if (isWaitingList) {
-      return isBrandGoalReached
+      return (isBrandGoalReached || hasReward)
         ? (list[3]?.price ?? list[list.length - 1]?.price ?? buyNowPrice)
         : (list[2]?.price ?? buyNowPrice);
     } else {
@@ -152,6 +154,8 @@ export const AddToCartDialog = ({
 
   const pricePerUnit = calculatePrice(quantity);
   const totalPrice = pricePerUnit * quantity;
+  // Súper-Precio ya operativo: meta de la marca alcanzada o el usuario tiene la recompensa de referido.
+  const superActive = isWaitingList && (isBrandGoalReached || hasReward);
 
   // Оценка доставки: Gratis по умолчанию; адрес платной зоны в кабинете —
   // её тариф (порог бесплатной доставки считается от суммы списка + этого товара)
@@ -342,7 +346,8 @@ export const AddToCartDialog = ({
               </div>
               <div className="text-right shrink-0">
                 <p
-                  className={`text-lg font-bold leading-none ${isWaitingList ? "text-primary" : "text-foreground"}`}
+                  className={`text-lg font-bold leading-none ${superActive ? "" : isWaitingList ? "text-primary" : "text-foreground"}`}
+                  style={superActive ? { color: "hsl(var(--group-buy-accent))" } : undefined}
                 >
                   {formatPrice(pricePerUnit)}{" "}
                   <span className="text-[11px] font-normal text-muted-foreground">c/u</span>
@@ -403,29 +408,38 @@ export const AddToCartDialog = ({
                 <span>Envío:</span>
                 <span>{deliveryEstimate === 0 ? "Gratis" : formatPrice(deliveryEstimate)}</span>
               </div>
-              <div
-                className={`flex justify-between ${isWaitingList ? "text-sm font-semibold text-primary" : "font-bold text-lg"}`}
-              >
-                <span>{isWaitingList ? "Precio Garantizado:" : "Total:"}</span>
-                <span className={isWaitingList ? undefined : "text-primary"}>
-                  {formatPrice(totalPrice)}
-                </span>
-              </div>
-              {isWaitingList && (
+              {!isWaitingList ? (
+                <div className="flex justify-between font-bold text-lg">
+                  <span>Total:</span>
+                  <span className="text-primary">{formatPrice(totalPrice)}</span>
+                </div>
+              ) : superActive ? (
                 <div
                   className="flex justify-between font-bold text-lg"
                   style={{ color: "hsl(var(--group-buy-accent))" }}
                 >
                   <span>Súper-Precio:</span>
-                  <span>
-                    {formatPrice((effPrices[effPrices.length - 1]?.price ?? pricePerUnit) * quantity)}
-                  </span>
+                  <span>{formatPrice(totalPrice)}</span>
                 </div>
-              )}
-              {isWaitingList && (
-                <p className="text-[11px] leading-snug text-muted-foreground">
-                  * El Precio Garantizado está asegurado en todos los casos. Para alcanzar el Súper-Precio, compartí en redes sociales e invitá a tus amigos
-                </p>
+              ) : (
+                <>
+                  <div className="flex justify-between text-sm font-semibold text-primary">
+                    <span>Precio Garantizado:</span>
+                    <span>{formatPrice(totalPrice)}</span>
+                  </div>
+                  <div
+                    className="flex justify-between font-bold text-lg"
+                    style={{ color: "hsl(var(--group-buy-accent))" }}
+                  >
+                    <span>Súper-Precio:</span>
+                    <span>
+                      {formatPrice((effPrices[effPrices.length - 1]?.price ?? pricePerUnit) * quantity)}
+                    </span>
+                  </div>
+                  <p className="text-[11px] leading-snug text-muted-foreground">
+                    * El Precio Garantizado está asegurado en todos los casos. Para alcanzar el Súper-Precio, compartí en redes sociales e invitá a tus amigos
+                  </p>
+                </>
               )}
             </div>
 
