@@ -9,15 +9,14 @@ interface Props {
 }
 
 /**
- * Línea «Faltan $X. Compartí y llevate el Súper-Precio» + botones de compartir
- * (Instagram / WhatsApp / compartir / copiar enlace), igual que en Mis grupos.
- * No renderiza nada si la marca no tiene meta de colecta.
+ * «Faltan $X. Compartí y llevate el Súper-Precio» + botones de compartir en una
+ * sola fila (se envuelve en pantallas angostas). No renderiza nada sin meta.
  */
 export const BrandSuperShareLine = ({ brandSlug, source, className = "" }: Props) => {
   const { collected, target, reached } = useBrandProgress(brandSlug);
   if (target <= 0) return null;
   return (
-    <div className={className}>
+    <div className={`flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 ${className}`}>
       {reached ? (
         <p className="text-sm font-bold text-primary leading-snug text-center">
           ¡Meta alcanzada! Súper-Precio activo
@@ -48,9 +47,7 @@ export const BrandSuperShareLine = ({ brandSlug, source, className = "" }: Props
           </span>
         </p>
       )}
-      <div className="flex justify-center mt-1.5">
-        <ShareIconButtons source={source} showCopyLink />
-      </div>
+      <ShareIconButtons source={source} showCopyLink className="shrink-0" />
     </div>
   );
 };
