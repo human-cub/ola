@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getVisitorId } from "@/lib/referral";
 
 const SESSION_KEY = "ola_an_session"; // sessionStorage: { id, last }
+const NO_TRACK_KEY = "ola_no_track"; // "1" = this browser belongs to an admin, never track
 const FIRST_TOUCH_KEY = "ola_first_touch"; // localStorage, set once per visitor
 const SESSION_GAP_MS = 30 * 60 * 1000;
 
@@ -27,6 +28,8 @@ interface EventRow {
 }
 
 let currentUserId: string | null = null;
+let noTrack = false;
+try { noTrack = localStorage.getItem("ola_no_track") === "1"; } catch { /* ignore */ }
 let sessionUtm: Utm | null = null;
 let sessionReferrerSent = false;
 let queue: EventRow[] = [];
@@ -119,6 +122,7 @@ async function flush(): Promise<void> {
 /** Track an event into our own analytics_events table. */
 export function track(event: string, props: Record<string, unknown> = {}): void {
   try {
+    if (noTrack) return;
     if (window.location.pathname.startsWith("/admin")) return;
     queue.push({
       visitor_id: getVisitorId(),
@@ -160,6 +164,29 @@ export function mirrorToOwnAnalytics(): Types.EnrichmentPlugin {
   };
 }
 
+/**
+ * Admin opt-out: once an admin signs in on this browser, flag the device and
+ * stop sending events forever (covers their anonymous sessions too). The
+ * report RPC additionally filters admin visitor_ids server-side, so history
+ * is clean retroactively as well.
+ */
+async function refreshNoTrack(uid: string | null): Promise<void> {
+  if (!uid || noTrack) return;
+  try {
+    const { data } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", uid)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (data) {
+      noTrack = true;
+      try { localStorage.setItem(NO_TRACK_KEY, "1"); } catch { /* ignore */ }
+      queue = [];
+    }
+  } catch { /* ignore */ }
+}
+
 /** Call once at app start (main.tsx). */
 export function initAnalytics(): void {
   if (initialized) return;
@@ -172,9 +199,11 @@ export function initAnalytics(): void {
     // so journeys stitch together once the user signs up).
     void supabase.auth.getSession().then(({ data }) => {
       currentUserId = data.session?.user?.id ?? null;
+      void refreshNoTrack(currentUserId);
     });
     supabase.auth.onAuthStateChange((_e, session) => {
       currentUserId = session?.user?.id ?? null;
+      void refreshNoTrack(currentUserId);
     });
 
     // Flush on tab hide/close so we lose as little as possible.
