@@ -100,24 +100,28 @@ const MarcaV2 = () => {
         <div className="container mx-auto px-4 py-8">
           {!notFound && (
             <div className="flex flex-col items-center mb-8 gap-3">
-              {brand?.logo_url && (
-                <img
-                  src={brand.logo_url}
-                  alt={`Logo ${brand.name}`}
-                  className="h-20 w-auto object-contain"
-                  loading="eager"
-                  width={200}
-                  height={80}
-                />
-              )}
-              <h1 className="text-2xl font-bold text-center bg-gradient-primary bg-clip-text text-transparent">
-                {brand?.name || "Marca"}
-              </h1>
+              <div className="flex items-center justify-center gap-3">
+                {brand?.logo_url && (
+                  <img
+                    src={brand.logo_url}
+                    alt={`Logo ${brand.name}`}
+                    className="h-12 w-auto object-contain"
+                    loading="eager"
+                    width={200}
+                    height={80}
+                  />
+                )}
+                <h1 className="text-2xl font-bold text-center bg-gradient-primary bg-clip-text text-transparent">
+                  {brand?.name || "Marca"}
+                </h1>
+              </div>
               {brand?.slug && (
                 <div className="w-full max-w-md mt-2">
                   <BrandProgressBar brandSlug={brand.slug} />
-                  <BrandSuperShareLine brandSlug={brand.slug} source="marca_page" className="mt-2.5" />
                 </div>
+              )}
+              {brand?.slug && (
+                <BrandSuperShareLine brandSlug={brand.slug} source="marca_page" className="mt-1" />
               )}
             </div>
           )}
