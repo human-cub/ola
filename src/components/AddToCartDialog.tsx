@@ -23,6 +23,7 @@ import { CartAddSuccess, GroupAddSuccess } from "@/components/AddToCartSuccess";
 import { QuantityStepper } from "@/components/QuantityStepper";
 import { useCart } from "@/contexts/CartContext";
 import { useBrandCollection } from "@/hooks/useBrandCollection";
+import { useReferralReward } from "@/hooks/useReferralReward";
 import { useDeliveryEstimate } from "@/hooks/useDeliveryEstimate";
 import { supabase } from "@/integrations/supabase/client";
 import { setPendingAddAction } from "@/lib/postAuthAction";
@@ -95,6 +96,7 @@ export const AddToCartDialog = ({
   // desde este nivel con el aporte del pedido
   const [groupSnapshot, setGroupSnapshot] = useState<{ collected: number; target: number } | null>(null);
   const { collectedRaw: brandCollected, target: brandTarget } = useBrandCollection(brandSlug);
+  const { hasReward } = useReferralReward();
 
   const flavorOptions = variantOptions
     ? variantOptions.map((v) => ({
@@ -135,7 +137,7 @@ export const AddToCartDialog = ({
     const buyNowPrice = list.length > 1 ? list[1].price : list[0].price;
 
     if (isWaitingList) {
-      return isBrandGoalReached
+      return (isBrandGoalReached || hasReward)
         ? (list[3]?.price ?? list[list.length - 1]?.price ?? buyNowPrice)
         : (list[2]?.price ?? buyNowPrice);
     } else {
@@ -152,6 +154,8 @@ export const AddToCartDialog = ({
 
   const pricePerUnit = calculatePrice(quantity);
   const totalPrice = pricePerUnit * quantity;
+  // Súper-Precio ya operativo: meta de la marca alcanzada o el usuario tiene la recompensa de referido.
+  const superActive = isWaitingList && (isBrandGoalReached || hasReward);
 
   // Оценка доставки: Gratis по умолчанию; адрес платной зоны в кабинете —
   // её тариф (порог бесплатной доставки считается от суммы списка + этого товара)
@@ -272,7 +276,7 @@ export const AddToCartDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md rounded-2xl">
+      <DialogContent className="sm:max-w-md rounded-2xl p-4 gap-3">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3 text-xl font-bold">
             {isWaitingList ? (
@@ -320,9 +324,9 @@ export const AddToCartDialog = ({
             />
           )
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {/* Product Info */}
-            <div className="flex gap-4 items-center">
+            <div className="flex gap-3 items-center">
               {effImage && (
                 <div className="w-24 h-24 bg-white rounded-md overflow-hidden shrink-0">
                   <img
@@ -342,16 +346,17 @@ export const AddToCartDialog = ({
               </div>
               <div className="text-right shrink-0">
                 <p
-                  className={`text-lg font-bold leading-none ${isWaitingList ? "text-primary" : "text-foreground"}`}
+                  className={`text-lg font-bold leading-none ${superActive ? "" : isWaitingList ? "text-primary" : "text-foreground"}`}
+                  style={superActive ? { color: "hsl(var(--group-buy-accent))" } : undefined}
                 >
-                  {formatPrice(pricePerUnit)}
+                  {formatPrice(pricePerUnit)}{" "}
+                  <span className="text-[11px] font-normal text-muted-foreground">c/u</span>
                 </p>
                 {(effPrices[0]?.price ?? 0) > pricePerUnit && (
                   <p className="text-xs text-muted-foreground/70 line-through mt-1">
                     {formatPrice(effPrices[0].price)}
                   </p>
                 )}
-                <p className="text-[11px] text-muted-foreground mt-0.5">c/u</p>
               </div>
             </div>
 
@@ -392,7 +397,7 @@ export const AddToCartDialog = ({
             </div>
 
             {/* Price Summary */}
-            <div className="bg-muted/60 rounded-xl border border-border p-3 space-y-1.5">
+            <div className="bg-muted/60 rounded-xl border border-border p-2.5 space-y-1">
               <div className="flex justify-between text-sm">
                 <span>Cantidad:</span>
                 <span className="font-semibold">
@@ -403,29 +408,38 @@ export const AddToCartDialog = ({
                 <span>Envío:</span>
                 <span>{deliveryEstimate === 0 ? "Gratis" : formatPrice(deliveryEstimate)}</span>
               </div>
-              <div
-                className={`flex justify-between ${isWaitingList ? "text-sm font-semibold text-primary" : "font-bold text-lg"}`}
-              >
-                <span>{isWaitingList ? "Precio Garantizado:" : "Total:"}</span>
-                <span className={isWaitingList ? undefined : "text-primary"}>
-                  {formatPrice(totalPrice)}
-                </span>
-              </div>
-              {isWaitingList && (
+              {!isWaitingList ? (
+                <div className="flex justify-between font-bold text-lg">
+                  <span>Total:</span>
+                  <span className="text-primary">{formatPrice(totalPrice)}</span>
+                </div>
+              ) : superActive ? (
                 <div
                   className="flex justify-between font-bold text-lg"
                   style={{ color: "hsl(var(--group-buy-accent))" }}
                 >
                   <span>Súper-Precio:</span>
-                  <span>
-                    {formatPrice((effPrices[effPrices.length - 1]?.price ?? pricePerUnit) * quantity)}
-                  </span>
+                  <span>{formatPrice(totalPrice)}</span>
                 </div>
-              )}
-              {isWaitingList && (
-                <p className="text-xs text-muted-foreground">
-                  * El Precio Garantizado está asegurado en todos los casos. Para alcanzar el Súper-Precio, compartí en redes sociales e invitá a tus amigos
-                </p>
+              ) : (
+                <>
+                  <div className="flex justify-between text-sm font-semibold text-primary">
+                    <span>Precio Garantizado:</span>
+                    <span>{formatPrice(totalPrice)}</span>
+                  </div>
+                  <div
+                    className="flex justify-between font-bold text-lg"
+                    style={{ color: "hsl(var(--group-buy-accent))" }}
+                  >
+                    <span>Súper-Precio:</span>
+                    <span>
+                      {formatPrice((effPrices[effPrices.length - 1]?.price ?? pricePerUnit) * quantity)}
+                    </span>
+                  </div>
+                  <p className="text-[11px] leading-snug text-muted-foreground">
+                    * El Precio Garantizado está asegurado en todos los casos. Para alcanzar el Súper-Precio, compartí en redes sociales e invitá a tus amigos
+                  </p>
+                </>
               )}
             </div>
 
@@ -434,12 +448,12 @@ export const AddToCartDialog = ({
             )}
 
             {/* Action Buttons */}
-            <div className="space-y-2 pt-1">
+            <div className="space-y-2 pt-0">
               <button
                 type="button"
                 onClick={handleSubmit}
                 disabled={loading}
-                className="w-full py-3.5 rounded-2xl font-bold text-white text-[16px] flex items-center justify-center gap-2 shadow-lg bg-gradient-primary transform transition active:scale-95 disabled:opacity-60"
+                className="w-full py-3 rounded-2xl font-bold text-white text-[16px] flex items-center justify-center gap-2 shadow-lg bg-gradient-primary transform transition active:scale-95 disabled:opacity-60"
               >
                 {isWaitingList ? <GroupIcon className="w-5 h-5" /> : <ShoppingCart className="w-5 h-5" />}
                 {loading
@@ -452,7 +466,7 @@ export const AddToCartDialog = ({
                 type="button"
                 onClick={() => onOpenChange(false)}
                 disabled={loading}
-                className="w-full py-3 rounded-2xl font-semibold text-muted-foreground border-2 border-border bg-card hover:bg-muted transform transition active:scale-95"
+                className="w-full py-2.5 rounded-2xl font-semibold text-muted-foreground border-2 border-border bg-card hover:bg-muted transform transition active:scale-95"
               >
                 Cancelar
               </button>
