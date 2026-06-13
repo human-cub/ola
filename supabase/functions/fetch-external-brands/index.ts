@@ -14,6 +14,7 @@ interface MergedBrand {
   logo_url: string | null;
   sort_order: number;
   is_active: boolean;
+  is_active_general: boolean;
   seo_title: string | null;
   seo_description: string | null;
   products_count: number;
@@ -166,11 +167,14 @@ Deno.serve(async (req) => {
         const seo_title = pickStr(r, ["seo_title", "SeoTitle", "seoTitle", "meta_title"]) ?? null;
         const seo_description = pickStr(r, ["seo_description", "SeoDescription", "seoDescription", "meta_description"]) ?? null;
         const productsCount = id ? (countsByBrandId.get(id) ?? 0) : 0;
-        return { id, name, slug, logo_url, seo_title, seo_description, productsCount };
+        const active_ola = typeof r["active_ola"] === "boolean" ? (r["active_ola"] as boolean) : true;
+        const active_general = typeof r["active"] === "boolean" ? (r["active"] as boolean) : true;
+        return { id, name, slug, logo_url, seo_title, seo_description, productsCount, active_ola, active_general };
       })
       .filter((x): x is {
         id?: string; name: string; slug: string; logo_url: string | null;
         seo_title: string | null; seo_description: string | null; productsCount: number;
+        active_ola: boolean; active_general: boolean;
       } => x !== null);
 
     const { data: overrides, error: ovErr } = await local
@@ -209,7 +213,10 @@ Deno.serve(async (req) => {
         emoji: null,
         logo_url: b.logo_url,
         sort_order: ov?.sort_order ?? i,
-        is_active: hasProducts && (ov?.is_active ?? true),
+        // Retail (ola) visibility = master pim-pum brands.active_ola.
+        // General (socios + default) = master pim-pum brands.active.
+        is_active: hasProducts && b.active_ola,
+        is_active_general: hasProducts && b.active_general,
         seo_title: b.seo_title,
         seo_description: b.seo_description,
         products_count: b.productsCount,
