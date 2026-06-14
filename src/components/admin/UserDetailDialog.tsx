@@ -27,6 +27,8 @@ interface UserProfile {
   created_at: string;
   profile_completed: boolean;
   email?: string;
+  instagram_handle?: string | null;
+  social_reward_granted_at?: string | null;
 }
 
 interface LoginEntry {
@@ -120,6 +122,28 @@ export const UserDetailDialog = ({
                   <Badge className="bg-success text-success-foreground">Activo</Badge>
                 )}
               </div>
+              {user.social_reward_granted_at && (
+                <div className="col-span-2">
+                  <p className="text-muted-foreground">Instagram</p>
+                  <p className="font-medium flex flex-wrap items-center gap-2">
+                    {user.instagram_handle ? (
+                      <a
+                        href={`https://instagram.com/${user.instagram_handle}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline"
+                      >
+                        @{user.instagram_handle}
+                      </a>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                    <Badge variant="outline" className="border-pink-500 text-pink-600">
+                      Se suscribió por el descuento web
+                    </Badge>
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="border-t pt-4">
