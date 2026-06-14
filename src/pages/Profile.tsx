@@ -13,6 +13,7 @@ import { SecurityForm } from "@/components/profile/SecurityForm";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useAppSetting } from "@/hooks/useAppSetting";
 import { ShareBlock } from "@/components/ShareBlock";
+import { SocialRewardCard } from "@/components/SocialRewardCard";
 import { toast } from "sonner";
 import type { AddressData } from "@/lib/address";
 import logoOlaSocios from "@/assets/logo-ola-socios.png";
@@ -196,6 +197,7 @@ const Profile = () => {
 
           {showInvite && (
             <TabsContent value="invite">
+              <SocialRewardCard />
               <div className="rounded-lg border border-primary/20 bg-gradient-primary/10 p-4">
                 <p className="text-base font-semibold text-primary mb-1">Tu link de invitación</p>
                 <p className="text-sm text-muted-foreground mb-3">

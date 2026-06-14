@@ -165,10 +165,12 @@ export const syncWaitingListOrder = async (userId: string) => {
     // Referrer reward: a pending one-time Super discount on the referrer's group order.
     const { data: prof } = await supabase
       .from("profiles")
-      .select("has_referral_reward")
+      .select("has_referral_reward, has_social_reward")
       .eq("user_id", userId)
       .maybeSingle();
-    const hasReward = !!(prof as any)?.has_referral_reward;
+    const hasReferral = !!(prof as any)?.has_referral_reward;
+    const hasSocial = !!(prof as any)?.has_social_reward;
+    const hasReward = hasReferral || hasSocial;
     const hasPromo = (!!promoCode && promoBonus > 0) || hasReward;
 
     if (!waitingListData || waitingListData.length === 0) {
@@ -219,7 +221,7 @@ export const syncWaitingListOrder = async (userId: string) => {
         total_amount: subtotal,
         discount_amount: discountAmount,
         is_promo: hasPromo,
-        promo_code: hasPromo ? (promoCode ?? (hasReward ? "REFERIDO" : null)) : null,
+        promo_code: hasPromo ? (promoCode ?? (hasReferral ? "REFERIDO" : hasSocial ? "INSTAGRAM" : null)) : null,
         promo_tier: hasPromo ? (promoBonus || null) : null,
       })
       .eq("id", existingOrder.id);

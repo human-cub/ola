@@ -16,10 +16,10 @@ export function useReferralReward() {
       if (!session) { if (mounted) setHasReward(false); return; }
       const { data } = await supabase
         .from("profiles")
-        .select("has_referral_reward")
+        .select("has_referral_reward, has_social_reward")
         .eq("user_id", session.user.id)
         .maybeSingle();
-      if (mounted) setHasReward(!!(data as any)?.has_referral_reward);
+      if (mounted) setHasReward(!!(data as any)?.has_referral_reward || !!(data as any)?.has_social_reward);
     })();
     return () => { mounted = false; };
   }, []);
