@@ -47,6 +47,8 @@ interface UserProfile {
   created_at: string;
   profile_completed: boolean;
   email?: string;
+  instagram_handle?: string | null;
+  social_reward_granted_at?: string | null;
 }
 
 const ITEMS_PER_PAGE = 50;
@@ -319,6 +321,9 @@ const UsersTable = () => {
                           )}
                         {passwordSet[user.user_id] === false && (
                             <Badge variant="outline" className="ml-1 border-amber-500 text-amber-600">Sin clave</Badge>
+                          )}
+                          {user.social_reward_granted_at && (
+                            <Badge variant="outline" className="ml-1 border-pink-500 text-pink-600">IG</Badge>
                           )}
                           </TableCell>
                         <TableCell className="text-right space-x-2">
